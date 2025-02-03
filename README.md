@@ -4,8 +4,8 @@
 
 Advanced framework for evaluating LLM decision-making in complex narrative environments using Space Rangers QM quests.
 
-## Overview
 
+## Overview
 This benchmark uses text quests (.qm files) from the classic game "Space Rangers" as a testing ground for LLM agents.
 Each quest represents a complex decision tree with:
 - Multiple valid paths to success/failure with clear win/loss conditions
@@ -25,7 +25,6 @@ The system evaluates LLMs on their ability to:
 
 
 ## Setup
-
 1. Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/yourconscience/llm-quest-benchmark
@@ -45,22 +44,43 @@ Supported providers:
 
 Note: Local LLM support is not included in the initial version but can be added through LiteLLM customization.
 
+## Current Implementation Status
+- [x] Core QM parsing
+- [x] Basic state management
+- [x] LLM integration
+- [x] OpenRouter support
+- [x] Simulation environment
+- [ ] Complete QM parser validation
+- [ ] Implement quest completion detection
+- [ ] Add benchmark scoring system
+
+## Updated Usage Example
+
 ## Usage (WIP)
 
 ```python
-benchmark = QuestBenchmark(
-    qm_path="quests/example.qm",
-    agents=["openrouter/deepseek/deepseek-chat",
-            "openrouter/anthropic/claude-3-5-sonnet"]
-)
+from src import qm_parser, llm_agent, simulator
 
-results = []
-for agent in benchmark.agents:
-    episode_result = benchmark.run_episode(agent)
-    results.append({
-        "model": agent.model,
-        **episode_result
-    })
+MAX_ITER = 500
+
+# Load quest data
+with open("quests/smugglers.qm", "rb") as f:
+    qm_data = qm_parser.parse_qm(f.read())
+
+# Initialize components
+agent = llm_agent.QuestAgent()
+simulator = simulator.QuestSimulator(qm_data, agent)
+
+# Run quest simulation
+state = simulator.reset()
+n_iter = 0
+while n_iter < MAX_ITER:
+    result = simulator.step()
+    print(f"Day {state.days_passed}: {result.transition.description}")
+    if result.done:
+        print(f"Quest completed! Reward: {result.reward}")
+        break
+    n_iter += 1
 ```
 
 ## License
