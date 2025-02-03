@@ -1,0 +1,5 @@
+.env
+tmp/*
+space-rangers-quest/*
+.vscode/*
+.venv/*
