@@ -54,6 +54,6 @@
    - Long-running stability tests
 
 ## Documentation
-- [ ] Update README with current API
+- [x] Update README with current API
 - [ ] Add developer troubleshooting guide
 - [ ] Create quest contribution docs
