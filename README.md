@@ -4,7 +4,6 @@
 
 Benchmark for evaluating LLM decision-making in complex narrative environments using Space Rangers text quests.
 
-
 ## Overview
 This benchmark uses text quests (.qm files) from the classic game "Space Rangers" as a testing ground for LLM agents.
 Each quest represents a complex decision tree with:
@@ -20,9 +19,18 @@ The system evaluates LLMs on their ability to:
 ## Features
 - **LiteLLM backend**: Supports multiple LLM providers through LiteLLM with built-in caching and routing.
 - **OpenRouter Integration**: All latest cloud models are supported through OpenRouter.
-- **Data contamination**: Original quests are contaminated with rephrased text / translations, ensuring that data was not exposed during training.
+- **Data contamination**: Original text data is translated/rephrased without semantic changes, ensuring it was not seen during training.
 - **Complex decision making**: Benchmark focuses on LLM's ability to understand context and make consistent decisions in complex narrative environments.
 
+## Current Status [WIP]:
+- [x] Simple parser for QM files
+- [x] Basic state management and environment simulator
+- [x] LLM-agents with OpenRouter support
+- [x] Wrapper for roginvs/space-rangers-quest QM player + example quest
+- [ ] QM parsing works for all needed quests
+- [ ] Create prompt template based on game state and previous actions
+- [ ] Add reward score for single run
+- [ ] Prepare benchmark with multiple runs across different QM text quests
 
 ## Setup
 1. Clone the repository and install dependencies:
@@ -44,19 +52,7 @@ Supported providers:
 
 Note: Local LLM support is not included in the initial version but can be added through LiteLLM customization.
 
-## Current Implementation Status
-- [x] Core QM parsing
-- [x] Basic state management
-- [x] LLM integration
-- [x] OpenRouter support
-- [x] Simulation environment
-- [ ] Complete QM parser validation
-- [ ] Implement quest completion detection
-- [ ] Add benchmark scoring system
-
-## Updated Usage Example
-
-## Usage (WIP)
+## Usage example
 
 ```python
 from src import qm_parser, llm_agent, simulator
