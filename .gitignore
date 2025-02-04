@@ -2,3 +2,5 @@
 tmp/*
 .vscode/*
 .venv/*
+.DS_Store
+space-rangers-quest/*
