@@ -1,8 +1,11 @@
 """
 QM file parser integrated with core data structures
 """
+import subprocess
+import json
+from pathlib import Path
 from struct import unpack_from
-from typing import Dict, List
+from typing import Dict, List, Any
 from .data_structures import QMParameter, QMLocation, QMTransition, QMStructure
 
 def parse_qm(buffer: bytes) -> QMStructure:
@@ -91,3 +94,23 @@ def parse_qm(buffer: bytes) -> QMStructure:
         transitions=transitions,
         start_location=0  # Will be updated later
     )
+
+def parse_qm_file(qm_path: str) -> QMStructure:
+    """Parse QM file using TypeScript parser"""
+    cmd = [
+        "npx", "ts-node",
+        str(Path("scripts/parse_qm.ts").resolve()),
+        str(Path(qm_path).resolve())
+    ]
+
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(f"QM parsing failed: {result.stderr}")
+
+    data = json.loads(result.stdout)
+    return QMStructure.parse_obj(data)  # Convert to Pydantic model

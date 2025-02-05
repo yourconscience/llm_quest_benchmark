@@ -1,13 +1,12 @@
 import { QMPlayer } from "../space-rangers-quest/src/lib/qmplayer";
 import { parse } from "../space-rangers-quest/src/lib/qmreader";
 import * as fs from "fs";
-import * as process from "process";
-interface GameState {
-    text: string;
-    choices: Array<{id: number; text: string}>;
-    daysPassed: number;
-    params: Array<{name: string; value: number}>;
-}
+import * as readline from "readline";
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
 
 export function runInteractiveQuest(qmPath: string): void {
     const data = fs.readFileSync(qmPath);
@@ -15,39 +14,28 @@ export function runInteractiveQuest(qmPath: string): void {
     const player = new QMPlayer(qm, "rus");
     player.start();
 
-    process.stdin.setEncoding("utf8");
-    process.stdin.on("data", (input) => {
-        const choiceId = parseInt(input.toString().trim());
-        if (!isNaN(choiceId)) {
-            player.performJump(choiceId);
-            sendState(player.getState());
-        } else {
-            process.stderr.write("Invalid input\n");
-        }
-    });
+    function showAndAsk() {
+        const state = player.getState();
+        console.info(state);  // Use same output as original
+        rl.question("> ", (answer) => {
+            const id = parseInt(answer);
+            if (!isNaN(id) && state.choices.find(x => x.jumpId === id)) {
+                player.performJump(id);
+            } else {
+                console.info(`Wrong input!`);
+            }
+            showAndAsk();
+        });
+    }
 
-    sendState(player.getState());
+    showAndAsk();
 }
 
-function sendState(state: any) {
-    const gameState: GameState = {
-        text: state.text,
-        choices: state.choices.map((c: any) => ({
-            id: c.jumpId,
-            text: c.text
-        })),
-        daysPassed: state.daysPassed,
-        params: Object.values(state.params).map((p: any) => ({
-            name: p.name,
-            value: p.value
-        }))
-    };
-
-    process.stdout.write(JSON.stringify(gameState) + "\n");
-}
-
-// CLI handler
 if (require.main === module) {
     const qmPath = process.argv[2];
+    if (!qmPath) {
+        console.error("Please provide a path to .qm file");
+        process.exit(1);
+    }
     runInteractiveQuest(qmPath);
 }

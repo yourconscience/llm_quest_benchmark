@@ -4,3 +4,5 @@ tmp/*
 .venv/*
 .DS_Store
 space-rangers-quest/*
+package-lock.json
+node_modules/*
