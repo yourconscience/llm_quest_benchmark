@@ -1,6 +1,3 @@
 [submodule "space-rangers-quest"]
 	path = space-rangers-quest
 	url = https://github.com/roginvs/space-rangers-quest
-[submodule "textarena"]
-	path = textarena
-	url = https://github.com/LeonGuertler/TextArena.git
