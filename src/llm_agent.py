@@ -1,75 +1,73 @@
 """
-LLM-powered decision maker for text quests
+LLM-powered agent for Space Rangers quests using TextArena's agent system
 """
-import os
-import litellm
-from jinja2 import Environment, FileSystemLoader
-from typing import List
-from .data_structures import QuestState, QMTransition
+import textarena as ta
+from typing import Optional
 
-class QuestAgent:
-    def __init__(self, model: str = "openrouter/deepseek/deepseek-chat", template_dir: str = "prompts"):
-        self.model = model
-        self.template_env = Environment(
-            loader=FileSystemLoader(template_dir),
-            autoescape=True
-        )
-        self.fallback_model = "openrouter/anthropic/claude-3.5-sonnet"
-        self.api_key = os.getenv("OPENROUTER_API_KEY")
-        if not self.api_key:
-            raise ValueError("OPENROUTER_API_KEY environment variable not set")
+QUEST_PROMPT_TEMPLATE = """You are playing a Space Rangers text quest. You will be presented with a location description and a list of available actions. Your goal is to complete the quest successfully.
 
-    def choose_action(
+The game will present you with numbered choices. To select an action, respond with just the number of your chosen action.
+
+Example observation:
+Trading Station
+You find yourself at a bustling trading station. Several merchants eye you suspiciously.
+
+Available actions:
+1. Approach the weapon merchant
+2. Visit the ship upgrades shop
+3. Leave the station
+
+Example response:
+2
+
+Current observation:
+{observation}
+
+Choose your action (respond with just the number):"""
+
+class QuestAgent(ta.Agent):
+    """TextArena agent specialized for Space Rangers quests"""
+
+    def __init__(
         self,
-        state: QuestState,
-        transitions: List[QMTransition]
-    ) -> int:
-        """Select transition index using LLM with enhanced validation"""
-        if not transitions:
-            raise ValueError("No available transitions")
-
-        prompt = self.render_prompt(state, transitions)
-        response = self.query_llm(prompt)
-        return self.validate_response(response, len(transitions))
-
-    def render_prompt(self, state: QuestState, transitions: List[QMTransition]) -> str:
-        template = self.template_env.get_template("decision_prompt.jinja2")
-        return template.render(
-            location=state.current_location,
-            params=state.parameters,
-            transitions=transitions,
-            history=state.history[-3:]  # Last 3 steps
+        model: str = "claude-3.5-sonnet",
+        system_prompt: Optional[str] = QUEST_PROMPT_TEMPLATE,
+        temperature: float = 0.4,
+        **kwargs
+    ):
+        super().__init__()
+        self.agent = ta.agents.OpenRouterAgent(
+            model_name=model,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            max_tokens=256,
+            **kwargs
         )
 
-    def query_llm(self, prompt: str) -> str:
-        """LiteLLM integration with OpenRouter fallback"""
-        try:
-            response = litellm.completion(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.3,
-                max_tokens=500,
-                api_key=self.api_key
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            # Fallback to Claude-3.5-Sonnet
-            return litellm.completion(
-                model=self.fallback_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.3,
-                api_key=self.api_key
-            ).choices[0].message.content
+    def __call__(self, observation: str) -> str:
+        """Process observation and return action number"""
+        return self.agent(observation)
 
-    def validate_response(self, text: str, num_choices: int) -> int:
-        """Validate and parse LLM response"""
-        clean_text = text.strip().lower()
 
-        # Look for explicit choice numbers
-        for i in range(1, num_choices + 1):
-            if any(pattern.format(i) in clean_text
-                   for pattern in ["{}", "option {}", "choice {}"]):
-                return i - 1
+# Optional wrapper for more strategic gameplay
+class StrategicQuestAgent(ta.AgentWrapper):
+    """Adds strategic thinking to quest agent responses"""
 
-        # Fallback to first option
-        return 0
+    def __init__(self, agent: QuestAgent, debug: bool = False):
+        super().__init__(agent)
+        self.debug = debug
+
+    def __call__(self, observation: str) -> str:
+        # First, analyze the situation
+        analysis = self.agent(
+            "Analyze this situation and explain your thinking step-by-step instead of choosing an action:\n" + observation
+        )
+        if self.debug:
+            print(f"\nAnalysis: {analysis}")
+
+        # Then make the actual choice
+        action = self.agent(f"{observation}\n\nAnalysis:\n{analysis}")
+        if self.debug:
+            print(f"Chosen action: {action}")
+
+        return action

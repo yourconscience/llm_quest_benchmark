@@ -1,6 +1,7 @@
 import { QMPlayer } from "../space-rangers-quest/src/lib/qmplayer";
 import { parse } from "../space-rangers-quest/src/lib/qmreader";
 import * as fs from "fs";
+import * as process from "process";
 import * as readline from "readline";
 
 const rl = readline.createInterface({
@@ -8,7 +9,21 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-export function runInteractiveQuest(qmPath: string): void {
+function printQuestAsJson(qmPath: string): void {
+    const data = fs.readFileSync(qmPath);
+    const qm = parse(data);
+    const player = new QMPlayer(qm, "rus");
+    player.start();
+
+    // Just get the raw state and output as JSON
+    const state = player.getState();
+    console.log(JSON.stringify({
+        state,
+        qm
+    }));
+}
+
+function runInteractiveQuest(qmPath: string): void {
     const data = fs.readFileSync(qmPath);
     const qm = parse(data);
     const player = new QMPlayer(qm, "rus");
@@ -16,7 +31,7 @@ export function runInteractiveQuest(qmPath: string): void {
 
     function showAndAsk() {
         const state = player.getState();
-        console.info(state);  // Use same output as original
+        console.info(state);
         rl.question("> ", (answer) => {
             const id = parseInt(answer);
             if (!isNaN(id) && state.choices.find(x => x.jumpId === id)) {
@@ -34,8 +49,19 @@ export function runInteractiveQuest(qmPath: string): void {
 if (require.main === module) {
     const qmPath = process.argv[2];
     if (!qmPath) {
-        console.error("Please provide a path to .qm file");
+        console.error("Usage: consoleplayer.ts [--json] <path-to-qm>");
         process.exit(1);
     }
+
+    if (process.argv.includes("--json")) {
+        try {
+            printQuestAsJson(qmPath);
+        } catch (err) {
+            console.error("Failed to parse and print JSON:", err);
+            process.exit(1);
+        }
+        process.exit(0);
+    }
+
     runInteractiveQuest(qmPath);
 }

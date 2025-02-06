@@ -6,3 +6,5 @@ tmp/*
 space-rangers-quest/*
 package-lock.json
 node_modules/*
+docs/*
+src/__pycache__/*

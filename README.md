@@ -33,9 +33,9 @@ The system evaluates LLMs on their ability to:
 - [ ] Prepare benchmark with multiple runs across different QM text quests
 
 ## Setup
-1. Clone the repository and install dependencies:
+1. Clone the repository with submodules and install dependencies:
 ```bash
-git clone https://github.com/yourconscience/llm-quest-benchmark
+git clone https://github.com/yourconscience/llm-quest-benchmark --recurse-submodules
 cd llm-quest-benchmark
 pip install -r requirements.txt
 ```
@@ -60,7 +60,7 @@ from src import qm_parser, llm_agent, simulator
 MAX_ITER = 500
 
 # Load quest data
-with open("quests/smugglers.qm", "rb") as f:
+with open("quests/boat.qm", "rb") as f:
     qm_data = qm_parser.parse_qm(f.read())
 
 # Initialize components
