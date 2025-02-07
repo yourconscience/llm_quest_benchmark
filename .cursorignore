@@ -1,0 +1,4 @@
+*.qm
+
+# Include critical submodules
+!space-rangers-quest/src/

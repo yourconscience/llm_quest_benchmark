@@ -1,0 +1,10 @@
+{# Template for processing quest observations and choices #}
+Current observation:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Choose your action (respond with just the number):

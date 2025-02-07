@@ -3,27 +3,16 @@ LLM-powered agent for Space Rangers quests using TextArena's agent system
 """
 import textarena as ta
 from typing import Optional
+from pathlib import Path
+from jinja2 import Environment, FileSystemLoader
 
-QUEST_PROMPT_TEMPLATE = """You are playing a Space Rangers text quest. You will be presented with a location description and a list of available actions. Your goal is to complete the quest successfully.
-
-The game will present you with numbered choices. To select an action, respond with just the number of your chosen action.
-
-Example observation:
-Trading Station
-You find yourself at a bustling trading station. Several merchants eye you suspiciously.
-
-Available actions:
-1. Approach the weapon merchant
-2. Visit the ship upgrades shop
-3. Leave the station
-
-Example response:
-2
-
-Current observation:
-{observation}
-
-Choose your action (respond with just the number):"""
+# Configure Jinja environment
+TEMPLATES_DIR = Path(__file__).parent / "prompt_templates"
+env = Environment(
+    loader=FileSystemLoader(TEMPLATES_DIR),
+    trim_blocks=True,
+    lstrip_blocks=True
+)
 
 class QuestAgent(ta.Agent):
     """TextArena agent specialized for Space Rangers quests"""
@@ -31,14 +20,18 @@ class QuestAgent(ta.Agent):
     def __init__(
         self,
         model: str = "claude-3.5-sonnet",
-        system_prompt: Optional[str] = QUEST_PROMPT_TEMPLATE,
         temperature: float = 0.4,
         **kwargs
     ):
         super().__init__()
+        # Load templates
+        self.system_template = env.get_template("system_role.jinja")
+        self.action_template = env.get_template("action_choice.jinja")
+
+        # Initialize agent with rendered system prompt
         self.agent = ta.agents.OpenRouterAgent(
             model_name=model,
-            system_prompt=system_prompt,
+            system_prompt=self.system_template.render(),
             temperature=temperature,
             max_tokens=256,
             **kwargs
@@ -46,7 +39,26 @@ class QuestAgent(ta.Agent):
 
     def __call__(self, observation: str) -> str:
         """Process observation and return action number"""
-        return self.agent(observation)
+        # Parse choices from observation text
+        lines = observation.split('\n')
+        choices = []
+        collecting = False
+
+        for line in lines:
+            if line.startswith('Available actions:'):
+                collecting = True
+                continue
+            if collecting and line.strip():
+                # Extract choice text without number
+                text = line.split('.', 1)[1].strip()
+                choices.append({"text": text})
+
+        # Render prompt using template
+        prompt = self.action_template.render(
+            observation=observation,
+            choices=choices
+        )
+        return self.agent(prompt)
 
 
 # Optional wrapper for more strategic gameplay
