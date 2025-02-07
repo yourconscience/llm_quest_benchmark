@@ -2,19 +2,65 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Benchmark for evaluating LLM decision-making in complex narrative environments using Space Rangers text quests.
+Benchmark for testing LLM performance on Space Rangers text quests.
 
-## Overview
-This benchmark uses text quests (.qm files) from the classic game "Space Rangers" as a testing ground for LLM agents.
-Each quest represents a complex decision tree with:
-- Multiple valid paths to success/failure with clear win/loss conditions
-- Parameter-based state tracking
-- Long-term consequences of decisions
+## Prerequisites
 
-The system evaluates LLMs on their ability to:
-- Understand context and make consistent decisions
-- Optimize for long-term outcomes
+- Python 3.10+
+- Node.js 18+ (for QM parser)
+- Git (for submodules)
 
+## Installation
+
+1. Clone repository with submodules:
+```bash
+git clone https://github.com/yourconscience/llm-quest-benchmark --recurse-submodules
+cd llm-quest-benchmark
+```
+
+2. Create and activate virtual environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Linux/MacOS
+# or
+.venv\Scripts\activate  # Windows
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+npm install --prefix space-rangers-quest --legacy-peer-deps
+```
+
+4. Set up environment variables:
+```bash
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+## Running Tests
+
+Basic test suite:
+```bash
+pytest tests/
+```
+
+## Running Example Quest
+
+Test LLM on a simple quest:
+```bash
+python scripts/test_llm_quest.py
+```
+
+## Project Structure
+
+- `src/` - Core components
+  - `qm.py` - QM file parser
+  - `llm_agent.py` - LLM-powered quest agent
+  - `prompt_templates/` - Jinja templates for prompts
+- `scripts/` - Utility scripts
+- `tests/` - Test suite
+- `quests/` - Example QM files
 
 ## Features
 - **LiteLLM backend**: Supports multiple LLM providers through LiteLLM with built-in caching and routing.
@@ -31,53 +77,6 @@ The system evaluates LLMs on their ability to:
 - [ ] Create prompt template based on game state and previous actions
 - [ ] Add reward score for single run
 - [ ] Prepare benchmark with multiple runs across different QM text quests
-
-## Setup
-1. Clone the repository with submodules and install dependencies:
-```bash
-git clone https://github.com/yourconscience/llm-quest-benchmark --recurse-submodules
-cd llm-quest-benchmark
-pip install -r requirements.txt
-```
-
-2. Copy `.env.template` to `.env` and add your API keys:
-```bash
-cp .env.template .env
-```
-
-Supported providers:
-- OpenAI (GPT models)
-- Anthropic (Claude models)
-- OpenRouter (various models)
-
-Note: Local LLM support is not included in the initial version but can be added through LiteLLM customization.
-
-## Usage example
-
-```python
-from src import qm_parser, llm_agent, simulator
-
-MAX_ITER = 500
-
-# Load quest data
-with open("quests/boat.qm", "rb") as f:
-    qm_data = qm_parser.parse_qm(f.read())
-
-# Initialize components
-agent = llm_agent.QuestAgent()
-simulator = simulator.QuestSimulator(qm_data, agent)
-
-# Run quest simulation
-state = simulator.reset()
-n_iter = 0
-while n_iter < MAX_ITER:
-    result = simulator.step()
-    print(f"Day {state.days_passed}: {result.transition.description}")
-    if result.done:
-        print(f"Quest completed! Reward: {result.reward}")
-        break
-    n_iter += 1
-```
 
 ## License
 MIT License - See LICENSE for details.
