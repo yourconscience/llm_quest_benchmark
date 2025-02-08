@@ -4,6 +4,8 @@ LLM-powered agent for Space Rangers quests using TextArena's agent system
 import textarena as ta
 from jinja2 import Environment as JinjaEnvironment, FileSystemLoader
 from constants import PROMPT_TEMPLATES_DIR
+import logging
+from typing import Optional, Dict, Any
 
 # Configure Jinja environment
 env = JinjaEnvironment(
@@ -19,9 +21,13 @@ class QuestAgent(ta.Agent):
         self,
         model: str = "claude-3.5-sonnet",
         temperature: float = 0.4,
+        debug: bool = False,
         **kwargs
     ):
         super().__init__()
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.debug = debug
+
         # Load templates
         self.system_template = env.get_template("system_role.jinja")
         self.action_template = env.get_template("action_choice.jinja")
@@ -35,8 +41,17 @@ class QuestAgent(ta.Agent):
             **kwargs
         )
 
+        if self.debug:
+            self.logger.setLevel(logging.DEBUG)
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter('%(name)s - %(message)s'))
+            self.logger.addHandler(handler)
+
     def __call__(self, observation: str) -> str:
         """Process observation and return action number"""
+        if self.debug:
+            self.logger.debug(f"\nObservation:\n{observation}")
+
         # Parse choices from observation text
         lines = observation.split('\n')
         choices = []
@@ -51,12 +66,26 @@ class QuestAgent(ta.Agent):
                 text = line.split('.', 1)[1].strip()
                 choices.append({"text": text})
 
+        if not choices:
+            self.logger.error("No valid choices found in observation!")
+            return "0"  # Emergency exit
+
         # Render prompt using template
         prompt = self.action_template.render(
             observation=observation,
             choices=choices
         )
-        return self.agent(prompt)
+        if self.debug:
+            self.logger.debug(f"\nPrompt:\n{prompt}")
+
+        try:
+            response = self.agent(prompt)
+            if self.debug:
+                self.logger.debug(f"Raw LLM response: {response}")
+            return response
+        except Exception as e:
+            self.logger.error(f"LLM call failed: {str(e)}")
+            return "0"
 
 
 # Optional wrapper for more strategic gameplay

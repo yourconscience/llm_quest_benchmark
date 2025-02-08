@@ -1,66 +1,86 @@
 """
-Test script to run LLM agent on Space Rangers quest
+Enhanced end-to-end quest runner with logging and metrics
 """
-import sys
-from pathlib import Path
-import subprocess
+import argparse
 import json
+import logging
+import sys
+from datetime import datetime
+from pathlib import Path
 
-# Add project root to Python path
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
+def validate_project_structure():
+    """Ensure script is run from project root with required directories"""
+    required_dirs = [
+        Path("src"),
+        Path("quests"),
+        Path("scripts")
+    ]
 
-from src.llm_agent import QuestAgent
-from src.qm import parse_qm, QMGame
-
-def run_llm_quest(quest_path: str, agent_cls=QuestAgent):
-    """Run quest with LLM agent"""
-    # Initialize QM game and agent
-    game = parse_qm(quest_path)
-    agent = agent_cls()
-
-    current_location = game.get_location(game.start_id)
-
-    while True:
-        # Format observation for LLM
-        observation = (
-            f"{current_location.text}\n\n"
-            "Available actions:\n"
-        )
-        for i, choice in enumerate(current_location.choices, 1):
-            observation += f"{i}. {choice.text}\n"
-
-        # Get LLM decision
-        action = agent(observation)
-
-        try:
-            # Convert LLM response to choice index
-            choice_idx = int(action.strip()) - 1
-            if 0 <= choice_idx < len(current_location.choices):
-                # Get next location
-                next_loc_id = current_location.choices[choice_idx].jumpId
-                current_location = game.get_location(next_loc_id)
-                print(f"\nChose action {choice_idx + 1}")
-            else:
-                print(f"\nInvalid choice {action}, try again")
-                continue
-
-        except ValueError:
-            print(f"\nInvalid response from LLM: {action}")
-            continue
-
-        # Check for end conditions (no more choices)
-        if not current_location.choices:
-            print("\nQuest completed!")
-            print(f"Final location: {current_location.text}")
-            break
-
-if __name__ == "__main__":
-    # Use example quest
-    quest_path = project_root / "quests" / "boat.qm"
-    if not quest_path.exists():
-        print(f"Quest file not found: {quest_path}")
+    missing = [d for d in required_dirs if not d.exists()]
+    if missing:
+        print("ERROR: Please run from project root directory!")
+        print("Missing directories:", [str(d) for d in missing])
         sys.exit(1)
 
-    print(f"\nStarting quest: {quest_path.name}")
-    run_llm_quest(str(quest_path))
+def main():
+    validate_project_structure()
+
+    parser = argparse.ArgumentParser(description="Run LLM agent on Space Rangers quest")
+    parser.add_argument("--quest", type=str, default="quests/boat.qm",
+                      help="Path to QM quest file")
+    parser.add_argument("--log-level", choices=["debug", "info", "warning"], default="info",
+                      help="Logging verbosity level")
+    parser.add_argument("--output", type=str,
+                      help="Path to save metrics JSON file")
+    args = parser.parse_args()
+
+    # Setup logging
+    logging.basicConfig(
+        level=args.log_level.upper(),
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+
+    # Initialize components
+    from llm_quest_benchmark.qm_adapter import QMPlayerEnv
+    from llm_quest_benchmark.llm_agent import QuestAgent
+    from llm_quest_benchmark.renderers.quest_renderer import QuestRenderer
+
+    env = QMPlayerEnv(args.quest)
+    agent = QuestAgent(debug=(args.log_level == "debug"))
+    renderer = QuestRenderer(env)
+
+    # Run quest
+    obs = env.reset()
+    renderer.render()
+
+    while True:
+        action = agent(obs[0])  # Get action from agent
+        obs, reward, done, info = env.step(action)
+        renderer.render()
+
+        if done:
+            if reward[0] > 0:
+                print("\n🎉 Quest completed successfully!")
+            else:
+                print("\n💥 Quest failed!")
+            break
+
+    # Save metrics
+    metrics = env.get_metrics()
+    metrics.update({
+        'quest_file': args.quest,
+        'completion_time': datetime.now().isoformat(),
+        'final_reward': reward[0]
+    })
+
+    if args.output:
+        output_path = Path(args.output)
+        output_path.parent.mkdir(exist_ok=True)
+        with open(output_path, 'w') as f:
+            json.dump(metrics, f, indent=2)
+        print(f"\nMetrics saved to: {output_path}")
+
+    return 0 if reward[0] > 0 else 1
+
+if __name__ == "__main__":
+    exit(main())

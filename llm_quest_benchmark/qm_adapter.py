@@ -2,6 +2,7 @@
 import textarena as ta
 from pathlib import Path
 from .qm import parse_qm, QMGame
+from typing import Dict, Any
 
 class QMPlayerEnv(ta.Env):
     """TextArena environment for Space Rangers quests"""
@@ -22,6 +23,15 @@ class QMPlayerEnv(ta.Env):
 
         # Track current location
         self.current_loc_id = self.qm_data.start_id
+
+        # Add metrics tracking
+        self.metrics = {
+            'steps_taken': 0,
+            'valid_actions': 0,
+            'invalid_actions': 0,
+            'quest_completed': False,
+            'error_log': []
+        }
 
     def _get_location_description(self) -> str:
         """Get current location description with available actions"""
@@ -47,6 +57,8 @@ class QMPlayerEnv(ta.Env):
 
     def step(self, action: str):
         """Execute action and return new state"""
+        self.metrics['steps_taken'] += 1
+
         try:
             # Convert action to choice index
             choice_idx = int(action.strip()) - 1
@@ -72,9 +84,15 @@ class QMPlayerEnv(ta.Env):
             done = len(new_loc.choices) == 0
             reward = 1.0 if done else 0.0
 
+            self.metrics['valid_actions'] += 1
             return self.state.observations, {0: reward}, done, {}
 
         except (ValueError, IndexError) as e:
+            self.metrics['invalid_actions'] += 1
+            self.metrics['error_log'].append({
+                'step': self.metrics['steps_taken'],
+                'error': str(e)
+            })
             self.state.add_observation(
                 from_id=ta.GAME_ID,
                 to_id=0,
@@ -87,3 +105,7 @@ class QMPlayerEnv(ta.Env):
         """Render current game state"""
         print("\n=== Current Location ===")
         print(self._get_location_description())
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """Return copy of metrics for analysis"""
+        return self.metrics.copy()

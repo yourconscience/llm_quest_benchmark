@@ -17,7 +17,9 @@ package-lock.json
 # Macos
 .DS_Store
 
-# Python cache and compiled files
+# Python cache, compiled and build files
 src/__pycache__/*
 *.pyc
 *.egg-info
+dist/
+build/

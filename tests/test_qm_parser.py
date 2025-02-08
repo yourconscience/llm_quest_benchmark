@@ -1,7 +1,7 @@
 """Basic tests for QM file parsing"""
 import pytest
 from pathlib import Path
-from src.qm import parse_qm, QMGame
+from llm_quest_benchmark.qm import parse_qm, QMGame
 from constants import DEFAULT_QUEST
 
 def test_qm_file_exists():

@@ -1,7 +1,7 @@
 """Basic tests for LLM agent functionality"""
 import pytest
 from unittest.mock import patch
-from src.llm_agent import QuestAgent
+from llm_quest_benchmark.llm_agent import QuestAgent
 
 @pytest.fixture
 def example_observation():
