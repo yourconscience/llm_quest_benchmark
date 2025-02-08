@@ -30,9 +30,12 @@ def parse_qm(qm_path: str) -> QMGame:
     if not qm_path.exists():
         raise FileNotFoundError(f"QM file not found: {qm_path}")
 
+    # Use correct path relative to space-rangers-quest submodule
+    parser_script = Path("space-rangers-quest/src/consoleplayer.ts").resolve()
+
     cmd = [
         "node", "-r", "ts-node/register",
-        str(Path("scripts/consoleplayer.ts").resolve()),
+        str(parser_script),
         str(qm_path), "--json"
     ]
 
@@ -53,7 +56,7 @@ def parse_qm(qm_path: str) -> QMGame:
                 choices=[QMChoice(
                     jumpId=j['toLocId'],
                     text=j['texts'][0] if j['texts'] else ""
-                ) for j in loc['jumps']]
+                ) for j in loc.get('jumps', [])]  # Используем get() для безопасности
             )
 
         return QMGame(
@@ -64,4 +67,6 @@ def parse_qm(qm_path: str) -> QMGame:
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Node parser error:\n{e.stderr}")
     except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to parse JSON from parser.\nOutput:\n{proc.stdout}\nError: {e}")
+        # Добавим больше информации для отладки
+        print(f"Raw output: {proc.stdout[:200]}...")  # Показываем первые 200 символов
+        raise ValueError(f"Failed to parse JSON from parser. Error: {e}")

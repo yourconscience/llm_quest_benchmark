@@ -1,9 +1,23 @@
-.env
+# Temporary files
 tmp/*
+
+# VSCode settings
 .vscode/*
+
+# Environment variables
+.env
+
+# Python virtual environment
 .venv/*
-.DS_Store
-space-rangers-quest/*
-package-lock.json
+
+# Node modules and package-lock
 node_modules/*
+package-lock.json
+
+# Macos
+.DS_Store
+
+# Python cache and compiled files
 src/__pycache__/*
+*.pyc
+*.egg-info

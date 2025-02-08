@@ -1,4 +1,5 @@
 *.qm
 
+space-rangers-quest/*
 # Include critical submodules
-!space-rangers-quest/src/
+!space-rangers-quest/src/lib/qmreader.ts

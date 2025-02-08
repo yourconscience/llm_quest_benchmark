@@ -4,6 +4,10 @@
 1. **Minimal TextArena Integration** - Use TextArena for agent management and evaluation infrastructure
 2. **QM First** - Focus on faithful Space Rangers quest translation rather than generic game support
 3. **Developer Happiness** - Choose interesting tech over "production-ready" solutions
+   - Explicit third-party imports using `as` aliases
+   - Type hints for all public interfaces
+   - Avoid wildcard imports
+   - Prefer full module paths for rarely used components
 
 ## Key Components
 

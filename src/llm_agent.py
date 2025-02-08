@@ -2,14 +2,12 @@
 LLM-powered agent for Space Rangers quests using TextArena's agent system
 """
 import textarena as ta
-from typing import Optional
-from pathlib import Path
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment as JinjaEnvironment, FileSystemLoader
+from constants import PROMPT_TEMPLATES_DIR
 
 # Configure Jinja environment
-TEMPLATES_DIR = Path(__file__).parent / "prompt_templates"
-env = Environment(
-    loader=FileSystemLoader(TEMPLATES_DIR),
+env = JinjaEnvironment(
+    loader=FileSystemLoader(PROMPT_TEMPLATES_DIR),
     trim_blocks=True,
     lstrip_blocks=True
 )

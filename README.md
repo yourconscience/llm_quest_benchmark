@@ -28,7 +28,7 @@ source .venv/bin/activate  # Linux/MacOS
 
 3. Install dependencies:
 ```bash
-pip install -r requirements.txt
+pip install .
 npm install --prefix space-rangers-quest --legacy-peer-deps
 ```
 
