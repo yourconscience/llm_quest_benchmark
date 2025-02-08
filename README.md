@@ -38,15 +38,21 @@ cp .env.example .env
 # Edit .env with your API keys
 ```
 
-## Basic Usage
+## Entry points
 
-Run from project root with venv activated:
+1. Run quest with live rendering:
 
 ```bash
-# From project root directory
-python scripts/run_llm_quest.py \
-  --quest quests/boat.qm \
-  --log-level debug
+llm-quest --quest quests/boat.qm --log-level debug
+```
+For headless operation:
+```bash
+llm-quest --log-level warning --output metrics.json > /dev/null
+```
+
+2. Analyze metrics:
+```bash
+llm-analyze metrics.json
 ```
 
 Key options:
@@ -54,10 +60,6 @@ Key options:
 - `--log-level`: Set logging verbosity (debug, info, warning)
 - `--output`: Save run metrics to JSON file
 
-Live rendering requires terminal support. For headless operation:
-```bash
-python -m scripts.test_llm_quest --log-level warning > /dev/null
-```
 
 ## Current Status [WIP]:
 - [x] Simple parser for QM files
@@ -79,13 +81,18 @@ python -m scripts.test_llm_quest --log-level warning > /dev/null
 
 ## Project Structure
 
-- `src/` - Core components
-  - `qm.py` - QM file parser
-  - `llm_agent.py` - LLM-powered quest agent
-  - `prompt_templates/` - Jinja templates for prompts
-- `scripts/` - Utility scripts
-- `tests/` - Test suite
+- `llm_quest_benchmark/` - Core package
+  - `agents/` - Agent implementations
+    - `llm_agent.py` - LLM-powered quest agent
+  - `parsers/` - File parsers
+    - `qm/` - QM file parsing
+  - `renderers/` - Output renderers
+  - `prompt_templates/` - Jinja templates
+  - `scripts/` - CLI entry points
+  - `tests/` - Test suite
 - `quests/` - Example QM files
+- `space-rangers-quest/` - TypeScript console player for Space Rangers quests
+- `docs/` - Documentation and roadmap
 
 
 ## License

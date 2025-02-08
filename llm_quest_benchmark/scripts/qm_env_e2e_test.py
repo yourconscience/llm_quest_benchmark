@@ -4,10 +4,10 @@ This script registers the QMPlayer environment, creates a simple dummy agent,
 and runs a game loop.
 """
 
-import os
 from pathlib import Path
 import textarena as ta
 from textarena.envs.registration import register as ta_register
+from llm_quest_benchmark.constants import QUESTS_DIR  # Use project constants
 
 # Add src to Python path
 import sys
@@ -17,9 +17,8 @@ sys.path.append(str(project_root))
 # Register our custom QMPlayer environment
 ta_register(
     id="QMPlayer-v0",
-    entry_point="src.qm_adapter:QMPlayerEnv",
-    # Pass only the specific parameters needed by QMPlayerEnv
-    qm_file=str(project_root / "quests" / "boat.qm"),
+    entry_point="llm_quest_benchmark.environments.qm_env:QMPlayerEnv",
+    qm_file=str(QUESTS_DIR / "boat.qm"),  # Use QUESTS_DIR constant
     max_steps=100
 )
 

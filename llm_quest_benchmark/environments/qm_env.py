@@ -1,7 +1,7 @@
 """TextArena environment for Space Rangers quests"""
 import textarena as ta
 from pathlib import Path
-from .qm import parse_qm, QMGame
+from llm_quest_benchmark.environments.qm import parse_qm
 from typing import Dict, Any
 
 class QMPlayerEnv(ta.Env):

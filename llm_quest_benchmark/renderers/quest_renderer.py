@@ -9,9 +9,9 @@ from rich.table import Table as RichTable
 from rich.text import Text as RichText
 from rich.box import ROUNDED as RichRounded
 import textarena as ta
-from textarena.wrappers import RenderWrapper  # Add TextArena integration
+from textarena.wrappers import SimpleRenderWrapper  # Add TextArena integration
 
-class QuestRenderer(RenderWrapper):  # Change base class
+class QuestRenderer(SimpleRenderWrapper):  # Change base class
     """
     Rich-based renderer for Space Rangers quests with TextArena integration
     Preserves existing history tracking while adding TextArena compatibility
@@ -22,8 +22,7 @@ class QuestRenderer(RenderWrapper):  # Change base class
         self.console = RichConsole()
         self.show_analysis = show_analysis
         self.history: List[Dict] = []
-        self.layout = RichLayout()
-        self._setup_layout()
+        self.layout = self._create_layout()
 
     def _create_layout(self) -> RichLayout:
         """Create the base layout"""

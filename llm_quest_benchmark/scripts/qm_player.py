@@ -1,8 +1,13 @@
+"""
+Interactive Space Rangers quests console player
+"""
+
 import subprocess
 import argparse
 import os
 import shutil
 from pathlib import Path
+from llm_quest_benchmark.constants import PROJECT_ROOT
 
 def find_node_executable() -> str:
     """Find the node executable in PATH or common locations"""
@@ -25,9 +30,9 @@ def find_node_executable() -> str:
         "Could not find node executable. Ensure Node.js is installed and in PATH."
     )
 
-def run_quest(quest_path: str):
-    """Run quest in interactive mode using TypeScript console player"""
-    ts_path = Path("space-rangers-quest")
+def play_quest(quest_path: str):
+    """Play quest in interactive mode using TypeScript console player"""
+    ts_path = PROJECT_ROOT / "space-rangers-quest"
     if not ts_path.exists():
         raise FileNotFoundError("Space Rangers submodule not found")
 
@@ -39,10 +44,13 @@ def run_quest(quest_path: str):
     # Get full path to node executable
     node_exe = find_node_executable()
 
+    # Update consoleplayer.ts path
+    consoleplayer_path = PROJECT_ROOT / "llm_quest_benchmark" / "parsers" / "qm" / "consoleplayer.ts"
+
     cmd = [
         node_exe,  # Use full path to node
         "-r", "ts-node/register",
-        str(Path("scripts/consoleplayer.ts").resolve()),
+        str(consoleplayer_path),
         str(quest_path)
     ]
 
@@ -64,9 +72,14 @@ def run_quest(quest_path: str):
         print(f"\nError running quest: {e}")
         raise
 
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser(description="Run Space Rangers quest interactively")
     parser.add_argument("quest_path", help="Path to the .qm file")
     args = parser.parse_args()
 
-    run_quest(args.quest_path)
+    play_quest(args.quest_path)
+
+
+if __name__ == "__main__":
+    main()

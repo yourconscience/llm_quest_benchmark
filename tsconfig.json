@@ -9,7 +9,7 @@
         "outDir": "dist"
     },
     "include": [
-        "scripts/**/*",
+        "llm_quest_benchmark/scripts/**/*",
         "space-rangers-quest/src/**/*"
     ]
-} 
+}

@@ -2,7 +2,7 @@
 from pathlib import Path
 
 # Project paths
-PROJECT_ROOT = Path(__file__).parent
+PROJECT_ROOT = Path(__file__).parent.parent
 PROMPT_TEMPLATES_DIR = PROJECT_ROOT / "llm_quest_benchmark" / "prompt_templates"
 QUESTS_DIR = PROJECT_ROOT / "quests"
 

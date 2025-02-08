@@ -3,9 +3,8 @@ LLM-powered agent for Space Rangers quests using TextArena's agent system
 """
 import textarena as ta
 from jinja2 import Environment as JinjaEnvironment, FileSystemLoader
-from constants import PROMPT_TEMPLATES_DIR
+from llm_quest_benchmark.constants import PROMPT_TEMPLATES_DIR
 import logging
-from typing import Optional, Dict, Any
 
 # Configure Jinja environment
 env = JinjaEnvironment(

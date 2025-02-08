@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import json
 from pydantic import BaseModel
+from llm_quest_benchmark.constants import PROJECT_ROOT
 
 class QMChoice(BaseModel):
     """A single choice/action in a location"""
@@ -30,8 +31,8 @@ def parse_qm(qm_path: str) -> QMGame:
     if not qm_path.exists():
         raise FileNotFoundError(f"QM file not found: {qm_path}")
 
-    # Use correct path relative to space-rangers-quest submodule
-    parser_script = Path("space-rangers-quest/src/consoleplayer.ts").resolve()
+    # Use correct path to parser in our package
+    parser_script = PROJECT_ROOT / "llm_quest_benchmark" / "scripts" / "consoleplayer.ts"
 
     cmd = [
         "node", "-r", "ts-node/register",

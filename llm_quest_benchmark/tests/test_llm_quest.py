@@ -41,8 +41,8 @@ def main():
     )
 
     # Initialize components
-    from llm_quest_benchmark.qm_adapter import QMPlayerEnv
-    from llm_quest_benchmark.llm_agent import QuestAgent
+    from llm_quest_benchmark.environments.qm_env import QMPlayerEnv
+    from llm_quest_benchmark.agents.llm_agent import QuestAgent
     from llm_quest_benchmark.renderers.quest_renderer import QuestRenderer
 
     env = QMPlayerEnv(args.quest)

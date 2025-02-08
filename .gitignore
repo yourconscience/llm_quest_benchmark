@@ -18,7 +18,7 @@ package-lock.json
 .DS_Store
 
 # Python cache, compiled and build files
-src/__pycache__/*
+llm_quest_benchmark/**/__pycache__/
 *.pyc
 *.egg-info
 dist/

@@ -1,5 +1,5 @@
-import { QMPlayer } from "../space-rangers-quest/src/lib/qmplayer";
-import { parse } from "../space-rangers-quest/src/lib/qmreader";
+import { QMPlayer } from "../../space-rangers-quest/src/lib/qmplayer";
+import { parse } from "../../space-rangers-quest/src/lib/qmreader";
 import * as fs from "fs";
 import * as process from "process";
 import * as readline from "readline";
