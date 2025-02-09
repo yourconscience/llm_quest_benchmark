@@ -7,7 +7,8 @@ and runs a game loop.
 from pathlib import Path
 import textarena as ta
 from textarena.envs.registration import register as ta_register
-from llm_quest_benchmark.constants import QUESTS_DIR  # Use project constants
+
+from llm_quest_benchmark import constants  # Use project constants
 
 # Add src to Python path
 import sys
@@ -18,7 +19,7 @@ sys.path.append(str(project_root))
 ta_register(
     id="QMPlayer-v0",
     entry_point="llm_quest_benchmark.environments.qm_env:QMPlayerEnv",
-    qm_file=str(QUESTS_DIR / "boat.qm"),  # Use QUESTS_DIR constant
+    qm_file=str(constants.DEFAULT_QUEST),  # Use QUESTS_DIR constant
     max_steps=100
 )
 

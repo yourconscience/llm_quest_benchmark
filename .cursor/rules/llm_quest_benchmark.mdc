@@ -1,0 +1,43 @@
+---
+description: LLM Quest Benchmart Project
+globs: 
+---
+################################################################################
+#  Rules for llm-quest-benchmark project     #
+################################################################################
+
+PROJECT_NAME: llm-quest-benchmark
+GOAL: Benchmark LLM performance on Space Rangers text quests; build a robust evaluation framework. Target: Next Week.
+VERSION: 0.2.0
+
+# Core Principles (Specific to this project)
+PROJECT_PRINCIPLES:
+  - QM_FIRST: Focus on Space Rangers quests.
+  - DEVELOPER_HAPPINESS: Prioritize interesting tech and rapid iteration.
+  - MINIMAL_TEXTARENA: Use TextArena for infrastructure, but keep custom components focused.
+
+# Key Files/Directories (Update this as your project evolves)
+# This section provides a high-level overview, not an exhaustive list.
+CONTEXT_FILES:
+  - README.md: Project overview and setup.
+  - roadmap.md: Project roadmap.
+  - llm_quest_benchmark/scripts/llm_quest.py: Main benchmarking script.
+  - space-rangers-quest/src/lib/qmreader.ts: QM parser (TypeScript).
+  - llm_quest_benchmark/agents/llm_agent.py: Example LLM agent.
+
+# Tools and Commands (Specific to this project)
+# Provide concise descriptions and usage examples.
+TOOLS:
+  - llm-quest: Run a quest and benchmark an LLM agent.
+    - Usage: `llm-quest --quest <quest_path> --log-level <level>`
+  - llm-analyze: Analyze benchmark results.
+    - Usage: `llm-analyze <metrics_file>`
+  - qm_player.py: Play quests interactively.
+    - Usage: `python llm_quest_benchmark/scripts/qm_player.py <quest_path>`
+  - npm run pack-game-data (in space-rangers-quest): Pack game data.
+    - Usage: `cd space-rangers-quest; npm run pack-game-data`
+
+# Known Issues/Limitations (Optional, but helpful)
+KNOWN_ISSUES:
+  - QM parsing may not support all quest formats.
+  - The `space-rangers-quest` submodule requires specific build steps.

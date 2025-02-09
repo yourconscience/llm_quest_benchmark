@@ -45,7 +45,7 @@ def play_quest(quest_path: str):
     node_exe = find_node_executable()
 
     # Update consoleplayer.ts path
-    consoleplayer_path = PROJECT_ROOT / "llm_quest_benchmark" / "parsers" / "qm" / "consoleplayer.ts"
+    consoleplayer_path = PROJECT_ROOT / "llm_quest_benchmark" / "scripts" / "consoleplayer.ts"
 
     cmd = [
         node_exe,  # Use full path to node

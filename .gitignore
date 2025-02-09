@@ -1,6 +1,11 @@
 # Temporary files
 tmp/*
 
+# Quest files and utils
+quests/*
+!quests/boat.qm
+tge/*
+
 # VSCode settings
 .vscode/*
 

@@ -8,6 +8,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from llm_quest_benchmark import constants
+
 def validate_project_structure():
     """Ensure script is run from project root with required directories"""
     required_dirs = [
@@ -26,7 +28,7 @@ def main():
     validate_project_structure()
 
     parser = argparse.ArgumentParser(description="Run LLM agent on Space Rangers quest")
-    parser.add_argument("--quest", type=str, default="quests/boat.qm",
+    parser.add_argument("--quest", type=str, default=constants.DEFAULT_QUEST,
                       help="Path to QM quest file")
     parser.add_argument("--log-level", choices=["debug", "info", "warning"], default="info",
                       help="Logging verbosity level")

@@ -11,7 +11,7 @@ setup(
     package_data={
         "llm_quest_benchmark": [
             "prompt_templates/*.jinja",
-            "parsers/qm/*.ts"
+            "scripts/*.ts"
         ]
     },
     install_requires=get_requirements(),
