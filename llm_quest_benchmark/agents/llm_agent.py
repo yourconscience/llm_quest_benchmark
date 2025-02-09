@@ -1,28 +1,28 @@
 """
 LLM-powered agent for Space Rangers quests using TextArena's agent system
 """
-import textarena as ta
-from jinja2 import Environment as JinjaEnvironment, FileSystemLoader
-from llm_quest_benchmark.constants import PROMPT_TEMPLATES_DIR
 import logging
 
+import textarena as ta
+from jinja2 import Environment as JinjaEnvironment
+from jinja2 import FileSystemLoader
+
+from llm_quest_benchmark.constants import PROMPT_TEMPLATES_DIR
+
 # Configure Jinja environment
-env = JinjaEnvironment(
-    loader=FileSystemLoader(PROMPT_TEMPLATES_DIR),
-    trim_blocks=True,
-    lstrip_blocks=True
-)
+env = JinjaEnvironment(loader=FileSystemLoader(PROMPT_TEMPLATES_DIR),
+                       trim_blocks=True,
+                       lstrip_blocks=True)
+
 
 class QuestAgent(ta.Agent):
     """TextArena agent specialized for Space Rangers quests"""
 
-    def __init__(
-        self,
-        model: str = "claude-3.5-sonnet",
-        temperature: float = 0.4,
-        debug: bool = False,
-        **kwargs
-    ):
+    def __init__(self,
+                 model: str = "claude-3.5-sonnet",
+                 temperature: float = 0.4,
+                 debug: bool = False,
+                 **kwargs):
         super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.debug = debug
@@ -32,13 +32,11 @@ class QuestAgent(ta.Agent):
         self.action_template = env.get_template("action_choice.jinja")
 
         # Initialize agent with rendered system prompt
-        self.agent = ta.agents.OpenRouterAgent(
-            model_name=model,
-            system_prompt=self.system_template.render(),
-            temperature=temperature,
-            max_tokens=256,
-            **kwargs
-        )
+        self.agent = ta.agents.OpenRouterAgent(model_name=model,
+                                               system_prompt=self.system_template.render(),
+                                               temperature=temperature,
+                                               max_tokens=256,
+                                               **kwargs)
 
         if self.debug:
             self.logger.setLevel(logging.DEBUG)
@@ -70,10 +68,7 @@ class QuestAgent(ta.Agent):
             return "0"  # Emergency exit
 
         # Render prompt using template
-        prompt = self.action_template.render(
-            observation=observation,
-            choices=choices
-        )
+        prompt = self.action_template.render(observation=observation, choices=choices)
         if self.debug:
             self.logger.debug(f"\nPrompt:\n{prompt}")
 
@@ -98,8 +93,8 @@ class StrategicQuestAgent(ta.AgentWrapper):
     def __call__(self, observation: str) -> str:
         # First, analyze the situation
         analysis = self.agent(
-            "Analyze this situation and explain your thinking step-by-step instead of choosing an action:\n" + observation
-        )
+            "Analyze this situation and explain your thinking step-by-step instead of choosing an action:\n"
+            + observation)
         if self.debug:
             print(f"\nAnalysis: {analysis}")
 

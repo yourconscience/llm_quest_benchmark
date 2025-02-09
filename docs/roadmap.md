@@ -128,3 +128,14 @@ This keeps the architecture focused while letting you explore modern LLM ops too
    - Local development setup
    - Containerized evaluation
    - Results tracking
+
+# Development Standards
+
+## Code Style
+- All Python code formatted with yapf (.style.yapf) and isort (.isort.cfg)
+- Pre-commit hooks enforce:
+  - Import sorting (isort)
+  - Code formatting (yapf)
+  - Type checking (mypy)
+  - Linting (flake8)
+- Run `pre-commit install` after cloning

@@ -36,8 +36,13 @@ TOOLS:
     - Usage: `python llm_quest_benchmark/scripts/qm_player.py <quest_path>`
   - npm run pack-game-data (in space-rangers-quest): Pack game data.
     - Usage: `cd space-rangers-quest; npm run pack-game-data`
+  - pre-commit: Maintain code quality
+    - Usage: `pre-commit run --all-files`
+  - format: Auto-format code
+    - Usage: `yapf -irp . && isort .`
 
-# Known Issues/Limitations (Optional, but helpful)
-KNOWN_ISSUES:
-  - QM parsing may not support all quest formats.
-  - The `space-rangers-quest` submodule requires specific build steps.
+# Development Standards
+STANDARDS:
+  - CODE_STYLE: All code must pass pre-commit checks
+  - TYPING: Use type hints for all public interfaces
+  - DOCS: Keep docs updated with code changes

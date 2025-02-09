@@ -4,14 +4,15 @@ This script registers the QMPlayer environment, creates a simple dummy agent,
 and runs a game loop.
 """
 
+# Add src to Python path
+import sys
 from pathlib import Path
+
 import textarena as ta
 from textarena.envs.registration import register as ta_register
 
 from llm_quest_benchmark import constants  # Use project constants
 
-# Add src to Python path
-import sys
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
@@ -20,15 +21,17 @@ ta_register(
     id="QMPlayer-v0",
     entry_point="llm_quest_benchmark.environments.qm_env:QMPlayerEnv",
     qm_file=str(constants.DEFAULT_QUEST),  # Use QUESTS_DIR constant
-    max_steps=100
-)
+    max_steps=100)
+
 
 class DummyAgent:
     """Simple agent that always selects the first option"""
+
     def __call__(self, observation: str) -> str:
         print("\n--- Agent Observation ---")
         print(observation)
         return "1"  # Always choose first option
+
 
 def main():
     # Create and wrap the environment
@@ -57,6 +60,7 @@ def main():
         raise  # Re-raise to see full traceback during testing
     finally:
         env.close()
+
 
 if __name__ == "__main__":
     main()

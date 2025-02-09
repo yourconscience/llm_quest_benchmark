@@ -1,8 +1,11 @@
 """TextArena environment for Space Rangers quests"""
-import textarena as ta
 from pathlib import Path
+from typing import Any, Dict
+
+import textarena as ta
+
 from llm_quest_benchmark.environments.qm import parse_qm
-from typing import Dict, Any
+
 
 class QMPlayerEnv(ta.Env):
     """TextArena environment for Space Rangers quests"""
@@ -15,11 +18,7 @@ class QMPlayerEnv(ta.Env):
         self.qm_data = parse_qm(str(self.qm_file))
 
         # Initialize TextArena state
-        self.state = ta.State(
-            num_players=1,
-            max_turns=max_steps,
-            role_mapping={0: "Player"}
-        )
+        self.state = ta.State(num_players=1, max_turns=max_steps, role_mapping={0: "Player"})
 
         # Track current location
         self.current_loc_id = self.qm_data.start_id
@@ -49,10 +48,8 @@ class QMPlayerEnv(ta.Env):
 
         self.current_loc_id = self.qm_data.start_id
 
-        self.state.reset(
-            game_state={"description": self._get_location_description()},
-            player_prompt_function=lambda pid, gs: gs["description"]
-        )
+        self.state.reset(game_state={"description": self._get_location_description()},
+                         player_prompt_function=lambda pid, gs: gs["description"])
         return self.state.observations
 
     def step(self, action: str):
@@ -72,12 +69,10 @@ class QMPlayerEnv(ta.Env):
             self.current_loc_id = choice.jumpId
 
             # Update state
-            self.state.add_observation(
-                from_id=ta.GAME_ID,
-                to_id=0,
-                message=self._get_location_description(),
-                for_logging=True
-            )
+            self.state.add_observation(from_id=ta.GAME_ID,
+                                       to_id=0,
+                                       message=self._get_location_description(),
+                                       for_logging=True)
 
             # Check if quest ended (no more choices)
             new_loc = self.qm_data.get_location(self.current_loc_id)
@@ -89,16 +84,11 @@ class QMPlayerEnv(ta.Env):
 
         except (ValueError, IndexError) as e:
             self.metrics['invalid_actions'] += 1
-            self.metrics['error_log'].append({
-                'step': self.metrics['steps_taken'],
-                'error': str(e)
-            })
-            self.state.add_observation(
-                from_id=ta.GAME_ID,
-                to_id=0,
-                message=f"Invalid action: {action}. Error: {str(e)}",
-                for_logging=True
-            )
+            self.metrics['error_log'].append({'step': self.metrics['steps_taken'], 'error': str(e)})
+            self.state.add_observation(from_id=ta.GAME_ID,
+                                       to_id=0,
+                                       message=f"Invalid action: {action}. Error: {str(e)}",
+                                       for_logging=True)
             return self.state.observations, {0: -1}, True, {"error": str(e)}
 
     def render(self, mode: str = "human") -> None:

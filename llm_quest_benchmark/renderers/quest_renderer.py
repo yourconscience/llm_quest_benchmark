@@ -2,14 +2,16 @@
 Rich-based renderer for Space Rangers quests
 """
 from typing import Dict, List, Optional
+
+import textarena as ta
+from rich.box import ROUNDED as RichRounded
 from rich.console import Console as RichConsole
-from rich.panel import Panel as RichPanel
 from rich.layout import Layout as RichLayout
+from rich.panel import Panel as RichPanel
 from rich.table import Table as RichTable
 from rich.text import Text as RichText
-from rich.box import ROUNDED as RichRounded
-import textarena as ta
 from textarena.wrappers import SimpleRenderWrapper  # Add TextArena integration
+
 
 class QuestRenderer(SimpleRenderWrapper):  # Change base class
     """
@@ -28,11 +30,8 @@ class QuestRenderer(SimpleRenderWrapper):  # Change base class
         """Create the base layout"""
         layout = RichLayout()
 
-        layout.split(
-            RichLayout(name="header", size=3),
-            RichLayout(name="main"),
-            RichLayout(name="footer", size=3)
-        )
+        layout.split(RichLayout(name="header", size=3), RichLayout(name="main"),
+                     RichLayout(name="footer", size=3))
 
         layout["main"].split_row(
             RichLayout(name="content", ratio=2),
@@ -43,12 +42,10 @@ class QuestRenderer(SimpleRenderWrapper):  # Change base class
 
     def _render_location(self, observation: str) -> RichPanel:
         """Render the current location"""
-        return RichPanel(
-            RichText(observation),
-            title="Current Location",
-            border_style="blue",
-            box=RichRounded
-        )
+        return RichPanel(RichText(observation),
+                         title="Current Location",
+                         border_style="blue",
+                         box=RichRounded)
 
     def _render_history(self) -> RichPanel:
         """Render action history"""
@@ -57,28 +54,19 @@ class QuestRenderer(SimpleRenderWrapper):  # Change base class
         table.add_column("Action")
 
         for i, entry in enumerate(self.history[-10:], 1):  # Show last 10 actions
-            table.add_row(
-                str(i),
-                str(entry.get('action', ''))
-            )
+            table.add_row(str(i), str(entry.get('action', '')))
 
-        return RichPanel(
-            table,
-            title="History",
-            border_style="green"
-        )
+        return RichPanel(table, title="History", border_style="green")
 
     def _render_analysis(self, analysis: Optional[str]) -> RichPanel:
         """Render agent's analysis if available"""
         if not analysis:
             return RichPanel("No analysis available", title="Analysis")
 
-        return RichPanel(
-            RichText(analysis),
-            title="Analysis",
-            border_style="yellow",
-            box=RichRounded
-        )
+        return RichPanel(RichText(analysis),
+                         title="Analysis",
+                         border_style="yellow",
+                         box=RichRounded)
 
     def _render_parameters(self, state) -> RichTable:
         """Extract parameters from TextArena state"""
@@ -117,8 +105,7 @@ class QuestRenderer(SimpleRenderWrapper):  # Change base class
         params_panel = self._render_parameters(state)
         history_panel = self._render_history()
         analysis_panel = self._render_analysis(
-            self.history[-1].get('analysis') if self.history and self.show_analysis else None
-        )
+            self.history[-1].get('analysis') if self.history and self.show_analysis else None)
 
         # Update layout sections
         self.layout["main"]["state"].update(state_panel)

@@ -1,27 +1,22 @@
 """
 Main quest runner implementation
 """
+import json
 import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
-import json
 
-from llm_quest_benchmark.environments.qm_env import QMPlayerEnv
 from llm_quest_benchmark.agents.llm_agent import QuestAgent
+from llm_quest_benchmark.environments.qm_env import QMPlayerEnv
 from llm_quest_benchmark.renderers.quest_renderer import QuestRenderer
 
-def run_quest(
-    quest: str,
-    log_level: str = "info",
-    output: Optional[str] = None
-) -> int:
+
+def run_quest(quest: str, log_level: str = "info", output: Optional[str] = None) -> int:
 
     # Configure logging
-    logging.basicConfig(
-        level=log_level.upper(),
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    logging.basicConfig(level=log_level.upper(),
+                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     logging.info("Runner started!")
 

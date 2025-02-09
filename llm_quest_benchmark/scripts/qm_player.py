@@ -2,37 +2,36 @@
 Interactive Space Rangers quests console player with rich terminal output
 """
 
-import subprocess
 import argparse
+import json
 import os
 import shutil
-import json
+import subprocess
 from pathlib import Path
+
 from llm_quest_benchmark.constants import PROJECT_ROOT
-from llm_quest_benchmark.utils.text_processor import process_game_state
 from llm_quest_benchmark.renderers.terminal import TerminalRenderer
+from llm_quest_benchmark.utils.text_processor import process_game_state
 
 
 def find_node_executable() -> str:
     """Find the node executable in PATH or common locations"""
-    # First try to find node in PATH
     node_path = shutil.which("node")
     if node_path:
         return node_path
 
-    # Common locations for node
     common_paths = [
         "/usr/local/bin/node",
         "/usr/bin/node",
-        "/opt/homebrew/bin/node",  # Common on macOS
+        "/opt/homebrew/bin/node",  # macOS
     ]
     for path in common_paths:
         if os.path.isfile(path):
             return path
 
     raise FileNotFoundError(
-        "Could not find node executable. Ensure Node.js is installed and in PATH."
-    )
+        "Could not find node executable. Install Node.js and ensure it's in PATH.")
+
 
 def play_quest(quest_path: str, language: str):
     """Play quest in interactive mode using TypeScript console player"""
@@ -51,21 +50,24 @@ def play_quest(quest_path: str, language: str):
 
     cmd = [
         node_exe,
-        "-r", "ts-node/register",
+        "-r",
+        "ts-node/register",
         str(consoleplayer_path),
-        str(quest_path)
+        str(quest_path),
     ]
 
     try:
         process = subprocess.Popen(
             cmd,
             cwd=str(PROJECT_ROOT),
-            env={**os.environ, "LANG": language},
+            env={
+                **os.environ, "LANG": language
+            },
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             bufsize=1,
-            universal_newlines=True
+            universal_newlines=True,
         )
 
         while True:
@@ -74,10 +76,8 @@ def play_quest(quest_path: str, language: str):
                 break
             if line:
                 try:
-                    # Parse JSON and clean text
                     raw_state = json.loads(line.strip())
                     game_state = process_game_state(raw_state)
-                    # Render the cleaned state
                     renderer.render_game_state(game_state)
                 except json.JSONDecodeError:
                     renderer.render_error(f"Invalid game state: {line.strip()}")
@@ -94,19 +94,25 @@ def play_quest(quest_path: str, language: str):
         renderer.render_error(f"Unexpected error: {e}")
         raise
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run Space Rangers quest interactively",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("quest_path", help="Path to the .qm file")
-    parser.add_argument("--lang", choices=["rus", "eng"], default="rus",
-                      help="Language for quest text (default: rus)")
+    parser.add_argument(
+        "--lang",
+        choices=["rus", "eng"],
+        default="rus",
+        help="Language for quest text (default: rus)",
+    )
     args = parser.parse_args()
 
     renderer = TerminalRenderer()
     renderer.render_title()
     play_quest(args.quest_path, args.lang)
+
 
 if __name__ == "__main__":
     main()

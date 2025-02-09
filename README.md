@@ -26,9 +26,9 @@ source .venv/bin/activate  # Linux/MacOS
 .venv\Scripts\activate  # Windows
 ```
 
-3. Install in development mode:
+3. Install package + dependencies:
 ```bash
-pip install -e .
+pip install .
 npm install --prefix space-rangers-quest --legacy-peer-deps
 ```
 

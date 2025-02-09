@@ -1,0 +1,19 @@
+repos:
+  - repo: local
+    hooks:
+      - id: yapf
+        name: yapf
+        entry: yapf
+        language: system
+        types: [python]
+        args:
+          - '-i'
+          - '--style=./.style.yapf'
+      - id: isort
+        name: isort
+        entry: isort
+        language: system
+        types: [python]
+        args:
+          - '--sp'
+          - './.isort.cfg'

@@ -1,21 +1,26 @@
 """QM file parsing and data structures for Space Rangers quests"""
-from typing import Dict, List, Any
-from pathlib import Path
-import subprocess
 import json
+import subprocess
+from pathlib import Path
+from typing import Any, Dict, List
+
 from pydantic import BaseModel
+
 from llm_quest_benchmark.constants import PROJECT_ROOT
+
 
 class QMChoice(BaseModel):
     """A single choice/action in a location"""
     jumpId: int
     text: str
 
+
 class QMLocation(BaseModel):
     """A location in the quest with its text and available choices"""
     id: int
     text: str
     choices: List[QMChoice]
+
 
 class QMGame(BaseModel):
     """Complete quest state"""
@@ -24,6 +29,7 @@ class QMGame(BaseModel):
 
     def get_location(self, loc_id: int) -> QMLocation:
         return self.locations[loc_id]
+
 
 def parse_qm(qm_path: str) -> QMGame:
     """Parse QM file using space-rangers-quest TypeScript parser"""
@@ -34,11 +40,7 @@ def parse_qm(qm_path: str) -> QMGame:
     # Use correct path to parser in our package
     parser_script = PROJECT_ROOT / "llm_quest_benchmark" / "scripts" / "consoleplayer.ts"
 
-    cmd = [
-        "node", "-r", "ts-node/register",
-        str(parser_script),
-        str(qm_path), "--json"
-    ]
+    cmd = ["node", "-r", "ts-node/register", str(parser_script), str(qm_path), "--json"]
 
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -54,16 +56,13 @@ def parse_qm(qm_path: str) -> QMGame:
             locations[int(loc_id)] = QMLocation(
                 id=int(loc_id),
                 text=loc['texts'][0] if loc['texts'] else "",
-                choices=[QMChoice(
-                    jumpId=j['toLocId'],
-                    text=j['texts'][0] if j['texts'] else ""
-                ) for j in loc.get('jumps', [])]  # Используем get() для безопасности
+                choices=[
+                    QMChoice(jumpId=j['toLocId'], text=j['texts'][0] if j['texts'] else "")
+                    for j in loc.get('jumps', [])
+                ]  # Используем get() для безопасности
             )
 
-        return QMGame(
-            start_id=state['locId'],
-            locations=locations
-        )
+        return QMGame(start_id=state['locId'], locations=locations)
 
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Node parser error:\n{e.stderr}")
