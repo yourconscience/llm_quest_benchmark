@@ -5,7 +5,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
+from llm_quest_benchmark.utils import choice_mapper, text_processor
 
 
 class TerminalRenderer:
@@ -28,8 +28,9 @@ class TerminalRenderer:
 
     def render_quest_text(self, text: str):
         """Render quest text with scroll effect"""
+        cleaned_text = text_processor.clean_qm_text(text)
         panel = Panel.fit(
-            f"[italic]{text}[/]",
+            f"[italic]{cleaned_text}[/]",
             title="[bold cyan]📜 Quest Log[/]",
             title_align="left",
             border_style="cyan",
@@ -47,10 +48,15 @@ class TerminalRenderer:
         param_table.add_column(style="green")
 
         for param in params:
-            param_table.add_row(
-                f"{param['name']}:",
-                str(param['value']),
-            )
+            if isinstance(param, dict):
+                # If the parameter is a dict, expect 'name' and 'value'
+                param_name = param.get('name', '')
+                param_value = param.get('value', '')
+            else:
+                # If it's not a dict, assume it's a string—clean it first.
+                param_name = ""
+                param_value = text_processor.clean_qm_text(str(param))
+            param_table.add_row(param_name, param_value)
 
         self.console.print(
             Panel(
@@ -63,7 +69,7 @@ class TerminalRenderer:
 
     def render_choices(self, choices: list):
         """Render choices with sequential numbers"""
-        self.choice_mapper = ChoiceMapper(choices)
+        self.choice_mapper = choice_mapper.ChoiceMapper(choices)
         grid = Table.grid(padding=(0, 2), expand=False)
         grid.add_column(justify="right", width=6)
         grid.add_column(style="bold green", min_width=40)
@@ -107,7 +113,12 @@ class TerminalRenderer:
         self.render_choices(state['choices'])
         self.console.print("\n")
 
-    def prompt_choice(self, choice_mapper: ChoiceMapper) -> int:
+    def prompt_choice(self, choice_mapper: choice_mapper.ChoiceMapper, skip: bool = False) -> int:
+        # If skip is set and there is only one available choice, auto-select it.
+        if skip and len(choice_mapper.get_valid_choices()) == 1:
+            self.console.print("[dim]Auto-selecting the only available choice.[/dim]")
+            return choice_mapper.get_jump_id(choice_mapper.get_valid_choices()[0])
+
         while True:
             try:
                 choice = self.console.input("[bold yellow]Enter choice number (or 'q' to quit): [/]")

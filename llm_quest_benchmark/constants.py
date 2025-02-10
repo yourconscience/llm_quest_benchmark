@@ -10,3 +10,4 @@ QUESTS_DIR = PROJECT_ROOT / "quests"
 DEFAULT_QUEST = QUESTS_DIR / "boat.qm"
 
 MODEL_CHOICES = ["gpt-4o", "sonnet", "deepseek"]
+DEFAULT_MODEL = "gpt-4o"

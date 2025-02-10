@@ -11,8 +11,8 @@ import typer
 from typing_extensions import Annotated
 
 from llm_quest_benchmark.scripts.qm_player import play_quest as play_quest_func
-from llm_quest_benchmark.scripts.run_quest import run_quest as run_quest_func
-from llm_quest_benchmark.constants import MODEL_CHOICES
+from llm_quest_benchmark.runner import run_quest as run_quest_func
+from llm_quest_benchmark.constants import MODEL_CHOICES, DEFAULT_MODEL
 
 app = typer.Typer(
     help="llm-quest: Command-line tools for LLM Quest Benchmark.",
@@ -59,9 +59,9 @@ def run(
         typer.Option(
             "--model",
             "-m",
-            help="Model for the LLM agent.",
+            help="Model for the LLM agent (choices: " + ", ".join(MODEL_CHOICES) + ").",
         ),
-    ] = None,
+    ] = DEFAULT_MODEL,
 ):
     exit_code = run_quest_func(str(quest), log_level, output, model)
     raise typer.Exit(code=exit_code)
@@ -83,7 +83,13 @@ def analyze(
         ),
     ],
 ):
-    analyze_metrics_func(str(metrics_file))
+    # We call the analyze function from an assumed module.
+    # If you have a separate analyze tool, invoke it here.
+    # For this example, we'll just read and print the metrics.
+    import json
+    with open(str(metrics_file), "r") as f:
+        metrics = json.load(f)
+    typer.echo(json.dumps(metrics, indent=2))
 
 
 @app.command(help="Play a quest interactively in the console.")
@@ -109,8 +115,15 @@ def play(
             help="Language for quest text (rus, eng).",
         ),
     ] = "rus",
+    skip: Annotated[
+        bool,
+        typer.Option(
+            "--skip",
+            help="Automatically select screens with only one available option.",
+        ),
+    ] = False,
 ):
-    play_quest_func(str(quest), language)
+    play_quest_func(str(quest), language, skip)
 
 
 if __name__ == "__main__":

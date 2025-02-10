@@ -34,7 +34,7 @@ def find_node_executable() -> str:
         "Could not find node executable. Install Node.js and ensure it's in PATH.")
 
 
-def play_quest(quest_path: str, language: str):
+def play_quest(quest_path: str, language: str, skip: bool = False):
     """Play quest in interactive mode using TypeScript console player"""
     renderer = TerminalRenderer()
 
@@ -100,7 +100,7 @@ def play_quest(quest_path: str, language: str):
                     renderer.render_game_state(game_state)
 
                     # Get user input and send to process
-                    jump_id = renderer.prompt_choice(choice_mapper)
+                    jump_id = renderer.prompt_choice(choice_mapper, skip)
                     process.stdin.write(f"{jump_id}\n")
                     process.stdin.flush()
 

@@ -7,12 +7,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from llm_quest_benchmark.constants import DEFAULT_MODEL
 from llm_quest_benchmark.agents.llm_agent import QuestAgent
 from llm_quest_benchmark.environments.qm_env import QMPlayerEnv
 from llm_quest_benchmark.renderers.quest_renderer import QuestRenderer
 
 
-def run_quest(quest: str, log_level: str = "info", output: Optional[str] = None) -> int:
+def run_quest(quest: str,
+              log_level: str = "info",
+              output: Optional[str] = None,
+              model: str = DEFAULT_MODEL) -> int:
 
     # Configure logging
     logging.basicConfig(level=log_level.upper(),
@@ -22,7 +26,8 @@ def run_quest(quest: str, log_level: str = "info", output: Optional[str] = None)
 
     # Initialize components
     env = QMPlayerEnv(quest)
-    agent = QuestAgent(debug=(log_level == "debug"))
+    agent = QuestAgent(debug=(log_level == "debug"), model_name=model)
+    logging.info(f"Using model: {model}")
     renderer = QuestRenderer(env)
 
     # Run quest
