@@ -43,17 +43,6 @@ def run(
             help="Logging level (debug, info, warning, error).",
         ),
     ] = "info",
-    output: Annotated[
-        Optional[Path],
-        typer.Option(
-            "--output",
-            "-o",
-            help="Path to save metrics JSON file.",
-            file_okay=True,
-            dir_okay=False,
-            writable=True,
-        ),
-    ] = None,
     model: Annotated[
         str,
         typer.Option(
@@ -73,7 +62,6 @@ def run(
     exit_code = run_quest_func(
         quest=str(quest),
         log_level=log_level,
-        output=output,
         model=model,
         metrics=metrics,
     )

@@ -53,11 +53,12 @@ class MetricsLogger:
         data = {
             "quest": self.quest_file,
             "start_time": self.run_time,
+            "completed": any(step["reward"] > 0 for step in self.steps),
             "end_time": datetime.now().isoformat(),
             "steps": self.steps,
         }
 
-        with open(filepath, "w") as f:
-            json.dump(data, f, indent=2)
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
 
         return str(filepath)

@@ -4,7 +4,6 @@ import * as readline from "readline";
 import { parse } from "../../space-rangers-quest/src/lib/qmreader";
 import * as fs from "fs";
 import * as process from "process";
-import * as assert from "assert";
 import { QMPlayer } from "../../space-rangers-quest/src/lib/qmplayer";
 
 // Helper function to clean text from QM tags
@@ -65,14 +64,20 @@ rl.on('line', (input) => {
 
         const newState = player.getState();
         // Check for game end condition
-        if (newState.choices.length === 0) {
-            console.log(JSON.stringify({
+        const gameEnded = newState.choices.length === 0;
+        if (gameEnded) {
+            // Revert to a simpler final state that doesn't rely on locId or random
+            const finalState = {
+                gameEnded: true,
+                finalReward: 0,
+                // Keep text and paramsState for consistency
                 text: cleanText(newState.text),
                 paramsState: newState.paramsState,
                 choices: [],
-                gameEnded: true
-            }));
-            process.exit(0);
+            };
+
+            // Emit the final state as JSON
+            console.log(JSON.stringify(finalState));
         } else {
             console.log(JSON.stringify({
                 text: cleanText(newState.text),

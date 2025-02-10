@@ -70,27 +70,16 @@ def run_quest(
         metrics_logger.log_step(step_count, new_state, choice=action, action=action, reward=reward[0])
 
         if done:
-            if reward[0] > 0:
-                print("\n🎉 Quest completed successfully!")
-            else:
-                print("\n💥 Quest failed!")
+            final_state = {"text": "Quest completed successfully" if reward[0] > 0 else "Quest failed"}
+            metrics_logger.log_step(step_count, final_state, action="final", reward=reward[0])
             break
 
-    # Compile final metrics
-    env_metrics = env.get_metrics()
-    env_metrics.update({
-        "quest_file": quest,
-        "completion_time": datetime.now().isoformat(),
-        "final_reward": reward[0],
-    })
-
-    # Save metrics if an output file is provided
-    if output:
-        metrics_logger.save_metrics(env_metrics, output)
-        print(f"\nMetrics saved to: {output}")
-    elif metrics:
+    if metrics:
         saved_path = metrics_logger.save()
         if saved_path:
             print(f"\nMetrics automatically saved to: {saved_path}")
+    elif output:
+        print("\n --output is deprecated. Use --metrics for auto-saving")
+        # Consider writing to output file using metrics_logger if needed
 
     return 0 if reward[0] > 0 else 1

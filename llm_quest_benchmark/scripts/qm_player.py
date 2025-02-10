@@ -81,6 +81,12 @@ def play_quest(quest_path: str, language: str, skip: bool = False, metrics: bool
         # Read and process stdout line by line
         game_active = True
         step_count = 0
+        quest_completed = False
+
+        # Store the last valid state for fallback
+        last_valid_state = None
+        final_state = None
+        final_reward = 0
 
         while game_active and process.poll() is None:
             line = process.stdout.readline()
@@ -94,16 +100,13 @@ def play_quest(quest_path: str, language: str, skip: bool = False, metrics: bool
             try:
                 if line.startswith('{'):
                     raw_state = json.loads(line)
+                    last_valid_state = raw_state  # Store last valid state
                     step_count += 1
-                    metrics_logger.log_step(
-                        step=step_count,
-                        state=raw_state,
-                        action="",  # No agent action in interactive mode
-                        reward=0,
-                    )
                     # Check for game end condition
                     if raw_state.get('gameEnded') or not raw_state.get('choices'):
-                        renderer.console.print("\n[bold green]🎉 Quest completed![/bold green]\n")
+                        renderer.console.print("\n[bold green]Quest ended![/bold green]\n")
+                        final_state = raw_state  # Store final state
+                        quest_completed = True
                         game_active = False
                         break
 
@@ -116,6 +119,10 @@ def play_quest(quest_path: str, language: str, skip: bool = False, metrics: bool
                     process.stdin.write(f"{jump_id}\n")
                     process.stdin.flush()
 
+                    # Revert to working version: log the step with default reward 0
+                    metrics_logger.log_step(step_count, raw_state, action=str(jump_id), reward=0)
+                    # Continue game flow as managed by the TypeScript subprocess
+
                 elif line.startswith('Wrong input'):
                     renderer.render_error("Invalid choice! Please try again.")
                 else:
@@ -124,14 +131,57 @@ def play_quest(quest_path: str, language: str, skip: bool = False, metrics: bool
             except json.JSONDecodeError:
                 renderer.render_error(f"Failed to parse game state")
 
+        # Try to get final state from different sources
+        try:
+            # First try: Parse the last line if it looks like JSON
+            if line and line.strip().startswith('{'):
+                try:
+                    parsed_state = json.loads(line)
+                    if parsed_state.get('gameEnded', False):
+                        final_state = parsed_state
+                except json.JSONDecodeError:
+                    pass
+
+            # Second try: Use the stored final state from the game loop
+            if not final_state and last_valid_state:
+                final_state = last_valid_state
+
+            # Extract reward and status
+            if final_state:
+                final_reward = final_state.get("finalReward", 0)
+                completed = final_state.get("completed", False)
+                timed_out = final_state.get("debugInfo", {}).get("timeOut", False)
+
+                # Debug output for verification
+                renderer.console.print(f"\n[dim]Final state summary:[/dim]")
+                renderer.console.print(f"[dim]Completed: {completed}[/dim]")
+                renderer.console.print(f"[dim]Final Reward: {final_reward}[/dim]")
+                renderer.console.print(f"[dim]Time Out: {timed_out}[/dim]")
+            else:
+                renderer.render_error("No valid final state found, using default values")
+                final_reward = 0
+                final_state = last_valid_state or {}
+
+        except Exception as e:
+            renderer.console.print("[dim]Failed to process final state[/dim]")
+            renderer.render_error(f"Error processing final state: {e}")
+            final_reward = 0
+            final_state = last_valid_state or {}
+
         # Cleanup after loop exits
         if process.poll() is None:
             process.terminate()
+        stderr = process.stderr.read()
+        if process.returncode != 0 and stderr:
+            renderer.render_error(f"Process error: {stderr}")
 
-        if process.returncode != 0:
-            stderr = process.stderr.read()
-            if stderr:
-                renderer.render_error(f"Process error: {stderr}")
+        # Update the completion message based on the final state
+        if final_reward > 0 or final_state.get("completed", False):
+            renderer.console.print("\n[bold green]🎉 Quest completed successfully![/bold green]\n")
+        else:
+            renderer.console.print("\n[bold red]🚫 Quest failed or ended prematurely![/bold red]\n")
+
+        metrics_logger.log_step(step_count + 1, final_state, action="final", reward=final_reward)
 
         if metrics:
             saved_path = metrics_logger.save()
