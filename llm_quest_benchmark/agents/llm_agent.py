@@ -8,6 +8,7 @@ from jinja2 import Environment as JinjaEnvironment
 from jinja2 import FileSystemLoader
 
 from llm_quest_benchmark.constants import PROMPT_TEMPLATES_DIR
+from llm_quest_benchmark.constants import MODEL_CHOICES
 
 # Configure Jinja environment
 env = JinjaEnvironment(loader=FileSystemLoader(PROMPT_TEMPLATES_DIR),
@@ -18,31 +19,39 @@ env = JinjaEnvironment(loader=FileSystemLoader(PROMPT_TEMPLATES_DIR),
 class QuestAgent(ta.Agent):
     """TextArena agent specialized for Space Rangers quests"""
 
-    def __init__(self,
-                 model: str = "claude-3.5-sonnet",
-                 temperature: float = 0.4,
-                 debug: bool = False,
-                 **kwargs):
-        super().__init__()
-        self.logger = logging.getLogger(self.__class__.__name__)
+    SUPPORTED_MODELS = MODEL_CHOICES
+
+    def __init__(self, debug: bool = False, model_name: str = "openai"):
+        super().__init__(player_id=0) # Agent for player 0
         self.debug = debug
-
-        # Load templates
-        self.system_template = env.get_template("system_role.jinja")
+        self.model_name = model_name.lower() # Store model name
+        if self.model_name not in self.SUPPORTED_MODELS: # Validate model name
+            raise ValueError(f"Unsupported model: {model_name}. Supported models are: {self.SUPPORTED_MODELS}")
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.action_template = env.get_template("action_choice.jinja")
+        self.system_template = env.get_template("system_role.jinja")
 
-        # Initialize agent with rendered system prompt
-        self.agent = ta.agents.OpenRouterAgent(model_name=model,
-                                               system_prompt=self.system_template.render(),
-                                               temperature=temperature,
-                                               max_tokens=256,
-                                               **kwargs)
+        # Initialize agent based on model_name
+        if self.model_name == "gpt-4o":
+            self.agent = ta.agents.OpenRouterAgent(model_kwargs={"max_tokens": 200}, model_ids=["openai/gpt-4o"]) # Example OpenAI model
+        elif self.model_name == "sonnet":
+            self.agent = ta.agents.OpenRouterAgent(model_kwargs={"max_tokens": 200}, model_ids=["anthropic/claude-3.5-sonnet"]) # Example Anthropic model
+        elif self.model_name == "deepseek":
+            self.agent = ta.agents.OpenRouterAgent(model_kwargs={"max_tokens": 200}, model_ids=["deepseek-ai/deepseek-chat"]) # Example DeepSeek model
+        else:
+            # Should not reach here due to validation in __init__
+            raise ValueError(f"Model name '{model_name}' is not supported.")
+
+        self.reset()
 
         if self.debug:
             self.logger.setLevel(logging.DEBUG)
             handler = logging.StreamHandler()
             handler.setFormatter(logging.Formatter('%(name)s - %(message)s'))
             self.logger.addHandler(handler)
+
+    def reset(self):
+        pass
 
     def __call__(self, observation: str) -> str:
         """Process observation and return action number"""

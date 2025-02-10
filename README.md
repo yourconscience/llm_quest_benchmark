@@ -21,7 +21,7 @@ git clone https://github.com/yourconscience/llm-quest-benchmark --recurse-submod
 ```bash:setup.py
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev]
+pip install -e .
 ```
 
 3. Install pre-commit hooks:
@@ -39,30 +39,39 @@ cp .env.example .env
 1. Run quest with live rendering:
 
 ```bash
-llm-quest --quest quests/boat.qm --log-level debug
+llm-quest run --quest quests/boat.qm --log-level debug
 ```
 For headless operation:
 ```bash
-llm-quest --log-level warning --output metrics.json > /dev/null
+llm-quest run --quest quests/boat.qm --log-level warning --output metrics.json > /dev/null
 ```
 
 2. Analyze metrics:
 ```bash
-llm-analyze metrics.json
+llm-quest analyze --metrics-file metrics.json
+```
+
+3. Run interactive quest player:
+```bash
+llm-quest play --quest quests/boat.qm
 ```
 
 Key options:
 - `--quest`: Path to QM quest file (default: quests/boat.qm)
 - `--log-level`: Set logging verbosity (debug, info, warning)
 - `--output`: Save run metrics to JSON file
+- `--model`: LLM model to use (openai, anthropic, deepseek)
 
 
-## Current Status [WIP]:
-- [x] Simple parser for QM files
+## Current Status [✅ Basic Player Implemented]:
 - [x] Basic state management and environment simulator
 - [x] LLM-agents with OpenRouter support
 - [x] Wrapper for roginvs/space-rangers-quest QM player + example quest
-- [ ] QM parsing works for all needed quests
+- [x] QM parsing works for all needed quests
+- [x] Interactive console player with rich terminal output
+
+
+```
 - [ ] Create prompt template based on game state and previous actions
 - [ ] Add reward score for single run
 - [ ] Prepare benchmark with multiple runs across different QM text quests

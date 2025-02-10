@@ -85,14 +85,8 @@ graph TD
 - Guidance (for structured output from LLMs)
 
 ### Remove
-- Custom state management (use TextArena's)
+- Custom state management (using TextArena's)
 - Low-level game engine code
-
-## First Week Milestones
-1. [✓] Basic QM file loading in TextArena environment
-2. [✓] Basic agent structure with TextArena integration
-3. [ ] Strategic agent completing test quest
-4. [ ] Basic metrics collection
 
 ## Learning Opportunities
 - TextArena's wrapper system
@@ -107,11 +101,11 @@ This keeps the architecture focused while letting you explore modern LLM ops too
 1. [✓] Basic environment and agent integration
 2. [✓] Strategic agent with reasoning
 3. [✓] Migrate to Jinja templates for prompts
-4. [ ] End-to-end quest completion with LLM
-   - [ ] Test quest selection and preparation
-   - [ ] Agent response validation
-   - [ ] Basic logging and debugging
-5. [ ] Basic metrics collection
+4. [✓] End-to-end quest completion with LLM
+   - [✓] Test quest selection and preparation
+   - [✓] Agent response validation
+   - [✓] Basic logging and debugging
+5. [✓] Basic metrics collection
 
 ## Workflow
 1. Development:

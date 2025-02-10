@@ -10,8 +10,9 @@ def main():
     parser.add_argument("--quest", default=constants.DEFAULT_QUEST)
     parser.add_argument("--log-level", choices=["debug", "info", "warning"], default="info")
     parser.add_argument("--output")
+    parser.add_argument("--model")
     args = parser.parse_args()
-    return run_quest(args.quest, args.log_level, args.output)
+    return run_quest(args.quest, args.log_level, args.output, args.model)
 
 
 if __name__ == "__main__":

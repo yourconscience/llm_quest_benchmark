@@ -8,3 +8,5 @@ QUESTS_DIR = PROJECT_ROOT / "quests"
 
 # Default quest for testing
 DEFAULT_QUEST = QUESTS_DIR / "boat.qm"
+
+MODEL_CHOICES = ["gpt-4o", "sonnet", "deepseek"]

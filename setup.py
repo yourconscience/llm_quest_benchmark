@@ -4,6 +4,10 @@ def get_requirements():
     with open("requirements.txt") as f:
         return [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
+def get_dev_requirements():
+    with open("requirements-dev.txt") as f:
+        return [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
 setup(
     name="llm_quest_benchmark",
     version="0.1.0",
@@ -14,24 +18,11 @@ setup(
             "scripts/*.ts"
         ]
     },
-    install_requires=[
-        'textarena>=0.4.0',
-        'rich>=13.0',
-        'python-dotenv>=1.0',
-    ],
-    extras_require={
-        'dev': [
-            'yapf==0.40.2',
-            'isort==5.13.2',
-            'pytest==8.1.1',
-            'pre-commit==3.6.2'
-        ]
-    },
+    install_requires=get_requirements(),
+    extras_require={'dev': get_dev_requirements()},
     entry_points={
         "console_scripts": [
-            "llm-quest=llm_quest_benchmark.scripts.run_quest:main",
-            "llm-analyze=llm_quest_benchmark.scripts.analyze_metrics:main",
-            "qm-player=llm_quest_benchmark.scripts.qm_player:main"
-        ]
+            "llm-quest=llm_quest_benchmark.scripts.cli:app",
+        ],
     }
 )
