@@ -8,6 +8,8 @@ litellm>=1.0.0
 
 # TextArena integration
 textarena>=0.3.2
+uvicorn>=0.29.0
+fastapi>=0.114.0
 
 # Testing
 pytest>=8.0.0
@@ -18,6 +20,5 @@ rich>=13.0.0
 typer>=0.11.0
 
 # Development
-black>=24.0.0
+yapf>=0.34.0
 isort>=5.13.0
-mypy>=1.8.0

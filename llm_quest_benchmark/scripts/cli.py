@@ -1,3 +1,8 @@
+import os
+# Set the env variable before any other imports to suppress transformers warnings
+os.environ["TRANSFORMERS_VERBOSITY"] = "error"
+
+
 """Unified CLI entry point for llm-quest-benchmark"""
 from pathlib import Path
 from typing import Optional
@@ -109,5 +114,4 @@ def play(
 
 
 if __name__ == "__main__":
-    app()
     app()
