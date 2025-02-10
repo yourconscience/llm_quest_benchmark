@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import * as readline from "readline";
 import { parse } from "../../space-rangers-quest/src/lib/qmreader";
 import * as fs from "fs";
@@ -33,32 +35,56 @@ const qm = parse(data);
 const player = new QMPlayer(qm, "rus");
 player.start();
 
+// Output initial state
+console.log(JSON.stringify({
+    text: cleanText(player.getState().text),
+    paramsState: player.getState().paramsState,
+    choices: player.getState().choices.map(choice => ({
+        ...choice,
+        text: cleanText(choice.text)
+    }))
+}));
+
+// Read input line by line (from Python)
 const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
+  input: process.stdin, // Read from stdin (provided by Python)
+  output: process.stdout, // Write to stdout (captured by Python)
 });
 
-function showAndAsk() {
-    const state = player.getState();
-    // Output only text, paramsState, and choices, with cleaned text
-    console.log(JSON.stringify({
-        text: cleanText(state.text),
-        paramsState: state.paramsState,
-        choices: state.choices.map(choice => ({
-            ...choice,
-            text: cleanText(choice.text)
-        }))
-    }, null, 2));
+rl.on('line', (input) => {
+    try {
+        const answer = input.trim();
+        const state = player.getState();
 
-    rl.question("> ", (answer) => {
-        const id = parseInt(answer);
+        const id = parseInt(answer, 10);
         if (!isNaN(id) && state.choices.find((x) => x.jumpId === id)) {
             player.performJump(id);
         } else {
             console.info(`Wrong input!`);
         }
-        showAndAsk();
-    });
-}
 
-showAndAsk();
+        const newState = player.getState();
+        // Check for game end condition
+        if (newState.choices.length === 0) {
+            console.log(JSON.stringify({
+                text: cleanText(newState.text),
+                paramsState: newState.paramsState,
+                choices: [],
+                gameEnded: true
+            }));
+            process.exit(0);
+        } else {
+            console.log(JSON.stringify({
+                text: cleanText(newState.text),
+                paramsState: newState.paramsState,
+                choices: newState.choices.map(choice => ({
+                    ...choice,
+                    text: cleanText(choice.text)
+                }))
+            }));
+        }
+    } catch (error) {
+        console.error(`Error processing input: ${error}`);
+        process.exit(1);
+    }
+});

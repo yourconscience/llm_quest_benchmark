@@ -12,30 +12,26 @@ Benchmark for testing LLM performance on Space Rangers text quests.
 
 ## Installation
 
-1. Clone repository with submodules:
+1. Clone with submodules:
 ```bash
 git clone https://github.com/yourconscience/llm-quest-benchmark --recurse-submodules
-cd llm-quest-benchmark
 ```
 
-2. Create and activate virtual environment:
-```bash
+2. Set up Python environment:
+```bash:setup.py
 python -m venv .venv
-source .venv/bin/activate  # Linux/MacOS
-# or
-.venv\Scripts\activate  # Windows
+source .venv/bin/activate
+pip install -e .[dev]
 ```
 
-3. Install package + dependencies:
+3. Install pre-commit hooks:
 ```bash
-pip install .
-npm install --prefix space-rangers-quest --legacy-peer-deps
+pre-commit install
 ```
 
-4. Set up environment variables:
+4. Configure environment:
 ```bash
 cp .env.example .env
-# Edit .env with your API keys
 ```
 
 ## Entry points
@@ -99,3 +95,20 @@ Key options:
 MIT License - See LICENSE for details.
 
 Disclaimer: This project is not affiliated with Elemental Games or the Space Rangers franchise. Quest content is modified for research purposes only.
+
+
+## Node.js & TypeScript Setup for the space-rangers-quest Submodule
+
+After you clone the repository with submodules, perform the following steps to ensure the TypeScript code can compile correctly:
+
+1. **Install dependencies:**
+   ```bash
+   cd space-rangers-quest
+   npm install --legacy-peer-deps
+   npm install --save-dev @types/node
+   ```
+
+2. **(Optional) Build the TypeScript code:**
+   ```bash
+   npm run build
+   ```

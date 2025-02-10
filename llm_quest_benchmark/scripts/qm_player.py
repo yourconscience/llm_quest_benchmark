@@ -12,6 +12,7 @@ from pathlib import Path
 from llm_quest_benchmark.constants import PROJECT_ROOT
 from llm_quest_benchmark.renderers.terminal import TerminalRenderer
 from llm_quest_benchmark.utils.text_processor import process_game_state
+from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
 
 
 def find_node_executable() -> str:
@@ -61,8 +62,11 @@ def play_quest(quest_path: str, language: str):
             cmd,
             cwd=str(PROJECT_ROOT),
             env={
-                **os.environ, "LANG": language
+                **os.environ,
+                "LANG": language,
+                "NODE_PATH": str(ts_path / "node_modules")
             },
+            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -70,22 +74,52 @@ def play_quest(quest_path: str, language: str):
             universal_newlines=True,
         )
 
-        while True:
+        # Read and process stdout line by line
+        game_active = True
+
+        while game_active and process.poll() is None:
             line = process.stdout.readline()
-            if not line and process.poll() is not None:
+            if not line:
                 break
-            if line:
-                try:
-                    raw_state = json.loads(line.strip())
+
+            line = line.strip()
+            if not line:
+                continue
+
+            try:
+                if line.startswith('{'):
+                    raw_state = json.loads(line)
+                    # Check for game end condition
+                    if raw_state.get('gameEnded') or not raw_state.get('choices'):
+                        renderer.console.print("\n[bold green]🎉 Quest completed![/bold green]\n")
+                        game_active = False
+                        break
+
                     game_state = process_game_state(raw_state)
+                    choice_mapper = ChoiceMapper(raw_state['choices'])
                     renderer.render_game_state(game_state)
-                except json.JSONDecodeError:
-                    renderer.render_error(f"Invalid game state: {line.strip()}")
+
+                    # Get user input and send to process
+                    jump_id = renderer.prompt_choice(choice_mapper)
+                    process.stdin.write(f"{jump_id}\n")
+                    process.stdin.flush()
+
+                elif line.startswith('Wrong input'):
+                    renderer.render_error("Invalid choice! Please try again.")
+                else:
+                    print(line)
+
+            except json.JSONDecodeError:
+                renderer.render_error(f"Failed to parse game state")
+
+        # Cleanup after loop exits
+        if process.poll() is None:
+            process.terminate()
 
         if process.returncode != 0:
             stderr = process.stderr.read()
             if stderr:
-                renderer.render_error(stderr)
+                renderer.render_error(f"Process error: {stderr}")
 
     except KeyboardInterrupt:
         process.terminate()

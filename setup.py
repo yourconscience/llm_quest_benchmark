@@ -14,7 +14,19 @@ setup(
             "scripts/*.ts"
         ]
     },
-    install_requires=get_requirements(),
+    install_requires=[
+        'textarena>=0.4.0',
+        'rich>=13.0',
+        'python-dotenv>=1.0',
+    ],
+    extras_require={
+        'dev': [
+            'yapf==0.40.2',
+            'isort==5.13.2',
+            'pytest==8.1.1',
+            'pre-commit==3.6.2'
+        ]
+    },
     entry_points={
         "console_scripts": [
             "llm-quest=llm_quest_benchmark.scripts.run_quest:main",
