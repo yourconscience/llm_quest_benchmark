@@ -62,8 +62,21 @@ def run(
             help="Model for the LLM agent (choices: " + ", ".join(MODEL_CHOICES) + ").",
         ),
     ] = DEFAULT_MODEL,
+    metrics: Annotated[
+        bool,
+        typer.Option(
+            "--metrics",
+            help="Enable automatic metrics logging to metrics/ directory.",
+        ),
+    ] = False,
 ):
-    exit_code = run_quest_func(str(quest), log_level, output, model)
+    exit_code = run_quest_func(
+        quest=str(quest),
+        log_level=log_level,
+        output=output,
+        model=model,
+        metrics=metrics,
+    )
     raise typer.Exit(code=exit_code)
 
 
@@ -122,8 +135,20 @@ def play(
             help="Automatically select screens with only one available option.",
         ),
     ] = False,
+    metrics: Annotated[
+        bool,
+        typer.Option(
+            "--metrics",
+            help="Enable automatic metrics logging to metrics/ directory.",
+        ),
+    ] = False,
 ):
-    play_quest_func(str(quest), language, skip)
+    play_quest_func(
+        quest_path=str(quest),
+        language=language,
+        skip=skip,
+        metrics=metrics,
+    )
 
 
 if __name__ == "__main__":

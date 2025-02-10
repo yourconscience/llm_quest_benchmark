@@ -106,7 +106,9 @@ MIT License - See LICENSE for details.
 Disclaimer: This project is not affiliated with Elemental Games or the Space Rangers franchise. Quest content is modified for research purposes only.
 
 
-## Node.js & TypeScript Setup for the space-rangers-quest Submodule
+## Appendix
+
+### Node.js & TypeScript Setup for the space-rangers-quest Submodule
 
 After you clone the repository with submodules, perform the following steps to ensure the TypeScript code can compile correctly:
 
@@ -121,3 +123,17 @@ After you clone the repository with submodules, perform the following steps to e
    ```bash
    npm run build
    ```
+
+### Metrics Collection
+
+Enable automatic metrics logging with the `--metrics` flag:
+
+```bash
+# For automated runs
+llm-quest run --quest quests/boat.qm --metrics
+
+# For interactive play
+llm-quest play --quest quests/boat.qm --metrics
+```
+
+Metrics are saved to the `metrics/` directory with filenames like `boat_20240315_143022.json`.

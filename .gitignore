@@ -1,5 +1,6 @@
-# Temporary files
+# Temporary files and metrics
 tmp/*
+metrics/*
 
 # Quest files and utils
 quests/*
