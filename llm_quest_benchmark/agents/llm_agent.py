@@ -112,7 +112,8 @@ class QuestAgent(ta.Agent):
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=200,
-                temperature=0.7
+                temperature=0.7,
+                timeout=30  # Add 30 second timeout
             )
             if self.debug:
                 self.logger.debug(f"Raw LLM response: {response.choices[0].message.content}")
