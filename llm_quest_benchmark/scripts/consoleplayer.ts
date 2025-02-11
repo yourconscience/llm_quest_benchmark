@@ -48,7 +48,6 @@ if (jsonMode) {
     const state = player.getState();
     console.log(JSON.stringify({
         state: {
-            locId: state.locId,
             text: cleanText(state.text),
             choices: state.choices.map(choice => ({
                 jumpId: choice.jumpId,
