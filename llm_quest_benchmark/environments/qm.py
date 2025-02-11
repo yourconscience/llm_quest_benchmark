@@ -59,24 +59,21 @@ def parse_qm(qm_path: str) -> QMGame:
             check=True,
             stdin=subprocess.DEVNULL
         )
-        raw_data = json.loads(proc.stdout)
+        qm_data = json.loads(proc.stdout)
 
-        # Extract what we need from the raw data
-        state = raw_data['state']
-
-        # Create initial location
-        locations = {
-            state['locId']: QMLocation(
-                id=state['locId'],
-                text=state['text'],
+        # Convert QM data to our format
+        locations = {}
+        for loc_id, loc in qm_data['locations'].items():
+            locations[int(loc_id)] = QMLocation(
+                id=int(loc_id),
+                text=loc['texts'][0] if loc['texts'] else "",
                 choices=[
-                    QMChoice(jumpId=choice['jumpId'], text=choice['text'])
-                    for choice in state['choices']
+                    QMChoice(jumpId=j['toLocId'], text=j['texts'][0] if j['texts'] else "")
+                    for j in loc.get('jumps', [])
                 ]
             )
-        }
 
-        return QMGame(start_id=state['locId'], locations=locations)
+        return QMGame(start_id=qm_data['startLocId'], locations=locations)
 
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Node parser error:\n{e.stderr}")
@@ -86,3 +83,6 @@ def parse_qm(qm_path: str) -> QMGame:
     except KeyError as e:
         print(f"Raw output: {proc.stdout[:200]}...")  # Show first 200 characters
         raise ValueError(f"Missing required field in parser output: {e}")
+    except IndexError as e:
+        print(f"Raw output: {proc.stdout[:200]}...")  # Show first 200 characters
+        raise ValueError(f"No choices found in parser output: {e}")
