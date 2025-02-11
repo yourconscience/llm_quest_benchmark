@@ -40,33 +40,49 @@ def parse_qm(qm_path: str) -> QMGame:
     # Use correct path to parser in our package
     parser_script = PROJECT_ROOT / "llm_quest_benchmark" / "scripts" / "consoleplayer.ts"
 
-    cmd = ["node", "-r", "ts-node/register", str(parser_script), str(qm_path), "--json"]
+    # Run parser with --json flag and no stdin
+    cmd = [
+        "node",
+        "-r",
+        "ts-node/register",
+        str(parser_script),
+        str(qm_path),
+        "--json"
+    ]
 
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        # Run with no stdin to prevent waiting for input
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=True,
+            stdin=subprocess.DEVNULL
+        )
         raw_data = json.loads(proc.stdout)
 
         # Extract what we need from the raw data
         state = raw_data['state']
-        qm = raw_data['qm']
 
-        # Convert to our format
-        locations = {}
-        for loc_id, loc in qm['locations'].items():
-            locations[int(loc_id)] = QMLocation(
-                id=int(loc_id),
-                text=loc['texts'][0] if loc['texts'] else "",
+        # Create initial location
+        locations = {
+            state['locId']: QMLocation(
+                id=state['locId'],
+                text=state['text'],
                 choices=[
-                    QMChoice(jumpId=j['toLocId'], text=j['texts'][0] if j['texts'] else "")
-                    for j in loc.get('jumps', [])
-                ]  # Используем get() для безопасности
+                    QMChoice(jumpId=choice['jumpId'], text=choice['text'])
+                    for choice in state['choices']
+                ]
             )
+        }
 
         return QMGame(start_id=state['locId'], locations=locations)
 
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Node parser error:\n{e.stderr}")
     except json.JSONDecodeError as e:
-        # Добавим больше информации для отладки
-        print(f"Raw output: {proc.stdout[:200]}...")  # Показываем первые 200 символов
+        print(f"Raw output: {proc.stdout[:200]}...")  # Show first 200 characters
         raise ValueError(f"Failed to parse JSON from parser. Error: {e}")
+    except KeyError as e:
+        print(f"Raw output: {proc.stdout[:200]}...")  # Show first 200 characters
+        raise ValueError(f"Missing required field in parser output: {e}")

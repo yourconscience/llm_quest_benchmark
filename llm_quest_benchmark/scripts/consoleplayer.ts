@@ -23,6 +23,7 @@ if (process.argv.length < 3) {
 const questFilePath = process.argv[2];
 const validLanguages = ["rus", "eng"];
 const language = process.env.QM_LANG || "rus";
+const jsonMode = process.argv.includes("--json");
 
 if (!validLanguages.includes(language)) {
     console.error(`Invalid language: ${language}. Valid options are: ${validLanguages.join(", ")}`);
@@ -42,6 +43,23 @@ const qm = parse(data);
 const player = new QMPlayer(qm, language as "rus" | "eng");
 player.start();
 
+// If in JSON mode, output parsed data and exit
+if (jsonMode) {
+    const state = player.getState();
+    console.log(JSON.stringify({
+        state: {
+            locId: state.locId,
+            text: cleanText(state.text),
+            choices: state.choices.map(choice => ({
+                jumpId: choice.jumpId,
+                text: cleanText(choice.text)
+            }))
+        }
+    }));
+    process.exit(0);
+}
+
+// Interactive mode
 // Output initial state
 console.log(JSON.stringify({
     text: cleanText(player.getState().text),
@@ -87,6 +105,7 @@ rl.on('line', (input) => {
 
             // Emit the final state as JSON
             console.log(JSON.stringify(finalState));
+            rl.close();
         } else {
             console.log(JSON.stringify({
                 text: cleanText(newState.text),
@@ -99,6 +118,7 @@ rl.on('line', (input) => {
         }
     } catch (error) {
         console.error(`Error processing input: ${error}`);
+        rl.close();
         process.exit(1);
     }
 });
