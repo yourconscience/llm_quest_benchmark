@@ -67,7 +67,7 @@ def play_quest(quest_path: str, language: str, skip: bool = False, metrics: bool
             cwd=str(PROJECT_ROOT),
             env={
                 **os.environ,
-                "LANG": language,
+                "QM_LANG": language,
                 "NODE_PATH": str(ts_path / "node_modules")
             },
             stdin=subprocess.PIPE,

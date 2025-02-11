@@ -12,7 +12,12 @@ from typing_extensions import Annotated
 
 from llm_quest_benchmark.scripts.qm_player import play_quest as play_quest_func
 from llm_quest_benchmark.runner import run_quest as run_quest_func
-from llm_quest_benchmark.constants import MODEL_CHOICES, DEFAULT_MODEL
+from llm_quest_benchmark.constants import (
+    MODEL_CHOICES,
+    DEFAULT_MODEL,
+    LANG_CHOICES,
+    DEFAULT_LANG,
+)
 
 app = typer.Typer(
     help="llm-quest: Command-line tools for LLM Quest Benchmark.",
@@ -113,9 +118,9 @@ def play(
         typer.Option(
             "--language",
             "--lang",
-            help="Language for quest text (rus, eng).",
+            help=f"Language for quest text (choices: {', '.join(LANG_CHOICES)}).",
         ),
-    ] = "rus",
+    ] = DEFAULT_LANG,
     skip: Annotated[
         bool,
         typer.Option(

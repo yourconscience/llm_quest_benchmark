@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from llm_quest_benchmark.constants import DEFAULT_MODEL
+from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_LANG
 from llm_quest_benchmark.agents.llm_agent import QuestAgent
 from llm_quest_benchmark.environments.qm_env import QMPlayerEnv
 from llm_quest_benchmark.renderers.quest_renderer import QuestRenderer
@@ -21,6 +21,7 @@ def run_quest(
     log_level: str = "info",
     output: Optional[str] = None,
     model: str = DEFAULT_MODEL,
+    language: str = DEFAULT_LANG,
     metrics: bool = False,
 ) -> int:
     # Configure logging
@@ -31,9 +32,10 @@ def run_quest(
     logging.info("Runner started!")
 
     # Initialize components
-    env = QMPlayerEnv(quest)
+    env = QMPlayerEnv(quest, language=language)
     agent = QuestAgent(debug=(log_level == "debug"), model_name=model)
     logging.info(f"Using model: {model}")
+    logging.info(f"Using language: {language}")
     renderer = QuestRenderer(env)
 
     # Initialize our metrics logger

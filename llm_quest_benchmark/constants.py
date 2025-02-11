@@ -11,3 +11,7 @@ DEFAULT_QUEST = QUESTS_DIR / "boat.qm"
 
 MODEL_CHOICES = ["gpt-4o", "sonnet", "deepseek"]
 DEFAULT_MODEL = "gpt-4o"
+
+# Language options
+LANG_CHOICES = ["rus", "eng"]
+DEFAULT_LANG = "rus"

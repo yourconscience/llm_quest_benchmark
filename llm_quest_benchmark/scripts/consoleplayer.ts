@@ -14,12 +14,20 @@ function cleanText(text: string): string {
         .replace(/\r\n/g, '\n');
 }
 
-// Get the quest file path from the command line arguments
+// Get the quest file path and language from command line arguments or environment
 if (process.argv.length < 3) {
     console.error("Usage: ts-node consoleplayer.ts <quest_file.qm>");
     process.exit(1);
 }
+
 const questFilePath = process.argv[2];
+const validLanguages = ["rus", "eng"];
+const language = process.env.QM_LANG || "rus";
+
+if (!validLanguages.includes(language)) {
+    console.error(`Invalid language: ${language}. Valid options are: ${validLanguages.join(", ")}`);
+    process.exit(1);
+}
 
 // Read the quest file
 let data: Buffer;
@@ -31,7 +39,7 @@ try {
 }
 
 const qm = parse(data);
-const player = new QMPlayer(qm, "rus");
+const player = new QMPlayer(qm, language as "rus" | "eng");
 player.start();
 
 // Output initial state
@@ -66,11 +74,12 @@ rl.on('line', (input) => {
         // Check for game end condition
         const gameEnded = newState.choices.length === 0;
         if (gameEnded) {
-            // Revert to a simpler final state that doesn't rely on locId or random
+            // Get final game state from QMPlayer logic
+            const finalReward = newState.gameState === "win" ? 1 : 0;
+
             const finalState = {
                 gameEnded: true,
-                finalReward: 0,
-                // Keep text and paramsState for consistency
+                finalReward,
                 text: cleanText(newState.text),
                 paramsState: newState.paramsState,
                 choices: [],
