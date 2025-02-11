@@ -2,6 +2,10 @@
 LLM-powered agent for Space Rangers quests using TextArena's agent system
 """
 import logging
+import re
+import os
+import sys
+from openai import OpenAI
 
 import textarena as ta
 from jinja2 import Environment as JinjaEnvironment
@@ -20,38 +24,57 @@ class QuestAgent(ta.Agent):
     """TextArena agent specialized for Space Rangers quests"""
 
     SUPPORTED_MODELS = MODEL_CHOICES
+    MODEL_NAME = "gpt-4o-mini"  # Using gpt-4o-mini directly
 
-    def __init__(self, debug: bool = False, model_name: str = "openai"):
-        super().__init__(player_id=0) # Agent for player 0
+    def __init__(self, debug: bool = False, model_name: str = "gpt-4o"):
+        super().__init__()  # Initialize base Agent class
+        self.player_id = 0  # Set player_id after initialization
         self.debug = debug
-        self.model_name = model_name.lower() # Store model name
-        if self.model_name not in self.SUPPORTED_MODELS: # Validate model name
-            raise ValueError(f"Unsupported model: {model_name}. Supported models are: {self.SUPPORTED_MODELS}")
+
+        # Configure logging
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.action_template = env.get_template("action_choice.jinja")
-        self.system_template = env.get_template("system_role.jinja")
-
-        # Initialize agent based on model_name
-        if self.model_name == "gpt-4o":
-            self.agent = ta.agents.OpenRouterAgent(model_kwargs={"max_tokens": 200}, model_ids=["openai/gpt-4o"]) # Example OpenAI model
-        elif self.model_name == "sonnet":
-            self.agent = ta.agents.OpenRouterAgent(model_kwargs={"max_tokens": 200}, model_ids=["anthropic/claude-3.5-sonnet"]) # Example Anthropic model
-        elif self.model_name == "deepseek":
-            self.agent = ta.agents.OpenRouterAgent(model_kwargs={"max_tokens": 200}, model_ids=["deepseek-ai/deepseek-chat"]) # Example DeepSeek model
-        else:
-            # Should not reach here due to validation in __init__
-            raise ValueError(f"Model name '{model_name}' is not supported.")
-
-        self.reset()
-
         if self.debug:
             self.logger.setLevel(logging.DEBUG)
             handler = logging.StreamHandler()
-            handler.setFormatter(logging.Formatter('%(name)s - %(message)s'))
+            handler.setFormatter(logging.Formatter('%(name)s - %(levelname)s - %(message)s'))
             self.logger.addHandler(handler)
 
+        # Load templates
+        self.action_template = env.get_template("action_choice.jinja")
+        self.system_template = env.get_template("system_role.jinja")
+
+        # Get system prompt
+        system_prompt = self.system_template.render()
+        if self.debug:
+            self.logger.debug(f"System prompt:\n{system_prompt}")
+
+        # Initialize OpenAI client
+        try:
+            api_key = os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                raise ValueError("OPENAI_API_KEY environment variable not set")
+            self.client = OpenAI(api_key=api_key)
+            if self.debug:
+                self.logger.debug(f"Initialized OpenAI client with model: {self.MODEL_NAME}")
+        except Exception as e:
+            self.logger.error(f"Failed to initialize OpenAI client: {str(e)}")
+            sys.exit(1)  # Exit immediately on initialization error
+
+        self.reset()
+
     def reset(self):
-        pass
+        """Reset agent state"""
+        self.history = []
+        self.logger.debug("Agent state reset")
+
+    def extract_choice_number(self, response: str) -> str:
+        """Extract choice number from LLM response"""
+        # Try to find a number in the response
+        match = re.search(r'\d+', response.strip())
+        if match:
+            return match.group(0)
+        self.logger.error("No valid choice number found in response")
+        sys.exit(1)  # Exit immediately if no valid choice found
 
     def __call__(self, observation: str) -> str:
         """Process observation and return action number"""
@@ -64,17 +87,17 @@ class QuestAgent(ta.Agent):
         collecting = False
 
         for line in lines:
-            if line.startswith('Available actions:'):
+            if line.startswith('Available actions:') or line.startswith('Available choices:'):
                 collecting = True
                 continue
             if collecting and line.strip():
                 # Extract choice text without number
-                text = line.split('.', 1)[1].strip()
+                text = line.split('.', 1)[1].strip() if '.' in line else line.strip()
                 choices.append({"text": text})
 
         if not choices:
             self.logger.error("No valid choices found in observation!")
-            return "0"  # Emergency exit
+            sys.exit(1)  # Exit immediately if no choices found
 
         # Render prompt using template
         prompt = self.action_template.render(observation=observation, choices=choices)
@@ -82,13 +105,36 @@ class QuestAgent(ta.Agent):
             self.logger.debug(f"\nPrompt:\n{prompt}")
 
         try:
-            response = self.agent(prompt)
+            response = self.client.chat.completions.create(
+                model=self.MODEL_NAME,
+                messages=[
+                    {"role": "system", "content": self.system_template.render()},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=200,
+                temperature=0.7
+            )
             if self.debug:
-                self.logger.debug(f"Raw LLM response: {response}")
-            return response
+                self.logger.debug(f"Raw LLM response: {response.choices[0].message.content}")
+
+            # Extract choice number from response
+            choice = self.extract_choice_number(response.choices[0].message.content)
+            if self.debug:
+                self.logger.debug(f"Extracted choice: {choice}")
+
+            # Store in history
+            self.history.append({
+                'observation': observation,
+                'prompt': prompt,
+                'response': response.choices[0].message.content,
+                'choice': choice
+            })
+
+            return choice
+
         except Exception as e:
-            self.logger.error(f"LLM call failed: {str(e)}")
-            return "0"
+            self.logger.error(f"OpenAI API call failed: {str(e)}")
+            sys.exit(1)  # Exit immediately on any error
 
 
 # Optional wrapper for more strategic gameplay
