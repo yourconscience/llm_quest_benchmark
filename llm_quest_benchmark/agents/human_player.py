@@ -1,6 +1,7 @@
 """Human player interface for Space Rangers quests"""
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, TextIO
+import sys
 
 from rich.console import Console
 from rich.panel import Panel
@@ -11,22 +12,38 @@ from llm_quest_benchmark.agents.base import QuestPlayer
 class HumanPlayer(QuestPlayer):
     """Human player that takes input through console"""
 
-    def __init__(self, skip_single: bool = False, debug: bool = False):
+    def __init__(self,
+                 skip_single: bool = False,
+                 debug: bool = False,
+                 input_stream: Optional[TextIO] = None,
+                 output_stream: Optional[TextIO] = None):
         """Initialize human player
 
         Args:
             skip_single: Auto-select when only one choice available
             debug: Enable debug logging
+            input_stream: Optional custom input stream (for testing)
+            output_stream: Optional custom output stream (for testing)
         """
         self.skip_single = skip_single
         self.debug = debug
-        self.console = Console()
+        self.console = Console(file=output_stream) if output_stream else Console()
+        self.input_stream = input_stream or sys.stdin
         self.logger = logging.getLogger(self.__class__.__name__)
         if debug:
             self.logger.setLevel(logging.DEBUG)
 
+    def _get_input(self, prompt: str = "") -> str:
+        """Get input from configured input stream"""
+        if prompt:
+            self.console.print(prompt, end="")
+        return self.input_stream.readline().strip()
+
     def get_action(self, observation: str, choices: list) -> str:
         """Get action through console input"""
+        # Show current state
+        self.console.print(observation)
+
         # Auto-skip if enabled and only one choice
         if self.skip_single and len(choices) == 1:
             self.console.print("[dim]Auto-selecting the only available choice.[/dim]")
@@ -35,7 +52,7 @@ class HumanPlayer(QuestPlayer):
         # Get user input
         while True:
             try:
-                choice = self.console.input("[bold yellow]Enter choice number (or 'q' to quit): [/]")
+                choice = self._get_input("[bold yellow]Enter choice number (or 'q' to quit): [/]")
                 if choice.lower() == 'q':
                     raise KeyboardInterrupt
 

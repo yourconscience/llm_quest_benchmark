@@ -7,7 +7,15 @@ from llm_quest_benchmark.agents.simple_agent import SimpleQuestAgent
 
 @pytest.fixture
 def example_observation():
-    return "You are at a trading station.\n\nAvailable actions:\n1. Talk to merchant\n2. Leave station\n"
+    return "You are at a trading station."
+
+
+@pytest.fixture
+def example_choices():
+    return [
+        {"id": "1", "text": "Talk to merchant"},
+        {"id": "2", "text": "Leave station"}
+    ]
 
 
 @pytest.fixture
@@ -16,16 +24,16 @@ def mock_openrouter_response():
 
 
 @patch('llm_quest_benchmark.agents.llm_client.OpenAIClient')
-def test_agent_response_format(mock_client_class, example_observation, mock_openrouter_response):
+def test_agent_response_format(mock_client_class, example_observation, example_choices, mock_openrouter_response):
     """Test that agent returns valid action number"""
     # Setup mock
     mock_client = Mock()
-    mock_client.side_effect = lambda x: mock_openrouter_response
+    mock_client.return_value = mock_openrouter_response
     mock_client_class.return_value = mock_client
 
     # Create agent and test
     agent = SimpleQuestAgent(model_name="gpt-4o")
-    response = agent(example_observation)
+    response = agent.get_action(example_observation, example_choices)
 
     assert response == "1"
     assert mock_client.call_count == 1

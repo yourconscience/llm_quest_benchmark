@@ -1,9 +1,10 @@
 """End-to-end tests for simple agent"""
 import logging
 import pytest
+from io import StringIO
 
-from llm_quest_benchmark.agents.simple_agent import SimpleQuestAgent
 from llm_quest_benchmark.environments.qm import QMPlayerEnv
+from llm_quest_benchmark.agents.simple_agent import SimpleQuestAgent
 from llm_quest_benchmark.constants import DEFAULT_QUEST
 
 
@@ -40,8 +41,11 @@ def test_simple_agent_boat_quest():
             logger.info(f"\n=== Step {step_count} ===")
 
             # Get agent's action
-            action = agent(observation)
-            logger.debug(f"Agent chose action: {action}")
+            action = agent.get_action(observation, env.state['choices'])
+            assert isinstance(action, str)
+            assert action.isdigit()
+            choice_num = int(action)
+            assert 1 <= choice_num <= len(env.state['choices'])
 
             # Take step in environment
             observation, reward, done, info = env.step(action)
@@ -60,3 +64,6 @@ def test_simple_agent_boat_quest():
     except Exception as e:
         logger.exception("Error during episode")
         raise
+
+    finally:
+        env.close()

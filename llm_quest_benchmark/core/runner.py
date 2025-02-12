@@ -1,6 +1,6 @@
 """Quest runner implementation with improved logging and error handling"""
 import logging
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Dict, Any
 
 from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_LANG
 from llm_quest_benchmark.agents.simple_agent import SimpleQuestAgent
@@ -28,13 +28,14 @@ class QuestRunner:
     ) -> None:
         """Initialize all components needed for quest execution"""
         self.logger.debug("Initializing environment...")
-        self.env = QMPlayerEnv(quest, language=language)
+        self.env = QMPlayerEnv(quest, language=language, debug=debug)
 
         self.logger.debug("Initializing agent...")
         self.agent = SimpleQuestAgent(debug=debug, model_name=model)
         self.logger.info(f"Using model: {model}")
         self.logger.info(f"Using language: {language}")
 
+        self.logger.debug("Initializing renderer...")
         self.renderer = QuestRenderer(self.env)
 
         if metrics:
@@ -59,7 +60,7 @@ class QuestRunner:
 
             while True:
                 # Get agent's action
-                action = self.agent(observation)
+                action = self.agent.get_action(observation, self.env.state['choices'])
 
                 # Take action in environment
                 observation, reward, done, info = self.env.step(action)
@@ -70,11 +71,10 @@ class QuestRunner:
                 # Log metrics if enabled
                 if self.metrics_logger:
                     self.metrics_logger.log_step(
-                        observation=observation,
+                        step=len(self.env.state_history),
+                        state=self.env.state,
                         action=action,
-                        reward=reward,
-                        done=done,
-                        info=info
+                        reward=reward
                     )
 
                 if done:

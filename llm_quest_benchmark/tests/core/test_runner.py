@@ -27,7 +27,7 @@ def test_runner_initialization(runner, mock_logger):
 
 
 @patch('llm_quest_benchmark.environments.qm.QMPlayerEnv')
-@patch('llm_quest_benchmark.agents.llm_agent.QuestAgent')
+@patch('llm_quest_benchmark.agents.simple_agent.SimpleQuestAgent')
 @patch('llm_quest_benchmark.renderers.quest_renderer.QuestRenderer')
 def test_runner_setup(mock_renderer, mock_agent, mock_env, runner):
     """Test that runner sets up components correctly"""
@@ -36,6 +36,8 @@ def test_runner_setup(mock_renderer, mock_agent, mock_env, runner):
     mock_env.return_value = mock_env_instance
     mock_agent_instance = Mock()
     mock_agent.return_value = mock_agent_instance
+    mock_renderer_instance = Mock()
+    mock_renderer.return_value = mock_renderer_instance
 
     # Initialize
     runner.initialize(str(DEFAULT_QUEST))
@@ -45,26 +47,35 @@ def test_runner_setup(mock_renderer, mock_agent, mock_env, runner):
     mock_agent.assert_called_once()
     mock_renderer.assert_called_once()
 
+    # Verify component instances were stored
+    assert runner.env == mock_env_instance
+    assert runner.agent == mock_agent_instance
+    assert runner.renderer == mock_renderer_instance
+
 
 @patch('llm_quest_benchmark.environments.qm.QMPlayerEnv')
-@patch('llm_quest_benchmark.agents.llm_agent.QuestAgent')
-def test_runner_execution(mock_agent, mock_env, runner):
+@patch('llm_quest_benchmark.agents.simple_agent.SimpleQuestAgent')
+@patch('llm_quest_benchmark.renderers.quest_renderer.QuestRenderer')
+def test_runner_execution(mock_renderer, mock_agent, mock_env, runner):
     """Test quest execution flow"""
     # Setup mocks
     mock_env_instance = Mock()
-    mock_env_instance.reset.return_value = {"observation": "test"}
+    mock_env_instance.reset.return_value = "Initial observation"
     mock_env_instance.step.return_value = (
-        {"observation": "next"},  # observations
-        {0: 1.0},  # rewards
+        "Next observation",  # observations
+        1.0,  # reward
         True,  # done
         {}  # info
     )
-    mock_env_instance.state.observations = [{"observation": "test"}]
+    mock_env_instance.state = {'choices': [{'id': '1', 'text': 'Test choice'}]}
     mock_env.return_value = mock_env_instance
 
     mock_agent_instance = Mock()
-    mock_agent_instance.return_value = "1"
+    mock_agent_instance.get_action.return_value = "1"
     mock_agent.return_value = mock_agent_instance
+
+    mock_renderer_instance = Mock()
+    mock_renderer.return_value = mock_renderer_instance
 
     # Initialize and run
     runner.initialize(str(DEFAULT_QUEST))
@@ -73,6 +84,8 @@ def test_runner_execution(mock_agent, mock_env, runner):
     # Verify execution flow
     mock_env_instance.reset.assert_called_once()
     mock_env_instance.step.assert_called_once_with("1")
+    mock_agent_instance.get_action.assert_called_once_with("Initial observation", mock_env_instance.state['choices'])
+    mock_renderer_instance.render.assert_called()
     assert exit_code == 0  # Success due to positive reward
 
 
