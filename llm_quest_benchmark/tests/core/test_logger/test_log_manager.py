@@ -1,10 +1,9 @@
-"""Tests for core utilities"""
+"""Tests for logger module"""
 import logging
 import pytest
-import time
 from pathlib import Path
 
-from llm_quest_benchmark.core.utils import LogManager, timeout, CommandTimeout
+from llm_quest_benchmark.core.logger import LogManager
 
 
 def test_log_manager_initialization():
@@ -33,15 +32,3 @@ def test_log_manager_debug_setup(tmp_path):
         log_files = list(log_dir.glob("llm_quest_*.log"))
         assert len(log_files) == 1
         assert log_files[0].read_text().strip().endswith("Test debug message")
-
-
-def test_timeout_context_manager():
-    """Test that timeout context manager works"""
-    # Test successful completion within timeout
-    with timeout(1):
-        time.sleep(0.1)  # Should complete successfully
-
-    # Test timeout exception
-    with pytest.raises(CommandTimeout):
-        with timeout(1):
-            time.sleep(2)  # Should timeout

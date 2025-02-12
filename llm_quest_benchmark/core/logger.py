@@ -1,35 +1,10 @@
-"""Common utilities for llm-quest-benchmark"""
+"""Logger utilities"""
 import os
-import signal
 import logging
-from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from rich.logging import RichHandler
-
-
-class CommandTimeout(Exception):
-    """Raised when a command times out"""
-    pass
-
-
-@contextmanager
-def timeout(seconds: int):
-    """Context manager for timing out long-running operations"""
-    def handler(signum, frame):
-        raise CommandTimeout(f"Operation timed out after {seconds} seconds")
-
-    # Register a function to raise the timeout error when signal received
-    signal.signal(signal.SIGALRM, handler)
-    signal.alarm(seconds)
-
-    try:
-        yield
-    finally:
-        # Disable the alarm
-        signal.alarm(0)
 
 
 class LogManager:
