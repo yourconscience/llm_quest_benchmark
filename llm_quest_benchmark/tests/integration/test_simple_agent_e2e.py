@@ -1,14 +1,10 @@
-"""E2E test for simple agent completing boat.qm quest"""
+"""End-to-end tests for simple agent"""
 import logging
-from pathlib import Path
-
 import pytest
 
 from llm_quest_benchmark.agents.simple_agent import SimpleQuestAgent
 from llm_quest_benchmark.environments.qm import QMPlayerEnv
-from llm_quest_benchmark.environments.qm_parser import parse_qm
 from llm_quest_benchmark.constants import DEFAULT_QUEST
-from llm_quest_benchmark.renderers.quest_renderer import QuestRenderer
 
 
 @pytest.mark.integration
@@ -22,18 +18,13 @@ def test_simple_agent_boat_quest():
     )
     logger = logging.getLogger(__name__)
 
-    # Parse quest
-    logger.info("Parsing quest file...")
-    game = parse_qm(str(DEFAULT_QUEST))
-
     # Create environment with debug enabled
     logger.info("Creating environment...")
-    env = QMPlayerEnv(game, debug=True)
-    env.renderer = QuestRenderer(env, show_analysis=True)
+    env = QMPlayerEnv(str(DEFAULT_QUEST), debug=True)
 
     # Create agent
     logger.info("Creating agent...")
-    agent = SimpleQuestAgent(debug=True, model_name="gpt-4o-mini")
+    agent = SimpleQuestAgent(debug=True, model_name="gpt-4o")
 
     # Run episode
     logger.info("Starting episode...")

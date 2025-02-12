@@ -116,7 +116,6 @@ class QuestRenderer(SimpleRenderWrapper):  # Change base class
         # Preserve existing console handling
         self.console.clear()
         self.console.print(self.layout)
-
     def render_current_state(self):
         """Render current state of the environment."""
         self.render()

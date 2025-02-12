@@ -1,98 +1,86 @@
-# Simplified QM Workflow - Proposal
+# QM Workflow
 
-## Core Problem
-Current implementation tries to maintain game state in both TypeScript and Python,
-leading to synchronization issues and complexity. We need to simplify this by having
-a single source of truth and minimal state transformation.
+## Architecture Overview
 
-## Proposed Changes
+The QM workflow is built around a TypeScript bridge that serves as the single source of truth for game state and logic. This design provides a clean separation of concerns:
 
-### 1. Bridge as State Manager
-- Make TypeScript bridge the ONLY state manager
-- Consistent JSON format between parse/interactive modes
-- Always include location ID and full state in responses
-- Example response format:
+### 1. TypeScript Bridge (Single Source of Truth)
+- Handles all QM file parsing and game state management
+- Provides consistent JSON format for all operations
+- Example state format:
   ```json
   {
-    "locationId": "123",
-    "text": "Current text",
-    "choices": [
-      {
-        "id": "456",
-        "text": "Choice text"
-      }
-    ],
-    "gameEnded": false,
-    "params": {},  // Optional game parameters
-    "reward": 0    // Optional reward value
+    "state": {
+      "text": "Current text",
+      "choices": [
+        {
+          "id": "456",
+          "text": "Choice text"
+        }
+      ],
+      "gameState": "active"
+    },
+    "saving": {
+      "locationId": "123",
+      "paramValues": {}
+    }
   }
   ```
 
-### 2. Simplified Environment
-- Remove QMGame, QMLocation, QMChoice classes
-- Environment only maintains:
-  1. Bridge process
-  2. Current observation text
-  3. Current choices mapping
-- No state duplication or tracking
-
-### 3. Direct Choice Handling (Enhanced)
-- ChoiceMapper becomes simple {number: choice.id} map
-- Add explicit validation step:
+### 2. Python Bridge Layer (`bridge.py`)
+- Manages TypeScript process lifecycle
+- Handles communication protocol
+- Provides clean Python interface:
   ```python
-  def validate_choice(choice_num: int) -> str:
-      if choice_num not in self.choice_map:
-          raise ValueError(
-              f"Invalid choice {choice_num}. Valid: {list(self.choice_map.keys())}\n"
-              f"Current State: {json.dumps(self.bridge_state, indent=2)}"
-          )
-      return self.choice_map[choice_num]
+  class GameState:
+      location_id: str
+      text: str
+      choices: List[Dict]
+      game_ended: bool
+      params: Dict
+      reward: float
   ```
 
-### 4. Clear Data Flow (Expanded)
-Add explicit error propagation:
+### 3. Environment Layer (`qm.py`)
+- Implements TextArena interface
+- Manages choice mapping (numbers to jump IDs)
+- Formats observations and state
+- Tracks history and renders output
+
+## Data Flow
 ```mermaid
 flowchart TD
-    Agent -->|number| Env
-    Env -->|validate| Error{Valid?}
-    Error -->|No| Agent[Raise ValueError]
-    Error -->|Yes| Bridge
-    Bridge -->|state| Env
-    Bridge -->|error| Env[Raise BridgeError]
-    Env -->|formatted| Agent
+    Agent[Agent] -->|choice number| Env[QMPlayerEnv]
+    Env -->|validate| Bridge[Python Bridge]
+    Bridge -->|jump id| TS[TypeScript Bridge]
+    TS -->|raw state| Bridge
+    Bridge -->|GameState| Env
+    Env -->|observation| Agent
 ```
 
-### 5. Testing Improvements (Concrete Examples)
-Add debug helper format:
-```python
-def format_debug_state(state: dict) -> str:
-    return (
-        f"Location: {state['locationId']}\n"
-        f"Choices:\n" +
-        "\n".join(f"{i+1}. {c['text']} ({c['id']})"
-                for i, c in enumerate(state['choices']))
-    )
-```
+## Choice Handling
+1. Agent provides choice number (1-based)
+2. Environment validates and maps to jump ID
+3. Bridge sends jump ID to TypeScript
+4. TypeScript executes jump and returns new state
+5. Bridge formats state into Python objects
+6. Environment updates TextArena state and renders
 
-## Benefits
-1. Single source of truth (Bridge)
-2. No state synchronization needed
-3. Simpler error handling
-4. Easier testing
-5. Clear responsibility boundaries
+## Error Handling
+1. Choice validation in environment
+2. Process management in bridge
+3. State validation in bridge
+4. Clear error messages propagated up
 
-## Migration Path (Updated)
-1. Update bridge to provide consistent format
-2. Simplify environment:
-   - Remove `QMGame` dependency
-   - Add state snapshotting via:
-   ```python
-   class QMEnv:
-       def __init__(self):
-           self.state_history: List[dict] = []
+## Testing Strategy
+1. Unit tests for each layer
+2. Integration tests for full pipeline
+3. End-to-end tests with real quests
+4. Debug logging at each level
 
-       def _record_state(self, state: dict):
-           self.state_history.append(deepcopy(state))
-   ```
-3. Update tests for new structure
-4. Add debugging helpers
+## Development Guidelines
+1. Keep TypeScript bridge as source of truth
+2. Handle all text formatting in Python
+3. Use clear error messages
+4. Maintain comprehensive logging
+5. Keep state immutable where possible

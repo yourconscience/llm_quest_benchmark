@@ -33,15 +33,25 @@ try {
 
 const qm = parse(data);
 
-// If parse mode, output raw QM structure and exit
-if (parseMode) {
-    console.log(JSON.stringify(qm));
-    process.exit(0);
-}
-
-// Interactive mode - initialize player
+// Initialize player
 const player = new QMPlayer(qm, language as "rus" | "eng");
 player.start();
+
+// If parse mode, output raw QM structure and exit
+if (parseMode) {
+    // Format data consistently with interactive mode
+    const state = player.getState();
+    const saving = player.getSaving();
+    console.log(JSON.stringify({
+        state: state,
+        saving: saving,
+        metadata: {
+            startLocationId: qm.locations[0]?.id || 0,
+            locations: qm.locations
+        }
+    }));
+    process.exit(0);
+}
 
 // Output initial raw state
 console.log(JSON.stringify({
