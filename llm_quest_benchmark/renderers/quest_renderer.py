@@ -1,29 +1,26 @@
 """
 Rich-based renderer for Space Rangers quests
 """
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any, Union
 
-import textarena as ta
 from rich.box import ROUNDED as RichRounded
 from rich.console import Console as RichConsole
 from rich.layout import Layout as RichLayout
 from rich.panel import Panel as RichPanel
 from rich.table import Table as RichTable
 from rich.text import Text as RichText
-from textarena.wrappers import SimpleRenderWrapper  # Add TextArena integration
+
+from llm_quest_benchmark.environments.state import QMState
 
 
-class QuestRenderer(SimpleRenderWrapper):  # Change base class
-    """
-    Rich-based renderer for Space Rangers quests with TextArena integration
-    Preserves existing history tracking while adding TextArena compatibility
-    """
+class QuestRenderer:
+    """Rich-based renderer for Space Rangers quests"""
 
-    def __init__(self, env: ta.Env, show_analysis: bool = True):
-        super().__init__(env)  # Use RenderWrapper's init
+    def __init__(self, env):
+        """Initialize renderer with environment"""
+        self.env = env
         self.console = RichConsole()
-        self.show_analysis = show_analysis
-        self.history: List[Dict] = []
+        self.history: List[Dict[str, Any]] = []
         self.layout = self._create_layout()
 
     def _create_layout(self) -> RichLayout:
@@ -68,54 +65,55 @@ class QuestRenderer(SimpleRenderWrapper):  # Change base class
                          border_style="yellow",
                          box=RichRounded)
 
-    def _render_parameters(self, state) -> RichTable:
-        """Extract parameters from TextArena state"""
+    def _render_parameters(self, state: Union[Dict[str, Any], QMState]) -> RichTable:
+        """Extract parameters from state"""
         params_table = RichTable(title="Quest Parameters")
         params_table.add_column("Parameter")
         params_table.add_column("Value")
-        for param, value in state.get('parameters', {}).items():
+
+        # Handle both dict and QMState objects
+        if isinstance(state, dict):
+            info = state.get('info', {})
+        else:
+            info = state.info if hasattr(state, 'info') else {}
+
+        for param, value in info.items():
             params_table.add_row(str(param), str(value))
         return params_table
 
-    def step(self, action):
-        """Track action in history and render"""
-        obs, reward, done, info = self.env.step(action)
+    def add_to_history(self, state: Union[Dict[str, Any], QMState]) -> None:
+        """Add state to history"""
+        # Convert QMState to dict for history tracking
+        if isinstance(state, QMState):
+            self.history.append({
+                'action': '',  # Will be updated by step
+                'text': state.text,
+                'choices': state.choices,
+                'reward': state.reward,
+                'done': state.done,
+                'info': state.info
+            })
+        else:
+            self.history.append(state)
 
-        # Track history
-        self.history.append({
-            'action': action,
-            'observation': obs,
-            'reward': reward,
-            'analysis': info.get('analysis')
-        })
-
-        # Render updated state
-        self.render()
-
-        return obs, reward, done, info
-
-    def render(self, mode: str = "human") -> None:
-        """Updated render method with TextArena compatibility"""
-        # Get state through TextArena's interface
+    def render(self) -> None:
+        """Render current state"""
+        # Get current state
         state = self.env.state
         observation = self.env.current_observation()
 
-        # Update panels using existing rendering logic
+        # Update panels
         state_panel = self._render_location(observation)
         params_panel = self._render_parameters(state)
         history_panel = self._render_history()
         analysis_panel = self._render_analysis(
-            self.history[-1].get('analysis') if self.history and self.show_analysis else None)
+            self.history[-1].get('analysis') if self.history else None)
 
         # Update layout sections
-        self.layout["main"]["state"].update(state_panel)
-        self.layout["main"]["params"].update(params_panel)
-        self.layout["history"].update(history_panel)
-        self.layout["sidebar"].update(analysis_panel)
+        self.layout["main"]["content"].update(state_panel)
+        self.layout["main"]["sidebar"].update(params_panel)
+        self.layout["footer"].update(history_panel)
 
         # Preserve existing console handling
         self.console.clear()
         self.console.print(self.layout)
-    def render_current_state(self):
-        """Render current state of the environment."""
-        self.render()

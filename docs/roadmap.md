@@ -1,53 +1,39 @@
-# LLM Quest Benchmark Roadmap
+# Project Roadmap
 
-## Current Status (v0.1)
+## Version 0.2 (Current)
 
-### ✅ Core Infrastructure
-- [x] TypeScript QM parser integration
-- [x] Python environment implementation
-- [x] Basic LLM agent interface
-- [x] Integration tests with timeouts
-- [x] Debug logging system
-- [x] Error handling for parser and environment
+### Core Infrastructure
+- [x] Integrate TypeScript QM parser
+- [x] Implement Python environment
+- [x] Remove TextArena dependency
+- [x] Implement basic agent interface
+- [x] Add quest renderer
 
-### 🔄 In Progress
-1. Agent prompt improvements
-2. Metrics analysis tools
-3. Test coverage expansion
+### In Progress
+- [ ] Improve TypeScript Bridge stability
+- [ ] Simplify environment interface
+- [ ] Add more test coverage
 
-## Next Milestone (v0.2)
+### Known Issues
+- TypeScript Bridge occasionally fails to parse complex quests
+- Some tests failing after environment updates
 
-### Parser & Environment
-1. Stable parsing for all quest files
-   - Validation system
-   - Edge case handling
-   - Format documentation
+### Next Steps
+1. Improve bridge stability
+2. Add more test coverage
+3. Document new environment interface
+4. Release version 0.2
 
-### Agent System
-1. Memory system implementation
-   - Context management
-   - State tracking
-   - History compression
+## Future Versions
 
-### Metrics & Analysis
-1. Comprehensive benchmarking
-   - Quest selection criteria
-   - Performance metrics
-   - Analysis dashboard
+### Version 0.3
+- [ ] Add support for more quest features
+- [ ] Improve error handling
+- [ ] Add more agent types
+- [ ] Enhance renderer capabilities
 
-## Future Directions (v0.3+)
-
-### Performance
-- Local model serving (vLLM)
-- Parallel quest evaluation
-- Resource optimization
-
-### Analysis
-- Model comparison framework
-- Success rate tracking
-- Decision point analysis
-
-### Integration
-- CI/CD pipeline
-- Containerized evaluation
-- Results database
+### Version 0.4
+- [ ] Add quest editor
+- [ ] Support for custom rewards
+- [ ] Add quest validation tools
+- [ ] Improve documentation

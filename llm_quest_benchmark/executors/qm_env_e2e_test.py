@@ -1,66 +1,35 @@
-"""
-Example to test the QMPlayer environment integration with TextArena.
-This script registers the QMPlayer environment, creates a simple dummy agent,
-and runs a game loop.
-"""
+"""Example to test the QMPlayer environment integration."""
 
-# Add src to Python path
-import sys
-from pathlib import Path
+import os
+import pytest
 
-import textarena as ta
-from textarena.envs.registration import register as ta_register
+from llm_quest_benchmark.environments.qm import SimpleQMEnv
+from llm_quest_benchmark.agents.simple_agent import SimpleQuestAgent
 
-from llm_quest_benchmark import constants  # Use project constants
+def test_qm_env_e2e():
+    """Test end-to-end interaction with QM environment."""
+    # Initialize environment
+    env = SimpleQMEnv(quest_file="quests/boat.qm")
+    agent = SimpleQuestAgent(model="gpt-4o")
 
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root))
+    # Reset environment
+    state = env.reset()
+    assert state is not None
+    assert "text" in state
+    assert "choices" in state
+    assert len(state["choices"]) > 0
 
-# Register our custom QMPlayer environment
-ta_register(
-    id="QMPlayer-v0",
-    entry_point="llm_quest_benchmark.environments.qm:QMPlayerEnv",
-    qm_file=str(constants.DEFAULT_QUEST),  # Use QUESTS_DIR constant
-    max_steps=100)
+    # Take a step
+    action = agent.step(state)
+    assert isinstance(action, int)
+    assert 0 <= action < len(state["choices"])
 
+    # Step environment
+    next_state, reward, done, info = env.step(action)
+    assert next_state is not None
+    assert isinstance(reward, (int, float))
+    assert isinstance(done, bool)
+    assert isinstance(info, dict)
 
-class DummyAgent:
-    """Simple agent that always selects the first option"""
-
-    def __call__(self, observation: str) -> str:
-        print("\n--- Agent Observation ---")
-        print(observation)
-        return "1"  # Always choose first option
-
-
-def main():
-    # Create and wrap the environment
-    env = ta.make("QMPlayer-v0")
-    env = ta.wrappers.LLMObservationWrapper(env)
-    env = ta.wrappers.SimpleRenderWrapper(env, player_names={0: "DummyAgent"})
-
-    # Run test episode
-    print("\nStarting test episode...")
-    observations = env.reset()
-    done = False
-    agent = DummyAgent()
-
-    try:
-        while not done:
-            player_id, obs = env.get_observation()
-            action = agent(obs)
-            print(f"\nAgent action: {action}")
-            observations, rewards, done, info = env.step(action)
-            env.render()
-            if done:
-                print(f"\nGame over! Final rewards: {rewards}")
-                break
-    except Exception as e:
-        print(f"Error during episode: {e}")
-        raise  # Re-raise to see full traceback during testing
-    finally:
-        env.close()
-
-
-if __name__ == "__main__":
-    main()
+    # Clean up
+    env.close()

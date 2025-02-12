@@ -79,7 +79,7 @@ class QuestRunner:
 
                 if done:
                     # Quest completed
-                    final_reward = reward.get(0, 0)  # Get player 0's reward
+                    final_reward = reward if isinstance(reward, (int, float)) else reward.get(0, 0)  # Get player reward
                     if final_reward > 0:
                         self.logger.info("Quest completed successfully!")
                         return 0
