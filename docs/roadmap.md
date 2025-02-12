@@ -1,76 +1,101 @@
 # LLM Quest Benchmark Roadmap
 
 ## Core Architecture Principles
-1. **Minimal TextArena Integration** - Use TextArena for agent management and evaluation infrastructure
-2. **QM First** - Focus on faithful Space Rangers quest translation rather than generic game support
-3. **Developer Happiness** - Choose interesting tech over "production-ready" solutions
-   - Explicit third-party imports using `as` aliases
-   - Type hints for all public interfaces
-   - Avoid wildcard imports
-   - Prefer full module paths for rarely used components
+1. **Minimal Dependencies** - Focus on essential tools and libraries
+2. **QM First** - Focus on faithful Space Rangers quest experience
+3. **Developer Experience** - Choose best and well-designed tools to make other devs happy:
+   - Prioritize testing, logging, and debugging
+   - Clear error messages
+   - Good documentation
+   - Good code readability and structure
 
 ## Key Components
 
 ```mermaid
 graph TD
-    QM[QM Files] --> Parser
-    Parser --> QuestEnv[TextArena QuestEnv]
-    QuestEnv --> Agent[TextArena Agent]
+    QM[QM Files] --> Parser[TypeScript Bridge]
+    Parser --> QuestEnv[Quest Environment]
+    QuestEnv --> Agent[LLM Agent]
     Agent -->|Actions| QuestEnv
-    QuestEnv --> Evaluator[TextArena Evaluator]
+    QuestEnv --> Metrics[Metrics Collection]
 ```
 
-## Implementation Steps
+## Implementation Status
 
-### Phase 1: Basic Playable Environment
-1. **QM TextArena Adapter** (`src/qm_adapter.py`)
-   - ✓ Parse QM files using space-rangers-quest TypeScript parser
-   - ✓ Convert to simple Python data structures
-   - ✓ Map locations and choices to TextArena observations
-   - ✓ Track quest state and handle actions
+### ✅ Phase 1: Core Infrastructure
+1. **QM Parser Bridge**
+   - [x] TypeScript integration
+   - [x] JSON state conversion
+   - [ ] Error handling improvements
+   - [ ] Stable parsing for all quests
 
-2. **Quest-Specific Agent** (`src/llm_agent.py`)
-   - ✓ Basic QuestAgent using TextArena's agent system
-   - ✓ Strategic wrapper for analysis before action
-   - ✓ Basic step-by-step reasoning
-   - ✓ Jinja templates for prompts
-   - [ ] Add memory of past choices
+2. **Quest Environment**
+   - [x] State management
+   - [x] Action handling
+   - [x] Debug logging
+   - [ ] Better error messages
 
-3. **State Visualization** (`src/renderers/quest_renderer.py`)
-   - [ ] Rich-based custom renderer
-   - [ ] ASCII art for locations (optional)
-   - [ ] Quest state display
-   - [ ] Action history tracking
+3. **LLM Agent**
+   - [x] Basic integration
+   - [x] Model selection
+   - [ ] Improved prompts
+   - [ ] Memory system
 
-### Phase 2: Evaluation System
-1. **Quest Metrics** (`src/metrics.py`)
-   - [ ] Success rate tracking
-   - [ ] Narrative coherence scoring
-   - [ ] Decision consistency metrics
-   - [ ] Resource efficiency tracking
+### 🔄 Phase 2: Testing & Metrics
+1. **Testing Infrastructure**
+   - [x] Integration tests
+   - [x] Timeout handling
+   - [x] Debug logging
+   - [ ] More test coverage
 
-2. **Benchmark Suite** (`configs/benchmarks`)
-   - [ ] Test quest collection
-   - [ ] Model comparison configs
-   - [ ] Metrics aggregation
-   - [ ] Results visualization
+2. **Metrics System**
+   - [x] Basic collection
+   - [x] JSON output
+   - [ ] Analysis tools
+   - [ ] Benchmarking
 
-### Phase 3: Advanced Features
-1. **Agent Improvements**
-   - [ ] Quest-specific knowledge injection
-   - [ ] Different agent personalities
-   - [ ] Multi-turn reasoning
-   - [ ] Memory management
+### 📋 Phase 3: Improvements
+1. **Parser Stability**
+   - [ ] Better error handling
+   - [ ] Quest validation
+   - [ ] Format documentation
 
-2. **Multi-Agent Mode**
-   - [ ] Competitive quest solving
-   - [ ] Agent collaboration
-   - [ ] Performance comparison
+2. **Agent Enhancements**
+   - [ ] Context management
+   - [ ] Strategy injection
+   - [ ] Performance tuning
 
-3. **Infrastructure**
-   - [ ] VLLM local serving
-   - [ ] Results database
-   - [ ] Web dashboard
+3. **Benchmarking**
+   - [ ] Quest selection
+   - [ ] Model comparison
+   - [ ] Results analysis
+
+## Current Sprint
+1. [x] Integration tests with timeouts
+2. [x] Debug logging improvements
+3. [ ] QM parser error handling
+4. [ ] Agent prompt improvements
+5. [ ] Metrics analysis tools
+
+## Development Standards
+
+### Testing
+- Integration tests for CLI commands
+- Unit tests for core components
+- Debug logging in all modes
+- Timeout handling everywhere
+
+### Code Style
+- Formatted with yapf
+- Sorted with isort
+- Type hints required
+- Clear error messages
+
+### Documentation
+- Updated README
+- Clear roadmap
+- Inline comments
+- Debug logs
 
 ## Technology Choices
 
@@ -96,16 +121,6 @@ graph TD
 - Rich terminal UI
 
 This keeps the architecture focused while letting you explore modern LLM ops tools!
-
-## Current Sprint
-1. [✓] Basic environment and agent integration
-2. [✓] Strategic agent with reasoning
-3. [✓] Migrate to Jinja templates for prompts
-4. [✓] End-to-end quest completion with LLM
-   - [✓] Test quest selection and preparation
-   - [✓] Agent response validation
-   - [✓] Basic logging and debugging
-5. [✓] Basic metrics collection
 
 ## Workflow
 1. Development:
