@@ -31,6 +31,13 @@ def test_runner_initialization(runner, mock_logger):
 @patch('llm_quest_benchmark.renderers.quest_renderer.QuestRenderer')
 def test_runner_setup(mock_renderer, mock_agent, mock_env, runner):
     """Test that runner sets up components correctly"""
+    # Setup mocks
+    mock_env_instance = Mock()
+    mock_env.return_value = mock_env_instance
+    mock_agent_instance = Mock()
+    mock_agent.return_value = mock_agent_instance
+
+    # Initialize
     runner.initialize(str(DEFAULT_QUEST))
 
     # Check that components were initialized
@@ -44,7 +51,7 @@ def test_runner_setup(mock_renderer, mock_agent, mock_env, runner):
 def test_runner_execution(mock_agent, mock_env, runner):
     """Test quest execution flow"""
     # Setup mocks
-    mock_env_instance = mock_env.return_value
+    mock_env_instance = Mock()
     mock_env_instance.reset.return_value = {"observation": "test"}
     mock_env_instance.step.return_value = (
         {"observation": "next"},  # observations
@@ -53,9 +60,11 @@ def test_runner_execution(mock_agent, mock_env, runner):
         {}  # info
     )
     mock_env_instance.state.observations = [{"observation": "test"}]
+    mock_env.return_value = mock_env_instance
 
-    mock_agent_instance = mock_agent.return_value
+    mock_agent_instance = Mock()
     mock_agent_instance.return_value = "1"
+    mock_agent.return_value = mock_agent_instance
 
     # Initialize and run
     runner.initialize(str(DEFAULT_QUEST))
@@ -70,8 +79,10 @@ def test_runner_execution(mock_agent, mock_env, runner):
 @patch('llm_quest_benchmark.environments.qm_env.QMPlayerEnv')
 def test_runner_error_handling(mock_env, runner):
     """Test error handling during quest execution"""
-    mock_env_instance = mock_env.return_value
+    # Setup mock
+    mock_env_instance = Mock()
     mock_env_instance.reset.side_effect = Exception("Test error")
+    mock_env.return_value = mock_env_instance
 
     runner.initialize(str(DEFAULT_QUEST))
     exit_code = runner.run()

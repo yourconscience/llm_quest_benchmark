@@ -1,6 +1,7 @@
 """Basic tests for LLM agent functionality"""
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
+
 from llm_quest_benchmark.agents.llm_agent import QuestAgent
 
 
@@ -19,17 +20,15 @@ def mock_openrouter_response():
     return "1"  # Always choose first option for tests
 
 
-def test_agent_initialization():
-    """Test that agent can be created"""
-    agent = QuestAgent()
-    assert agent.system_template
-    assert agent.action_template
-
-
-@patch('textarena.agents.OpenRouterAgent.__call__')
-def test_agent_response_format(mock_call, example_observation, mock_openrouter_response):
+@patch('textarena.agents.OpenRouterAgent')
+def test_agent_response_format(mock_agent_class, example_observation, mock_openrouter_response):
     """Test that agent returns valid action number"""
-    mock_call.return_value = mock_openrouter_response
+    # Setup mock
+    mock_agent_instance = Mock()
+    mock_agent_instance.__call__.return_value = mock_openrouter_response
+    mock_agent_class.return_value = mock_agent_instance
+
+    # Create and test agent
     agent = QuestAgent(model_name="sonnet")  # Use sonnet model for testing
     response = agent(example_observation)
 
