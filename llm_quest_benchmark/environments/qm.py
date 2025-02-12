@@ -5,7 +5,6 @@ from dataclasses import dataclass
 
 import textarena as ta
 from llm_quest_benchmark.renderers.quest_renderer import QuestRenderer
-from llm_quest_benchmark.environments.qm_parser import parse_qm
 from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
 from llm_quest_benchmark.executors.ts_bridge.bridge import QMBridge
 

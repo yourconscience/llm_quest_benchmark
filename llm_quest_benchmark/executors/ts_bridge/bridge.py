@@ -94,9 +94,20 @@ class QMBridge:
             )
 
             # Read initial state
-            initial_raw = self.process.stdout.readline()
+            initial_raw = ""
+            while True:
+                line = self.process.stdout.readline()
+                if not line:
+                    break
+                initial_raw += line.strip()
+                if line.strip().endswith("}"):
+                    break
+
             if self.debug:
                 logger.debug(f"Initial raw state: {initial_raw}")
+
+            if not initial_raw:
+                raise RuntimeError("No initial state received from TypeScript bridge")
 
             initial_state = GameState.from_raw_state(json.loads(initial_raw))
             self.state_history.append(initial_state)
@@ -114,7 +125,21 @@ class QMBridge:
         try:
             self.process.stdin.write("get_state\n")
             self.process.stdin.flush()
-            raw_state = json.loads(self.process.stdout.readline())
+
+            # Read response
+            response = ""
+            while True:
+                line = self.process.stdout.readline()
+                if not line:
+                    break
+                response += line.strip()
+                if line.strip().endswith("}"):
+                    break
+
+            if not response:
+                raise RuntimeError("No response received from TypeScript bridge")
+
+            raw_state = json.loads(response)
             return GameState.from_raw_state(raw_state)
         except Exception as e:
             logger.error(f"Failed to get current state: {str(e)}")
@@ -150,9 +175,20 @@ class QMBridge:
             self.process.stdin.flush()
 
             # Read response
-            response = self.process.stdout.readline()
+            response = ""
+            while True:
+                line = self.process.stdout.readline()
+                if not line:
+                    break
+                response += line.strip()
+                if line.strip().endswith("}"):
+                    break
+
             if self.debug:
                 logger.debug(f"Raw response: {response}")
+
+            if not response:
+                raise RuntimeError("No response received from TypeScript bridge")
 
             # Parse and store new state
             new_state = GameState.from_raw_state(json.loads(response))
