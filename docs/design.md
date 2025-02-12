@@ -57,3 +57,11 @@
 - Inline comments for complex logic
 - Debug logs for runtime behavior
 - Clear error messages
+
+### Git Workflow
+- Create feature branches for all changes
+- Branch naming: `feature/description` or `fix/description`
+- Test changes in feature branch before merging
+- Merge to master only when tests pass
+- Keep commits focused and well-described
+- Delete feature branches after successful merge
