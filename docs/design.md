@@ -59,9 +59,16 @@
 - Clear error messages
 
 ### Git Workflow
-- Create feature branches for all changes
+- Direct commits to master for:
+  - Documentation updates
+  - Small fixes
+  - Minor improvements
+  - Test updates
+- Feature branches for:
+  - New features
+  - Major refactoring
+  - Breaking changes
+  - Complex improvements
 - Branch naming: `feature/description` or `fix/description`
-- Test changes in feature branch before merging
-- Merge to master only when tests pass
+- Test changes before merging
 - Keep commits focused and well-described
-- Delete feature branches after successful merge
