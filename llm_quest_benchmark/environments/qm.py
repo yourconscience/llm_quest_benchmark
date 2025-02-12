@@ -40,7 +40,7 @@ def parse_qm(qm_path: str) -> QMGame:
     # Use correct path to parser in our package
     parser_script = PROJECT_ROOT / "llm_quest_benchmark" / "executors" / "ts_bridge" / "consoleplayer.ts"
 
-    cmd = ["node", "-r", "ts-node/register", str(parser_script), str(qm_path), "--json"]
+    cmd = ["node", "-r", "ts-node/register", str(parser_script), str(qm_path), "--parse"]
 
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -59,7 +59,7 @@ def parse_qm(qm_path: str) -> QMGame:
                 choices=[
                     QMChoice(jumpId=j['toLocId'], text=j['texts'][0] if j['texts'] else "")
                     for j in loc.get('jumps', [])
-                ]  # Используем get() для безопасности
+                ]
             )
 
         return QMGame(start_id=state['locId'], locations=locations)
@@ -67,6 +67,11 @@ def parse_qm(qm_path: str) -> QMGame:
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Node parser error:\n{e.stderr}")
     except json.JSONDecodeError as e:
-        # Добавим больше информации для отладки
-        print(f"Raw output: {proc.stdout[:200]}...")  # Показываем первые 200 символов
+        # Add debug info
+        print(f"Raw output: {proc.stdout[:200]}...")  # Show first 200 chars
         raise ValueError(f"Failed to parse JSON from parser. Error: {e}")
+    except KeyError as e:
+        # Add debug info for missing keys
+        print(f"Raw output: {proc.stdout[:200]}...")
+        print(f"Available keys: {raw_data.keys()}")
+        raise ValueError(f"Missing required key in parser output: {e}")

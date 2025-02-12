@@ -1,24 +1,9 @@
 # LLM Quest Benchmark Roadmap
 
-## Core Architecture Principles
-1. **Minimal Dependencies** - Focus on essential tools and libraries
-2. **QM First** - Focus on faithful Space Rangers quest experience
-3. **Developer Experience** - Choose best and well-designed tools to make other devs happy:
-   - Prioritize testing, logging, and debugging
-   - Clear error messages
-   - Good documentation
-   - Good code readability and structure
-
-## Key Components
-
-```mermaid
-graph TD
-    QM[QM Files] --> Parser[TypeScript Bridge]
-    Parser --> QuestEnv[Quest Environment]
-    QuestEnv --> Agent[LLM Agent]
-    Agent -->|Actions| QuestEnv
-    QuestEnv --> Metrics[Metrics Collection]
-```
+## Core Principles
+1. **QM First** - Focus on faithful Space Rangers quest experience
+2. **Developer Experience** - Prioritize testing, logging, and debugging
+3. **Minimal Dependencies** - Focus on essential tools and libraries
 
 ## Implementation Status
 
@@ -76,6 +61,22 @@ graph TD
 3. [ ] QM parser error handling
 4. [ ] Agent prompt improvements
 5. [ ] Metrics analysis tools
+
+## Technology Stack
+
+### Core
+- Rich (terminal UI)
+- LiteLLM (model API)
+- TypeScript (QM parser)
+
+### Testing
+- pytest
+- yapf + isort
+- pre-commit hooks
+
+### Future
+- vLLM (local models)
+- Guidance (prompts)
 
 ## Development Standards
 

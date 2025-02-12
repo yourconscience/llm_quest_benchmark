@@ -16,11 +16,12 @@ function cleanText(text: string): string {
 
 // Get the quest file path and language from command line arguments or environment
 if (process.argv.length < 3) {
-    console.error("Usage: ts-node consoleplayer.ts <quest_file.qm>");
+    console.error("Usage: ts-node consoleplayer.ts <quest_file.qm> [--json|--parse]");
     process.exit(1);
 }
 
 const questFilePath = process.argv[2];
+const parseMode = process.argv.includes("--parse");
 const validLanguages = ["rus", "eng"];
 const language = process.env.QM_LANG || "rus";
 
@@ -39,6 +40,23 @@ try {
 }
 
 const qm = parse(data);
+
+// If parse mode, output raw QM structure and exit
+if (parseMode) {
+    const player = new QMPlayer(qm, language as "rus" | "eng");
+    player.start();
+    const gameState = player.getSaving();  // Get actual game state
+    console.log(JSON.stringify({
+        state: {
+            locId: gameState.locationId,
+            params: gameState.paramValues
+        },
+        qm: qm
+    }));
+    process.exit(0);
+}
+
+// Interactive mode
 const player = new QMPlayer(qm, language as "rus" | "eng");
 player.start();
 
