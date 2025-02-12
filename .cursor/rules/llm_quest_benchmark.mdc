@@ -1,5 +1,5 @@
 ---
-description: LLM Quest Project
+description: LLM Quest Benchmark Project
 globs: 
 ---
 ################################################################################
@@ -12,7 +12,7 @@ VERSION: 0.2.0
 
 # Core Principles (Specific to this project)
 PROJECT_PRINCIPLES:
-  - QM_FIRST: Focus on Space Rangers quests, use space-rangers-quest parser as
+  - QM_FIRST: Focus on Space Rangers quests, use space-rangers-quest submodule for parsing as is
   - DEVELOPER_HAPPINESS: Prioritize interesting tech and rapid iteration.
   - MINIMAL_TEXTARENA: Use TextArena for infrastructure, but keep custom components focused.
 
@@ -21,16 +21,19 @@ PROJECT_PRINCIPLES:
 CONTEXT_FILES:
   - README.md: Project overview and setup.
   - roadmap.md: Project roadmap.
-  - llm_quest_benchmark/scripts/сщ: Main benchmarking script.
+  - llm_quest_benchmark/scripts/run_quest.py: Main benchmarking script.
   - space-rangers-quest/src/lib/qmreader.ts: QM parser (TypeScript).
   - llm_quest_benchmark/agents/llm_agent.py: Example LLM agent.
 
 # Tools and Commands (Specific to this project)
 # Provide concise descriptions and usage examples.
 TOOLS:
-  - activate-venv: Ensure virtual environment is active
-    - Usage: source .venv/bin/activate || python -m venv .venv && source .venv/bin/activate
-    - Priority: 1 (Must run before any pip/pipx commands)
+  - uv: Modern Python package manager
+    - Usage: uv pip install [package]
+    - Priority: 0 (Always use instead of pip)
+  - ensure-env: Setup environment
+    - Usage: source bin/ensure_env.sh
+    - Priority: 1 (Run before any Python commands)
   - llm-quest: Run a quest and benchmark an LLM agent.
     - Usage: `llm-quest run --quest <quest_path> --log-level <level>`
   - llm-analyze: Analyze benchmark results -- to be designed.
@@ -39,7 +42,11 @@ TOOLS:
     - Usage: `python llm_quest_benchmark/scripts/qm_player.py <quest_path>`
   - pre-commit: Maintain code quality
     - Usage: `pre-commit run --all-files`
-  - format: Auto-format code
-    - Usage: `yapf -irp . && isort .`
-  - safe-install: Install packages safely
-    - Usage: .venv/bin/activate && pip install [package]
+
+
+STANDARDS:
+  - ENV_CONSISTENCY: Always use bin/ensure_env.sh
+  - LOCK_FILES: requirements.lock must be committed
+  - CODE_STYLE: All code must pass pre-commit checks and not duplicate existing code
+  - TYPING: Use type hints for all public interfaces
+  - DOCS: Keep docs updated with code changes

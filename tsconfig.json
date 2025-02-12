@@ -10,7 +10,7 @@
         "types": ["node"]
     },
     "include": [
-        "llm_quest_benchmark/scripts/**/*",
+        "llm_quest_benchmark/executors/**/*",
         "space-rangers-quest/src/**/*"
     ]
 }
