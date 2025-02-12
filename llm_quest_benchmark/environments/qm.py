@@ -38,7 +38,7 @@ def parse_qm(qm_path: str) -> QMGame:
         raise FileNotFoundError(f"QM file not found: {qm_path}")
 
     # Use correct path to parser in our package
-    parser_script = PROJECT_ROOT / "llm_quest_benchmark" / "scripts" / "consoleplayer.ts"
+    parser_script = PROJECT_ROOT / "llm_quest_benchmark" / "executors" / "ts_bridge" / "consoleplayer.ts"
 
     cmd = ["node", "-r", "ts-node/register", str(parser_script), str(qm_path), "--json"]
 

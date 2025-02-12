@@ -1,10 +1,10 @@
 /// <reference types="node" />
 
 import * as readline from "readline";
-import { parse } from "../../space-rangers-quest/src/lib/qmreader";
+import { parse } from "../../../space-rangers-quest/src/lib/qmreader";
 import * as fs from "fs";
 import * as process from "process";
-import { QMPlayer } from "../../space-rangers-quest/src/lib/qmplayer";
+import { QMPlayer } from "../../../space-rangers-quest/src/lib/qmplayer";
 
 // Helper function to clean text from QM tags
 function cleanText(text: string): string {

@@ -16,7 +16,7 @@ Available actions:
 
 @pytest.fixture
 def mock_openrouter_response():
-    return "1"  # Всегда выбираем первый вариант для тестов
+    return "1"  # Always choose first option for tests
 
 
 def test_agent_initialization():
@@ -30,8 +30,7 @@ def test_agent_initialization():
 def test_agent_response_format(mock_call, example_observation, mock_openrouter_response):
     """Test that agent returns valid action number"""
     mock_call.return_value = mock_openrouter_response
-
-    agent = QuestAgent()
+    agent = QuestAgent(model_name="sonnet")  # Use sonnet model for testing
     response = agent(example_observation)
 
     assert response.strip().isdigit()

@@ -1,18 +1,13 @@
 """CLI commands for llm-quest-benchmark"""
-import os
-import logging
-import signal
-from contextlib import contextmanager
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 import typer
-from rich.logging import RichHandler
 from typing_extensions import Annotated
 
+from llm_quest_benchmark.core.utils import LogManager, timeout, CommandTimeout
+from llm_quest_benchmark.core.runner import run_quest as run_quest_func
 from llm_quest_benchmark.executors.qm_player import play_quest as play_quest_func
-from llm_quest_benchmark.runner import run_quest as run_quest_func
 from llm_quest_benchmark.constants import (
     MODEL_CHOICES,
     DEFAULT_MODEL,
@@ -20,63 +15,14 @@ from llm_quest_benchmark.constants import (
     DEFAULT_LANG,
 )
 
-# Set up logging with rich handler
-logging.basicConfig(
-    level="INFO",
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[RichHandler(rich_tracebacks=True)]
-)
-log = logging.getLogger("llm-quest")
-
-# Set transformers logging level
-os.environ["TRANSFORMERS_VERBOSITY"] = "error"
-
-class CommandTimeout(Exception):
-    """Raised when a command times out"""
-    pass
-
-@contextmanager
-def timeout(seconds: int):
-    """Context manager for timing out long-running operations"""
-    def handler(signum, frame):
-        raise CommandTimeout(f"Operation timed out after {seconds} seconds")
-
-    # Register a function to raise the timeout error when signal received
-    signal.signal(signal.SIGALRM, handler)
-    signal.alarm(seconds)
-
-    try:
-        yield
-    finally:
-        # Disable the alarm
-        signal.alarm(0)
+# Initialize logging
+log_manager = LogManager()
+log = log_manager.get_logger()
 
 app = typer.Typer(
     help="llm-quest: Command-line tools for LLM Quest Benchmark.",
     rich_markup_mode="rich",
 )
-
-def setup_logging(log_level: str) -> None:
-    """Configure logging based on the specified level"""
-    numeric_level = getattr(logging, log_level.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError(f"Invalid log level: {log_level}")
-
-    log.setLevel(numeric_level)
-    if log_level.upper() == "DEBUG":
-        # Create logs directory if it doesn't exist
-        log_dir = Path("logs")
-        log_dir.mkdir(exist_ok=True)
-
-        # Add file handler for debug logging
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        debug_handler = logging.FileHandler(log_dir / f"llm_quest_{timestamp}.log")
-        debug_handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        debug_handler.setFormatter(formatter)
-        log.addHandler(debug_handler)
-        log.debug("Debug logging enabled")
 
 @app.command(help="Run a quest with an LLM agent.")
 def run(
@@ -127,33 +73,46 @@ def run(
 ):
     """Run a quest with an LLM agent."""
     try:
-        setup_logging(log_level)
+        log_manager.setup(log_level)
         log.info(f"Starting quest run with model {model}")
         log.debug(f"Quest file: {quest}")
         log.debug(f"Timeout: {timeout_seconds}s")
 
         if timeout_seconds > 0:
-            with timeout(timeout_seconds):
-                exit_code = run_quest_func(
-                    quest=str(quest),
-                    log_level=log_level,
-                    model=model,
-                    metrics=metrics,
-                )
+            try:
+                with timeout(timeout_seconds):
+                    exit_code = run_quest_func(
+                        quest=str(quest),
+                        log_level=log_level,
+                        model=model,
+                        metrics=metrics,
+                        logger=log,
+                    )
+            except CommandTimeout as e:
+                if log_level.upper() == "DEBUG":
+                    log.error(
+                        f"Timeout error: {e}\n"
+                        "Debug suggestions:\n"
+                        "1. Check if the model API is responding\n"
+                        "2. Consider increasing timeout with --timeout option\n"
+                        "3. Check logs for any errors before timeout\n"
+                        "4. Try running with --model sonnet for faster responses"
+                    )
+                else:
+                    log.error(f"Timeout error: {e}")
+                raise typer.Exit(code=1)
         else:
             exit_code = run_quest_func(
                 quest=str(quest),
                 log_level=log_level,
                 model=model,
                 metrics=metrics,
+                logger=log,
             )
 
         log.info("Quest run completed")
         raise typer.Exit(code=exit_code)
 
-    except CommandTimeout as e:
-        log.error(f"Timeout error: {e}")
-        raise typer.Exit(code=1)
     except Exception as e:
         log.exception(f"Error during quest run: {e}")
         raise typer.Exit(code=1)
@@ -209,7 +168,7 @@ def play(
 ):
     """Play a Space Rangers quest interactively."""
     try:
-        setup_logging(log_level)
+        log_manager.setup(log_level)
         log.info(f"Starting interactive quest play")
         log.debug(f"Quest file: {quest}")
 
@@ -249,7 +208,7 @@ def analyze(
 ):
     """Analyze metrics from a quest run."""
     try:
-        setup_logging(log_level)
+        log_manager.setup(log_level)
         log.info(f"Analyzing metrics from {metrics_file}")
 
         import json
