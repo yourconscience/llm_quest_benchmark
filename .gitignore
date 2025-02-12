@@ -1,12 +1,12 @@
 # Temporary files and metrics
-tmp/*
-metrics/*
-logs/*
+tmp/
+metrics/
+logs/
 
 # Quest files and utils
-quests/*
+quests/
 !quests/boat.qm
-tge/*
+tge/
 
 # Local IDE
 .vscode/
@@ -17,16 +17,16 @@ tge/*
 .DS_Store
 
 # Python
-__pycache__/
 *.py[cod]
 *.egg-info/
+**/__pycache__/
+**/.pytest_cache/
 .venv/
 venv/
 env/
-llm_quest_benchmark/__pycache__/
 
 # Node modules and package-lock
-node_modules/*
+**/node_modules/
 package-lock.json
 
 # Build artifacts
