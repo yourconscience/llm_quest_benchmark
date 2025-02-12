@@ -1,77 +1,98 @@
-"""QM file parsing and data structures for Space Rangers quests"""
-import json
-import subprocess
-from pathlib import Path
-from typing import Any, Dict, List
+"""QM environment for Space Rangers quests"""
+from typing import Dict, List, Optional, Tuple, Any
+from dataclasses import dataclass
 
-from pydantic import BaseModel
-
-from llm_quest_benchmark.constants import PROJECT_ROOT
+from llm_quest_benchmark.renderers.quest_renderer import QuestRenderer
 
 
-class QMChoice(BaseModel):
-    """A single choice/action in a location"""
-    jumpId: int
+@dataclass
+class QMChoice:
+    """A choice in a QM location"""
+    id: str
     text: str
 
 
-class QMLocation(BaseModel):
-    """A location in the quest with its text and available choices"""
-    id: int
+@dataclass
+class QMLocation:
+    """A location in a QM file"""
+    id: str
     text: str
     choices: List[QMChoice]
 
 
-class QMGame(BaseModel):
-    """Complete quest state"""
-    start_id: int
-    locations: Dict[int, QMLocation]
-
-    def get_location(self, loc_id: int) -> QMLocation:
-        return self.locations[loc_id]
+@dataclass
+class QMGame:
+    """A QM game state"""
+    locations: Dict[str, QMLocation]
+    start_location_id: str
 
 
-def parse_qm(qm_path: str) -> QMGame:
-    """Parse QM file using space-rangers-quest TypeScript parser"""
-    qm_path = Path(qm_path).resolve()
-    if not qm_path.exists():
-        raise FileNotFoundError(f"QM file not found: {qm_path}")
+class QMPlayerEnv:
+    """Environment for playing QM files"""
 
-    # Use correct path to parser in our package
-    parser_script = PROJECT_ROOT / "llm_quest_benchmark" / "executors" / "ts_bridge" / "consoleplayer.ts"
+    def __init__(self, game: QMGame):
+        self.game = game
+        self.current_location_id = None
+        self.renderer = QuestRenderer(self)
+        self.done = False
+        self.reward = 0
+        self.info = {}
 
-    cmd = ["node", "-r", "ts-node/register", str(parser_script), str(qm_path), "--parse"]
+    def _get_location_description(self) -> str:
+        """Get the current location description with choices"""
+        location = self.game.locations[self.current_location_id]
+        desc = location.text + "\n\nChoices:\n"
+        for choice in location.choices:
+            desc += f"- {choice.text}\n"
+        return desc
 
-    try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        raw_data = json.loads(proc.stdout)
+    def reset(self) -> str:
+        """Reset the environment to initial state"""
+        self.current_location_id = self.game.start_location_id
+        self.done = False
+        self.reward = 0
+        self.info = {}
 
-        # Extract what we need from the raw data
-        state = raw_data['state']
-        qm = raw_data['qm']
+        # Get initial observation
+        observation = self._get_location_description()
 
-        # Convert to our format
-        locations = {}
-        for loc_id, loc in qm['locations'].items():
-            locations[int(loc_id)] = QMLocation(
-                id=int(loc_id),
-                text=loc['texts'][0] if loc['texts'] else "",
-                choices=[
-                    QMChoice(jumpId=j['toLocId'], text=j['texts'][0] if j['texts'] else "")
-                    for j in loc.get('jumps', [])
-                ]
-            )
+        # Add to history and render
+        self.renderer.add_to_history({
+            'location_id': self.current_location_id,
+            'observation': observation
+        })
+        self.renderer.render()
 
-        return QMGame(start_id=state['locId'], locations=locations)
+        return observation
 
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Node parser error:\n{e.stderr}")
-    except json.JSONDecodeError as e:
-        # Add debug info
-        print(f"Raw output: {proc.stdout[:200]}...")  # Show first 200 chars
-        raise ValueError(f"Failed to parse JSON from parser. Error: {e}")
-    except KeyError as e:
-        # Add debug info for missing keys
-        print(f"Raw output: {proc.stdout[:200]}...")
-        print(f"Available keys: {raw_data.keys()}")
-        raise ValueError(f"Missing required key in parser output: {e}")
+    def step(self, choice_id: str) -> Tuple[str, float, bool, Dict[str, Any]]:
+        """Take a step in the environment"""
+        if self.done:
+            return self._get_location_description(), 0, True, self.info
+
+        # Validate choice
+        location = self.game.locations[self.current_location_id]
+        valid_choices = [c.id for c in location.choices]
+
+        if choice_id not in valid_choices:
+            self.info['error'] = f'Invalid choice {choice_id}. Valid choices: {valid_choices}'
+            return self._get_location_description(), -1, False, self.info
+
+        # Update state
+        self.current_location_id = choice_id
+        observation = self._get_location_description()
+
+        # Check if we're done
+        self.done = len(self.game.locations[choice_id].choices) == 0
+        self.reward = 1 if self.done else 0
+
+        # Add to history and render
+        self.renderer.add_to_history({
+            'location_id': self.current_location_id,
+            'observation': observation,
+            'reward': self.reward,
+            'done': self.done
+        })
+        self.renderer.render()
+
+        return observation, self.reward, self.done, self.info

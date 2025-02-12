@@ -26,7 +26,7 @@ def test_runner_initialization(runner, mock_logger):
     assert runner.metrics_logger is None
 
 
-@patch('llm_quest_benchmark.environments.qm_env.QMPlayerEnv')
+@patch('llm_quest_benchmark.environments.qm.QMPlayerEnv')
 @patch('llm_quest_benchmark.agents.llm_agent.QuestAgent')
 @patch('llm_quest_benchmark.renderers.quest_renderer.QuestRenderer')
 def test_runner_setup(mock_renderer, mock_agent, mock_env, runner):
@@ -46,7 +46,7 @@ def test_runner_setup(mock_renderer, mock_agent, mock_env, runner):
     mock_renderer.assert_called_once()
 
 
-@patch('llm_quest_benchmark.environments.qm_env.QMPlayerEnv')
+@patch('llm_quest_benchmark.environments.qm.QMPlayerEnv')
 @patch('llm_quest_benchmark.agents.llm_agent.QuestAgent')
 def test_runner_execution(mock_agent, mock_env, runner):
     """Test quest execution flow"""
@@ -76,7 +76,7 @@ def test_runner_execution(mock_agent, mock_env, runner):
     assert exit_code == 0  # Success due to positive reward
 
 
-@patch('llm_quest_benchmark.environments.qm_env.QMPlayerEnv')
+@patch('llm_quest_benchmark.environments.qm.QMPlayerEnv')
 def test_runner_error_handling(mock_env, runner):
     """Test error handling during quest execution"""
     # Setup mock

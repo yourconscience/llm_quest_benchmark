@@ -19,7 +19,7 @@ sys.path.append(str(project_root))
 # Register our custom QMPlayer environment
 ta_register(
     id="QMPlayer-v0",
-    entry_point="llm_quest_benchmark.environments.qm_env:QMPlayerEnv",
+    entry_point="llm_quest_benchmark.environments.qm:QMPlayerEnv",
     qm_file=str(constants.DEFAULT_QUEST),  # Use QUESTS_DIR constant
     max_steps=100)
 

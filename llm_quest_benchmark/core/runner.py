@@ -3,8 +3,8 @@ import logging
 from typing import Optional, Tuple, Dict, Any
 
 from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_LANG
-from llm_quest_benchmark.agents.llm_agent import QuestAgent
-from llm_quest_benchmark.environments.qm_env import QMPlayerEnv
+from llm_quest_benchmark.agents.simple_agent import SimpleQuestAgent
+from llm_quest_benchmark.environments.qm import QMPlayerEnv
 from llm_quest_benchmark.renderers.quest_renderer import QuestRenderer
 from llm_quest_benchmark.metrics import MetricsLogger
 
@@ -31,7 +31,7 @@ class QuestRunner:
         self.env = QMPlayerEnv(quest, language=language)
 
         self.logger.debug("Initializing agent...")
-        self.agent = QuestAgent(debug=debug, model_name=model)
+        self.agent = SimpleQuestAgent(debug=debug, model_name=model)
         self.logger.info(f"Using model: {model}")
         self.logger.info(f"Using language: {language}")
 
@@ -42,58 +42,53 @@ class QuestRunner:
             self.metrics_logger = MetricsLogger(auto_save=True)
             self.metrics_logger.set_quest_file(quest)
 
-    def execute_step(self) -> Tuple[bool, float, Dict[str, Any]]:
-        """Execute a single step of the quest
-        Returns:
-            Tuple[bool, float, dict]: (is_done, reward, info)
-        """
-        self.logger.debug(f"Getting action from agent...")
-        action = self.agent(self.env.state.observations[0])
-        self.logger.debug(f"Agent chose action: {action}")
-
-        observations, rewards, done, info = self.env.step(action)
-        reward = rewards[0]
-
-        if self.metrics_logger:
-            self.metrics_logger.log_step(
-                self.env.metrics['steps_taken'],
-                observations,
-                action,
-                reward
-            )
-
-        self.logger.debug(f"Step complete. Reward: {reward}")
-        return done, reward, info
-
     def run(self) -> int:
-        """Run the quest to completion
+        """Run the quest until completion or error
+
         Returns:
             int: Exit code (0 for success, 1 for failure)
         """
+        if not self.env or not self.agent:
+            self.logger.error("Runner not initialized!")
+            return 1
+
         try:
-            self.logger.debug("Resetting environment...")
-            self.env.reset()
-            total_reward = 0
+            # Get initial state
+            observation = self.env.reset()
+            self.renderer.render()
 
             while True:
-                done, reward, info = self.execute_step()
-                total_reward += reward
+                # Get agent's action
+                action = self.agent(observation)
+
+                # Take action in environment
+                observation, reward, done, info = self.env.step(action)
+
+                # Render current state
+                self.renderer.render()
+
+                # Log metrics if enabled
+                if self.metrics_logger:
+                    self.metrics_logger.log_step(
+                        observation=observation,
+                        action=action,
+                        reward=reward,
+                        done=done,
+                        info=info
+                    )
 
                 if done:
-                    if reward > 0:
-                        self.logger.info("🎉 Quest completed successfully!")
+                    # Quest completed
+                    final_reward = reward.get(0, 0)  # Get player 0's reward
+                    if final_reward > 0:
+                        self.logger.info("Quest completed successfully!")
+                        return 0
                     else:
-                        self.logger.info("💥 Quest failed!")
-                    break
-
-            if self.metrics_logger:
-                self.logger.debug("Saving metrics...")
-                self.metrics_logger.save()
-
-            return 0 if total_reward > 0 else 1
+                        self.logger.info("Quest failed.")
+                        return 1
 
         except Exception as e:
-            self.logger.exception("Error during quest run")
+            self.logger.exception("Error during quest execution")
             return 1
 
 
