@@ -6,17 +6,9 @@ import * as fs from "fs";
 import * as process from "process";
 import { QMPlayer } from "../../../space-rangers-quest/src/lib/qmplayer";
 
-// Helper function to clean text from QM tags
-function cleanText(text: string): string {
-    return text
-        .replace(/<clr>/g, '')
-        .replace(/<clrEnd>/g, '')
-        .replace(/\r\n/g, '\n');
-}
-
-// Get the quest file path and language from command line arguments or environment
+// Get the quest file path and language from command line arguments
 if (process.argv.length < 3) {
-    console.error("Usage: ts-node consoleplayer.ts <quest_file.qm> [--json|--parse]");
+    console.error("Usage: ts-node consoleplayer.ts <quest_file.qm> [--parse]");
     process.exit(1);
 }
 
@@ -30,7 +22,7 @@ if (!validLanguages.includes(language)) {
     process.exit(1);
 }
 
-// Read the quest file
+// Read and parse the quest file
 let data: Buffer;
 try {
     data = fs.readFileSync(questFilePath);
@@ -43,80 +35,51 @@ const qm = parse(data);
 
 // If parse mode, output raw QM structure and exit
 if (parseMode) {
-    const player = new QMPlayer(qm, language as "rus" | "eng");
-    player.start();
-    const gameState = player.getSaving();  // Get actual game state
-    console.log(JSON.stringify({
-        state: {
-            locId: gameState.locationId,
-            params: gameState.paramValues
-        },
-        qm: qm
-    }));
+    console.log(JSON.stringify(qm));
     process.exit(0);
 }
 
-// Interactive mode
+// Interactive mode - initialize player
 const player = new QMPlayer(qm, language as "rus" | "eng");
 player.start();
 
-// Output initial state
+// Output initial raw state
 console.log(JSON.stringify({
-    text: cleanText(player.getState().text),
-    paramsState: player.getState().paramsState,
-    choices: player.getState().choices.map(choice => ({
-        ...choice,
-        text: cleanText(choice.text)
-    }))
+    state: player.getState(),
+    saving: player.getSaving()
 }));
 
-// Read input line by line (from Python)
+// Read commands and return raw state
 const rl = readline.createInterface({
-  input: process.stdin, // Read from stdin (provided by Python)
-  output: process.stdout, // Write to stdout (captured by Python)
+    input: process.stdin,
+    output: process.stdout,
 });
 
 rl.on('line', (input) => {
     try {
-        const answer = input.trim();
-        const state = player.getState();
+        const command = input.trim();
 
-        const id = parseInt(answer, 10);
-        if (!isNaN(id) && state.choices.find((x) => x.jumpId === id)) {
-            player.performJump(id);
-        } else {
-            console.info(`Wrong input!`);
+        // Handle special commands
+        if (command === "get_state") {
+            console.log(JSON.stringify({
+                state: player.getState(),
+                saving: player.getSaving()
+            }));
+            return;
         }
 
-        const newState = player.getState();
-        // Check for game end condition
-        const gameEnded = newState.choices.length === 0;
-        if (gameEnded) {
-            // Get final game state from QMPlayer logic
-            const finalReward = newState.gameState === "win" ? 1 : 0;
-
-            const finalState = {
-                gameEnded: true,
-                finalReward,
-                text: cleanText(newState.text),
-                paramsState: newState.paramsState,
-                choices: [],
-            };
-
-            // Emit the final state as JSON
-            console.log(JSON.stringify(finalState));
-        } else {
+        // Try to perform jump
+        const jumpId = parseInt(command, 10);
+        if (!isNaN(jumpId)) {
+            player.performJump(jumpId);
             console.log(JSON.stringify({
-                text: cleanText(newState.text),
-                paramsState: newState.paramsState,
-                choices: newState.choices.map(choice => ({
-                    ...choice,
-                    text: cleanText(choice.text)
-                }))
+                state: player.getState(),
+                saving: player.getSaving()
             }));
+        } else {
+            console.error(JSON.stringify({ error: "Invalid jump ID" }));
         }
     } catch (error) {
-        console.error(`Error processing input: ${error}`);
-        process.exit(1);
+        console.error(JSON.stringify({ error: String(error) }));
     }
 });
