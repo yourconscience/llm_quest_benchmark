@@ -41,6 +41,5 @@ TOOLS:
     - Usage: `pre-commit run --all-files`
   - format: Auto-format code
     - Usage: `yapf -irp . && isort .`
-
-+  - safe-install: Install packages safely
-+    - Usage: .venv/bin/python -m pip install [package]
+  - safe-install: Install packages safely
+    - Usage: .venv/bin/activate && pip install [package]
