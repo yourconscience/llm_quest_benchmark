@@ -37,7 +37,26 @@ player.start();
 
 // If in JSON mode, output parsed data and exit
 if (jsonMode) {
-    console.log(JSON.stringify(qm));
+    // Output only essential data needed for QM parser
+    const minimalQm = {
+        startLoc: qm.locations.find(loc => loc.isStarting)?.id || 0,
+        locations: qm.locations.map(loc => ({
+            id: loc.id,
+            texts: loc.texts.map((t: string) => t ? Buffer.from(t, 'utf8').toString('base64') : ''),
+            isStarting: loc.isStarting,
+            isSuccess: loc.isSuccess,
+            isFaily: loc.isFaily,
+            isFailyDeadly: loc.isFailyDeadly,
+            isEmpty: loc.isEmpty
+        })),
+        jumps: qm.jumps.map(jump => ({
+            id: jump.id,
+            fromLocationId: jump.fromLocationId,
+            toLocationId: jump.toLocationId,
+            texts: [jump.text].map(t => t ? Buffer.from(t, 'utf8').toString('base64') : '')
+        }))
+    };
+    console.log(JSON.stringify(minimalQm));
     process.exit(0);
 }
 

@@ -30,12 +30,23 @@ class QuestRenderer(SimpleRenderWrapper):  # Change base class
         """Create the base layout"""
         layout = RichLayout()
 
-        layout.split(RichLayout(name="header", size=3), RichLayout(name="main"),
-                     RichLayout(name="footer", size=3))
+        # Create main sections
+        layout.split(
+            RichLayout(name="header", size=3),
+            RichLayout(name="main"),
+            RichLayout(name="footer", size=3)
+        )
 
+        # Split main section into content and sidebar
         layout["main"].split_row(
             RichLayout(name="content", ratio=2),
-            RichLayout(name="sidebar", ratio=1),
+            RichLayout(name="sidebar", ratio=1)
+        )
+
+        # Split content section into state and parameters
+        layout["main"]["content"].split(
+            RichLayout(name="state"),
+            RichLayout(name="parameters")
         )
 
         return layout
@@ -73,8 +84,12 @@ class QuestRenderer(SimpleRenderWrapper):  # Change base class
         params_table = RichTable(title="Quest Parameters")
         params_table.add_column("Parameter")
         params_table.add_column("Value")
-        for param, value in state.get('parameters', {}).items():
-            params_table.add_row(str(param), str(value))
+
+        # Get parameters from game_state if available
+        if hasattr(state, 'game_state') and isinstance(state.game_state, dict):
+            for param, value in state.game_state.get('parameters', {}).items():
+                params_table.add_row(str(param), str(value))
+
         return params_table
 
     def step(self, action):
@@ -104,14 +119,13 @@ class QuestRenderer(SimpleRenderWrapper):  # Change base class
         state_panel = self._render_location(observation)
         params_panel = self._render_parameters(state)
         history_panel = self._render_history()
-        analysis_panel = self._render_analysis(
-            self.history[-1].get('analysis') if self.history and self.show_analysis else None)
+        analysis_panel = self._render_analysis(None)  # Initialize with no analysis
 
         # Update layout sections
-        self.layout["main"]["state"].update(state_panel)
-        self.layout["main"]["params"].update(params_panel)
-        self.layout["history"].update(history_panel)
-        self.layout["sidebar"].update(analysis_panel)
+        self.layout["main"]["content"]["state"].update(state_panel)
+        self.layout["main"]["content"]["parameters"].update(params_panel)
+        self.layout["main"]["sidebar"].update(history_panel)
+        self.layout["footer"].update(analysis_panel)
 
         # Preserve existing console handling
         self.console.clear()

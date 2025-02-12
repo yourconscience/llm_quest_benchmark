@@ -1,10 +1,11 @@
 {# Template for processing quest observations and choices #}
-Current observation:
+Current game state:
 {{ observation }}
 
-Available actions:
+Available choices:
 {% for choice in choices %}
 {{ loop.index }}. {{ choice.text }}
 {% endfor %}
 
-Choose your action (respond with just the number):
+Based on the current game state and available choices, select the most appropriate action.
+Respond with just the number of your chosen action (1-{{ choices|length }}):

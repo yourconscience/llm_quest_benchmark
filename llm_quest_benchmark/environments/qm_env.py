@@ -40,6 +40,10 @@ class QMPlayerEnv(ta.Env):
             desc += f"{i}. {choice.text}\n"
         return desc
 
+    def current_observation(self) -> str:
+        """Get current observation for rendering"""
+        return self._get_location_description()
+
     def reset(self, seed: int = None) -> dict:
         """Reset to initial state"""
         if seed is not None:
@@ -48,8 +52,10 @@ class QMPlayerEnv(ta.Env):
 
         self.current_loc_id = self.qm_data.start_id
 
-        self.state.reset(game_state={"description": self._get_location_description()},
-                         player_prompt_function=lambda pid, gs: gs["description"])
+        self.state.reset(
+            game_state={"description": self._get_location_description()},
+            player_prompt_function=lambda **kwargs: kwargs['game_state'].get("description", "")
+        )
         return self.state.observations
 
     def step(self, action: str):

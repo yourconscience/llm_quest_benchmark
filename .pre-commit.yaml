@@ -17,3 +17,8 @@ repos:
         args:
           - '--sp'
           - './.isort.cfg'
+
+      - id: prevent-git-damage
+        name: Protect git internals
+        entry: '! git rev-parse --show-toplevel | grep -q "/.git/"'
+        language: system

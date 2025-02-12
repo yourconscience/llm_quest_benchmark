@@ -3,6 +3,7 @@ import json
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List
+import base64
 
 from pydantic import BaseModel
 
@@ -51,7 +52,6 @@ def parse_qm(qm_path: str) -> QMGame:
     ]
 
     try:
-        # Run with no stdin to prevent waiting for input
         proc = subprocess.run(
             cmd,
             capture_output=True,
@@ -59,30 +59,63 @@ def parse_qm(qm_path: str) -> QMGame:
             check=True,
             stdin=subprocess.DEVNULL
         )
-        qm_data = json.loads(proc.stdout)
 
-        # Convert QM data to our format
+        # Extract valid JSON substring from the output
+        raw_output = proc.stdout
+        start_idx = raw_output.find('{')
+        end_idx = raw_output.rfind('}')
+        if start_idx == -1 or end_idx == -1:
+            raise ValueError("No valid JSON found in parser output")
+        json_text = raw_output[start_idx:end_idx+1]
+        qm_data = json.loads(json_text)
+
+        # Convert QM data to our format with base64 decoding
         locations = {}
-        for loc_id, loc in qm_data['locations'].items():
-            locations[int(loc_id)] = QMLocation(
-                id=int(loc_id),
-                text=loc['texts'][0] if loc['texts'] else "",
-                choices=[
-                    QMChoice(jumpId=j['toLocId'], text=j['texts'][0] if j['texts'] else "")
-                    for j in loc.get('jumps', [])
-                ]
+        for loc in qm_data.get('locations', []):
+            decoded_text = ""
+            if loc.get('texts') and len(loc['texts']) > 0:
+                try:
+                    decoded_text = base64.b64decode(loc['texts'][0]).decode('utf8')
+                except Exception:
+                    decoded_text = loc['texts'][0]
+
+            # Get jumps for this location
+            choices = []
+            for jump in qm_data.get('jumps', []):
+                if jump.get('fromLocationId') == loc['id']:
+                    decoded_text = ""
+                    if jump.get('texts') and len(jump['texts']) > 0:
+                        try:
+                            decoded_text = base64.b64decode(jump['texts'][0]).decode('utf8')
+                        except Exception:
+                            decoded_text = jump['texts'][0]
+                    choices.append(QMChoice(jumpId=jump.get('toLocationId', 0), text=decoded_text))
+
+            locations[int(loc['id'])] = QMLocation(
+                id=int(loc['id']),
+                text=decoded_text,
+                choices=choices
             )
 
-        return QMGame(start_id=qm_data['startLocId'], locations=locations)
+        # Find start location
+        start_id = qm_data.get('startLoc', 0)
+        if not start_id:
+            # Try to find starting location from locations
+            for loc in qm_data.get('locations', []):
+                if loc.get('isStarting'):
+                    start_id = loc['id']
+                    break
+
+        return QMGame(start_id=start_id, locations=locations)
 
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Node parser error:\n{e.stderr}")
     except json.JSONDecodeError as e:
-        print(f"Raw output: {proc.stdout[:200]}...")  # Show first 200 characters
+        print(f"Raw output: {proc.stdout[:200]}...")
         raise ValueError(f"Failed to parse JSON from parser. Error: {e}")
     except KeyError as e:
-        print(f"Raw output: {proc.stdout[:200]}...")  # Show first 200 characters
+        print(f"Raw output: {proc.stdout[:200]}...")
         raise ValueError(f"Missing required field in parser output: {e}")
     except IndexError as e:
-        print(f"Raw output: {proc.stdout[:200]}...")  # Show first 200 characters
+        print(f"Raw output: {proc.stdout[:200]}...")
         raise ValueError(f"No choices found in parser output: {e}")
