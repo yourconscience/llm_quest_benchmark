@@ -51,7 +51,7 @@ def play_quest(quest_path: str, language: str, skip: bool = False, metrics: bool
         raise FileNotFoundError(f"Quest file not found: {quest_path}")
 
     node_exe = find_node_executable()
-    consoleplayer_path = PROJECT_ROOT / "llm_quest_benchmark" / "scripts" / "consoleplayer.ts"
+    consoleplayer_path = PROJECT_ROOT / "llm_quest_benchmark" / "executors" / "ts_bridge" / "consoleplayer.ts"
 
     cmd = [
         node_exe,
