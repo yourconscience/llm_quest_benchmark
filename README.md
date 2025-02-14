@@ -1,27 +1,17 @@
-# LLM Quest Benchmark
+# LLM Quest Benchmark 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A framework for evaluating LLM performance on complex decision-making tasks using Space Rangers text quests. The project provides:
-
-- **Quest Environment**: Run classic Space Rangers quests through a modern LLM-powered agent
-- **Interactive Mode**: Play quests manually or let an LLM agent navigate them
-- **Metrics Collection**: Track success rates, decision patterns, and performance metrics
-- **Developer Tools**: Rich debugging, state history, and comprehensive testing
-
-Built with LiteLLM for model access, Space Rangers Quest engine for parsing, and Rich for beautiful terminal output.
+Observe and analyze LLM agents decision-making through Space Rangers text adventures! 👾🚀📊
 
 ## Features
 
-- Run quests with different LLM models (Claude, GPT-4, etc.)
-- Interactive play mode with:
-  - Auto-skip for simple choices
-  - Rich terminal UI
-  - Debug state inspection
-  - State history tracking
-- Comprehensive metrics collection
-- Robust error handling and debugging
-- Beautiful terminal UI with Rich
+- 👾 **Quest Environment**: Classic Space Rangers text quests act as single-agent environments.
+- 🤖 **LLM Agents**: Simple yet customizable via prompt templates and optional thinking.
+- ⭐️ **Latest LLM Providers**: OpenAI, Anthropic, Deepseek, OpenRouter models are supported.
+- 🎮 **Interactive Mode**: Play quests as Human Agent in Rich terminal UI.
+- 📊 **Metrics Collection**: Track success rates, decision patterns, and performance metrics.
+- 🛠️ **Developer Tools**: Rich debugging, state history, and comprehensive testing.
 
 ## Prerequisites
 
@@ -79,21 +69,6 @@ llm-quest play --debug
 llm-quest run --timeout 5
 ```
 
-## CLI Options
-
-### Common Options
-- `--quest`: Quest file path (default: quests/boat.qm)
-- `--log-level`: Logging level (debug, info, warning)
-- `--metrics`: Enable metrics collection
-
-### Run Mode Options
-- `--model`: LLM model (sonnet, claude, gpt4)
-- `--timeout`: Timeout in seconds (default: 60)
-
-### Play Mode Options
-- `--skip`: Auto-select single choices
-- `--debug`: Show state history and debug info
-- `--lang`: Quest language (rus, eng)
 
 ## Project Structure
 
@@ -109,14 +84,6 @@ llm-quest run --timeout 5
 - `docs/` - Documentation
 
 See [docs/roadmap.md](docs/roadmap.md) for development status and plans.
-
-## Architecture
-
-The project uses a simplified architecture with clear boundaries:
-1. TypeScript bridge provides raw access to Space Rangers Quest engine
-2. Python bridge handles state management and formatting
-3. Environment provides clean interface for agents
-4. Rich UI for beautiful terminal output
 
 See [docs/qm_simplified_workflow.md](docs/qm_simplified_workflow.md) for details.
 
