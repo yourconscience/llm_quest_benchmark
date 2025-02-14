@@ -34,6 +34,12 @@ TOOLS:
   - ensure-env: Setup environment
     - Usage: source ensure_env.sh
     - Priority: 1 (Run before any Python commands)
+  - goose: AI agent for complex tasks and analysis
+    - Usage:
+      - Run task: `goose run -t "task description"`
+      - Run with file: `goose run -i instructions.txt`
+      - Debug output: Add debug context to task description
+    - Priority: 2 (Use for complex analysis and debugging)
  - llm-quest: CLI tool for running and playing quests
     - Usage: 
       - Run with LLM: `llm-quest run --quest <quest_path> --log-level <level>`
