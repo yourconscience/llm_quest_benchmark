@@ -7,13 +7,15 @@ from typing_extensions import Annotated
 
 from llm_quest_benchmark.core.logger import LogManager
 from llm_quest_benchmark.core.time import timeout, CommandTimeout
-from llm_quest_benchmark.core.runner import run_quest as run_quest_func
-from llm_quest_benchmark.executors.qm_player import play_quest as play_quest_func
+from llm_quest_benchmark.core.runner import run_quest
+from llm_quest_benchmark.environments.state import QuestOutcome
+from llm_quest_benchmark.executors.qm_player import play_quest
 from llm_quest_benchmark.constants import (
     MODEL_CHOICES,
     DEFAULT_MODEL,
     LANG_CHOICES,
     DEFAULT_LANG,
+    DEFAULT_QUEST,
 )
 
 # Initialize logging
@@ -56,6 +58,15 @@ def run(
             help=f"Model for the LLM agent (choices: {', '.join(MODEL_CHOICES)}).",
         ),
     ] = DEFAULT_MODEL,
+    language: Annotated[
+        str,
+        typer.Option(
+            "--language",
+            "--lang",
+            "-l",
+            help=f"Language for quest text (choices: {', '.join(LANG_CHOICES)}).",
+        ),
+    ] = DEFAULT_LANG,
     metrics: Annotated[
         bool,
         typer.Option(
@@ -82,41 +93,37 @@ def run(
         if timeout_seconds > 0:
             try:
                 with timeout(timeout_seconds):
-                    exit_code = run_quest_func(
+                    outcome = run_quest(
                         quest=str(quest),
-                        log_level=log_level,
                         model=model,
+                        language=language,
+                        log_level=log_level,
                         metrics=metrics,
-                        logger=log,
                     )
-            except CommandTimeout as e:
-                if log_level.upper() == "DEBUG":
-                    log.error(
-                        f"Timeout error: {e}\n"
-                        "Debug suggestions:\n"
-                        "1. Check if the model API is responding\n"
-                        "2. Consider increasing timeout with --timeout option\n"
-                        "3. Check logs for any errors before timeout\n"
-                        "4. Try running with --model sonnet for faster responses"
-                    )
-                else:
-                    log.error(f"Timeout error: {e}")
-                raise typer.Exit(code=1)
+            except CommandTimeout:
+                outcome = QuestOutcome.ERROR
         else:
-            exit_code = run_quest_func(
+            outcome = run_quest(
                 quest=str(quest),
-                log_level=log_level,
                 model=model,
+                language=language,
+                log_level=log_level,
                 metrics=metrics,
-                logger=log,
             )
 
-        log.info("Quest run completed")
-        raise typer.Exit(code=exit_code)
+        # Map outcome to exit code
+        exit_codes = {
+            QuestOutcome.SUCCESS: 0,
+            QuestOutcome.FAILURE: 1,
+            QuestOutcome.ERROR: 2
+        }
+
+        log.info(f"Quest run completed with outcome: {outcome}")
+        raise typer.Exit(code=exit_codes[outcome])
 
     except Exception as e:
         log.exception(f"Error during quest run: {e}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=2)
 
 @app.command(help="Play a quest interactively in the console.")
 def play(
@@ -173,15 +180,27 @@ def play(
         log.info(f"Starting interactive quest play")
         log.debug(f"Quest file: {quest}")
 
-        play_quest_func(
-            quest_path=str(quest),
+        outcome = play_quest(
+            quest=str(quest),
             language=language,
-            skip=skip,
+            log_level=log_level,
+            skip_single=skip,
             metrics=metrics,
         )
+
+        # Map outcome to exit code
+        exit_codes = {
+            QuestOutcome.SUCCESS: 0,
+            QuestOutcome.FAILURE: 1,
+            QuestOutcome.ERROR: 2
+        }
+
+        log.info(f"Quest play completed with outcome: {outcome}")
+        raise typer.Exit(code=exit_codes[outcome])
+
     except Exception as e:
         log.exception(f"Error during interactive play: {e}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=2)
 
 @app.command(help="Analyze metrics from a quest run.")
 def analyze(

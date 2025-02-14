@@ -2,7 +2,6 @@
 from typing import Dict, List, Optional, Tuple, Any
 from copy import deepcopy
 
-from llm_quest_benchmark.renderers.quest_renderer import QuestRenderer
 from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
 from llm_quest_benchmark.executors.ts_bridge.bridge import QMBridge
 from llm_quest_benchmark.environments.state import QMState
@@ -16,7 +15,7 @@ class QMPlayerEnv:
     1. Manages the bridge lifecycle
     2. Handles choice mapping between sequential numbers and jump IDs
     3. Formats observations and state
-    4. Tracks game history and renders state
+    4. Tracks game history
     """
 
     def __init__(self, quest_file: str, language: str = "rus", debug: bool = False):
@@ -35,9 +34,6 @@ class QMPlayerEnv:
         self.bridge = QMBridge(quest_file, debug=debug)
         self.state_history: List[QMState] = []
         self.choice_mapper: Optional[ChoiceMapper] = None
-
-        # Initialize renderer
-        self.renderer = QuestRenderer(self)
 
     def _format_observation(self, state) -> str:
         """Format observation text from game state"""
@@ -73,10 +69,6 @@ class QMPlayerEnv:
         # Update choice mapper and history
         self.choice_mapper = ChoiceMapper(initial_state.choices)
         self.state_history = [deepcopy(initial_state)]
-
-        # Add to history and render
-        self.renderer.add_to_history(deepcopy(initial_state))
-        self.renderer.render()
 
         return self._format_observation(initial_state)
 
@@ -117,10 +109,6 @@ class QMPlayerEnv:
             # Update choice mapper and history
             self.choice_mapper = ChoiceMapper(new_state.choices)
             self.state_history.append(deepcopy(new_state))
-
-            # Add to history and render
-            self.renderer.add_to_history(deepcopy(new_state))
-            self.renderer.render()
 
             return (
                 self._format_observation(new_state),
