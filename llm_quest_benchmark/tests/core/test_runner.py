@@ -4,6 +4,7 @@ import pytest
 from unittest.mock import Mock, patch
 
 from llm_quest_benchmark.core.runner import QuestRunner
+from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.constants import DEFAULT_QUEST
 
 
@@ -26,9 +27,9 @@ def test_runner_initialization(runner, mock_logger):
     assert runner.metrics_logger is None
 
 
-@patch('llm_quest_benchmark.environments.qm.QMPlayerEnv')
-@patch('llm_quest_benchmark.agents.simple_agent.SimpleQuestAgent')
-@patch('llm_quest_benchmark.renderers.quest_renderer.QuestRenderer')
+@patch('llm_quest_benchmark.core.runner.QMPlayerEnv')
+@patch('llm_quest_benchmark.core.runner.LLMAgent')
+@patch('llm_quest_benchmark.core.runner.QuestRenderer')
 def test_runner_setup(mock_renderer, mock_agent, mock_env, runner):
     """Test that runner sets up components correctly"""
     # Setup mocks
@@ -53,18 +54,18 @@ def test_runner_setup(mock_renderer, mock_agent, mock_env, runner):
     assert runner.renderer == mock_renderer_instance
 
 
-@patch('llm_quest_benchmark.environments.qm.QMPlayerEnv')
-@patch('llm_quest_benchmark.agents.simple_agent.SimpleQuestAgent')
-@patch('llm_quest_benchmark.renderers.quest_renderer.QuestRenderer')
+@patch('llm_quest_benchmark.core.runner.QMPlayerEnv')
+@patch('llm_quest_benchmark.core.runner.LLMAgent')
+@patch('llm_quest_benchmark.core.runner.QuestRenderer')
 def test_runner_execution(mock_renderer, mock_agent, mock_env, runner):
-    """Test quest execution flow"""
+    """Test quest execution flow - simplified to one step"""
     # Setup mocks
     mock_env_instance = Mock()
     mock_env_instance.reset.return_value = "Initial observation"
     mock_env_instance.step.return_value = (
         "Next observation",  # observations
         1.0,  # reward
-        True,  # done
+        True,  # done - end after first step
         {}  # info
     )
     mock_env_instance.state = {'choices': [{'id': '1', 'text': 'Test choice'}]}
@@ -79,17 +80,17 @@ def test_runner_execution(mock_renderer, mock_agent, mock_env, runner):
 
     # Initialize and run
     runner.initialize(str(DEFAULT_QUEST))
-    exit_code = runner.run()
+    outcome = runner.run()
 
     # Verify execution flow
     mock_env_instance.reset.assert_called_once()
     mock_env_instance.step.assert_called_once_with("1")
     mock_agent_instance.get_action.assert_called_once_with("Initial observation", mock_env_instance.state['choices'])
     mock_renderer_instance.render.assert_called()
-    assert exit_code == 0  # Success due to positive reward
+    assert outcome == QuestOutcome.SUCCESS  # Success due to positive reward
 
 
-@patch('llm_quest_benchmark.environments.qm.QMPlayerEnv')
+@patch('llm_quest_benchmark.core.runner.QMPlayerEnv')
 def test_runner_error_handling(mock_env, runner):
     """Test error handling during quest execution"""
     # Setup mock
@@ -98,7 +99,7 @@ def test_runner_error_handling(mock_env, runner):
     mock_env.return_value = mock_env_instance
 
     runner.initialize(str(DEFAULT_QUEST))
-    exit_code = runner.run()
+    outcome = runner.run()
 
-    assert exit_code == 1  # Failure due to error
+    assert outcome == QuestOutcome.ERROR  # Error due to exception
     runner.logger.exception.assert_called_once()

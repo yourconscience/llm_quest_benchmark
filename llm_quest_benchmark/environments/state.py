@@ -1,6 +1,14 @@
 """State classes for QM environments"""
 from typing import Dict, List, Any
 from dataclasses import dataclass
+from enum import Enum
+
+
+class QuestOutcome(str, Enum):
+    """Final outcome of a quest execution"""
+    SUCCESS = "success"  # Quest completed with positive reward
+    FAILURE = "failure"  # Quest completed with negative/zero reward
+    ERROR = "error"    # Quest failed to complete (timeout, crash, etc)
 
 
 @dataclass
