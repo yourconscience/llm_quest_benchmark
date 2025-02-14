@@ -32,7 +32,7 @@ TOOLS:
     - Usage: uv pip install [package]
     - Priority: 0 (Always use instead of pip)
   - ensure-env: Setup environment
-    - Usage: source bin/ensure_env.sh
+    - Usage: source ensure_env.sh
     - Priority: 1 (Run before any Python commands)
  - llm-quest: CLI tool for running and playing quests
     - Usage: 
@@ -44,7 +44,7 @@ TOOLS:
 
 
 STANDARDS:
-  - ENV_CONSISTENCY: Always use bin/ensure_env.sh
+  - ENV_CONSISTENCY: Always use ensure_env.sh
   - LOCK_FILES: requirements.lock must be committed
   - CODE_STYLE: All code must pass pre-commit checks and not duplicate existing code
   - TYPING: Use type hints for all public interfaces
