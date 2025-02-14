@@ -34,12 +34,11 @@ TOOLS:
   - ensure-env: Setup environment
     - Usage: source bin/ensure_env.sh
     - Priority: 1 (Run before any Python commands)
-  - llm-quest: Run a quest and benchmark an LLM agent.
-    - Usage: `llm-quest run --quest <quest_path> --log-level <level>`
-  - llm-analyze: Analyze benchmark results -- to be designed.
-    - Usage: `llm-quest analyze <metrics_file>`
-  - qm_player.py: Play quests interactively.
-    - Usage: `python llm_quest_benchmark/scripts/qm_player.py <quest_path>`
+ - llm-quest: CLI tool for running and playing quests
+    - Usage: 
+      - Run with LLM: `llm-quest run --quest <quest_path> --log-level <level>`
+      - Play interactive: `llm-quest play --quest <quest_path> --log-level <level>`
+      - Analyze results: `llm-quest analyze --metrics-file <metrics_file>`
   - pre-commit: Maintain code quality
     - Usage: `pre-commit run --all-files`
 
