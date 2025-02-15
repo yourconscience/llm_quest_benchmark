@@ -1,17 +1,20 @@
-"""Project-wide constants and paths"""
+"""Constants for llm-quest-benchmark"""
 from pathlib import Path
 
-# Project paths
-PROJECT_ROOT = Path(__file__).parent.parent
-PROMPT_TEMPLATES_DIR = PROJECT_ROOT / "llm_quest_benchmark" / "prompt_templates"
-QUESTS_DIR = PROJECT_ROOT / "quests"
-
-# Default quest for testing
-DEFAULT_QUEST = QUESTS_DIR / "boat.qm"
-
-MODEL_CHOICES = ["gpt-4o", "sonnet", "deepseek"]
+# Model choices
+MODEL_CHOICES = ["gpt-4o", "gpt-4o-mini", "sonnet", "deepseek"]
 DEFAULT_MODEL = "gpt-4o"
 
-# Language options
+# Language choices
 LANG_CHOICES = ["rus", "eng"]
 DEFAULT_LANG = "rus"
+
+# Default quest
+DEFAULT_QUEST = "quests/boat.qm"
+
+# Paths
+PROMPT_TEMPLATES_DIR = Path(__file__).parent / "prompt_templates"
+
+# Templates
+DEFAULT_TEMPLATE = "default.jinja"
+REASONING_TEMPLATE = "reasoning.jinja"

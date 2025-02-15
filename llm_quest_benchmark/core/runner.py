@@ -3,7 +3,7 @@ import logging
 from typing import Optional, Dict, Any
 import json
 
-from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_LANG
+from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_LANG, DEFAULT_TEMPLATE
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
 from llm_quest_benchmark.environments.qm import QMPlayerEnv
 from llm_quest_benchmark.renderers.terminal import TerminalRenderer
@@ -29,19 +29,20 @@ class QuestRunner:
         model: str = DEFAULT_MODEL,
         language: str = DEFAULT_LANG,
         debug: bool = False,
-        metrics: bool = False
+        metrics: bool = False,
+        template: str = DEFAULT_TEMPLATE,
     ) -> None:
         """Initialize all components needed for quest execution"""
         self.logger.debug("Initializing environment...")
         self.env = QMPlayerEnv(quest, language=language, debug=debug)
 
         self.logger.debug("Initializing agent...")
-        self.agent = LLMAgent(debug=debug, model_name=model)
+        self.agent = LLMAgent(debug=debug, model_name=model, template=template)
         self.logger.info(f"Using model: {model}")
         self.logger.info(f"Using language: {language}")
 
         # Initialize prompt renderer
-        self.prompt_renderer = PromptRenderer(self.env)
+        self.prompt_renderer = PromptRenderer(self.env, template=template)
 
         # Initialize unified logger
         self.quest_logger = QuestLogger(debug=debug, auto_save=metrics)
@@ -123,6 +124,7 @@ def run_quest(
     metrics: bool = False,
     headless: bool = False,
     logger: Optional[logging.Logger] = None,
+    template: str = DEFAULT_TEMPLATE,
 ) -> QuestOutcome:
     """Convenience function to run a quest with minimal setup
     Returns:
@@ -134,6 +136,7 @@ def run_quest(
         model=model,
         language=language,
         debug=(log_level.upper() == "DEBUG"),
-        metrics=metrics
+        metrics=metrics,
+        template=template,
     )
     return runner.run()

@@ -1,19 +1,91 @@
 """LLM agent for Space Rangers quests"""
+import json
 import logging
 from typing import Dict, List, Any, Optional
+from dataclasses import dataclass
 
-from jinja2 import Environment as JinjaEnvironment
-from jinja2 import FileSystemLoader
-from jinja2 import Template
-
-from llm_quest_benchmark.constants import PROMPT_TEMPLATES_DIR, MODEL_CHOICES
+from llm_quest_benchmark.constants import MODEL_CHOICES, DEFAULT_TEMPLATE
 from llm_quest_benchmark.agents.llm_client import get_llm_client
 from llm_quest_benchmark.agents.base import QuestPlayer
+from llm_quest_benchmark.renderers.prompt_renderer import PromptRenderer
 
-# Configure Jinja environment
-env = JinjaEnvironment(loader=FileSystemLoader(PROMPT_TEMPLATES_DIR),
-                      trim_blocks=True,
-                      lstrip_blocks=True)
+
+@dataclass
+class LLMResponse:
+    """Structured response from LLM agent"""
+    action: int  # The chosen action number (1-based)
+    reasoning: Optional[str] = None  # Optional explanation for the choice
+
+    def to_choice_string(self) -> str:
+        """Convert to choice string (1-based action number)"""
+        return str(self.action)
+
+
+def parse_llm_response(response: str, num_choices: int, debug: bool = False, logger: Optional[logging.Logger] = None) -> LLMResponse:
+    """Parse LLM response and return structured response object."""
+    if debug and logger:
+        logger.debug(f"Raw LLM response: {response}")
+
+    default_response = LLMResponse(action=1)  # Default to first choice if parsing fails
+
+    try:
+        # Try to parse as JSON first
+        try:
+            from json_repair import repair_json
+            try:
+                response_json = json.loads(response)
+            except json.JSONDecodeError:
+                # Try to repair and parse JSON
+                repaired_json = repair_json(response)
+                response_json = json.loads(repaired_json)
+
+            if isinstance(response_json, dict) and 'action' in response_json:
+                try:
+                    action = int(response_json['action'])
+                    if 1 <= action <= num_choices:
+                        return LLMResponse(
+                            action=action,
+                            reasoning=response_json.get('reasoning')
+                        )
+                    else:
+                        if debug and logger:
+                            logger.error(f"Action number {action} out of range [1, {num_choices}]")
+                except (ValueError, TypeError):
+                    if debug and logger:
+                        logger.error(f"Invalid action value in JSON: {response_json['action']}")
+            else:
+                # Try parsing as plain number
+                try:
+                    action = int(response.strip())
+                    if 1 <= action <= num_choices:
+                        return LLMResponse(action=action)
+                    else:
+                        if debug and logger:
+                            logger.error(f"Action number {action} out of range [1, {num_choices}]")
+                except ValueError:
+                    if debug and logger:
+                        logger.error(f"Could not parse response as number: {response}")
+
+        except (ImportError, json.JSONDecodeError) as e:
+            if debug and logger:
+                logger.error(f"JSON parsing failed: {str(e)}")
+            # Try parsing as plain number
+            try:
+                action = int(response.strip())
+                if 1 <= action <= num_choices:
+                    return LLMResponse(action=action)
+                else:
+                    if debug and logger:
+                        logger.error(f"Action number {action} out of range [1, {num_choices}]")
+            except ValueError:
+                if debug and logger:
+                    logger.error(f"Could not parse response as number: {response}")
+
+    except Exception as e:
+        if debug and logger:
+            logger.error(f"Response parsing failed: {str(e)}")
+
+    return default_response
 
 
 class LLMAgent(QuestPlayer):
@@ -21,9 +93,11 @@ class LLMAgent(QuestPlayer):
 
     SUPPORTED_MODELS = MODEL_CHOICES
 
-    def __init__(self, debug: bool = False, model_name: str = "gpt-4o"):
+    def __init__(self, debug: bool = False, model_name: str = "gpt-4o", template: str = DEFAULT_TEMPLATE):
         self.debug = debug
         self.model_name = model_name.lower()
+        self.template = template
+
         if self.model_name not in self.SUPPORTED_MODELS:
             raise ValueError(f"Unsupported model: {model_name}. Supported models are: {self.SUPPORTED_MODELS}")
 
@@ -34,39 +108,34 @@ class LLMAgent(QuestPlayer):
             handler.setFormatter(logging.Formatter('%(name)s - %(message)s'))
             self.logger.addHandler(handler)
 
-        # Load templates
-        self.action_template = env.get_template("action_choice.jinja")
-        self.system_template = env.get_template("system_role.jinja")
+        # Initialize prompt renderer
+        self.prompt_renderer = PromptRenderer(None, template=template)  # None for env since we don't need it here
 
-        # Initialize LLM client
-        self.llm = get_llm_client(model_name)
-        self.history = []
+        # Initialize LLM client with system prompt
+        self.llm = get_llm_client(model_name, system_prompt=self.prompt_renderer.render_system_prompt())
+        self.history: List[LLMResponse] = []
 
     def get_action(self, observation: str, choices: list) -> str:
         """Process observation and return action number"""
         if self.debug:
             self.logger.debug(f"\nObservation:\n{observation}")
 
-        # Format choices for template
-        choice_list = [{"text": c["text"]} for c in choices]
-
         # Render prompt using template
-        prompt = self.action_template.render(observation=observation, choices=choice_list)
+        prompt = self.prompt_renderer.render_action_prompt(observation, choices)
         if self.debug:
             self.logger.debug(f"\nPrompt:\n{prompt}")
 
         try:
             response = self.llm(prompt)
-            if self.debug:
-                self.logger.debug(f"Raw LLM response: {response}")
+            llm_response = parse_llm_response(response, len(choices), self.debug, self.logger)
 
-            # Ensure response is a valid choice number
-            choice_num = response.strip()
-            if not choice_num.isdigit() or not (1 <= int(choice_num) <= len(choices)):
-                self.logger.error(f"Invalid choice number: {choice_num}")
-                return "1"  # Default to first choice
+            if self.debug and llm_response.reasoning:
+                self.logger.debug(f"Reasoning: {llm_response.reasoning}")
 
-            return choice_num
+            # Store response in history
+            self.history.append(llm_response)
+
+            return llm_response.to_choice_string()
 
         except Exception as e:
             self.logger.error(f"LLM call failed: {str(e)}")

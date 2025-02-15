@@ -7,16 +7,17 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, Template
 
 from llm_quest_benchmark.environments.state import QMState
-from llm_quest_benchmark.constants import PROMPT_TEMPLATES_DIR
+from llm_quest_benchmark.constants import PROMPT_TEMPLATES_DIR, DEFAULT_TEMPLATE
 
 
 class PromptRenderer:
     """Handles prompt rendering and history tracking for quests"""
 
-    def __init__(self, env, templates_dir: Optional[Path] = None):
+    def __init__(self, env, templates_dir: Optional[Path] = None, template: str = DEFAULT_TEMPLATE):
         """Initialize renderer with environment and templates"""
         self.env = env
         self.history: List[Dict[str, Any]] = []
+        self.template = template
 
         # Initialize Jinja environment
         self.templates_dir = templates_dir or PROMPT_TEMPLATES_DIR
@@ -29,7 +30,7 @@ class PromptRenderer:
 
     def _load_templates(self) -> None:
         """Load all template files"""
-        self.action_template = self.jinja_env.get_template("action_choice.jinja")
+        self.action_template = self.jinja_env.get_template(self.template)
         self.system_template = self.jinja_env.get_template("system_role.jinja")
 
     def render_action_prompt(self, observation: str, choices: list) -> str:

@@ -63,7 +63,7 @@ def test_template_rendering():
     choices = [{"text": "Option 1"}, {"text": "Option 2"}]
 
     # Test that prompt is rendered correctly
-    prompt = agent.action_template.render(observation=observation, choices=choices)
+    prompt = agent.prompt_renderer.render_action_prompt(observation, choices)
     assert "Test observation" in prompt
     assert "Option 1" in prompt
     assert "Option 2" in prompt
