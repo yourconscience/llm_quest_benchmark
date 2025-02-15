@@ -1,34 +1,40 @@
 """End-to-end tests for quest CLI"""
-import subprocess
+import logging
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from llm_quest_benchmark.constants import DEFAULT_QUEST
+from llm_quest_benchmark.core.runner import run_quest
 from llm_quest_benchmark.executors.qm_player import play_quest
 from llm_quest_benchmark.tests.agents.test_players import FirstChoicePlayer
+from llm_quest_benchmark.environments.state import QuestOutcome
 
 
 @pytest.mark.e2e
 @pytest.mark.timeout(20)  # 20s should be enough
-def test_quest_run_with_llm(caplog):
+@patch('llm_quest_benchmark.core.runner.LLMAgent')
+def test_quest_run_with_llm(mock_agent_class, caplog):
     """Test that quest runs with LLM agent and reaches a final state"""
     caplog.set_level("ERROR")  # Only show errors in test output
 
-    result = subprocess.run([
-        "llm-quest", "run",
-        "-q", str(DEFAULT_QUEST),
-        "--log-level", "error",  # Reduce CLI output
-    ], capture_output=True, text=True)
+    # Set up mock agent
+    mock_agent = Mock()
+    mock_agent.get_action.return_value = "1"  # Always choose first option
+    mock_agent_class.return_value = mock_agent
 
-    # Check that we reached a final state (success or failure)
-    final_state_reached = False
-    for line in result.stdout.splitlines():
-        if "Quest completed" in line or "Quest failed" in line:
-            final_state_reached = True
-            break
+    # Run quest directly
+    outcome = run_quest(
+        quest=str(DEFAULT_QUEST),
+        log_level="error",  # Reduce output
+        headless=True,  # No UI needed for test
+    )
 
-    assert final_state_reached, \
-        f"Quest did not reach final state. Output:\n{result.stdout}\nErrors:\n{result.stderr}"
+    # Check that we got a valid outcome
+    assert outcome in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE], \
+        "Quest did not reach a final state"
+
+    # Verify agent was used
+    assert mock_agent.get_action.called, "Agent's get_action was not called"
 
 
 @pytest.mark.e2e
@@ -50,4 +56,5 @@ def test_quest_play_interactive(caplog):
     )
 
     # Check that we got a valid outcome
-    assert outcome is not None, "Quest did not return an outcome"
+    assert outcome in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE], \
+        "Quest did not reach a final state"

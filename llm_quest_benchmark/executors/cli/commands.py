@@ -5,7 +5,7 @@ from typing import Optional
 import typer
 from typing_extensions import Annotated
 
-from llm_quest_benchmark.core.logger import LogManager
+from llm_quest_benchmark.core.logging import LogManager
 from llm_quest_benchmark.core.time import timeout, CommandTimeout
 from llm_quest_benchmark.core.runner import run_quest
 from llm_quest_benchmark.environments.state import QuestOutcome
