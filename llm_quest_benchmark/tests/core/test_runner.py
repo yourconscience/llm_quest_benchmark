@@ -15,7 +15,8 @@ def mock_logger():
 
 @pytest.fixture
 def runner(mock_logger):
-    return QuestRunner(logger=mock_logger)
+    # Initialize with headless=True to match test expectations
+    return QuestRunner(logger=mock_logger, headless=True)
 
 
 def test_runner_initialization(runner, mock_logger):
@@ -23,22 +24,26 @@ def test_runner_initialization(runner, mock_logger):
     assert runner.logger == mock_logger
     assert runner.env is None
     assert runner.agent is None
-    assert runner.renderer is None
-    assert runner.metrics_logger is None
+    assert runner.terminal is None  # Now None because we set headless=True
+    assert runner.prompt_renderer is None
+    assert runner.quest_logger is None
 
 
 @patch('llm_quest_benchmark.core.runner.QMPlayerEnv')
 @patch('llm_quest_benchmark.core.runner.LLMAgent')
-@patch('llm_quest_benchmark.core.runner.QuestRenderer')
-def test_runner_setup(mock_renderer, mock_agent, mock_env, runner):
+@patch('llm_quest_benchmark.core.runner.TerminalRenderer')
+@patch('llm_quest_benchmark.core.runner.PromptRenderer')
+def test_runner_setup(mock_prompt_renderer, mock_terminal, mock_agent, mock_env, runner):
     """Test that runner sets up components correctly"""
     # Setup mocks
     mock_env_instance = Mock()
     mock_env.return_value = mock_env_instance
     mock_agent_instance = Mock()
     mock_agent.return_value = mock_agent_instance
-    mock_renderer_instance = Mock()
-    mock_renderer.return_value = mock_renderer_instance
+    mock_terminal_instance = Mock()
+    mock_terminal.return_value = mock_terminal_instance
+    mock_prompt_renderer_instance = Mock()
+    mock_prompt_renderer.return_value = mock_prompt_renderer_instance
 
     # Initialize
     runner.initialize(str(DEFAULT_QUEST))
@@ -46,18 +51,19 @@ def test_runner_setup(mock_renderer, mock_agent, mock_env, runner):
     # Check that components were initialized
     mock_env.assert_called_once()
     mock_agent.assert_called_once()
-    mock_renderer.assert_called_once()
+    mock_prompt_renderer.assert_called_once()
 
     # Verify component instances were stored
     assert runner.env == mock_env_instance
     assert runner.agent == mock_agent_instance
-    assert runner.renderer == mock_renderer_instance
+    assert runner.prompt_renderer == mock_prompt_renderer_instance
 
 
 @patch('llm_quest_benchmark.core.runner.QMPlayerEnv')
 @patch('llm_quest_benchmark.core.runner.LLMAgent')
-@patch('llm_quest_benchmark.core.runner.QuestRenderer')
-def test_runner_execution(mock_renderer, mock_agent, mock_env, runner):
+@patch('llm_quest_benchmark.core.runner.TerminalRenderer')
+@patch('llm_quest_benchmark.core.runner.PromptRenderer')
+def test_runner_execution(mock_prompt_renderer, mock_terminal, mock_agent, mock_env, runner):
     """Test quest execution flow - simplified to one step"""
     # Setup mocks
     mock_env_instance = Mock()
@@ -75,8 +81,12 @@ def test_runner_execution(mock_renderer, mock_agent, mock_env, runner):
     mock_agent_instance.get_action.return_value = "1"
     mock_agent.return_value = mock_agent_instance
 
-    mock_renderer_instance = Mock()
-    mock_renderer.return_value = mock_renderer_instance
+    mock_terminal_instance = Mock()
+    mock_terminal.return_value = mock_terminal_instance
+
+    mock_prompt_renderer_instance = Mock()
+    mock_prompt_renderer_instance.render_action_prompt.return_value = "Test prompt"
+    mock_prompt_renderer.return_value = mock_prompt_renderer_instance
 
     # Initialize and run
     runner.initialize(str(DEFAULT_QUEST))
@@ -85,8 +95,14 @@ def test_runner_execution(mock_renderer, mock_agent, mock_env, runner):
     # Verify execution flow
     mock_env_instance.reset.assert_called_once()
     mock_env_instance.step.assert_called_once_with("1")
-    mock_agent_instance.get_action.assert_called_once_with("Initial observation", mock_env_instance.state['choices'])
-    mock_renderer_instance.render.assert_called()
+    mock_agent_instance.get_action.assert_called_once_with(
+        "Initial observation",
+        mock_env_instance.state['choices']
+    )
+    mock_prompt_renderer_instance.render_action_prompt.assert_called_once_with(
+        "Initial observation",
+        mock_env_instance.state['choices']
+    )
     assert outcome == QuestOutcome.SUCCESS  # Success due to positive reward
 
 

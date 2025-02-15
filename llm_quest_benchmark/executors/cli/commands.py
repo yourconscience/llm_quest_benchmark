@@ -74,6 +74,13 @@ def run(
             help="Enable automatic metrics logging to metrics/ directory.",
         ),
     ] = False,
+    headless: Annotated[
+        bool,
+        typer.Option(
+            "--headless",
+            help="Run without terminal UI, output clean logs only.",
+        ),
+    ] = False,
     timeout_seconds: Annotated[
         int,
         typer.Option(
@@ -99,6 +106,7 @@ def run(
                         language=language,
                         log_level=log_level,
                         metrics=metrics,
+                        headless=headless,
                     )
             except CommandTimeout:
                 outcome = QuestOutcome.ERROR
@@ -109,6 +117,7 @@ def run(
                 language=language,
                 log_level=log_level,
                 metrics=metrics,
+                headless=headless,
             )
 
         # Map outcome to exit code
