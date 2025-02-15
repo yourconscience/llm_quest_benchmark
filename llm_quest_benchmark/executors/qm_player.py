@@ -9,7 +9,7 @@ from typing import Optional
 
 from llm_quest_benchmark.environments.qm import QMPlayerEnv
 from llm_quest_benchmark.agents.human_player import HumanPlayer
-from llm_quest_benchmark.metrics import MetricsLogger
+from llm_quest_benchmark.core.logging import QuestLogger
 from llm_quest_benchmark.environments.state import QuestOutcome
 
 
@@ -44,42 +44,37 @@ def play_quest(
         player = HumanPlayer(skip_single=skip_single, debug=debug)
 
     # Setup metrics if enabled
-    metrics_logger = MetricsLogger(auto_save=metrics) if metrics else None
+    quest_logger = QuestLogger(auto_save=metrics) if metrics else None
     if metrics:
-        metrics_logger.set_quest_file(str(quest_path))
+        quest_logger.set_quest_file(str(quest_path))
 
     try:
-        # Start game
+        # Get initial state
         observation = env.reset()
-        player.on_game_start()
-        step_count = 0
+        state = env.state
 
         while True:
-            step_count += 1
-            if debug:
-                logger.debug(f"\n=== Step {step_count} ===")
-
             # Get player's action
-            try:
-                action = player.get_action(observation, env.state['choices'])
-            except KeyboardInterrupt:
-                logger.info("Quest aborted by user")
-                return QuestOutcome.ERROR
+            action = player.get_action(observation, state['choices'])
 
-            # Take step in environment
+            # Take action in environment
             observation, reward, done, info = env.step(action)
+            state = env.state
 
-            # Log metrics if enabled
-            if metrics:
-                metrics_logger.log_step(
-                    step_count,
-                    env.state,
-                    action=action,
-                    reward=reward
+            # Log step if metrics enabled
+            if quest_logger:
+                quest_logger.log_step(
+                    step=len(quest_logger.steps) + 1,
+                    state=observation,
+                    choices=state['choices'],
+                    prompt="",  # No prompt for human player
+                    response=action,
+                    reward=reward,
+                    metrics=info
                 )
 
             if done:
-                # Determine outcome based on reward
+                # Quest completed
                 final_reward = reward if isinstance(reward, (int, float)) else reward.get(0, 0)
                 if final_reward > 0:
                     logger.info("Quest completed successfully!")
@@ -88,19 +83,13 @@ def play_quest(
                     logger.info("Quest failed.")
                     return QuestOutcome.FAILURE
 
-        # Save metrics if enabled
-        if metrics and metrics_logger:
-            saved_path = metrics_logger.save()
-            if saved_path and debug:
-                logger.debug(f"Metrics saved to: {saved_path}")
+    except KeyboardInterrupt:
+        logger.info("\nQuest interrupted by user.")
+        return QuestOutcome.ERROR
 
     except Exception as e:
-        logger.error(f"Error during quest: {str(e)}")
-        if debug:
-            logger.exception("Detailed error:")
+        logger.exception(f"Error during quest execution: {e}")
         return QuestOutcome.ERROR
-    finally:
-        env.close()
 
 
 def main():

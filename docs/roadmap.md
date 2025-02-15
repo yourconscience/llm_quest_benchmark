@@ -26,14 +26,29 @@
 
 ## Future Versions
 
-### Version 0.3
-- [ ] Add support for more quest features
-- [ ] Improve error handling
-- [ ] Add more agent types
-- [ ] Enhance renderer capabilities
+### Version 0.3 (High Priority)
+- [ ] Separate rendering from quest workflow
+  - Move renderer to visualization module
+  - Create headless quest runner for simulations
+  - Add support for parallel quest execution
+  - Implement visualization tools for multiple quest runs
+- [ ] Improve logging and debugging
+  - Streamline debug output format
+  - Add structured logging for quest states
+  - Implement clean separation between game state and rendering
+  - Add support for logging multiple parallel runs
 
 ### Version 0.4
-- [ ] Add quest editor
-- [ ] Support for custom rewards
-- [ ] Add quest validation tools
-- [ ] Improve documentation
+- [ ] Enhance agent capabilities
+  - Add support for strategic planning
+  - Implement chain-of-thought prompting
+  - Support for custom agent architectures
+- [ ] Improve quest analysis tools
+  - Add quest complexity metrics
+  - Implement performance comparison tools
+  - Support for automated agent evaluation
+
+### Future Ideas
+- Quest editor and validation tools
+- Support for custom rewards
+- Additional quest features

@@ -1,23 +1,27 @@
 """Quest runner implementation with improved logging and error handling"""
 import logging
 from typing import Optional, Dict, Any
+import json
 
 from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_LANG
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
 from llm_quest_benchmark.environments.qm import QMPlayerEnv
-from llm_quest_benchmark.renderers.quest_renderer import QuestRenderer
-from llm_quest_benchmark.metrics import MetricsLogger
+from llm_quest_benchmark.renderers.terminal import TerminalRenderer
+from llm_quest_benchmark.renderers.prompt_renderer import PromptRenderer
 from llm_quest_benchmark.environments.state import QuestOutcome
+from llm_quest_benchmark.core.logging import QuestLogger
 
 
 class QuestRunner:
     """Manages quest execution with logging and metrics"""
-    def __init__(self, logger: Optional[logging.Logger] = None):
+    def __init__(self, logger: Optional[logging.Logger] = None, headless: bool = False):
         self.logger = logger or logging.getLogger(__name__)
         self.env = None
         self.agent = None
-        self.renderer = None
-        self.metrics_logger = None
+        self.terminal = None if headless else TerminalRenderer()
+        self.prompt_renderer = None  # Initialize in initialize()
+        self.quest_logger = None
+        self.step_count = 0
 
     def initialize(
         self,
@@ -36,13 +40,12 @@ class QuestRunner:
         self.logger.info(f"Using model: {model}")
         self.logger.info(f"Using language: {language}")
 
-        self.logger.debug("Initializing renderer...")
-        self.renderer = QuestRenderer(self.env)
+        # Initialize prompt renderer
+        self.prompt_renderer = PromptRenderer(self.env)
 
-        if metrics:
-            self.logger.debug("Setting up metrics logging...")
-            self.metrics_logger = MetricsLogger(auto_save=True)
-            self.metrics_logger.set_quest_file(quest)
+        # Initialize unified logger
+        self.quest_logger = QuestLogger(debug=debug, auto_save=metrics)
+        self.quest_logger.set_quest_file(quest)
 
     def run(self) -> QuestOutcome:
         """Run the quest until completion or error
@@ -57,30 +60,39 @@ class QuestRunner:
         try:
             # Get initial state
             observation = self.env.reset()
-            self.renderer.render()
+            if self.terminal:
+                self.terminal.render_game_state(self.env.state)
 
             while True:
+                self.step_count += 1
+
                 # Get agent's action
+                prompt = self.prompt_renderer.render_action_prompt(observation, self.env.state['choices'])
                 action = self.agent.get_action(observation, self.env.state['choices'])
 
                 # Take action in environment
                 observation, reward, done, info = self.env.step(action)
 
-                # Render current state
-                self.renderer.render()
-
-                # Log metrics if enabled
-                if self.metrics_logger:
-                    self.metrics_logger.log_step(
-                        step=len(self.env.state_history),
-                        state=self.env.state,
-                        action=action,
-                        reward=reward
+                # Add to history and log
+                self.prompt_renderer.add_to_history(self.env.state)
+                if self.quest_logger:
+                    self.quest_logger.log_step(
+                        step=self.step_count,
+                        state=observation,
+                        choices=self.env.state['choices'],
+                        prompt=prompt,
+                        response=action,
+                        reward=reward,
+                        metrics=info
                     )
+
+                # Optional terminal rendering
+                if self.terminal:
+                    self.terminal.render_game_state(self.env.state)
 
                 if done:
                     # Quest completed
-                    final_reward = reward if isinstance(reward, (int, float)) else reward.get(0, 0)  # Get player reward
+                    final_reward = reward if isinstance(reward, (int, float)) else reward.get(0, 0)
                     if final_reward > 0:
                         self.logger.info("Quest completed successfully!")
                         return QuestOutcome.SUCCESS
@@ -92,6 +104,16 @@ class QuestRunner:
             self.logger.exception("Error during quest execution")
             return QuestOutcome.ERROR
 
+    def _format_prompt(self, observation: str, choices: list) -> str:
+        """Format the prompt that will be sent to the agent"""
+        return f"""Observation:
+{observation}
+
+Available actions:
+{json.dumps(choices, indent=2)}
+
+Choose your action (respond with just the number):"""
+
 
 def run_quest(
     quest: str,
@@ -99,13 +121,14 @@ def run_quest(
     model: str = DEFAULT_MODEL,
     language: str = DEFAULT_LANG,
     metrics: bool = False,
+    headless: bool = False,
     logger: Optional[logging.Logger] = None,
 ) -> QuestOutcome:
     """Convenience function to run a quest with minimal setup
     Returns:
         QuestOutcome: The final outcome of the quest
     """
-    runner = QuestRunner(logger=logger)
+    runner = QuestRunner(logger=logger, headless=headless)
     runner.initialize(
         quest=quest,
         model=model,

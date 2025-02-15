@@ -7,4 +7,15 @@ Available actions:
 {{ loop.index }}. {{ choice.text }}
 {% endfor %}
 
-Choose your action (respond with just the number):
+Take a deep breath, think step by step and select the best action to complete the quest.
+
+Your answer should be in the following format:
+
+```json
+{
+    "action": <action_number>,
+    "reasoning": "<your explanation in several sentences>"
+}
+```
+
+Please respond with the JSON object only, nothing else.

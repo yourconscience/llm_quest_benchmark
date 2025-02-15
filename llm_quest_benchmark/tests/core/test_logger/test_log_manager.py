@@ -3,7 +3,7 @@ import logging
 import pytest
 from pathlib import Path
 
-from llm_quest_benchmark.core.logger import LogManager
+from llm_quest_benchmark.core.logging import LogManager
 
 
 def test_log_manager_initialization():

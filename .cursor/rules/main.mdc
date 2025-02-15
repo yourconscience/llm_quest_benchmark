@@ -46,3 +46,8 @@ INSTRUCTIONS:
   - Remember you are part of a team.
   - Use Markdown format for all responses, including code.
   - Cite relevant files using their paths (e.g., `path/to/file.py`).
+  - When using goose:
+    - Provide clear, focused tasks with specific goals
+    - Include relevant documentation and context
+    - Use debug flags when investigating issues
+    - Review and validate Goose's output before implementation

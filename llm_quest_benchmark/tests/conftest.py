@@ -2,7 +2,7 @@
 import pytest
 from pathlib import Path
 
-from llm_quest_benchmark.core import LogManager
+from llm_quest_benchmark.core.logging import LogManager
 from llm_quest_benchmark.constants import DEFAULT_QUEST
 
 
