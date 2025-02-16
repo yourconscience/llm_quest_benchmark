@@ -25,14 +25,10 @@ class LogManager:
         # Set transformers logging level
         os.environ["TRANSFORMERS_VERBOSITY"] = "error"
 
-    def setup(self, log_level: str) -> None:
-        """Configure logging based on the specified level"""
-        numeric_level = getattr(logging, log_level.upper(), None)
-        if not isinstance(numeric_level, int):
-            raise ValueError(f"Invalid log level: {log_level}")
-
-        self.log.setLevel(numeric_level)
-        if log_level.upper() == "DEBUG":
+    def setup(self, debug: bool = False) -> None:
+        """Configure logging based on debug mode"""
+        self.log.setLevel(logging.DEBUG if debug else logging.INFO)
+        if debug:
             # Create logs directory if it doesn't exist
             log_dir = Path("logs")
             log_dir.mkdir(exist_ok=True)
@@ -61,16 +57,25 @@ class QuestStep:
     response: str
     reward: float = 0.0
     metrics: Dict[str, Any] = None
+    timestamp: str = ""
 
-    def to_console_line(self) -> str:
-        """Format step for console output - human readable single line"""
-        return f"Step {self.step} | Action: {self.response} | Reward: {self.reward} | Choices: {len(self.choices)}"
+    def __post_init__(self):
+        if not self.timestamp:
+            self.timestamp = datetime.now().isoformat()
+
+    def to_console_line(self, is_llm: bool = False) -> str:
+        """Format step for console output based on player type"""
+        if is_llm:
+            return f"Step {self.step} | Action: {self.response} | Reward: {self.reward} | Choices: {len(self.choices)}"
+        else:
+            # For human players, just show the state and choices
+            return f"Step {self.step} | Choices: {len(self.choices)}"
 
     def to_json(self) -> Dict[str, Any]:
         """Convert step to JSON format for analysis"""
         return {
             "step": self.step,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": self.timestamp,
             "state": self.state,
             "choices": self.choices,
             "prompt": self.prompt,
@@ -85,14 +90,19 @@ class QuestLogger:
     def __init__(self,
                  name: str = "quest",
                  debug: bool = False,
-                 log_dir: Optional[Path] = None,
-                 auto_save: bool = True):
+                 is_llm: bool = False):
         # Set up logging
         self.logger = logging.getLogger(name)
         self.debug = debug
+        self.is_llm = is_llm
         self.steps: List[QuestStep] = []
         self.quest_file: Optional[str] = None
-        self.auto_save = auto_save
+
+        # Always set up metrics file
+        metrics_dir = Path("metrics")
+        metrics_dir.mkdir(exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.metrics_file = metrics_dir / f"quest_run_{timestamp}.jsonl"
 
         # Configure console output
         console_handler = logging.StreamHandler()
@@ -100,20 +110,6 @@ class QuestLogger:
         console_handler.setFormatter(console_formatter)
         self.logger.addHandler(console_handler)
         self.logger.setLevel(logging.DEBUG if debug else logging.INFO)
-
-        # Configure file output if needed
-        self.log_dir = log_dir or Path("logs")
-        if auto_save:
-            self.log_dir.mkdir(exist_ok=True)
-            self._setup_metrics_file()
-
-    def _setup_metrics_file(self) -> None:
-        """Set up metrics file for JSON logging"""
-        metrics_dir = Path("metrics")
-        metrics_dir.mkdir(exist_ok=True)
-
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.metrics_file = metrics_dir / f"quest_run_{timestamp}.jsonl"
 
     def set_quest_file(self, quest_file: str) -> None:
         """Set the quest file being run"""
@@ -129,7 +125,7 @@ class QuestLogger:
                  response: str,
                  reward: float = 0.0,
                  metrics: Dict[str, Any] = None) -> None:
-        """Log a quest step with optional metrics"""
+        """Log a quest step with metrics"""
         quest_step = QuestStep(
             step=step,
             state=state,
@@ -141,17 +137,22 @@ class QuestLogger:
         )
         self.steps.append(quest_step)
 
-        # Console output - always show human readable format
-        self.logger.info(quest_step.to_console_line())
+        # Console output based on player type
+        self.logger.info(quest_step.to_console_line(is_llm=self.is_llm))
 
-        # Save JSON format if auto_save is enabled
-        if self.auto_save:
-            self._save_step(quest_step)
-
-    def _save_step(self, step: QuestStep) -> None:
-        """Save step in JSON format"""
+        # Always save metrics in JSONL format
         with open(self.metrics_file, "a") as f:
-            f.write(json.dumps(step.to_json()) + "\n")
+            f.write(json.dumps(quest_step.to_json()) + "\n")
+
+        # Debug logging if enabled
+        if self.debug:
+            self.logger.debug(f"Step {step} details:")
+            self.logger.debug(f"State: {state[:200]}...")
+            self.logger.debug(f"Prompt: {prompt[:200]}...")
+            self.logger.debug(f"Response: {response}")
+            self.logger.debug(f"Reward: {reward}")
+            if metrics:
+                self.logger.debug(f"Metrics: {json.dumps(metrics, indent=2)}")
 
     def get_metrics(self) -> Dict[str, Any]:
         """Get aggregated metrics for the quest run"""
@@ -159,5 +160,7 @@ class QuestLogger:
             "quest_file": self.quest_file,
             "total_steps": len(self.steps),
             "total_reward": sum(step.reward for step in self.steps),
-            "steps": [step.to_json() for step in self.steps]
+            "steps": [step.to_json() for step in self.steps],
+            "is_llm": self.is_llm,
+            "debug": self.debug
         }

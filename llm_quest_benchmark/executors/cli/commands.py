@@ -52,17 +52,16 @@ def main(
 @app.command()
 def run(
     quest: Path = typer.Option(DEFAULT_QUEST, help="Path to the QM quest file."),
-    log_level: str = typer.Option("info", help="Logging level (debug, info, warning, error)."),
+    debug: bool = typer.Option(False, help="Enable debug logging and output."),
     model: str = typer.Option(DEFAULT_MODEL, help=f"Model for the LLM agent (choices: {', '.join(MODEL_CHOICES)})."),
     language: str = typer.Option(DEFAULT_LANG, help=f"Language for quest text (choices: {', '.join(LANG_CHOICES)})."),
-    metrics: bool = typer.Option(False, help="Enable automatic metrics logging to metrics/ directory."),
     headless: bool = typer.Option(False, help="Run without terminal UI, output clean logs only."),
     timeout_seconds: int = typer.Option(60, help="Timeout in seconds (0 for no timeout)."),
     template: str = typer.Option(DEFAULT_TEMPLATE, help=f"Template to use for action prompts (default: {DEFAULT_TEMPLATE}, reasoning: {REASONING_TEMPLATE})."),
 ):
     """Run a quest with an LLM agent."""
     try:
-        log_manager.setup(log_level)
+        log_manager.setup(debug)
         log.info(f"Starting quest run with model {model}")
         log.debug(f"Quest file: {quest}")
         log.debug(f"Timeout: {timeout_seconds}s")
@@ -75,8 +74,7 @@ def run(
                         quest=str(quest),
                         model=model,
                         language=language,
-                        log_level=log_level,
-                        metrics=metrics,
+                        debug=debug,
                         headless=headless,
                         template=template,
                     )
@@ -87,8 +85,7 @@ def run(
                 quest=str(quest),
                 model=model,
                 language=language,
-                log_level=log_level,
-                metrics=metrics,
+                debug=debug,
                 headless=headless,
                 template=template,
             )
@@ -111,18 +108,18 @@ def run(
 def play(
     quest: Path = typer.Option(DEFAULT_QUEST, help="Path to the QM quest file."),
     skip: bool = typer.Option(False, help="Automatically select screens with only one available option."),
-    log_level: str = typer.Option("info", help="Logging level (debug, info, warning, error)."),
+    debug: bool = typer.Option(False, help="Enable debug logging and output."),
 ):
     """Play a Space Rangers quest interactively."""
     try:
-        log_manager.setup(log_level)
+        log_manager.setup(debug)
         log.info(f"Starting interactive quest play")
         log.debug(f"Quest file: {quest}")
 
         outcome = play_quest(
             quest=str(quest),
             skip_single=skip,
-            debug=(log_level == "debug"),
+            debug=debug,
         )
 
         # Map outcome to exit code
@@ -142,11 +139,11 @@ def play(
 @app.command()
 def analyze(
     metrics_file: Path = typer.Option(..., help="Path to the metrics JSON file."),
-    log_level: str = typer.Option("info", help="Logging level (debug, info, warning, error)."),
+    debug: bool = typer.Option(False, help="Enable debug logging and output."),
 ):
     """Analyze metrics from a quest run."""
     try:
-        log_manager.setup(log_level)
+        log_manager.setup(debug)
         log.info(f"Analyzing metrics from {metrics_file}")
 
         import json

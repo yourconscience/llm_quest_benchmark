@@ -39,8 +39,8 @@ def play_quest(
     if player is None:
         player = HumanPlayer(skip_single=skip_single, debug=debug)
 
-    # Setup metrics if enabled
-    quest_logger = QuestLogger(auto_save=True)
+    # Setup metrics logging
+    quest_logger = QuestLogger(debug=debug, is_llm=False)
     quest_logger.set_quest_file(quest)
 
     try:

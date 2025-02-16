@@ -25,7 +25,7 @@ def test_quest_run_with_llm(mock_agent_class, caplog):
     # Run quest directly
     outcome = run_quest(
         quest=str(DEFAULT_QUEST),
-        log_level="error",  # Reduce output
+        debug=False,  # Reduce output
         headless=True,  # No UI needed for test
     )
 
@@ -48,10 +48,9 @@ def test_quest_play_interactive(caplog):
 
     # Run quest with test player
     outcome = play_quest(
-        quest_path=str(DEFAULT_QUEST),
-        language="eng",  # Use English for testing
+        quest=str(DEFAULT_QUEST),
         player=player,
-        metrics=False,
+        skip_single=True,
         debug=False
     )
 

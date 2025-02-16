@@ -29,7 +29,7 @@ class QuestRunner:
         model: str = DEFAULT_MODEL,
         language: str = DEFAULT_LANG,
         debug: bool = False,
-        metrics: bool = False,
+        headless: bool = False,
         template: str = DEFAULT_TEMPLATE,
     ) -> None:
         """Initialize all components needed for quest execution"""
@@ -45,8 +45,11 @@ class QuestRunner:
         self.prompt_renderer = PromptRenderer(self.env, template=template)
 
         # Initialize unified logger
-        self.quest_logger = QuestLogger(debug=debug, auto_save=metrics)
+        self.quest_logger = QuestLogger(debug=debug, is_llm=True)
         self.quest_logger.set_quest_file(quest)
+
+        # Initialize terminal renderer if not headless
+        self.terminal = None if headless else TerminalRenderer()
 
     def run(self) -> QuestOutcome:
         """Run the quest until completion or error
@@ -118,25 +121,23 @@ Choose your action (respond with just the number):"""
 
 def run_quest(
     quest: str,
-    log_level: str = "info",
     model: str = DEFAULT_MODEL,
     language: str = DEFAULT_LANG,
-    metrics: bool = False,
+    debug: bool = False,
     headless: bool = False,
-    logger: Optional[logging.Logger] = None,
     template: str = DEFAULT_TEMPLATE,
 ) -> QuestOutcome:
     """Convenience function to run a quest with minimal setup
     Returns:
         QuestOutcome: The final outcome of the quest
     """
-    runner = QuestRunner(logger=logger, headless=headless)
+    runner = QuestRunner(headless=headless)
     runner.initialize(
         quest=quest,
         model=model,
         language=language,
-        debug=(log_level.upper() == "DEBUG"),
-        metrics=metrics,
+        debug=debug,
+        headless=headless,
         template=template,
     )
     return runner.run()
