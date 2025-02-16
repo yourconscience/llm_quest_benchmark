@@ -110,9 +110,7 @@ def run(
 @app.command()
 def play(
     quest: Path = typer.Option(DEFAULT_QUEST, help="Path to the QM quest file."),
-    language: str = typer.Option(DEFAULT_LANG, help=f"Language for quest text (choices: {', '.join(LANG_CHOICES)})."),
     skip: bool = typer.Option(False, help="Automatically select screens with only one available option."),
-    metrics: bool = typer.Option(False, help="Enable automatic metrics logging to metrics/ directory."),
     log_level: str = typer.Option("info", help="Logging level (debug, info, warning, error)."),
 ):
     """Play a Space Rangers quest interactively."""
@@ -123,10 +121,8 @@ def play(
 
         outcome = play_quest(
             quest=str(quest),
-            language=language,
-            log_level=log_level,
             skip_single=skip,
-            metrics=metrics,
+            debug=(log_level == "debug"),
         )
 
         # Map outcome to exit code
