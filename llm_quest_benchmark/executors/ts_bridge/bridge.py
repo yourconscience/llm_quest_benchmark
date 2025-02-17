@@ -32,6 +32,12 @@ class GameState:
                .replace('<clrEnd>', '')
                .replace('\r\n', '\n'))
 
+        # Don't end game if there are still valid choices
+        game_ended = len(state['choices']) == 0 or (
+            saving['state'].startswith('crit') and
+            not any(c['active'] for c in state['choices'])
+        )
+
         return cls(
             location_id=str(saving['locationId']),
             text=text,
@@ -39,7 +45,7 @@ class GameState:
                 'id': str(c['jumpId']),
                 'text': c['text'].replace('<clr>', '').replace('<clrEnd>', '')
             } for c in state['choices']],
-            game_ended=len(state['choices']) == 0,
+            game_ended=game_ended,
             params=saving['paramValues'],
             reward=1.0 if state.get('gameState') == 'win' else 0.0
         )

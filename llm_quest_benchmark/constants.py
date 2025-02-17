@@ -2,7 +2,7 @@
 from pathlib import Path
 
 # Model choices
-MODEL_CHOICES = ["gpt-4o", "gpt-4o-mini", "sonnet", "deepseek"]
+MODEL_CHOICES = ["gpt-4o", "gpt-4o-mini", "sonnet", "deepseek", "random_choice"]
 DEFAULT_MODEL = "gpt-4o"
 
 # Language choices
@@ -10,7 +10,7 @@ LANG_CHOICES = ["rus", "eng"]
 DEFAULT_LANG = "rus"
 
 # Default quest
-DEFAULT_QUEST = "quests/boat.qm"
+DEFAULT_QUEST = "quests/kr1/Boat.qm"
 
 # Paths
 PROMPT_TEMPLATES_DIR = Path(__file__).parent / "prompt_templates"

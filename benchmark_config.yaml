@@ -1,0 +1,19 @@
+# Example benchmark configuration
+quests:
+  - quests/kr1/Boat.qm
+  - quests/kr1/Gladiator.qm
+
+agents:
+  - model: gpt-4o-mini
+    template: default.jinja
+    temperature: 0.3
+    skip_single: true
+  - model: random_choice
+    template: default.jinja
+    temperature: 0.0
+    skip_single: true
+
+debug: false
+timeout_seconds: 30
+max_workers: 2
+output_dir: metrics

@@ -30,16 +30,16 @@ def test_runner_initialization(runner, mock_logger):
 
 
 @patch('llm_quest_benchmark.core.runner.QMPlayerEnv')
-@patch('llm_quest_benchmark.core.runner.LLMAgent')
+@patch('llm_quest_benchmark.core.runner.create_agent')
 @patch('llm_quest_benchmark.core.runner.TerminalRenderer')
 @patch('llm_quest_benchmark.core.runner.PromptRenderer')
-def test_runner_setup(mock_prompt_renderer, mock_terminal, mock_agent, mock_env, runner):
+def test_runner_setup(mock_prompt_renderer, mock_terminal, mock_create_agent, mock_env, runner):
     """Test that runner sets up components correctly"""
     # Setup mocks
     mock_env_instance = Mock()
     mock_env.return_value = mock_env_instance
     mock_agent_instance = Mock()
-    mock_agent.return_value = mock_agent_instance
+    mock_create_agent.return_value = mock_agent_instance
     mock_terminal_instance = Mock()
     mock_terminal.return_value = mock_terminal_instance
     mock_prompt_renderer_instance = Mock()
@@ -50,9 +50,9 @@ def test_runner_setup(mock_prompt_renderer, mock_terminal, mock_agent, mock_env,
 
     # Check that components were initialized
     mock_env.assert_called_once()
-    mock_agent.assert_called_once_with(
+    mock_create_agent.assert_called_once_with(
         debug=False,
-        model_name='gpt-4o',
+        model='gpt-4o',
         template='default.jinja',
         skip_single=False,
         temperature=DEFAULT_TEMPERATURE
@@ -66,10 +66,10 @@ def test_runner_setup(mock_prompt_renderer, mock_terminal, mock_agent, mock_env,
 
 
 @patch('llm_quest_benchmark.core.runner.QMPlayerEnv')
-@patch('llm_quest_benchmark.core.runner.LLMAgent')
+@patch('llm_quest_benchmark.core.runner.create_agent')
 @patch('llm_quest_benchmark.core.runner.TerminalRenderer')
 @patch('llm_quest_benchmark.core.runner.PromptRenderer')
-def test_runner_execution(mock_prompt_renderer, mock_terminal, mock_agent, mock_env, runner):
+def test_runner_execution(mock_prompt_renderer, mock_terminal, mock_create_agent, mock_env, runner):
     """Test quest execution flow - simplified to one step"""
     # Setup mocks
     mock_env_instance = Mock()
@@ -86,7 +86,7 @@ def test_runner_execution(mock_prompt_renderer, mock_terminal, mock_agent, mock_
     mock_agent_instance = Mock()
     mock_agent_instance.get_action.return_value = "1"
     mock_agent_instance.history = []  # Add empty history
-    mock_agent.return_value = mock_agent_instance
+    mock_create_agent.return_value = mock_agent_instance
 
     mock_terminal_instance = Mock()
     mock_terminal.return_value = mock_terminal_instance

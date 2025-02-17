@@ -1,6 +1,6 @@
 """CLI commands for llm-quest-benchmark"""
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import typer
 
@@ -10,6 +10,7 @@ from llm_quest_benchmark.core.runner import run_quest
 from llm_quest_benchmark.core.analyzer import analyze_quest_run
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.qm_player import play_quest
+from llm_quest_benchmark.executors.benchmark import run_benchmark, print_summary
 from llm_quest_benchmark.constants import (
     MODEL_CHOICES,
     DEFAULT_MODEL,
@@ -19,6 +20,7 @@ from llm_quest_benchmark.constants import (
     REASONING_TEMPLATE,
     DEFAULT_TEMPERATURE,
 )
+from llm_quest_benchmark.executors.benchmark_config import BenchmarkConfig, AgentConfig
 
 # Initialize logging
 log_manager = LogManager()
@@ -209,6 +211,65 @@ def analyze(
         raise typer.Exit(code=1)
     except Exception as e:
         log.exception(f"Error during analysis: {e}")
+        raise typer.Exit(code=2)
+
+@app.command()
+def benchmark(
+    config: Path = typer.Option(..., help="Path to benchmark configuration YAML file."),
+    debug: bool = typer.Option(False, help="Enable debug logging and output."),
+):
+    """Run benchmark evaluation on a set of quests.
+
+    This command runs benchmark evaluation using a YAML configuration file that specifies:
+    - quests: list of quest files or directories to test
+    - agents: list of agents with their model, template, and temperature settings
+    - other settings: debug, timeout, workers, etc.
+
+    Example:
+        llm-quest benchmark --config benchmark_config.yaml
+    """
+    try:
+        log_manager.setup(debug)
+
+        # Load config from file
+        if not config.exists():
+            typer.echo(f"Config file does not exist: {config}", err=True)
+            raise typer.Exit(code=1)
+
+        log.info(f"Loading benchmark config from {config}")
+        try:
+            benchmark_config = BenchmarkConfig.from_yaml(str(config))
+        except Exception as e:
+            typer.echo(f"Failed to load config: {str(e)}", err=True)
+            raise typer.Exit(code=1)
+
+        # Override debug setting if specified
+        if debug:
+            benchmark_config.debug = debug
+
+        # Log configuration
+        log.info(f"Running benchmark with:")
+        log.info(f"Quests: {benchmark_config.quests}")
+        log.info(f"Agents: {[a.model for a in benchmark_config.agents]}")
+        log.info(f"Timeout: {benchmark_config.timeout_seconds}s")
+        log.info(f"Workers: {benchmark_config.max_workers}")
+        log.info(f"Output directory: {benchmark_config.output_dir}")
+
+        # Run benchmark
+        results = run_benchmark(benchmark_config)
+
+        # Print summary
+        print_summary(results)
+
+        # Exit with error if any quests failed
+        errors = [r for r in results if r['error']]
+        if errors:
+            raise typer.Exit(code=1)
+
+    except typer.Exit:
+        raise  # Re-raise typer.Exit without logging
+    except Exception as e:
+        typer.echo(f"Error during benchmark: {str(e)}", err=True)
         raise typer.Exit(code=2)
 
 if __name__ == "__main__":

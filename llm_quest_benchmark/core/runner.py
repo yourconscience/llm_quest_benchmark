@@ -1,15 +1,79 @@
 """Quest runner implementation with improved logging and error handling"""
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Type
 import json
+from pathlib import Path
+from datetime import datetime
 
 from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_LANG, DEFAULT_TEMPLATE, DEFAULT_TEMPERATURE
-from llm_quest_benchmark.agents.llm_agent import LLMAgent
+from llm_quest_benchmark.agents.base import QuestPlayer
+from llm_quest_benchmark.agents.llm_agent import LLMAgent as LLMAgentClass
+from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.environments.qm import QMPlayerEnv
 from llm_quest_benchmark.renderers.terminal import TerminalRenderer
 from llm_quest_benchmark.renderers.prompt_renderer import PromptRenderer
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.core.logging import QuestLogger
+
+
+def run_quest_with_timeout(
+    quest_path: str,
+    model: str,
+    template: str = DEFAULT_TEMPLATE,
+    temperature: float = DEFAULT_TEMPERATURE,
+    timeout_seconds: int = 60,
+    debug: bool = False,
+    skip_single: bool = False,
+    headless: bool = True
+) -> Dict[str, Any]:
+    """Run a single quest with timeout and parameters
+
+    Args:
+        quest_path (str): Path to quest file
+        model (str): Model identifier (e.g. 'gpt-4o', 'random_choice')
+        template (str, optional): Prompt template name. Defaults to DEFAULT_TEMPLATE.
+        temperature (float, optional): Temperature for LLM sampling. Defaults to DEFAULT_TEMPERATURE.
+        timeout_seconds (int, optional): Timeout in seconds. Defaults to 60.
+        debug (bool, optional): Enable debug mode. Defaults to False.
+        skip_single (bool, optional): Auto-select single choices. Defaults to False.
+        headless (bool, optional): Run without terminal UI. Defaults to True.
+
+    Returns:
+        Dict[str, Any]: Result dictionary with quest outcome and metrics
+    """
+    quest_name = Path(quest_path).name
+    result = {
+        'quest': quest_name,
+        'model': model,
+        'template': template,
+        'temperature': temperature,
+        'outcome': QuestOutcome.ERROR.name,  # Store as string
+        'error': None,
+        'timestamp': datetime.now().isoformat()
+    }
+
+    logger = logging.getLogger(__name__)
+    if debug:
+        logger.setLevel(logging.DEBUG)
+
+    try:
+        logger.info(f"Starting quest {quest_name} with model {model}")
+        outcome = run_quest(
+            quest=quest_path,
+            model=model,
+            debug=debug,
+            headless=headless,
+            skip_single=skip_single,
+            template=template,
+            temperature=temperature
+        )
+        result['outcome'] = outcome.name  # Convert to string
+    except Exception as e:
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        logger.error(f"Quest {quest_name} failed with error: {error_msg}")
+        result['error'] = error_msg
+
+    return result
 
 
 class QuestRunner:
@@ -39,14 +103,15 @@ class QuestRunner:
         self.env = QMPlayerEnv(quest, language=language, debug=debug)
 
         self.logger.debug("Initializing agent...")
-        self.agent = LLMAgent(
+        self.agent = create_agent(
+            model=model,
             debug=debug,
-            model_name=model,
             template=template,
             skip_single=skip_single,
             temperature=temperature
         )
-        self.logger.info(f"Using model: {model}")
+        self.logger.info(f"Using agent: {self.agent.__class__.__name__}")
+
         self.logger.info(f"Using language: {language}")
 
         # Initialize prompt renderer
@@ -55,7 +120,7 @@ class QuestRunner:
         # Initialize unified logger
         self.quest_logger = QuestLogger(
             debug=debug,
-            is_llm=True,
+            is_llm=isinstance(self.agent, LLMAgentClass),
             model=model,
             template=template
         )
@@ -89,7 +154,7 @@ class QuestRunner:
 
                 # Get full LLM response if available
                 llm_response = None
-                if hasattr(self.agent, 'history') and len(self.agent.history) > 0:
+                if isinstance(self.agent, LLMAgentClass) and hasattr(self.agent, 'history') and len(self.agent.history) > 0:
                     llm_response = self.agent.history[-1].__dict__ if hasattr(self.agent.history[-1], '__dict__') else self.agent.history[-1]
 
                 # Take action in environment
