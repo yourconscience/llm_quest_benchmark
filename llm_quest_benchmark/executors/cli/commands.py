@@ -73,6 +73,7 @@ def run(
     headless: bool = typer.Option(False, help="Run without terminal UI, output clean logs only."),
     timeout_seconds: int = typer.Option(60, help="Timeout in seconds (0 for no timeout)."),
     template: str = typer.Option(DEFAULT_TEMPLATE, help=f"Template to use for action prompts (default: {DEFAULT_TEMPLATE}, reasoning: {REASONING_TEMPLATE})."),
+    skip: bool = typer.Option(False, help="Auto-select single choices without asking agent."),
 ):
     """Run a quest with an LLM agent.
 
@@ -99,6 +100,7 @@ def run(
                         debug=debug,
                         headless=headless,
                         template=template,
+                        skip_single=skip,
                     )
             except CommandTimeout:
                 outcome = QuestOutcome.ERROR
@@ -110,6 +112,7 @@ def run(
                 debug=debug,
                 headless=headless,
                 template=template,
+                skip_single=skip,
             )
 
         _handle_quest_outcome(outcome, "Quest run")

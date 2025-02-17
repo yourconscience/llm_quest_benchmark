@@ -31,13 +31,14 @@ class QuestRunner:
         debug: bool = False,
         headless: bool = False,
         template: str = DEFAULT_TEMPLATE,
+        skip_single: bool = False,
     ) -> None:
         """Initialize all components needed for quest execution"""
         self.logger.debug("Initializing environment...")
         self.env = QMPlayerEnv(quest, language=language, debug=debug)
 
         self.logger.debug("Initializing agent...")
-        self.agent = LLMAgent(debug=debug, model_name=model, template=template)
+        self.agent = LLMAgent(debug=debug, model_name=model, template=template, skip_single=skip_single)
         self.logger.info(f"Using model: {model}")
         self.logger.info(f"Using language: {language}")
 
@@ -131,6 +132,7 @@ def run_quest(
     debug: bool = False,
     headless: bool = False,
     template: str = DEFAULT_TEMPLATE,
+    skip_single: bool = False,
 ) -> QuestOutcome:
     """Convenience function to run a quest with minimal setup
     Returns:
@@ -144,5 +146,6 @@ def run_quest(
         debug=debug,
         headless=headless,
         template=template,
+        skip_single=skip_single,
     )
     return runner.run()

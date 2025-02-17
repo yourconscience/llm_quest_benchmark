@@ -93,7 +93,8 @@ class LLMAgent(QuestPlayer):
 
     SUPPORTED_MODELS = MODEL_CHOICES
 
-    def __init__(self, debug: bool = False, model_name: str = "gpt-4o", template: str = DEFAULT_TEMPLATE):
+    def __init__(self, debug: bool = False, model_name: str = "gpt-4o", template: str = DEFAULT_TEMPLATE, skip_single: bool = False):
+        super().__init__(skip_single=skip_single)
         self.debug = debug
         self.model_name = model_name.lower()
         self.template = template
@@ -115,8 +116,8 @@ class LLMAgent(QuestPlayer):
         self.llm = get_llm_client(model_name, system_prompt=self.prompt_renderer.render_system_prompt())
         self.history: List[LLMResponse] = []
 
-    def get_action(self, observation: str, choices: list) -> str:
-        """Process observation and return action number"""
+    def _get_action_impl(self, observation: str, choices: list) -> str:
+        """Implementation of action selection logic"""
         if self.debug:
             self.logger.debug(f"\nObservation:\n{observation}")
 

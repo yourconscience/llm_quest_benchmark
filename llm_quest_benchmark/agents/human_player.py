@@ -1,37 +1,21 @@
 """Interactive console player for Space Rangers quests"""
 import logging
-from typing import List, Dict
+from typing import List, Dict, Any
+
+from llm_quest_benchmark.agents.base import QuestPlayer
 
 
-class HumanPlayer:
+class HumanPlayer(QuestPlayer):
     """Interactive console player that takes input from user"""
     def __init__(self, skip_single: bool = False, debug: bool = False):
-        self.skip_single = skip_single
+        super().__init__(skip_single=skip_single)
         self.debug = debug
         self.logger = logging.getLogger(__name__)
         if debug:
             self.logger.setLevel(logging.DEBUG)
 
-    def on_game_start(self):
-        """Called when game starts"""
-        if self.debug:
-            self.logger.debug("Starting new game")
-
-    def get_action(self, observation: str, choices: List[Dict[str, str]]) -> str:
-        """Get next action from the player
-
-        Args:
-            observation: Current game state text
-            choices: List of available choices [{id: str, text: str}]
-
-        Returns:
-            Choice number as string (1-based)
-        """
-        if len(choices) == 1 and self.skip_single:
-            if self.debug:
-                self.logger.debug("Auto-selecting single choice")
-            return "1"  # Auto-select if only one choice
-
+    def _get_action_impl(self, observation: str, choices: list) -> str:
+        """Implementation of action selection logic"""
         # Print observation and choices
         print("\n" + observation)
 
@@ -48,3 +32,16 @@ class HumanPlayer:
                 print(f"Invalid choice. Please enter a number between 1 and {len(choices)}")
             except ValueError:
                 print("Invalid input. Please enter a number.")
+
+    def reset(self) -> None:
+        """Reset player state between episodes"""
+        pass
+
+    def on_game_start(self) -> None:
+        """Called when game starts"""
+        if self.debug:
+            self.logger.debug("Starting new game")
+
+    def on_game_end(self, final_state: Dict[str, Any]) -> None:
+        """Called when game ends"""
+        pass
