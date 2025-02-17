@@ -2,52 +2,142 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 import os
+import logging
+import anthropic
 
 from openai import OpenAI
+from llm_quest_benchmark.constants import MODEL_CHOICES, DEFAULT_TEMPERATURE
+
+logger = logging.getLogger(__name__)
 
 
 class LLMClient(ABC):
     """Base class for LLM clients"""
 
+    def __init__(self, model_id: str = "", system_prompt: str = "", temperature: float = DEFAULT_TEMPERATURE):
+        """Initialize the LLM client.
+
+        Args:
+            model_id (str, optional): ID of the model to use. Defaults to "".
+            system_prompt (str, optional): System prompt to use. Defaults to "".
+            temperature (float, optional): Temperature parameter for sampling. Defaults to DEFAULT_TEMPERATURE.
+        """
+        self.model_id = model_id
+        self.system_prompt = system_prompt
+        self.temperature = temperature
+
     @abstractmethod
-    def __call__(self, prompt: str, **kwargs) -> str:
-        """Call LLM with prompt and return response"""
+    def get_completion(self, prompt: str) -> str:
+        """Get a completion from the model.
+
+        Args:
+            prompt (str): The prompt to complete
+
+        Returns:
+            str: The completion
+        """
         pass
+
+    def __call__(self, prompt: str) -> str:
+        """Get a completion from the model.
+
+        Args:
+            prompt (str): The prompt to complete
+
+        Returns:
+            str: The completion
+        """
+        return self.get_completion(prompt)
 
 
 class OpenAIClient(LLMClient):
     """Client for OpenAI API"""
 
-    def __init__(self, model_id: str, system_prompt: str, max_tokens: int = 200):
-        self.client = OpenAI()  # Uses OPENAI_API_KEY from environment
-        self.model = model_id
-        self.max_tokens = max_tokens
-        self.system_prompt = system_prompt
+    def __init__(self, model_id: str = "", system_prompt: str = "", temperature: float = DEFAULT_TEMPERATURE, max_tokens: int = 200):
+        """Initialize the OpenAI client.
 
-    def __call__(self, prompt: str, **kwargs) -> str:
+        Args:
+            model_id (str, optional): ID of the model to use. Defaults to "".
+            system_prompt (str, optional): System prompt to use. Defaults to "".
+            temperature (float, optional): Temperature parameter for sampling. Defaults to DEFAULT_TEMPERATURE.
+            max_tokens (int, optional): Maximum tokens to generate. Defaults to 200.
+        """
+        super().__init__(model_id=model_id, system_prompt=system_prompt, temperature=temperature)
+        self.client = OpenAI()  # Uses OPENAI_API_KEY from environment
+        self.max_tokens = max_tokens
+
+    def get_completion(self, prompt: str) -> str:
+        """Get a completion from the model.
+
+        Args:
+            prompt (str): The prompt to complete
+
+        Returns:
+            str: The completion
+        """
         response = self.client.chat.completions.create(
-            model=self.model,
+            model=self.model_id,
             messages=[
                 {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=self.max_tokens,
-            temperature=0.7
+            temperature=self.temperature
         )
         return response.choices[0].message.content.strip()
 
 
-def get_llm_client(model_name: str, system_prompt: str) -> LLMClient:
-    """Factory function to get appropriate LLM client"""
-    model_map = {
-        "gpt-4o": ("gpt-4o-mini", OpenAIClient),
-        "gpt-4o-mini": ("gpt-4o-mini", OpenAIClient),  # Use same model for now
-        "sonnet": ("gpt-4o-mini", OpenAIClient),  # Use GPT-4 for now until we add Claude
-        "deepseek": ("gpt-4o-mini", OpenAIClient),  # Use GPT-4 for now until we add DeepSeek
-    }
+class AnthropicClient(LLMClient):
+    """Anthropic Claude client."""
 
-    if model_name not in model_map:
-        raise ValueError(f"Unsupported model: {model_name}")
+    def get_completion(self, prompt: str) -> str:
+        """Get a completion from the model.
 
-    model_id, client_class = model_map[model_name]
-    return client_class(model_id, system_prompt)
+        Args:
+            prompt (str): The prompt to complete
+
+        Returns:
+            str: The completion
+        """
+        try:
+            response = anthropic.messages.create(
+                model=self.model_id,
+                max_tokens=4096,
+                temperature=self.temperature,
+                system=self.system_prompt,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response.content[0].text
+        except Exception as e:
+            logger.error(f"Error getting completion from Anthropic: {e}")
+            raise
+
+
+def get_llm_client(model_name: str, system_prompt: str = "", temperature: float = DEFAULT_TEMPERATURE) -> LLMClient:
+    """Factory function to get appropriate LLM client.
+
+    Args:
+        model_name (str): Name of the model to use
+        system_prompt (str, optional): System prompt to use. Defaults to "".
+        temperature (float, optional): Temperature parameter for sampling. Defaults to DEFAULT_TEMPERATURE.
+
+    Returns:
+        LLMClient: The LLM client
+
+    Raises:
+        NotImplementedError: If the model is not yet supported
+    """
+    if model_name == "sonnet":
+        return AnthropicClient(
+            model_id="claude-3-sonnet-20240229",
+            system_prompt=system_prompt,
+            temperature=temperature
+        )
+    elif model_name in ["gpt-4o", "gpt-4o-mini"]:
+        return OpenAIClient(
+            model_id=model_name,
+            system_prompt=system_prompt,
+            temperature=temperature
+        )
+    else:
+        raise NotImplementedError(f"Model {model_name} is not yet supported")

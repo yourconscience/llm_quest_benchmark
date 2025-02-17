@@ -18,3 +18,6 @@ PROMPT_TEMPLATES_DIR = Path(__file__).parent / "prompt_templates"
 # Templates
 DEFAULT_TEMPLATE = "default.jinja"
 REASONING_TEMPLATE = "reasoning.jinja"
+
+# Default temperature
+DEFAULT_TEMPERATURE = 0.3  # Lower temperature for more focused responses

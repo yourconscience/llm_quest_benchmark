@@ -3,7 +3,7 @@ import logging
 from typing import Optional, Dict, Any
 import json
 
-from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_LANG, DEFAULT_TEMPLATE
+from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_LANG, DEFAULT_TEMPLATE, DEFAULT_TEMPERATURE
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
 from llm_quest_benchmark.environments.qm import QMPlayerEnv
 from llm_quest_benchmark.renderers.terminal import TerminalRenderer
@@ -32,13 +32,20 @@ class QuestRunner:
         headless: bool = False,
         template: str = DEFAULT_TEMPLATE,
         skip_single: bool = False,
+        temperature: float = DEFAULT_TEMPERATURE
     ) -> None:
         """Initialize all components needed for quest execution"""
         self.logger.debug("Initializing environment...")
         self.env = QMPlayerEnv(quest, language=language, debug=debug)
 
         self.logger.debug("Initializing agent...")
-        self.agent = LLMAgent(debug=debug, model_name=model, template=template, skip_single=skip_single)
+        self.agent = LLMAgent(
+            debug=debug,
+            model_name=model,
+            template=template,
+            skip_single=skip_single,
+            temperature=temperature
+        )
         self.logger.info(f"Using model: {model}")
         self.logger.info(f"Using language: {language}")
 
@@ -80,6 +87,11 @@ class QuestRunner:
                 prompt = self.prompt_renderer.render_action_prompt(observation, self.env.state['choices'])
                 action = self.agent.get_action(observation, self.env.state['choices'])
 
+                # Get full LLM response if available
+                llm_response = None
+                if hasattr(self.agent, 'history') and len(self.agent.history) > 0:
+                    llm_response = self.agent.history[-1].__dict__ if hasattr(self.agent.history[-1], '__dict__') else self.agent.history[-1]
+
                 # Take action in environment
                 observation, reward, done, info = self.env.step(action)
 
@@ -93,7 +105,8 @@ class QuestRunner:
                         prompt=prompt,
                         response=action,
                         reward=reward,
-                        metrics=info
+                        metrics=info,
+                        llm_response=llm_response
                     )
 
                 # Optional terminal rendering
@@ -133,6 +146,7 @@ def run_quest(
     headless: bool = False,
     template: str = DEFAULT_TEMPLATE,
     skip_single: bool = False,
+    temperature: float = DEFAULT_TEMPERATURE,
 ) -> QuestOutcome:
     """Convenience function to run a quest with minimal setup
     Returns:
@@ -147,5 +161,6 @@ def run_quest(
         headless=headless,
         template=template,
         skip_single=skip_single,
+        temperature=temperature,
     )
     return runner.run()

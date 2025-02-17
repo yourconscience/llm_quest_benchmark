@@ -58,6 +58,7 @@ class QuestStep:
     reward: float = 0.0
     metrics: Dict[str, Any] = None
     timestamp: str = ""
+    llm_response: Optional[Dict[str, Any]] = None  # Store full LLM response including reasoning
 
     def __post_init__(self):
         if not self.timestamp:
@@ -66,7 +67,11 @@ class QuestStep:
     def to_console_line(self, is_llm: bool = False) -> str:
         """Format step for console output based on player type"""
         if is_llm:
-            return f"Step {self.step} | Action: {self.response} | Reward: {self.reward} | Choices: {len(self.choices)}"
+            base_line = f"Step {self.step} | Action: {self.response} | Reward: {self.reward} | Choices: {len(self.choices)}"
+            if isinstance(self.llm_response, dict) and "reasoning" in self.llm_response and self.llm_response["reasoning"]:
+                reasoning_text = str(self.llm_response["reasoning"])
+                return f"{base_line}\n    Reasoning: {reasoning_text}"
+            return base_line
         else:
             # For human players, just show the state and choices
             return f"Step {self.step} | Choices: {len(self.choices)}"
@@ -81,7 +86,8 @@ class QuestStep:
             "prompt": self.prompt,
             "response": self.response,
             "reward": self.reward,
-            "metrics": self.metrics or {}
+            "metrics": self.metrics or {},
+            "llm_response": self.llm_response
         }
 
 
@@ -128,7 +134,8 @@ class QuestLogger:
                  prompt: str,
                  response: str,
                  reward: float = 0.0,
-                 metrics: Dict[str, Any] = None) -> None:
+                 metrics: Dict[str, Any] = None,
+                 llm_response: Optional[Dict[str, Any]] = None) -> None:
         """Log a quest step with metrics"""
         quest_step = QuestStep(
             step=step,
@@ -137,7 +144,8 @@ class QuestLogger:
             prompt=prompt,
             response=response,
             reward=reward,
-            metrics=metrics
+            metrics=metrics,
+            llm_response=llm_response
         )
         self.steps.append(quest_step)
 

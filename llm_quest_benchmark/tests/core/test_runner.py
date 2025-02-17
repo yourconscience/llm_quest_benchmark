@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 from llm_quest_benchmark.core.runner import QuestRunner
 from llm_quest_benchmark.environments.state import QuestOutcome
-from llm_quest_benchmark.constants import DEFAULT_QUEST
+from llm_quest_benchmark.constants import DEFAULT_QUEST, DEFAULT_TEMPERATURE, DEFAULT_TEMPLATE
 
 
 @pytest.fixture
@@ -50,7 +50,13 @@ def test_runner_setup(mock_prompt_renderer, mock_terminal, mock_agent, mock_env,
 
     # Check that components were initialized
     mock_env.assert_called_once()
-    mock_agent.assert_called_once()
+    mock_agent.assert_called_once_with(
+        debug=False,
+        model_name='gpt-4o',
+        template='default.jinja',
+        skip_single=False,
+        temperature=DEFAULT_TEMPERATURE
+    )
     mock_prompt_renderer.assert_called_once()
 
     # Verify component instances were stored
@@ -79,6 +85,7 @@ def test_runner_execution(mock_prompt_renderer, mock_terminal, mock_agent, mock_
 
     mock_agent_instance = Mock()
     mock_agent_instance.get_action.return_value = "1"
+    mock_agent_instance.history = []  # Add empty history
     mock_agent.return_value = mock_agent_instance
 
     mock_terminal_instance = Mock()
@@ -86,10 +93,16 @@ def test_runner_execution(mock_prompt_renderer, mock_terminal, mock_agent, mock_
 
     mock_prompt_renderer_instance = Mock()
     mock_prompt_renderer_instance.render_action_prompt.return_value = "Test prompt"
+    mock_prompt_renderer_instance.render_system_prompt.return_value = "Test system prompt"
     mock_prompt_renderer.return_value = mock_prompt_renderer_instance
 
     # Initialize and run
-    runner.initialize(str(DEFAULT_QUEST))
+    runner.initialize(
+        quest=str(DEFAULT_QUEST),
+        model='gpt-4o-mini',  # Use faster model for tests
+        template=DEFAULT_TEMPLATE,  # Use default template
+        temperature=DEFAULT_TEMPERATURE
+    )
     outcome = runner.run()
 
     # Verify execution flow

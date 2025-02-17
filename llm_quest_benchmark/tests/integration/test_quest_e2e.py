@@ -1,9 +1,12 @@
 """End-to-end tests for quest CLI"""
 import logging
 import pytest
-from unittest.mock import patch, Mock
 
-from llm_quest_benchmark.constants import DEFAULT_QUEST
+from llm_quest_benchmark.constants import (
+    DEFAULT_QUEST,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_TEMPLATE,
+)
 from llm_quest_benchmark.core.runner import run_quest
 from llm_quest_benchmark.executors.qm_player import play_quest
 from llm_quest_benchmark.tests.agents.test_players import FirstChoicePlayer
@@ -12,29 +15,28 @@ from llm_quest_benchmark.environments.state import QuestOutcome
 
 @pytest.mark.e2e
 @pytest.mark.timeout(20)  # 20s should be enough
-@patch('llm_quest_benchmark.core.runner.LLMAgent')
-def test_quest_run_with_llm(mock_agent_class, caplog):
+def test_quest_run_with_llm(caplog):
     """Test that quest runs with LLM agent and reaches a final state"""
-    caplog.set_level("ERROR")  # Only show errors in test output
+    caplog.set_level(logging.DEBUG)  # Show all logs in test output
 
-    # Set up mock agent
-    mock_agent = Mock()
-    mock_agent.get_action.return_value = "1"  # Always choose first option
-    mock_agent_class.return_value = mock_agent
-
-    # Run quest directly
+    # Run quest with real LLM agent
     outcome = run_quest(
         quest=str(DEFAULT_QUEST),
-        debug=False,  # Reduce output
+        debug=True,  # Enable debug logging
         headless=True,  # No UI needed for test
+        temperature=DEFAULT_TEMPERATURE,
+        model='gpt-4o-mini',  # Use faster model for tests
+        template=DEFAULT_TEMPLATE,  # Use default template for faster execution
     )
+
+    # Print logs for debugging
+    print("\nDebug logs:")
+    for record in caplog.records:
+        print(f"{record.levelname}: {record.message}")
 
     # Check that we got a valid outcome
     assert outcome in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE], \
         "Quest did not reach a final state"
-
-    # Verify agent was used
-    assert mock_agent.get_action.called, "Agent's get_action was not called"
 
 
 @pytest.mark.e2e

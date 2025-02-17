@@ -17,6 +17,7 @@ from llm_quest_benchmark.constants import (
     DEFAULT_QUEST,
     DEFAULT_TEMPLATE,
     REASONING_TEMPLATE,
+    DEFAULT_TEMPERATURE,
 )
 
 # Initialize logging
@@ -74,6 +75,7 @@ def run(
     timeout_seconds: int = typer.Option(60, help="Timeout in seconds (0 for no timeout)."),
     template: str = typer.Option(DEFAULT_TEMPLATE, help=f"Template to use for action prompts (default: {DEFAULT_TEMPLATE}, reasoning: {REASONING_TEMPLATE})."),
     skip: bool = typer.Option(False, help="Auto-select single choices without asking agent."),
+    temperature: float = typer.Option(DEFAULT_TEMPERATURE, help="Temperature for LLM sampling"),
 ):
     """Run a quest with an LLM agent.
 
@@ -101,6 +103,7 @@ def run(
                         headless=headless,
                         template=template,
                         skip_single=skip,
+                        temperature=temperature
                     )
             except CommandTimeout:
                 outcome = QuestOutcome.ERROR
@@ -113,6 +116,7 @@ def run(
                 headless=headless,
                 template=template,
                 skip_single=skip,
+                temperature=temperature
             )
 
         _handle_quest_outcome(outcome, "Quest run")

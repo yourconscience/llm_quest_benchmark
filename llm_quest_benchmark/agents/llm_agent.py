@@ -4,7 +4,12 @@ import logging
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 
-from llm_quest_benchmark.constants import MODEL_CHOICES, DEFAULT_TEMPLATE
+from llm_quest_benchmark.constants import (
+    MODEL_CHOICES,
+    DEFAULT_TEMPLATE,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_MODEL
+)
 from llm_quest_benchmark.agents.llm_client import get_llm_client
 from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.renderers.prompt_renderer import PromptRenderer
@@ -93,11 +98,17 @@ class LLMAgent(QuestPlayer):
 
     SUPPORTED_MODELS = MODEL_CHOICES
 
-    def __init__(self, debug: bool = False, model_name: str = "gpt-4o", template: str = DEFAULT_TEMPLATE, skip_single: bool = False):
+    def __init__(self,
+                 debug: bool = False,
+                 model_name: str = DEFAULT_MODEL,
+                 template: str = DEFAULT_TEMPLATE,
+                 skip_single: bool = False,
+                 temperature: float = DEFAULT_TEMPERATURE):
         super().__init__(skip_single=skip_single)
         self.debug = debug
         self.model_name = model_name.lower()
         self.template = template
+        self.temperature = temperature
 
         if self.model_name not in self.SUPPORTED_MODELS:
             raise ValueError(f"Unsupported model: {model_name}. Supported models are: {self.SUPPORTED_MODELS}")
@@ -112,8 +123,12 @@ class LLMAgent(QuestPlayer):
         # Initialize prompt renderer
         self.prompt_renderer = PromptRenderer(None, template=template)  # None for env since we don't need it here
 
-        # Initialize LLM client with system prompt
-        self.llm = get_llm_client(model_name, system_prompt=self.prompt_renderer.render_system_prompt())
+        # Initialize LLM client with system prompt and temperature
+        self.llm = get_llm_client(
+            model_name,
+            system_prompt=self.prompt_renderer.render_system_prompt(),
+            temperature=temperature
+        )
         self.history: List[LLMResponse] = []
 
     def _get_action_impl(self, observation: str, choices: list) -> str:
