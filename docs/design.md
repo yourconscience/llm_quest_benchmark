@@ -10,18 +10,15 @@
 ### Core Components
 1. **QM Parser Bridge** (TypeScript)
    - Parses QM files into structured format
-   - Handles text, choices, conditions, etc.
+   - Handles text, choices, conditions
    - Provides consistent interface for both interactive and automated play
    - Handles game state transitions
-   - Provides stable interface for Python environment
 
 2. **Quest Environment** (Python)
    - Manages game state and transitions
-   - Provides standard environment interface (reset, step, close)
+   - Provides standard environment interface (reset, step)
    - Handles reward calculation and episode termination
    - Works identically for both human and LLM players
-   - Handles action validation
-   - Provides observation space
 
 3. **Player Interface**
    - Abstract interface for decision making
@@ -29,38 +26,45 @@
      a. LLM Agent: Makes automated decisions using language models
      b. Human Player: Takes input through console interface
    - Both use same environment and state format
-   - Model-agnostic design
    - Unified API through LiteLLM
    - Structured prompt system
 
-4. **Renderer**
-   - Formats game state for display
-   - Handles text layout and styling
-   - Manages history tracking
-   - Adapts output based on player type (rich UI for humans, logging for LLMs)
+4. **Metrics Collection**
+   - JSONL format with UTF-8 encoding
+   - Tracks all steps, choices, and outcomes
+   - Supports both human and LLM players
+   - Debug mode for detailed logging
+   - Analysis tools for post-run insights
 
 ## Workflow
-1. Parser loads and parses QM file through TypeScript bridge
-2. Environment initializes with parsed quest
-3. Player (Human/LLM) receives observation and choices
-4. Player selects action:
-   - Human: Through console input
-   - LLM: Through API call
-5. Environment processes action and updates state
-6. Renderer formats state for display
-7. Loop continues until episode ends
 
-### Key Features
-- Unified workflow for both human and LLM players
-- Simple, modular design
-- Standard environment interface
-- Clean separation of concerns
-- Easy to extend and modify
-- Minimal dependencies
+1. **Quest Execution**
+   - Parser loads and parses QM file
+   - Environment initializes with parsed quest
+   - Player (Human/LLM) receives observation and choices
+   - Player selects action:
+     - Human: Through console input
+     - LLM: Through API call
+   - Environment processes action and updates state
+   - Metrics are logged for each step
+   - Loop continues until episode ends
+
+2. **Metrics Analysis**
+   - Metrics stored in JSONL format
+   - Each step includes:
+     - State and choices
+     - Player's action
+     - Reward and outcome
+     - Debug info (optional)
+   - Analysis tools provide:
+     - Quest summary
+     - Step-by-step review
+     - Decision patterns
+     - Performance metrics
 
 ## Technology Stack
 
-### Current
+### Core
 - TypeScript (QM Parser)
 - Python 3.11+ (Core)
 - Rich (Terminal UI)
@@ -87,23 +91,13 @@
 - Timeout handling for LLM calls
 - Debug logging in test mode
 
-### Documentation
-- Docstrings for public APIs
-- Inline comments for complex logic
-- Debug logs for runtime behavior
-- Clear error messages
-
 ### Git Workflow
 - Direct commits to master for:
   - Documentation updates
   - Small fixes
-  - Minor improvements
   - Test updates
 - Feature branches for:
   - New features
   - Major refactoring
   - Breaking changes
-  - Complex improvements
 - Branch naming: `feature/description` or `fix/description`
-- Test changes before merging
-- Keep commits focused and well-described

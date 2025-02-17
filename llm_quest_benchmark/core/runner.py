@@ -45,7 +45,12 @@ class QuestRunner:
         self.prompt_renderer = PromptRenderer(self.env, template=template)
 
         # Initialize unified logger
-        self.quest_logger = QuestLogger(debug=debug, is_llm=True)
+        self.quest_logger = QuestLogger(
+            debug=debug,
+            is_llm=True,
+            model=model,
+            template=template
+        )
         self.quest_logger.set_quest_file(quest)
 
         # Initialize terminal renderer if not headless

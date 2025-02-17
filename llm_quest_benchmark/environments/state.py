@@ -4,11 +4,18 @@ from dataclasses import dataclass
 from enum import Enum
 
 
-class QuestOutcome(str, Enum):
-    """Final outcome of a quest execution"""
-    SUCCESS = "success"  # Quest completed with positive reward
-    FAILURE = "failure"  # Quest completed with negative/zero reward
-    ERROR = "error"    # Quest failed to complete (timeout, crash, etc)
+class QuestOutcome(Enum):
+    """Possible quest outcomes"""
+    SUCCESS = "success"  # Quest completed successfully
+    FAILURE = "failure"  # Quest completed but goal not achieved
+    ERROR = "error"  # Quest failed due to technical error or timeout
+
+    @property
+    def exit_code(self) -> int:
+        """Get the exit code for this outcome"""
+        if self in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE]:
+            return 0  # Both success and failure are valid outcomes
+        return 2  # Error outcomes return 2
 
 
 @dataclass
