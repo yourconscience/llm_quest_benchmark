@@ -1,5 +1,6 @@
-{# Template for processing quest observations and choices - with reasoning #}
-Current observation:
+{# Tier 2: Structured reasoning #}
+{# Enhanced template for interactive fiction reasoning #}
+Current story state:
 {{ observation }}
 
 Available actions:
@@ -7,36 +8,17 @@ Available actions:
 {{ loop.index }}. {{ choice.text }}
 {% endfor %}
 
-Take a deep breath and solve this step by step:
+Analyze this situation through these lenses:
+1. Immediate Context: What just happened? What objects/characters are present?
+2. Story Clues: What narrative elements from previous scenes are relevant?
+3. Goal Inference: Based on the story introduction and progression, what is the likely objective?
+4. Choice Impact: What could each action lead to? Consider both direct and indirect consequences
 
-1. Analyze the current situation:
-   - What is the current state and goal?
-   - What are the key constraints and rules?
-   - What have we learned about the entities involved?
-   - What time or resource limits exist?
-
-2. Track and update your knowledge:
-   - What new information was revealed?
-   - How does it relate to previously known facts?
-   - What patterns or relationships can be identified?
-   - What is the current progress toward the goal?
-
-3. Evaluate your options:
-   - What are the immediate consequences of each choice?
-   - How does each choice affect the remaining possibilities?
-   - Which choice best aligns with the optimal solution path?
-   - Consider both immediate and long-term implications
-
-Your answer should be in the following format:
-
+Your response should be:
 ```json
 {
-    "action": <action_number>,
-    "state_analysis": "<brief analysis of current state, entities, and constraints>",
-    "knowledge_update": "<what new information was learned and how it affects the solution>",
-    "goal": "<immediate objective>",
-    "reasoning": "<detailed explanation of your choice, including resource management and future implications>"
+    "analysis": "<focused breakdown of current situation and critical clues>",
+    "reasoning": "<concise narrative connecting clues to action choice>",
+    "choice": <action_number>
 }
 ```
-
-Please respond with the JSON object only, nothing else.
