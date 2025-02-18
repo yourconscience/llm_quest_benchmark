@@ -50,8 +50,7 @@ def test_benchmark_command(cli_runner, tmp_path, mock_benchmark_results):
     config_path = tmp_path / "test_config.yaml"
     config_content = """
     quests:
-      - quests/kr1/Boat.qm
-      - quests/kr1/Gladiator.qm
+      - quests/boat.qm
     agents:
       - model: gpt-4o-mini
         template: default.jinja
@@ -84,9 +83,8 @@ def test_benchmark_command(cli_runner, tmp_path, mock_benchmark_results):
         # Verify benchmark was called with correct config
         mock_run.assert_called_once()
         config = mock_run.call_args[0][0]
-        assert len(config.quests) == 2
-        assert config.quests[0] == "quests/kr1/Boat.qm"
-        assert config.quests[1] == "quests/kr1/Gladiator.qm"
+        assert len(config.quests) == 1
+        assert config.quests[0] == "quests/boat.qm"
         assert len(config.agents) == 2
         assert config.agents[0].model == "gpt-4o-mini"
         assert config.agents[1].model == "random_choice"
@@ -100,7 +98,7 @@ def test_benchmark_command_with_debug_override(cli_runner, tmp_path, mock_benchm
     config_path = tmp_path / "test_config.yaml"
     config_content = """
     quests:
-      - quests/kr1/Boat.qm
+      - quests/boat.qm
     agents:
       - model: gpt-4o-mini
         template: default.jinja

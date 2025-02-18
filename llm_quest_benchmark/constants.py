@@ -10,7 +10,7 @@ LANG_CHOICES = ["rus", "eng"]
 DEFAULT_LANG = "rus"
 
 # Default quest
-DEFAULT_QUEST = "quests/kr1/Boat.qm"
+DEFAULT_QUEST = "quests/boat.qm"
 
 # Paths
 PROMPT_TEMPLATES_DIR = Path(__file__).parent / "prompt_templates"

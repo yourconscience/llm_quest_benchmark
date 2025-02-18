@@ -11,63 +11,52 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 - ⭐️ **Latest LLM Providers**: OpenAI, Anthropic, Deepseek, OpenRouter models are supported
 - 🎮 **Interactive Mode**: Play quests as Human Agent in Rich terminal UI
 - 📊 **Metrics Collection**: Track success rates, decision patterns, and performance metrics
-- 🛠️ **Developer Tools**: Rich debugging, state history, and comprehensive testing
 
-## Prerequisites
+## Setup
 
-- Python 3.10+
-- Node.js 18+ (for QM parser)
-- Git (for submodules)
+1. **Install Required Software**:
+   - Python 3.9 or later from [Python.org](https://www.python.org/downloads/)
+   - Node.js 18 or later from [nodejs.org](https://nodejs.org/)
+   - Git (for cloning the repository)
 
-## Quick Start
-
-1. Clone and setup:
+2. **Get the Code**:
 ```bash
 git clone https://github.com/yourconscience/llm-quest-benchmark --recurse-submodules
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-cp .env.example .env  # Configure your API keys
+cd llm-quest-benchmark
 ```
 
-2. Run a quest:
+3. **Setup Environment**:
+
+On Unix/Mac/WSL:
+```bash
+./install.sh
+source .venv/bin/activate
+```
+
+On Windows (PowerShell):
+```powershell
+# First time only: Allow script execution
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+# Then install
+./install.ps1
+```
+
+4. **Configure API Keys**:
+```bash
+cp .env.example .env  # Then edit .env with your API keys
+```
+
+## Usage
+
 ```bash
 # Run with LLM agent
-llm-quest run -q quests/boat.qm --model sonnet
+llm-quest run -q quests/boat.qm --model gpt-4o-mini
 
 # Play interactively
 llm-quest play -q quests/boat.qm --skip
 
 # Analyze quest run
 llm-quest analyze  # Uses most recent run
-llm-quest analyze --metrics-file metrics/quest_run_20250217_144717.jsonl
-```
-
-## Development
-
-1. Install dev tools:
-```bash
-pip install -e ".[dev]"
-pre-commit install
-```
-
-2. Run tests:
-```bash
-pytest                 # All tests
-pytest -m integration  # Integration tests
-pytest -m unit        # Unit tests
-```
-
-3. Debug options:
-```bash
-# Debug logging
-llm-quest run --debug
-
-# State inspection
-llm-quest play --debug
-
-# Analyze with debug info
-llm-quest analyze --debug
 ```
 
 ## Project Structure
@@ -81,9 +70,6 @@ llm-quest analyze --debug
   - `utils/` - Shared utilities
   - `tests/` - Test suite
 - `quests/` - Example quests
-- `docs/` - Documentation
-
-See [docs/design.md](docs/design.md) for more details on the project design.
 
 ## License
 MIT License - See LICENSE for details.
