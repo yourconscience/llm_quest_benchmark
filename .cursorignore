@@ -1,0 +1,4 @@
+# Ignore all files in space_rangers_quest directory except important ones
+space_rangers_quest/*
+!space_rangers_quest/src/lib/qmreader.ts
+!space_rangers_quest/src/lib/qmplayer/*
