@@ -1,26 +1,27 @@
 """CLI commands for llm-quest-benchmark"""
+import logging
+import click
 from pathlib import Path
 from typing import Optional, List
 
 import typer
 
 from llm_quest_benchmark.core.logging import LogManager
-from llm_quest_benchmark.core.time import timeout, CommandTimeout
-from llm_quest_benchmark.core.runner import run_quest
+from llm_quest_benchmark.core.runner import run_quest_with_timeout, QuestRunner
 from llm_quest_benchmark.core.analyzer import analyze_quest_run
 from llm_quest_benchmark.environments.state import QuestOutcome
-from llm_quest_benchmark.executors.qm_player import play_quest
 from llm_quest_benchmark.executors.benchmark import run_benchmark, print_summary
 from llm_quest_benchmark.constants import (
     MODEL_CHOICES,
     DEFAULT_MODEL,
-    DEFAULT_LANG,
     DEFAULT_QUEST,
     DEFAULT_TEMPLATE,
     REASONING_TEMPLATE,
     DEFAULT_TEMPERATURE,
 )
 from llm_quest_benchmark.executors.benchmark_config import BenchmarkConfig, AgentConfig
+from llm_quest_benchmark.executors.qm_player import play_quest
+from llm_quest_benchmark.agents.human_player import HumanPlayer
 
 # Initialize logging
 log_manager = LogManager()
@@ -92,33 +93,38 @@ def run(
         log.debug(f"Timeout: {timeout_seconds}s")
         log.debug(f"Using template: {template}")
 
+        # Run quest with timeout if specified
         if timeout_seconds > 0:
-            try:
-                with timeout(timeout_seconds):
-                    outcome = run_quest(
-                        quest=str(quest),
-                        model=model,
-                        language=DEFAULT_LANG,
-                        debug=debug,
-                        headless=headless,
-                        template=template,
-                        skip_single=skip,
-                        temperature=temperature
-                    )
-            except CommandTimeout:
-                outcome = QuestOutcome.ERROR
-        else:
-            outcome = run_quest(
-                quest=str(quest),
+            result = run_quest_with_timeout(
+                quest_path=str(quest),
                 model=model,
-                language=DEFAULT_LANG,
                 debug=debug,
                 headless=headless,
                 template=template,
                 skip_single=skip,
-                temperature=temperature
+                temperature=temperature,
+                timeout_seconds=timeout_seconds
             )
+        else:
+            # Run without timeout
+            runner = QuestRunner(headless=headless)
+            runner.initialize(
+                quest=str(quest),
+                model=model,
+                debug=debug,
+                headless=headless,
+                template=template,
+                skip_single=skip,
+                temperature=temperature,
+            )
+            outcome = runner.run()
+            result = {
+                'outcome': outcome.name,
+                'error': None
+            }
 
+        # Handle outcome
+        outcome = QuestOutcome[result['outcome']]
         _handle_quest_outcome(outcome, "Quest run")
 
     except typer.Exit:
@@ -146,10 +152,15 @@ def play(
         log.info(f"Starting interactive quest play")
         log.debug(f"Quest file: {quest}")
 
+        # Create interactive player
+        player = HumanPlayer(skip_single=skip, debug=debug)
+
+        # Run quest in interactive mode
         outcome = play_quest(
             quest=str(quest),
+            player=player,
             skip_single=skip,
-            debug=debug,
+            debug=debug
         )
 
         _handle_quest_outcome(outcome, "Quest play")
@@ -271,6 +282,36 @@ def benchmark(
         raise  # Re-raise typer.Exit without logging
     except Exception as e:
         typer.echo(f"Error during benchmark: {str(e)}", err=True)
+        raise typer.Exit(code=2)
+
+@app.command()
+def test(
+    quest: Path = typer.Option(DEFAULT_QUEST, help="Path to the QM quest file."),
+    debug: bool = typer.Option(False, help="Enable debug logging and output."),
+    model: str = typer.Option(DEFAULT_MODEL, help=f"Model for the LLM agent (choices: {', '.join(MODEL_CHOICES)})."),
+    template: str = typer.Option(DEFAULT_TEMPLATE, help=f"Template to use for action prompts (default: {DEFAULT_TEMPLATE}, reasoning: {REASONING_TEMPLATE})."),
+):
+    """Test a quest with specified agent (headless)"""
+    try:
+        log_manager.setup(debug)
+        log.info(f"Testing quest {quest} with model {model}")
+
+        result = run_quest_with_timeout(
+            quest_path=str(quest),
+            model=model,
+            debug=debug,
+            headless=True,
+            template=template,
+            timeout_seconds=60  # Use default timeout for tests
+        )
+
+        outcome = QuestOutcome[result['outcome']]
+        _handle_quest_outcome(outcome, "Quest test")
+
+    except typer.Exit:
+        raise
+    except Exception as e:
+        log.exception(f"Error during quest test: {e}")
         raise typer.Exit(code=2)
 
 if __name__ == "__main__":

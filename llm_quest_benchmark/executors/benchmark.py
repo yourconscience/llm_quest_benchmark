@@ -9,8 +9,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 from typing import List, Dict, Any, Optional, Tuple
 
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
+from llm_quest_benchmark.agents import create_agent
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.benchmark_config import BenchmarkConfig, AgentConfig
+from llm_quest_benchmark.core.time import calculate_benchmark_timeout, DEFAULT_QUEST_TIMEOUT
 
 # Configure logging
 logging.basicConfig(
@@ -69,12 +71,22 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         for agent in config.agents
     ]
 
+    # Calculate appropriate timeouts
+    quest_timeout = min(config.timeout_seconds, DEFAULT_QUEST_TIMEOUT)  # Use shorter of configured or default
+    benchmark_timeout = calculate_benchmark_timeout(
+        num_quests=len(quest_files),
+        num_agents=len(config.agents),
+        num_workers=config.max_workers,
+        quest_timeout=quest_timeout
+    )
+
     # Run tasks in parallel
     results = []
     benchmark_metrics = {
         'timestamp': datetime.now().isoformat(),
         'config': {
-            'timeout_seconds': config.timeout_seconds,
+            'quest_timeout': quest_timeout,
+            'benchmark_timeout': benchmark_timeout,
             'debug': config.debug,
             'max_workers': config.max_workers,
         },
@@ -101,13 +113,10 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
             executor.submit(
                 run_quest_with_timeout,
                 str(quest),
-                agent.model,
-                agent.template,
-                agent.temperature,
-                config.timeout_seconds,
-                config.debug,
-                agent.skip_single,
-                True  # Always run headless in benchmark
+                agent,
+                timeout_seconds=quest_timeout,  # Use calculated quest timeout
+                debug=config.debug,
+                skip_single=agent.skip_single,
             ): (quest, agent)
             for quest, agent in all_tasks
         }
@@ -116,43 +125,34 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         for future in as_completed(future_to_task):
             quest, agent = future_to_task[future]
             try:
-                result = future.result(timeout=config.timeout_seconds)
+                result = future.result(timeout=quest_timeout)  # Use same timeout for consistency
                 results.append(result)
                 status = 'SUCCESS' if result['outcome'] == QuestOutcome.SUCCESS.name else 'FAILED'
                 error_msg = f" (Error: {result['error']})" if result['error'] else ""
                 logger.info(f"{result['quest']} - {agent.model}: {status}{error_msg}")
-            except TimeoutError:
-                logger.error(f"Quest {quest} with {agent.model} timed out after {config.timeout_seconds}s")
+
+            except (TimeoutError, Exception) as e:
+                error_msg = f"Timeout" if isinstance(e, TimeoutError) else f"{type(e).__name__}: {str(e)}"
+                logger.error(f"Quest {quest.name} with agent {agent.model} failed: {error_msg}")
+
+                # Add failed result
                 result = {
                     'quest': quest.name,
                     'model': agent.model,
                     'template': agent.template,
                     'temperature': agent.temperature,
-                    'outcome': QuestOutcome.ERROR.name,
-                    'error': f'Timeout after {config.timeout_seconds}s',
-                    'timestamp': datetime.now().isoformat(),
-                    'steps': []
-                }
-                results.append(result)
-            except Exception as e:
-                logger.error(f"Quest {quest} with {agent.model} failed: {e}")
-                result = {
-                    'quest': quest.name,
-                    'model': agent.model,
-                    'template': agent.template,
-                    'temperature': agent.temperature,
-                    'outcome': QuestOutcome.ERROR.name,
-                    'error': str(e),
+                    'outcome': QuestOutcome.TIMEOUT.name if isinstance(e, TimeoutError) else QuestOutcome.ERROR.name,
+                    'error': error_msg,
                     'timestamp': datetime.now().isoformat(),
                     'steps': []
                 }
                 results.append(result)
 
-    # Update benchmark metrics with outcomes
-    for result in results:
-        if result['outcome'] not in benchmark_metrics['summary']['outcomes']:
-            benchmark_metrics['summary']['outcomes'][result['outcome']] = 0
-        benchmark_metrics['summary']['outcomes'][result['outcome']] += 1
+            # Update benchmark metrics with outcomes
+            outcome = result['outcome']
+            if outcome not in benchmark_metrics['summary']['outcomes']:
+                benchmark_metrics['summary']['outcomes'][outcome] = 0
+            benchmark_metrics['summary']['outcomes'][outcome] += 1
 
     # Save results if output directory specified
     if config.output_dir:
@@ -170,39 +170,105 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 quest_results[quest_name] = []
             quest_results[quest_name].append(result)
 
-            # Add quest metrics to benchmark summary
+        # Add quest metrics to benchmark summary
+        for quest_name, quest_results_list in quest_results.items():
             benchmark_metrics['quests'].append({
                 'name': quest_name,
-                'agent': {
-                    'model': result['model'],
-                    'template': result['template'],
-                    'temperature': result['temperature']
-                },
-                'outcome': result['outcome'],
-                'error': result['error'],
-                'timestamp': result['timestamp']
+                'results': [
+                    {
+                        'agent': {
+                            'model': result['model'],
+                            'template': result['template'],
+                            'temperature': result['temperature']
+                        },
+                        'outcome': result['outcome'],
+                        'error': result['error'],
+                        'timestamp': result['timestamp'],
+                        'steps': result['steps']
+                    }
+                    for result in quest_results_list
+                ]
             })
 
-        # Save quest-specific results
-        for quest_name, quest_results_list in quest_results.items():
+            # Save quest-specific results
             quest_dir = os.path.join(quests_dir, quest_name)
             os.makedirs(quest_dir, exist_ok=True)
-
-            output_file = os.path.join(quest_dir, f"benchmark_{timestamp}.jsonl")
+            output_file = os.path.join(quest_dir, f"{timestamp}.json")  # Changed to .json
+            quest_data = {
+                'timestamp': timestamp,
+                'quest_name': quest_name,
+                'results': quest_results_list
+            }
             with open(output_file, 'w', encoding='utf-8') as f:
-                for result in quest_results_list:
-                    f.write(json.dumps(result, ensure_ascii=False) + '\n')
+                json.dump(quest_data, f, indent=2, ensure_ascii=False)
             logger.info(f"Results for quest {quest_name} saved to {output_file}")
 
-        # Save benchmark metrics
+        # Save benchmark metrics and summary
         benchmarks_dir = os.path.join(config.output_dir, "benchmarks")
         os.makedirs(benchmarks_dir, exist_ok=True)
+
+        # Add summary statistics to benchmark metrics
+        summary_stats = calculate_summary_stats(results)
+        benchmark_metrics['summary'].update(summary_stats)
+
+        # Save complete benchmark results
         benchmark_file = os.path.join(benchmarks_dir, f"benchmark_{timestamp}.json")
         with open(benchmark_file, 'w', encoding='utf-8') as f:
             json.dump(benchmark_metrics, f, indent=2, ensure_ascii=False)
         logger.info(f"Benchmark metrics saved to {benchmark_file}")
 
     return results
+
+
+def calculate_summary_stats(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Calculate detailed summary statistics for benchmark results
+
+    Args:
+        results (List[Dict[str, Any]]): List of benchmark results
+
+    Returns:
+        Dict[str, Any]: Summary statistics
+    """
+    summary = {
+        'models': {},
+        'total_runs': len(results),
+        'total_errors': len([r for r in results if r['error']]),
+        'total_timeouts': len([r for r in results if r['outcome'] == QuestOutcome.TIMEOUT.name]),
+        'success_rate': 0,
+        'error_rate': 0,
+        'timeout_rate': 0
+    }
+
+    # Calculate per-model statistics
+    models = {r['model'] for r in results}
+    for model in sorted(models):
+        model_results = [r for r in results if r['model'] == model]
+        success = len([r for r in model_results if r['outcome'] == QuestOutcome.SUCCESS.name])
+        failed = len([r for r in model_results if r['outcome'] == QuestOutcome.FAILURE.name])
+        error = len([r for r in model_results if r['outcome'] in (QuestOutcome.ERROR.name, QuestOutcome.TIMEOUT.name)])
+        timeout = len([r for r in model_results if r['outcome'] == QuestOutcome.TIMEOUT.name])
+        total = len(model_results)
+
+        summary['models'][model] = {
+            'total_runs': total,
+            'success': success,
+            'success_rate': success/total if total > 0 else 0,
+            'failed': failed,
+            'failure_rate': failed/total if total > 0 else 0,
+            'errors': error,
+            'error_rate': error/total if total > 0 else 0,
+            'timeouts': timeout,
+            'timeout_rate': timeout/total if total > 0 else 0
+        }
+
+    # Calculate overall rates
+    total = len(results)
+    if total > 0:
+        summary['success_rate'] = len([r for r in results if r['outcome'] == QuestOutcome.SUCCESS.name]) / total
+        summary['error_rate'] = summary['total_errors'] / total
+        summary['timeout_rate'] = summary['total_timeouts'] / total
+
+    return summary
 
 
 def print_summary(results: List[Dict[str, Any]]) -> None:
@@ -220,7 +286,8 @@ def print_summary(results: List[Dict[str, Any]]) -> None:
         model_results = [r for r in results if r['model'] == model]
         success = len([r for r in model_results if r['outcome'] == QuestOutcome.SUCCESS.name])
         failed = len([r for r in model_results if r['outcome'] == QuestOutcome.FAILURE.name])
-        error = len([r for r in model_results if r['outcome'] == QuestOutcome.ERROR.name])
+        error = len([r for r in model_results if r['outcome'] in (QuestOutcome.ERROR.name, QuestOutcome.TIMEOUT.name)])
+        timeout = len([r for r in model_results if r['outcome'] == QuestOutcome.TIMEOUT.name])
         total = len(model_results)
 
         print(f"\nModel: {model}")
@@ -228,6 +295,7 @@ def print_summary(results: List[Dict[str, Any]]) -> None:
         print(f"Success: {success} ({success/total*100:.1f}%)")
         print(f"Failed: {failed} ({failed/total*100:.1f}%)")
         print(f"Error: {error} ({error/total*100:.1f}%)")
+        print(f"Timeout: {timeout} ({timeout/total*100:.1f}%)")
 
     # List errors if any
     errors = [r for r in results if r['error']]

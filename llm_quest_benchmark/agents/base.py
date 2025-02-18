@@ -42,3 +42,7 @@ class QuestPlayer(ABC):
     def on_game_end(self, final_state: Dict[str, Any]) -> None:
         """Called when game ends"""
         pass
+
+    def __str__(self) -> str:
+        """String representation of the player"""
+        return self.__class__.__name__

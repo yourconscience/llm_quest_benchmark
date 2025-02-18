@@ -60,6 +60,9 @@ llm-quest play -q quests/boat.qm --skip
 
 # Analyze quest run
 llm-quest analyze  # Uses most recent run
+
+# Run benchmark
+llm-quest benchmark --config configs/test_benchmark.yaml
 ```
 
 ## Project Structure

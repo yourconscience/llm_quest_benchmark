@@ -42,14 +42,10 @@ class QuestLogger:
     def __init__(self,
                  name: str = "quest",
                  debug: bool = False,
-                 is_llm: bool = False,
-                 model: str = None,
-                 template: str = None):
+                 agent: str = None):
         self.logger = logging.getLogger(name)
         self.debug = debug
-        self.is_llm = is_llm
-        self.model = model
-        self.template = template
+        self.agent = agent
         self.steps: List[QuestStep] = []
         self.quest_file: Optional[str] = None
 
@@ -78,7 +74,6 @@ class QuestLogger:
                  step: int,
                  state: str,
                  choices: list,
-                 prompt: str,
                  response: str,
                  reward: float = 0.0,
                  metrics: Dict[str, Any] = None,
@@ -88,25 +83,21 @@ class QuestLogger:
             step=step,
             state=state,
             choices=choices,
-            prompt=prompt,
             response=response,
             reward=reward,
             metrics=metrics,
             llm_response=llm_response
         )
         self.steps.append(quest_step)
-
-        # Console output based on player type
-        self.logger.info(quest_step.to_console_line(is_llm=self.is_llm))
+        # Log into console if debug is enabled
+        self.logger.debug(quest_step.to_console_line())
 
         # Add quest metadata to first step
         step_data = quest_step.to_json()
         if step == 1:
             step_data.update({
                 "quest_file": self.quest_file,
-                "is_llm": self.is_llm,
-                "model": self.model,
-                "template": self.template,
+                "agent": self.agent,
                 "debug": self.debug
             })
 
@@ -128,12 +119,10 @@ class QuestLogger:
         """Get aggregated metrics for the quest run"""
         return {
             "quest_file": self.quest_file,
+            "agent": self.agent,
             "total_steps": len(self.steps),
             "total_reward": sum(step.reward for step in self.steps),
             "steps": [step.to_json() for step in self.steps],
-            "is_llm": self.is_llm,
-            "model": self.model,
-            "template": self.template,
             "debug": self.debug
         }
 

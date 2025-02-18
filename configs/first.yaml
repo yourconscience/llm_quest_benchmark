@@ -1,14 +1,18 @@
 # Main LLM benchmark configuration
 quests:
-  - quests/boat.qm  # Example quest, will be replaced with actual quest paths
+  - quests/kr1
 agents:
-  - model: gpt-4o
+  - model: random_choice
+  - model: gpt-4o-mini
     template: default.jinja
+    temperature: 0.3
+  - model: gpt-4o
+    template: reasoning.jinja
     temperature: 0.3
   - model: sonnet
-    template: default.jinja
+    template: reasoning.jinja
     temperature: 0.3
 debug: false
-timeout_seconds: 60
+timeout_seconds: 7200 # 2 hours
 max_workers: 2
 output_dir: metrics/benchmarks

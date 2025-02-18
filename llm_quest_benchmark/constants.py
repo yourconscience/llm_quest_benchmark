@@ -21,3 +21,8 @@ REASONING_TEMPLATE = "reasoning.jinja"
 
 # Default temperature
 DEFAULT_TEMPERATURE = 0.3  # Lower temperature for more focused responses
+
+# Timeout settings (in seconds)
+DEFAULT_QUEST_TIMEOUT = 30  # Default timeout for single quest run
+DEFAULT_BENCHMARK_TIMEOUT_FACTOR = 1.5  # Safety factor for benchmark timeout calculation
+MAX_BENCHMARK_TIMEOUT = 7200  # Maximum benchmark timeout (2 hours)

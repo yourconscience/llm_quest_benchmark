@@ -11,6 +11,7 @@ from llm_quest_benchmark.agents.human_player import HumanPlayer
 from llm_quest_benchmark.core.logging import QuestLogger
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.constants import DEFAULT_LANG
+from llm_quest_benchmark.renderers.terminal import TerminalRenderer
 
 
 def play_quest(
@@ -32,7 +33,12 @@ def play_quest(
     """
     logger = logging.getLogger(__name__)
     if debug:
+        # Disable terminal output in debug mode
         logger.setLevel(logging.DEBUG)
+        terminal = lambda *args, **kwargs: None
+    else:
+        logger.setLevel(logging.WARNING)
+        terminal = TerminalRenderer()
 
     # Initialize environment and player
     env = QMPlayerEnv(quest, language=DEFAULT_LANG, debug=debug)
@@ -47,6 +53,8 @@ def play_quest(
         # Get initial state
         observation = env.reset()
         state = env.state
+        terminal.render_game_state(env.state)
+
 
         while True:
             # Get player's action
@@ -55,6 +63,7 @@ def play_quest(
             # Take action in environment
             observation, reward, done, info = env.step(action)
             state = env.state
+            terminal.render_game_state(env.state)
 
             # Log metrics
             quest_logger.log_step(

@@ -1,13 +1,12 @@
 """Core functionality for llm-quest-benchmark"""
 
-from .logging import LogManager
-from .time import timeout, CommandTimeout
-from .runner import QuestRunner, run_quest
+from .logging import QuestLogger
+from .runner import QuestRunner
+from .time import timeout, run_with_timeout
 
 __all__ = [
-    'LogManager',
-    'timeout',
-    'CommandTimeout',
     'QuestRunner',
-    'run_quest',
+    'QuestLogger',
+    'timeout',
+    'run_with_timeout',
 ]

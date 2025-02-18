@@ -112,6 +112,10 @@ class LLMAgent(QuestPlayer):
         )
         self.history: List[LLMResponse] = []
 
+    def get_last_response(self) -> LLMResponse:
+        """Get the last LLM response from history"""
+        return self.history[-1]
+
     def _get_action_impl(self, observation: str, choices: list) -> str:
         """Implementation of action selection logic"""
         if self.debug:
@@ -131,6 +135,7 @@ class LLMAgent(QuestPlayer):
 
             # Store response in history
             self.history.append(llm_response)
+            self.prompt_renderer.add_to_history(llm_response)
 
             return llm_response.to_choice_string()
 
@@ -146,3 +151,7 @@ class LLMAgent(QuestPlayer):
         """Log final state for analysis"""
         if self.debug:
             self.logger.debug(f"Game ended with state: {final_state}")
+
+    def __str__(self) -> str:
+        """String representation of the agent"""
+        return f"LLMAgent(model={self.model_name}, template={self.template}, temperature={self.temperature})"
