@@ -4,10 +4,11 @@ import click
 from pathlib import Path
 from typing import Optional, List
 
+from llm_quest_benchmark.agents.agent_factory import create_agent
 import typer
 
 from llm_quest_benchmark.core.logging import LogManager
-from llm_quest_benchmark.core.runner import run_quest_with_timeout, QuestRunner
+from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.core.analyzer import analyze_quest_run
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.benchmark import run_benchmark, print_summary
@@ -18,9 +19,9 @@ from llm_quest_benchmark.constants import (
     DEFAULT_TEMPLATE,
     REASONING_TEMPLATE,
     DEFAULT_TEMPERATURE,
+    INFINITE_TIMEOUT,
 )
 from llm_quest_benchmark.executors.benchmark_config import BenchmarkConfig, AgentConfig
-from llm_quest_benchmark.executors.qm_player import play_quest
 from llm_quest_benchmark.agents.human_player import HumanPlayer
 
 # Initialize logging
@@ -70,13 +71,12 @@ def main(
 @app.command()
 def run(
     quest: Path = typer.Option(DEFAULT_QUEST, help="Path to the QM quest file."),
-    debug: bool = typer.Option(False, help="Enable debug logging and output."),
     model: str = typer.Option(DEFAULT_MODEL, help=f"Model for the LLM agent (choices: {', '.join(MODEL_CHOICES)})."),
-    headless: bool = typer.Option(False, help="Run without terminal UI, output clean logs only."),
-    timeout_seconds: int = typer.Option(60, help="Timeout in seconds (0 for no timeout)."),
-    template: str = typer.Option(DEFAULT_TEMPLATE, help=f"Template to use for action prompts (default: {DEFAULT_TEMPLATE}, reasoning: {REASONING_TEMPLATE})."),
-    skip: bool = typer.Option(False, help="Auto-select single choices without asking agent."),
     temperature: float = typer.Option(DEFAULT_TEMPERATURE, help="Temperature for LLM sampling"),
+    template: str = typer.Option(DEFAULT_TEMPLATE, help=f"Template to use for action prompts (default: {DEFAULT_TEMPLATE}, reasoning: {REASONING_TEMPLATE})."),
+    timeout_seconds: int = typer.Option(60, help="Timeout in seconds for run (0 for no timeout)."),
+    skip: bool = typer.Option(True, help="Auto-select single choices without asking agent."),
+    debug: bool = typer.Option(False, help="Enable debug logging and output, remove terminal UI."),
 ):
     """Run a quest with an LLM agent.
 
@@ -88,42 +88,23 @@ def run(
     """
     try:
         log_manager.setup(debug)
-        log.info(f"Starting quest run with model {model}")
+        agent = create_agent(model=model,
+                             template=template,
+                             temperature=temperature,
+                             skip_single=skip,
+                             debug=debug)
+
+        log.warning(f"Starting quest run with agent {str(agent)}")
         log.debug(f"Quest file: {quest}")
         log.debug(f"Timeout: {timeout_seconds}s")
-        log.debug(f"Using template: {template}")
 
-        # Run quest with timeout if specified
-        if timeout_seconds > 0:
-            result = run_quest_with_timeout(
+        timeout_seconds = timeout_seconds if timeout_seconds > 0 else 10**9
+        result = run_quest_with_timeout(
                 quest_path=str(quest),
-                model=model,
+                agent=agent,
                 debug=debug,
-                headless=headless,
-                template=template,
-                skip_single=skip,
-                temperature=temperature,
                 timeout_seconds=timeout_seconds
-            )
-        else:
-            # Run without timeout
-            runner = QuestRunner(headless=headless)
-            runner.initialize(
-                quest=str(quest),
-                model=model,
-                debug=debug,
-                headless=headless,
-                template=template,
-                skip_single=skip,
-                temperature=temperature,
-            )
-            outcome = runner.run()
-            result = {
-                'outcome': outcome.name,
-                'error': None
-            }
-
-        # Handle outcome
+        )
         outcome = QuestOutcome[result['outcome']]
         _handle_quest_outcome(outcome, "Quest run")
 
@@ -156,13 +137,13 @@ def play(
         player = HumanPlayer(skip_single=skip, debug=debug)
 
         # Run quest in interactive mode
-        outcome = play_quest(
-            quest=str(quest),
-            player=player,
-            skip_single=skip,
+        result = run_quest_with_timeout(
+            quest_path=str(quest),
+            agent=player,
+            timeout_seconds=INFINITE_TIMEOUT,
             debug=debug
         )
-
+        outcome = QuestOutcome[result['outcome']]
         _handle_quest_outcome(outcome, "Quest play")
 
     except typer.Exit:

@@ -8,7 +8,17 @@ from rich.text import Text
 from llm_quest_benchmark.utils import choice_mapper, text_processor
 
 
-class TerminalRenderer:
+class NoRenderer:
+    def render_game_state(self, state: Dict[str, Any]):
+        """Render complete game state with RPG elements"""
+        pass
+
+    def render_title(self):
+        """Render the game title with RPG-style ASCII art"""
+        pass
+
+
+class RichRenderer:
 
     def __init__(self):
         self.console = Console()

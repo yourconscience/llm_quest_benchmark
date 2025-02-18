@@ -109,7 +109,6 @@ class QuestLogger:
         if self.debug:
             self.logger.debug(f"Step {step} details:")
             self.logger.debug(f"State: {state[:200]}...")
-            self.logger.debug(f"Prompt: {prompt[:200]}...")
             self.logger.debug(f"Response: {response}")
             self.logger.debug(f"Reward: {reward}")
             if metrics:
@@ -123,7 +122,6 @@ class QuestLogger:
             "total_steps": len(self.steps),
             "total_reward": sum(step.reward for step in self.steps),
             "steps": [step.to_json() for step in self.steps],
-            "debug": self.debug
         }
 
     def get_log_entries(self) -> List[Dict[str, Any]]:

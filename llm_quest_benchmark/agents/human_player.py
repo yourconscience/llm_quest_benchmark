@@ -14,20 +14,18 @@ class HumanPlayer(QuestPlayer):
         if debug:
             self.logger.setLevel(logging.DEBUG)
 
-    def _get_action_impl(self, observation: str, choices: list) -> str:
+    def _get_action_impl(self, observation: str, choices: list) -> int:
         """Implementation of action selection logic"""
-        # Print observation and choices
-        print("\n" + observation)
 
         while True:
             try:
-                choice = input("Enter choice number (or 'q' to quit): ")
+                choice = input()
                 if choice.lower() == 'q':
                     raise KeyboardInterrupt()
 
                 choice_num = int(choice)
                 if 1 <= choice_num <= len(choices):
-                    return str(choice_num)
+                    return choice_num
 
                 print(f"Invalid choice. Please enter a number between 1 and {len(choices)}")
             except ValueError:

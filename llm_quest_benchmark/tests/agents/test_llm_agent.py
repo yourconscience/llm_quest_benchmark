@@ -52,7 +52,7 @@ def test_agent_basic_flow(mock_openai):
     result = agent.get_action(observation, choices)
 
     # Verify results
-    assert result == "1"
+    assert result == 1  # Expect an integer
     assert mock_chat.completions.create.call_count == 1
 
 

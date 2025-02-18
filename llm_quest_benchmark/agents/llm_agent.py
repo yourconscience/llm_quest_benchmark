@@ -116,10 +116,11 @@ class LLMAgent(QuestPlayer):
         """Get the last LLM response from history"""
         return self.history[-1]
 
-    def _get_action_impl(self, observation: str, choices: list) -> str:
+    def _get_action_impl(self, observation: str, choices: list) -> int:
         """Implementation of action selection logic"""
         if self.debug:
             self.logger.debug(f"\nObservation:\n{observation}")
+            self.logger.debug(f"Available choices: {choices}")
 
         # Render prompt using template
         prompt = self.prompt_renderer.render_action_prompt(observation, choices)
@@ -128,7 +129,13 @@ class LLMAgent(QuestPlayer):
 
         try:
             response = self.llm(prompt)
+            if self.debug:
+                self.logger.debug(f"Raw LLM response: {response}")
+
             llm_response = parse_llm_response(response, len(choices), self.debug, self.logger)
+            if self.debug:
+                self.logger.debug(f"Parsed LLM response: {llm_response}")
+                self.logger.debug(f"Response action type: {type(llm_response.action)}")
 
             if self.debug and llm_response.reasoning:
                 self.logger.debug(f"Reasoning: {llm_response.reasoning}")
@@ -137,11 +144,11 @@ class LLMAgent(QuestPlayer):
             self.history.append(llm_response)
             self.prompt_renderer.add_to_history(llm_response)
 
-            return llm_response.to_choice_string()
+            return llm_response.action
 
         except Exception as e:
-            self.logger.error(f"LLM call failed: {str(e)}")
-            return "1"  # Default to first choice
+            self.logger.error(f"LLM call failed: {str(e)}", exc_info=True)
+            return 1  # Default to first choice
 
     def reset(self) -> None:
         """Reset agent state"""

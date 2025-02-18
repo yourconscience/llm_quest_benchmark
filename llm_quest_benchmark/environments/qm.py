@@ -1,6 +1,7 @@
 """QM environment for Space Rangers quests"""
 from typing import Dict, List, Optional, Tuple, Any
 from copy import deepcopy
+import logging
 
 from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
 from llm_quest_benchmark.executors.ts_bridge.bridge import QMBridge
@@ -29,6 +30,11 @@ class QMPlayerEnv:
         self.debug = debug
         self.language = language
         self.quest_file = quest_file
+
+        # Initialize logger
+        self.logger = logging.getLogger(self.__class__.__name__)
+        if self.debug:
+            self.logger.setLevel(logging.DEBUG)
 
         # Initialize bridge
         self.bridge = QMBridge(quest_file, debug=debug)
@@ -72,11 +78,11 @@ class QMPlayerEnv:
 
         return self._format_observation(initial_state)
 
-    def step(self, choice_num: str) -> Tuple[str, float, bool, Dict[str, Any]]:
+    def step(self, choice_num: int) -> Tuple[str, float, bool, Dict[str, Any]]:
         """Take a step in the environment
 
         Args:
-            choice_num: String containing the choice number (1-based)
+            choice_num: Integer containing the choice number (1-based)
 
         Returns:
             Tuple of (observation, reward, done, info)
@@ -86,15 +92,13 @@ class QMPlayerEnv:
             return self._format_observation(current_state), 0, True, current_state.info
 
         try:
-            # Convert choice number to int
-            choice_num_int = int(choice_num)
-            if not self.choice_mapper or choice_num_int not in self.choice_mapper:
+            if not self.choice_mapper or choice_num not in self.choice_mapper:
                 raise ValueError(
                     f"Invalid choice {choice_num}. Valid choices: {self.choice_mapper.get_valid_choices() if self.choice_mapper else []}"
                 )
 
-            # Take step through bridge
-            new_bridge_state = self.bridge.step(choice_num_int)
+            # Take step through bridge - convert to string for TypeScript bridge
+            new_bridge_state = self.bridge.step(str(choice_num))
 
             # Create new state
             new_state = QMState(
@@ -117,14 +121,9 @@ class QMPlayerEnv:
                 new_state.info
             )
 
-        except ValueError as e:
-            current_state.info['error'] = str(e)
-            return (
-                self._format_observation(current_state),
-                -1,
-                False,
-                current_state.info
-            )
+        except Exception as e:
+            self.logger.error(f"Error during step: {e}")
+            raise
 
     def close(self):
         """Clean up resources"""

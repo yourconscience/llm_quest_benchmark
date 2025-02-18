@@ -10,7 +10,7 @@ class QuestPlayer(ABC):
         """Initialize player with skip_single option"""
         self.skip_single = skip_single
 
-    def get_action(self, observation: str, choices: list) -> str:
+    def get_action(self, observation: str, choices: list) -> int:
         """Get action number from observation and choices
 
         Args:
@@ -18,15 +18,21 @@ class QuestPlayer(ABC):
             choices: List of available choices
 
         Returns:
-            String containing the choice number (1-based)
+            Integer containing the choice number (1-based)
+
+        Raises:
+            ValueError: If no choices are provided
         """
+        if not choices:
+            raise ValueError("No choices provided")
+
         # Handle single choice skipping if enabled
         if self.skip_single and len(choices) == 1:
-            return "1"
+            return 1
         return self._get_action_impl(observation, choices)
 
     @abstractmethod
-    def _get_action_impl(self, observation: str, choices: list) -> str:
+    def _get_action_impl(self, observation: str, choices: list) -> int:
         """Implementation of action selection logic"""
         pass
 

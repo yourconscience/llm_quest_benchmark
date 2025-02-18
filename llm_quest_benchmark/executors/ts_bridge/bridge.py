@@ -133,8 +133,15 @@ class QMBridge:
         """Validate choice number and return corresponding jump ID"""
         current_state = self.state_history[-1] if self.state_history else self.get_current_state()
 
-        if not (1 <= choice_num <= len(current_state.choices)):
-            valid_choices = list(range(1, len(current_state.choices) + 1))
+        # Convert choice_num to int to ensure type safety
+        try:
+            choice_num = int(choice_num)
+        except (TypeError, ValueError):
+            raise ValueError(f"Invalid choice number: {choice_num}")
+
+        num_choices = len(current_state.choices)
+        if not (1 <= choice_num <= num_choices):
+            valid_choices = list(range(1, num_choices + 1))
             raise ValueError(
                 f"Invalid choice {choice_num}. Valid choices: {valid_choices}\n"
                 f"Current state: {json.dumps(current_state.__dict__, indent=2)}"

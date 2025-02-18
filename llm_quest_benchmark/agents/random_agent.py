@@ -25,7 +25,7 @@ class RandomAgent(QuestPlayer):
             self.logger.setLevel(logging.DEBUG)
         self.rng = random.Random(seed)
 
-    def _get_action_impl(self, observation: str, choices: List[Dict[str, str]]) -> str:
+    def _get_action_impl(self, observation: str, choices: List[Dict[str, str]]) -> int:
         """Return random choice from available options.
 
         Args:
@@ -33,12 +33,12 @@ class RandomAgent(QuestPlayer):
             choices (List[Dict[str, str]]): Available choices
 
         Returns:
-            str: Selected choice number as string
+            int: Selected choice number (1-based)
         """
         if self.debug:
             self.logger.debug(f"Observation: {observation}")
             self.logger.debug(f"Available choices: {len(choices)}")
-        return str(self.rng.randint(1, len(choices)))
+        return self.rng.randint(1, len(choices))
 
     def reset(self) -> None:
         """Reset agent state - nothing to reset for random agent"""

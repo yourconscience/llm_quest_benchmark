@@ -9,14 +9,14 @@ from llm_quest_benchmark.environments.qm import QMPlayerEnv
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.core.logging import QuestLogger, LogManager
 from llm_quest_benchmark.core.time import run_with_timeout, CommandTimeout
-from llm_quest_benchmark.constants import DEFAULT_LANG
+from llm_quest_benchmark.constants import DEFAULT_LANG, DEFAULT_QUEST_TIMEOUT
+from llm_quest_benchmark.renderers.terminal import RichRenderer, NoRenderer
 
 def run_quest_with_timeout(
     quest_path: str,
     agent: QuestPlayer,
-    timeout_seconds: int = 60,
+    timeout_seconds: int = DEFAULT_QUEST_TIMEOUT,
     debug: bool = True,
-    skip_single: bool = False,
 ) -> Dict[str, Any]:
     """Run a single quest with timeout and parameters
 
@@ -26,7 +26,6 @@ def run_quest_with_timeout(
         timeout_seconds (int, optional): Timeout in seconds. Defaults to 60.
         debug (bool, optional): Enable debug mode. Defaults to False.
         skip_single (bool, optional): Auto-select single choices. Defaults to False.
-        headless (bool, optional): Run without terminal UI. Defaults to True.
 
     Returns:
         Dict[str, Any]: Result dictionary with quest outcome and metrics
@@ -48,10 +47,12 @@ def run_quest_with_timeout(
     try:
         logger.info(f"Starting quest {quest_name} with agent {agent}")
 
-        runner = QuestRunner(agent=agent, debug=debug, skip_single=skip_single)
+        runner = QuestRunner(agent=agent, debug=debug)
         try:
             # Run quest with timeout
-            outcome = run_with_timeout(runner.run, timeout_seconds)
+            def run_quest():
+                return runner.run(quest_path)
+            outcome = run_with_timeout(run_quest, timeout_seconds)
             result['outcome'] = outcome.name
         except CommandTimeout:
             logger.warning(f"Quest {quest_name} timed out after {timeout_seconds} seconds")
@@ -72,76 +73,116 @@ def run_quest_with_timeout(
 
 class QuestRunner:
     """Manages quest execution with logging and metrics"""
-    def __init__(self, agent: QuestPlayer, debug: bool = True, skip_single: bool = False):
+    def __init__(self, agent: QuestPlayer, debug: bool = False, logger: Any = None):
         """Initialize all components needed for quest execution"""
         self.agent = agent
         self.debug = debug
-        self.skip_single = skip_single
-        self.logger = LogManager().get_logger(debug=debug)
-        self.step_count = 0
 
-        # Initialize unified logger
+        self.logger = logger
+        if logger is None:
+            log_manager = LogManager()
+            log_manager.setup(debug=debug)
+            self.logger = log_manager.get_logger()
+
+        self.renderer = RichRenderer() if not debug else NoRenderer()
+
+        self.step_count = 0
+        self.env = None
+
+        # Initialize quest logger
         self.quest_logger = QuestLogger(
-            debug=debug,
+            debug=self.debug,
             agent=str(self.agent)
         )
 
+        self.logger.debug("QuestRunner initialized with agent: %s", str(agent))
+
+    def initialize(self, quest: str) -> None:
+        """Initialize environment and logger for a new quest"""
+        try:
+            self.logger.debug("Initializing environment for quest: %s", quest)
+            self.env = QMPlayerEnv(quest, language=DEFAULT_LANG, debug=self.debug)
+            self.quest_logger.set_quest_file(quest)
+            self.logger.info(f"Running quest {quest} with agent: {str(self.agent)}")
+        except Exception as e:
+            self.logger.error("Failed to initialize environment: %s", str(e), exc_info=True)
+            raise
 
     def run(self, quest: str) -> QuestOutcome:
-        """Run the quest until completion or error
-
-        Returns:
-            QuestOutcome: The final outcome of the quest
-        """
+        """Run the quest until completion or error"""
         if not self.agent:
             self.logger.error("No agent initialized!")
             return QuestOutcome.ERROR
 
-        self.logger.debug("Initializing environment...")
-        self.env = QMPlayerEnv(quest, language=DEFAULT_LANG, debug=self.debug)
-        self.quest_logger.set_quest_file(quest)
-        self.logger.info(f"Running quest {quest} with agent: {str(self.agent)}")
         try:
+            # Initialize environment and logger
+            self.initialize(quest)
+            self.logger.debug("Environment initialized successfully")
+
+            self.renderer.render_title()
+
             # Get initial state
             observation = self.env.reset()
+            self.logger.debug("Initial observation: %s", observation)
+            self.logger.debug("Initial state: %s", self.env.state)
+
+            self.renderer.render_game_state(self.env.state)
 
             while True:
                 self.step_count += 1
+                self.logger.debug("Step %d: Processing action", self.step_count)
+
+                # Check if there are any choices available
+                if not self.env.state['choices']:
+                    self.logger.info("No more choices available - quest ended")
+                    if self.env and self.env.state:
+                        self.agent.on_game_end(self.env.state)
+                    return QuestOutcome.FAILURE
 
                 # Get agent's action
                 action = self.agent.get_action(observation, self.env.state['choices'])
+                self.logger.debug("Agent selected action: %s (type: %s)", action, type(action))
 
-                # Get full LLM response if available
-                llm_response = None
                 try:
-                    llm_response = self.agent.get_last_response()
-                except AttributeError:
-                    llm_response = None
+                    # Take action in environment
+                    step_result = self.env.step(action)
+                    self.logger.debug("Raw step result: %s", step_result)
 
-                # Take action in environment
-                observation, reward, done, info = self.env.step(action)
+                    observation, done, success, info = step_result
+                    self.logger.debug("Step result unpacked - observation: %s, done: %s, success: %s, info: %s",
+                                 observation[:100] + "..." if observation and len(observation) > 100 else observation,
+                                 done, success, info)
 
-                if self.quest_logger:
-                    self.quest_logger.log_step(
-                        step=self.step_count,
-                        state=observation,
-                        choices=self.env.state['choices'],
-                        response=action,
-                        reward=reward,
-                        metrics=info,
-                        llm_response=llm_response
-                    )
+                    self.renderer.render_game_state(self.env.state)
 
-                if done:
-                    # Quest completed
-                    final_reward = reward if isinstance(reward, (int, float)) else reward.get(0, 0)
-                    if final_reward > 0:
-                        self.logger.info("Quest completed successfully!")
-                        return QuestOutcome.SUCCESS
-                    else:
-                        self.logger.info("Quest failed.")
-                        return QuestOutcome.FAILURE
+                    if self.quest_logger:
+                        self.quest_logger.log_step(
+                            step=self.step_count,
+                            state=observation,
+                            choices=self.env.state['choices'],
+                            response=action,
+                            reward=info.get('reward', 0),
+                            metrics=info,
+                            llm_response=None
+                        )
+
+                    if done:
+                        # Quest completed
+                        if success:
+                            self.logger.warning("Quest completed successfully!")
+                            self.agent.on_game_end(self.env.state)
+                            return QuestOutcome.SUCCESS
+                        else:
+                            self.logger.warning("Quest failed.")
+                            self.agent.on_game_end(self.env.state)
+                            return QuestOutcome.FAILURE
+
+                except Exception as e:
+                    self.logger.error("Error during step: %s", str(e), exc_info=True)
+                    raise
 
         except Exception as e:
-            self.logger.exception("Error during quest execution")
+            self.logger.error("Error running quest: %s", str(e), exc_info=True)
+            if self.env and self.env.state:
+                self.agent.on_game_end(self.env.state)
             return QuestOutcome.ERROR

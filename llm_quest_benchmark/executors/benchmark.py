@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 from typing import List, Dict, Any, Optional, Tuple
 
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
-from llm_quest_benchmark.agents import create_agent
+from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.benchmark_config import BenchmarkConfig, AgentConfig
 from llm_quest_benchmark.core.time import calculate_benchmark_timeout, DEFAULT_QUEST_TIMEOUT
@@ -64,11 +64,21 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         logger.warning(f"No .qm files found in provided paths: {config.quests}")
         return []
 
+    # Create agents first
+    agents = []
+    for agent_config in config.agents:
+        try:
+            agent = create_agent(agent_config.model)
+            agents.append((agent, agent_config))
+        except Exception as e:
+            logger.error(f"Failed to create agent {agent_config.model}: {e}")
+            continue
+
     # Prepare tasks - each quest with each agent
-    all_tasks: List[Tuple[Path, AgentConfig]] = [
-        (quest, agent)
+    all_tasks: List[Tuple[Path, Any, AgentConfig]] = [
+        (quest, agent, agent_config)
         for quest in quest_files
-        for agent in config.agents
+        for agent, agent_config in agents
     ]
 
     # Calculate appropriate timeouts
@@ -92,12 +102,12 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         },
         'agents': [
             {
-                'model': agent.model,
-                'template': agent.template,
-                'temperature': agent.temperature,
-                'skip_single': agent.skip_single
+                'model': agent_config.model,
+                'template': agent_config.template,
+                'temperature': agent_config.temperature,
+                'skip_single': agent_config.skip_single
             }
-            for agent in config.agents
+            for _, agent_config in agents
         ],
         'quests': [],
         'summary': {
@@ -116,31 +126,36 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 agent,
                 timeout_seconds=quest_timeout,  # Use calculated quest timeout
                 debug=config.debug,
-                skip_single=agent.skip_single,
-            ): (quest, agent)
-            for quest, agent in all_tasks
+                skip_single=agent_config.skip_single,
+            ): (quest, agent, agent_config)
+            for quest, agent, agent_config in all_tasks
         }
 
         # Wait for each future to complete with timeout
         for future in as_completed(future_to_task):
-            quest, agent = future_to_task[future]
+            quest, agent, agent_config = future_to_task[future]
             try:
                 result = future.result(timeout=quest_timeout)  # Use same timeout for consistency
+                # Add agent config info to result
+                result['model'] = agent_config.model
+                result['template'] = agent_config.template
+                result['temperature'] = agent_config.temperature
                 results.append(result)
+
                 status = 'SUCCESS' if result['outcome'] == QuestOutcome.SUCCESS.name else 'FAILED'
                 error_msg = f" (Error: {result['error']})" if result['error'] else ""
-                logger.info(f"{result['quest']} - {agent.model}: {status}{error_msg}")
+                logger.info(f"{result['quest']} - {agent_config.model}: {status}{error_msg}")
 
             except (TimeoutError, Exception) as e:
                 error_msg = f"Timeout" if isinstance(e, TimeoutError) else f"{type(e).__name__}: {str(e)}"
-                logger.error(f"Quest {quest.name} with agent {agent.model} failed: {error_msg}")
+                logger.error(f"Quest {quest.name} with agent {agent_config.model} failed: {error_msg}")
 
                 # Add failed result
                 result = {
                     'quest': quest.name,
-                    'model': agent.model,
-                    'template': agent.template,
-                    'temperature': agent.temperature,
+                    'model': agent_config.model,
+                    'template': agent_config.template,
+                    'temperature': agent_config.temperature,
                     'outcome': QuestOutcome.TIMEOUT.name if isinstance(e, TimeoutError) else QuestOutcome.ERROR.name,
                     'error': error_msg,
                     'timestamp': datetime.now().isoformat(),
@@ -193,29 +208,14 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
             # Save quest-specific results
             quest_dir = os.path.join(quests_dir, quest_name)
             os.makedirs(quest_dir, exist_ok=True)
-            output_file = os.path.join(quest_dir, f"{timestamp}.json")  # Changed to .json
-            quest_data = {
-                'timestamp': timestamp,
-                'quest_name': quest_name,
-                'results': quest_results_list
-            }
-            with open(output_file, 'w', encoding='utf-8') as f:
-                json.dump(quest_data, f, indent=2, ensure_ascii=False)
-            logger.info(f"Results for quest {quest_name} saved to {output_file}")
+            output_file = os.path.join(quest_dir, f"{timestamp}.json")
+            with open(output_file, 'w') as f:
+                json.dump(quest_results_list, f, indent=2)
 
-        # Save benchmark metrics and summary
-        benchmarks_dir = os.path.join(config.output_dir, "benchmarks")
-        os.makedirs(benchmarks_dir, exist_ok=True)
-
-        # Add summary statistics to benchmark metrics
-        summary_stats = calculate_summary_stats(results)
-        benchmark_metrics['summary'].update(summary_stats)
-
-        # Save complete benchmark results
-        benchmark_file = os.path.join(benchmarks_dir, f"benchmark_{timestamp}.json")
-        with open(benchmark_file, 'w', encoding='utf-8') as f:
-            json.dump(benchmark_metrics, f, indent=2, ensure_ascii=False)
-        logger.info(f"Benchmark metrics saved to {benchmark_file}")
+        # Save benchmark summary
+        summary_file = os.path.join(config.output_dir, f"benchmark_{timestamp}.json")
+        with open(summary_file, 'w') as f:
+            json.dump(benchmark_metrics, f, indent=2)
 
     return results
 
