@@ -28,18 +28,15 @@ class LogManager:
     def setup(self, debug: bool = False) -> None:
         """Configure logging based on debug mode"""
         self.log.setLevel(logging.DEBUG if debug else logging.INFO)
-        if debug:
-            # Create logs directory if it doesn't exist
-            log_dir = Path("logs")
-            log_dir.mkdir(exist_ok=True)
 
-            # Add file handler for debug logging
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            debug_handler = logging.FileHandler(log_dir / f"llm_quest_{timestamp}.log")
-            debug_handler.setLevel(logging.DEBUG)
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            debug_handler.setFormatter(formatter)
-            self.log.addHandler(debug_handler)
+        # Add console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG if debug else logging.INFO)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        console_handler.setFormatter(formatter)
+        self.log.addHandler(console_handler)
+
+        if debug:
             self.log.debug("Debug logging enabled")
 
     def get_logger(self):
