@@ -1,0 +1,13 @@
+"""Bridge dataclasses for TypeScript integration"""
+from dataclasses import dataclass
+from typing import List, Dict
+
+
+@dataclass
+class QMBridgeState:
+    """State object returned by TypeScript bridge"""
+    location_id: str
+    text: str
+    choices: List[Dict[str, str]]  # [{id: str, text: str}]
+    reward: float
+    game_ended: bool

@@ -1,28 +1,51 @@
-# PowerShell installation script
+# Check prerequisites
 $ErrorActionPreference = "Stop"
 
-# Install UV if missing
-if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-    Write-Host "Installing UV package manager..."
-    Invoke-WebRequest -Uri https://astral.sh/uv/install.ps1 -UseBasicParsing | Invoke-Expression
+function Test-Command($command) {
+    try { Get-Command $command -ErrorAction Stop | Out-Null; return $true }
+    catch { return $false }
 }
 
+if (-not (Test-Command python)) {
+    Write-Error "Python 3 is required but not installed. Aborting."
+    exit 1
+}
+if (-not (Test-Command node)) {
+    Write-Error "Node.js is required but not installed. Aborting."
+    exit 1
+}
+if (-not (Test-Command npm)) {
+    Write-Error "npm is required but not installed. Aborting."
+    exit 1
+}
+
+# Print versions
+Write-Host "Using:"
+python --version
+node --version
+npm --version
+
+# Setup Python environment
 Write-Host "Setting up Python environment..."
-# Let uv handle the venv creation and activation
-$env:VIRTUAL_ENV = Join-Path $PWD.Path ".venv"
-$env:PATH = Join-Path $env:VIRTUAL_ENV "Scripts" + [IO.Path]::PathSeparator + $env:PATH
-uv venv --python python3 .venv
-uv pip install -e .
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 
-# Verify critical dependencies
-Write-Host "Verifying dependencies..."
-python -c "import anthropic; import openai; import litellm; print('✓ Dependencies verified')"
-
-# Install and build TypeScript components
-Write-Host "Setting up TypeScript components..."
-npm install
+# Setup TypeScript bridge
+Write-Host "Setting up TypeScript bridge..."
+Push-Location space-rangers-quest
+npm install --legacy-peer-deps
 npm run build
+Pop-Location
 
-Write-Host "✓ Setup complete!"
-Write-Host "Run '.venv\Scripts\activate' to activate the environment"
-Write-Host "Then use 'llm-quest' to start using the tool"
+# Create default config if not exists
+if (-not (Test-Path .env)) {
+    Write-Host "Creating default .env file..."
+    Copy-Item .env.example .env
+    Write-Host "Please edit .env with your API keys"
+}
+
+Write-Host "Installation complete! Please:"
+Write-Host "1. Edit .env with your API keys"
+Write-Host "2. Activate the virtual environment: .\venv\Scripts\Activate.ps1"

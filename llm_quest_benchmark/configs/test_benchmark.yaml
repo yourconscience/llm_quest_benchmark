@@ -1,0 +1,13 @@
+# Example benchmark configuration
+quests:
+  - quests/boat.qm
+agents:
+  - model: random_choice
+  - model: gpt-4o
+    template: default.jinja
+  # - model: sonnet
+  #   template: default.jinja
+debug: true
+timeout_seconds: 30
+max_workers: 2
+output_dir: metrics/test

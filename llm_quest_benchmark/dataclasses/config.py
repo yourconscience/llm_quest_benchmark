@@ -1,9 +1,5 @@
-"""Configuration schema for benchmark runs"""
-from llm_quest_benchmark.dataclasses.config import AgentConfig, BenchmarkConfig
-
-__all__ = ['AgentConfig', 'BenchmarkConfig']
-
-from dataclasses import dataclass, field
+"""Configuration dataclasses for benchmark runs"""
+from dataclasses import dataclass
 from typing import List, Optional
 from pathlib import Path
 
@@ -38,7 +34,7 @@ class BenchmarkConfig:
     debug: bool = False
     timeout_seconds: int = 60
     max_workers: int = 4
-    output_dir: Optional[str] = "metrics"
+    output_dir: Optional[str] = "metrics/quests"
 
     def __post_init__(self):
         # Validate quest paths

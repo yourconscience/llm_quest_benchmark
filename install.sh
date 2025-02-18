@@ -1,28 +1,49 @@
-#!/bin/sh
-set -e
+#!/bin/bash
+set -e  # Exit on error
 
-# Install UV if missing (faster than pip)
-if ! command -v uv > /dev/null; then
-    echo "Installing UV package manager..."
+# Check prerequisites
+command -v python3 >/dev/null 2>&1 || { echo "Python 3 is required but not installed. Aborting." >&2; exit 1; }
+command -v node >/dev/null 2>&1 || { echo "Node.js is required but not installed. Aborting." >&2; exit 1; }
+command -v npm >/dev/null 2>&1 || { echo "npm is required but not installed. Aborting." >&2; exit 1; }
+
+# Print versions
+echo "Using:"
+python3 --version
+node --version
+npm --version
+
+# Install uv if not present
+if ! command -v uv &> /dev/null; then
+    echo "Installing uv package manager..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
+# Setup Python environment using uv
 echo "Setting up Python environment..."
-# Let uv handle the venv creation and activation
-export VIRTUAL_ENV="$(pwd)/.venv"
-export PATH="$VIRTUAL_ENV/bin:$PATH"
-uv venv --python python3 .venv
+uv venv
+source .venv/bin/activate
+
+# Install dependencies with uv
+echo "Installing Python dependencies..."
 uv pip install -e .
 
-# Verify critical dependencies
-echo "Verifying dependencies..."
-python3 -c "import anthropic; import openai; import litellm; print('✓ Dependencies verified')"
-
-# Install and build TypeScript components
-echo "Setting up TypeScript components..."
-npm install
+# Setup TypeScript bridge
+echo "Setting up TypeScript bridge..."
+cd space-rangers-quest
+# Set NODE_OPTIONS to handle OpenSSL issues with newer Node versions
+export NODE_OPTIONS=--openssl-legacy-provider
+npm install --legacy-peer-deps
 npm run build
+cd ..
 
-echo "✓ Setup complete!"
-echo "Run 'source .venv/bin/activate' to activate the environment"
-echo "Then use 'llm-quest' to start using the tool"
+# Create default config if not exists
+if [ ! -f .env ]; then
+    echo "Creating default .env file..."
+    cp .env.example .env
+    echo "Please edit .env with your API keys"
+fi
+
+echo "Installation complete! Please:"
+echo "1. Edit .env with your API keys"
+echo "2. Activate the virtual environment: source .venv/bin/activate"
+echo "3. Note: When running TypeScript-related tasks, you may need to set: export NODE_OPTIONS=--openssl-legacy-provider"

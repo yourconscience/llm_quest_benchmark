@@ -2,7 +2,7 @@
 import json
 import logging
 from typing import Dict, List, Any, Optional
-from dataclasses import dataclass
+from json_repair import repair_json
 
 from llm_quest_benchmark.constants import (
     MODEL_CHOICES,
@@ -13,17 +13,32 @@ from llm_quest_benchmark.constants import (
 from llm_quest_benchmark.agents.llm_client import get_llm_client
 from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.renderers.prompt_renderer import PromptRenderer
+from llm_quest_benchmark.dataclasses.agent import LLMResponse
 
 
-@dataclass
-class LLMResponse:
-    """Structured response from LLM agent"""
-    action: int  # The chosen action number (1-based)
-    reasoning: Optional[str] = None  # Optional explanation for the choice
+def _parse_json_response(response: str, debug: bool = False, logger: Optional[logging.Logger] = None) -> Optional[Dict[str, Any]]:
+    """Try to parse response as JSON, with repair attempt if needed"""
+    try:
+        return json.loads(response)
+    except json.JSONDecodeError:
+        if debug and logger:
+            logger.debug("Initial JSON parse failed, attempting repair")
+        try:
+            repaired = repair_json(response)
+            return json.loads(repaired)
+        except Exception as e:
+            if debug and logger:
+                logger.error(f"JSON repair failed: {e}")
+            return None
 
-    def to_choice_string(self) -> str:
-        """Convert to choice string (1-based action number)"""
-        return str(self.action)
+
+def _validate_action_number(action: int, num_choices: int, debug: bool = False, logger: Optional[logging.Logger] = None) -> bool:
+    """Validate that action number is within valid range"""
+    if 1 <= action <= num_choices:
+        return True
+    if debug and logger:
+        logger.error(f"Action number {action} out of range [1, {num_choices}]")
+    return False
 
 
 def parse_llm_response(response: str, num_choices: int, debug: bool = False, logger: Optional[logging.Logger] = None) -> LLMResponse:
@@ -31,66 +46,32 @@ def parse_llm_response(response: str, num_choices: int, debug: bool = False, log
     if debug and logger:
         logger.debug(f"Raw LLM response: {response}")
 
-    default_response = LLMResponse(action=1)  # Default to first choice if parsing fails
-
-    try:
-        # Try to parse as JSON first
+    # Try parsing as JSON first
+    response_json = _parse_json_response(response, debug, logger)
+    if response_json and isinstance(response_json, dict) and 'action' in response_json:
         try:
-            from json_repair import repair_json
-            try:
-                response_json = json.loads(response)
-            except json.JSONDecodeError:
-                # Try to repair and parse JSON
-                repaired_json = repair_json(response)
-                response_json = json.loads(repaired_json)
-
-            if isinstance(response_json, dict) and 'action' in response_json:
-                try:
-                    action = int(response_json['action'])
-                    if 1 <= action <= num_choices:
-                        return LLMResponse(
-                            action=action,
-                            reasoning=response_json.get('reasoning')
-                        )
-                    else:
-                        if debug and logger:
-                            logger.error(f"Action number {action} out of range [1, {num_choices}]")
-                except (ValueError, TypeError):
-                    if debug and logger:
-                        logger.error(f"Invalid action value in JSON: {response_json['action']}")
-            else:
-                # Try parsing as plain number
-                try:
-                    action = int(response.strip())
-                    if 1 <= action <= num_choices:
-                        return LLMResponse(action=action)
-                    else:
-                        if debug and logger:
-                            logger.error(f"Action number {action} out of range [1, {num_choices}]")
-                except ValueError:
-                    if debug and logger:
-                        logger.error(f"Could not parse response as number: {response}")
-
-        except (ImportError, json.JSONDecodeError) as e:
+            action = int(response_json['action'])
+            if _validate_action_number(action, num_choices, debug, logger):
+                return LLMResponse(
+                    action=action,
+                    reasoning=response_json.get('reasoning')
+                )
+        except (ValueError, TypeError):
             if debug and logger:
-                logger.error(f"JSON parsing failed: {str(e)}")
-            # Try parsing as plain number
-            try:
-                action = int(response.strip())
-                if 1 <= action <= num_choices:
-                    return LLMResponse(action=action)
-                else:
-                    if debug and logger:
-                        logger.error(f"Action number {action} out of range [1, {num_choices}]")
-            except ValueError:
-                if debug and logger:
-                    logger.error(f"Could not parse response as number: {response}")
+                logger.error(f"Invalid action value in JSON: {response_json['action']}")
 
-    except Exception as e:
+    # Try parsing as plain number
+    try:
+        action = int(response.strip())
+        if _validate_action_number(action, num_choices, debug, logger):
+            return LLMResponse(action=action)
+    except ValueError:
         if debug and logger:
-            logger.error(f"Response parsing failed: {str(e)}")
+            logger.error(f"Could not parse response as number: {response}")
 
-    return default_response
+    # Default to first choice if all parsing attempts fail
+    logger.error(f"Error during {response} parsing, defaulting to first choice.")
+    return LLMResponse(action=1)
 
 
 class LLMAgent(QuestPlayer):

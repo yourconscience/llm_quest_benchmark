@@ -9,7 +9,7 @@ from llm_quest_benchmark.constants import (
 )
 from llm_quest_benchmark.core.runner import run_quest
 from llm_quest_benchmark.executors.qm_player import play_quest
-from llm_quest_benchmark.tests.agents.test_players import FirstChoicePlayer
+from llm_quest_benchmark.agents.random_agent import RandomAgent
 from llm_quest_benchmark.environments.state import QuestOutcome
 
 
@@ -35,18 +35,20 @@ def test_quest_run_with_llm(caplog):
         print(f"{record.levelname}: {record.message}")
 
     # Check that we got a valid outcome
+    assert not outcome.is_error, "Quest ended with an error"
     assert outcome in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE], \
         "Quest did not reach a final state"
+    assert outcome.exit_code == 0, "Normal quest outcomes should have exit code 0"
 
 
 @pytest.mark.e2e
 @pytest.mark.timeout(20)  # 20s should be enough
 def test_quest_play_interactive(caplog):
-    """Test interactive quest play reaches a final state using FirstChoicePlayer"""
+    """Test interactive quest play reaches a final state using RandomAgent"""
     caplog.set_level("ERROR")  # Only show errors in test output
 
-    # Use FirstChoicePlayer for automated testing
-    player = FirstChoicePlayer(skip_single=True, debug=False)
+    # Use RandomAgent for automated testing
+    player = RandomAgent(skip_single=True, debug=False)
 
     # Run quest with test player
     outcome = play_quest(
@@ -57,5 +59,7 @@ def test_quest_play_interactive(caplog):
     )
 
     # Check that we got a valid outcome
+    assert not outcome.is_error, "Quest ended with an error"
     assert outcome in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE], \
         "Quest did not reach a final state"
+    assert outcome.exit_code == 0, "Normal quest outcomes should have exit code 0"

@@ -49,7 +49,8 @@ def run_quest_with_timeout(
         'temperature': temperature,
         'outcome': QuestOutcome.ERROR.name,  # Store as string
         'error': None,
-        'timestamp': datetime.now().isoformat()
+        'timestamp': datetime.now().isoformat(),
+        'steps': []  # Store detailed steps
     }
 
     logger = logging.getLogger(__name__)
@@ -58,16 +59,28 @@ def run_quest_with_timeout(
 
     try:
         logger.info(f"Starting quest {quest_name} with model {model}")
-        outcome = run_quest(
+
+        # Create quest runner with logging
+        runner = QuestRunner(headless=True)  # Always headless for benchmark
+        runner.initialize(
             quest=quest_path,
             model=model,
+            language=DEFAULT_LANG,
             debug=debug,
-            headless=headless,
-            skip_single=skip_single,
+            headless=True,
             template=template,
-            temperature=temperature
+            skip_single=skip_single,
+            temperature=temperature,
         )
-        result['outcome'] = outcome.name  # Convert to string
+
+        # Run quest and collect outcome
+        outcome = runner.run()
+        result['outcome'] = outcome.name
+
+        # Collect detailed metrics from quest logger
+        if runner.quest_logger:
+            result['steps'] = runner.quest_logger.get_log_entries()
+
     except Exception as e:
         error_msg = f"{type(e).__name__}: {str(e)}"
         logger.error(f"Quest {quest_name} failed with error: {error_msg}")

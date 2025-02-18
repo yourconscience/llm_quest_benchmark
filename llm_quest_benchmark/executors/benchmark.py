@@ -71,6 +71,30 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
 
     # Run tasks in parallel
     results = []
+    benchmark_metrics = {
+        'timestamp': datetime.now().isoformat(),
+        'config': {
+            'timeout_seconds': config.timeout_seconds,
+            'debug': config.debug,
+            'max_workers': config.max_workers,
+        },
+        'agents': [
+            {
+                'model': agent.model,
+                'template': agent.template,
+                'temperature': agent.temperature,
+                'skip_single': agent.skip_single
+            }
+            for agent in config.agents
+        ],
+        'quests': [],
+        'summary': {
+            'total_quests': len(quest_files),
+            'total_runs': len(all_tasks),
+            'outcomes': {}
+        }
+    }
+
     with ThreadPoolExecutor(max_workers=config.max_workers) as executor:
         # Submit all tasks
         future_to_task = {
@@ -99,36 +123,84 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 logger.info(f"{result['quest']} - {agent.model}: {status}{error_msg}")
             except TimeoutError:
                 logger.error(f"Quest {quest} with {agent.model} timed out after {config.timeout_seconds}s")
-                results.append({
+                result = {
                     'quest': quest.name,
                     'model': agent.model,
                     'template': agent.template,
                     'temperature': agent.temperature,
                     'outcome': QuestOutcome.ERROR.name,
                     'error': f'Timeout after {config.timeout_seconds}s',
-                    'timestamp': datetime.now().isoformat()
-                })
+                    'timestamp': datetime.now().isoformat(),
+                    'steps': []
+                }
+                results.append(result)
             except Exception as e:
                 logger.error(f"Quest {quest} with {agent.model} failed: {e}")
-                results.append({
+                result = {
                     'quest': quest.name,
                     'model': agent.model,
                     'template': agent.template,
                     'temperature': agent.temperature,
                     'outcome': QuestOutcome.ERROR.name,
                     'error': str(e),
-                    'timestamp': datetime.now().isoformat()
-                })
+                    'timestamp': datetime.now().isoformat(),
+                    'steps': []
+                }
+                results.append(result)
+
+    # Update benchmark metrics with outcomes
+    for result in results:
+        if result['outcome'] not in benchmark_metrics['summary']['outcomes']:
+            benchmark_metrics['summary']['outcomes'][result['outcome']] = 0
+        benchmark_metrics['summary']['outcomes'][result['outcome']] += 1
 
     # Save results if output directory specified
     if config.output_dir:
-        os.makedirs(config.output_dir, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = os.path.join(config.output_dir, f"benchmark_{timestamp}.jsonl")
-        with open(output_file, 'w', encoding='utf-8') as f:
-            for result in results:
-                f.write(json.dumps(result, ensure_ascii=False) + '\n')
-        logger.info(f"Results saved to {output_file}")
+
+        # Save detailed quest metrics
+        quests_dir = os.path.join(config.output_dir, "quests")
+        os.makedirs(quests_dir, exist_ok=True)
+
+        # Group results by quest
+        quest_results = {}
+        for result in results:
+            quest_name = Path(result['quest']).stem
+            if quest_name not in quest_results:
+                quest_results[quest_name] = []
+            quest_results[quest_name].append(result)
+
+            # Add quest metrics to benchmark summary
+            benchmark_metrics['quests'].append({
+                'name': quest_name,
+                'agent': {
+                    'model': result['model'],
+                    'template': result['template'],
+                    'temperature': result['temperature']
+                },
+                'outcome': result['outcome'],
+                'error': result['error'],
+                'timestamp': result['timestamp']
+            })
+
+        # Save quest-specific results
+        for quest_name, quest_results_list in quest_results.items():
+            quest_dir = os.path.join(quests_dir, quest_name)
+            os.makedirs(quest_dir, exist_ok=True)
+
+            output_file = os.path.join(quest_dir, f"benchmark_{timestamp}.jsonl")
+            with open(output_file, 'w', encoding='utf-8') as f:
+                for result in quest_results_list:
+                    f.write(json.dumps(result, ensure_ascii=False) + '\n')
+            logger.info(f"Results for quest {quest_name} saved to {output_file}")
+
+        # Save benchmark metrics
+        benchmarks_dir = os.path.join(config.output_dir, "benchmarks")
+        os.makedirs(benchmarks_dir, exist_ok=True)
+        benchmark_file = os.path.join(benchmarks_dir, f"benchmark_{timestamp}.json")
+        with open(benchmark_file, 'w', encoding='utf-8') as f:
+            json.dump(benchmark_metrics, f, indent=2, ensure_ascii=False)
+        logger.info(f"Benchmark metrics saved to {benchmark_file}")
 
     return results
 

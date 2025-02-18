@@ -44,11 +44,9 @@ def _handle_quest_outcome(outcome: QuestOutcome, log_prefix: str) -> None:
         log_prefix: Prefix for the log message (e.g. "Quest run" or "Quest play")
     """
     log.info(f"{log_prefix} completed with outcome: {outcome}")
-    if outcome.exit_code == 0:
-        raise typer.Exit(code=outcome.exit_code)
-    else:
-        log.error(f"Quest failed with error code: {outcome.exit_code}")
-        raise typer.Exit(code=outcome.exit_code)
+    if outcome.is_error:
+        log.error("Quest encountered an error")
+    raise typer.Exit(code=outcome.exit_code)
 
 @app.callback()
 def main(
@@ -261,10 +259,13 @@ def benchmark(
         # Print summary
         print_summary(results)
 
-        # Exit with error if any quests failed
-        errors = [r for r in results if r['error']]
-        if errors:
-            raise typer.Exit(code=1)
+        # Check for errors
+        errors = [r for r in results if r['outcome'] == QuestOutcome.ERROR.name]
+        if len(errors) == len(results):  # All quests errored
+            log.error("All quests failed with errors")
+            raise typer.Exit(code=2)
+        elif errors:  # Some quests errored
+            log.warning(f"{len(errors)} quests failed with errors")
 
     except typer.Exit:
         raise  # Re-raise typer.Exit without logging
