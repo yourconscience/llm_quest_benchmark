@@ -135,7 +135,7 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 run_quest_with_timeout,
                 str(quest),
                 agent,
-                timeout_seconds=quest_timeout,  # Use calculated quest timeout
+                timeout=quest_timeout,  # Use calculated quest timeout
                 debug=config.debug,
             ): (quest, agent, agent_config)
             for quest, agent, agent_config in all_tasks

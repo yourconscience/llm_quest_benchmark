@@ -74,7 +74,7 @@ def run(
     model: str = typer.Option(DEFAULT_MODEL, help=f"Model for the LLM agent (choices: {', '.join(MODEL_CHOICES)})."),
     temperature: float = typer.Option(DEFAULT_TEMPERATURE, help="Temperature for LLM sampling"),
     template: str = typer.Option(DEFAULT_TEMPLATE, help=f"Template to use for action prompts (default: {DEFAULT_TEMPLATE}, reasoning: {REASONING_TEMPLATE})."),
-    timeout_seconds: int = typer.Option(60, help="Timeout in seconds for run (0 for no timeout)."),
+    timeout: int = typer.Option(60, help="Timeout in seconds for run (0 for no timeout)."),
     skip: bool = typer.Option(True, help="Auto-select single choices without asking agent."),
     debug: bool = typer.Option(False, help="Enable debug logging and output, remove terminal UI."),
 ):
@@ -96,14 +96,14 @@ def run(
 
         log.warning(f"Starting quest run with agent {str(agent)}")
         log.debug(f"Quest file: {quest}")
-        log.debug(f"Timeout: {timeout_seconds}s")
+        log.debug(f"Timeout: {timeout}s")
 
-        timeout_seconds = timeout_seconds if timeout_seconds > 0 else 10**9
+        timeout = timeout if timeout > 0 else 10**9
         result = run_quest_with_timeout(
                 quest_path=str(quest),
                 agent=agent,
                 debug=debug,
-                timeout_seconds=timeout_seconds
+                timeout=timeout
         )
         outcome = QuestOutcome[result['outcome']]
         _handle_quest_outcome(outcome, "Quest run")
@@ -140,7 +140,7 @@ def play(
         result = run_quest_with_timeout(
             quest_path=str(quest),
             agent=player,
-            timeout_seconds=INFINITE_TIMEOUT,
+            timeout=INFINITE_TIMEOUT,
             debug=debug
         )
         outcome = QuestOutcome[result['outcome']]
@@ -241,7 +241,7 @@ def benchmark(
         log.info(f"Running benchmark with:")
         log.info(f"Quests: {benchmark_config.quests}")
         log.info(f"Agents: {[a.model for a in benchmark_config.agents]}")
-        log.info(f"Timeout: {benchmark_config.timeout_seconds}s")
+        log.info(f"Quest timeout: {benchmark_config.quest_timeout}s")
         log.info(f"Workers: {benchmark_config.max_workers}")
         log.info(f"Output directory: {benchmark_config.output_dir}")
 
@@ -283,7 +283,7 @@ def test(
             debug=debug,
             headless=True,
             template=template,
-            timeout_seconds=60  # Use default timeout for tests
+            timeout=60  # Use default timeout for tests
         )
 
         outcome = QuestOutcome[result['outcome']]
