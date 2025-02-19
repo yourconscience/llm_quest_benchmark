@@ -34,7 +34,10 @@ def create_renderer(
     """
     if debug:
         return NoRenderer()
+    elif total_quests is not None and total_runs is not None:
+        # In benchmark mode, always use ProgressRenderer
+        return ProgressRenderer(total_quests, total_runs)
     elif isinstance(agent, HumanPlayer):
         return RichRenderer()
     else:
-        return ProgressRenderer(total_quests, total_runs) if total_quests else NoRenderer()
+        return NoRenderer()

@@ -48,30 +48,34 @@ def parse_llm_response(response: str, num_choices: int, debug: bool = False, log
 
     # Try parsing as JSON first
     response_json = _parse_json_response(response, debug, logger)
-    if response_json and isinstance(response_json, dict) and 'action' in response_json:
-        try:
-            action = int(response_json['action'])
-            if _validate_action_number(action, num_choices, debug, logger):
-                return LLMResponse(
-                    action=action,
-                    reasoning=response_json.get('reasoning')
-                )
-        except (ValueError, TypeError):
-            if debug and logger:
-                logger.error(f"Invalid action value in JSON: {response_json['action']}")
+    if response_json and isinstance(response_json, dict):
+        # Check for either 'action' or 'result' field
+        action_value = response_json.get('action') or response_json.get('result')
+        if action_value is not None:
+            try:
+                action = int(action_value)
+                if _validate_action_number(action, num_choices, debug, logger):
+                    return LLMResponse(
+                        action=action,
+                        reasoning=response_json.get('reasoning'),
+                        is_default=False
+                    )
+            except (ValueError, TypeError):
+                if debug and logger:
+                    logger.error(f"Invalid action value in JSON: {action_value}")
 
     # Try parsing as plain number
     try:
         action = int(response.strip())
         if _validate_action_number(action, num_choices, debug, logger):
-            return LLMResponse(action=action)
+            return LLMResponse(action=action, is_default=False)
     except ValueError:
         if debug and logger:
             logger.error(f"Could not parse response as number: {response}")
 
     # Default to first choice if all parsing attempts fail
     logger.error(f"Error during {response} parsing, defaulting to first choice.")
-    return LLMResponse(action=1)
+    return LLMResponse(action=1, is_default=True)
 
 
 class LLMAgent(QuestPlayer):
@@ -144,10 +148,18 @@ class LLMAgent(QuestPlayer):
             self.history.append(llm_response)
             self.prompt_renderer.add_to_history(llm_response)
 
+            # Track if this was a parsing error
+            if llm_response.is_default:
+                self.logger.error(f"Error during {response} parsing, defaulting to first choice.")
+                self.last_error = "LLM parsing error"
+            else:
+                self.last_error = None
+
             return llm_response.action
 
         except Exception as e:
             self.logger.error(f"LLM call failed: {str(e)}", exc_info=True)
+            self.last_error = str(e)
             return 1  # Default to first choice
 
     def reset(self) -> None:

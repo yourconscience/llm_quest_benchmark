@@ -10,6 +10,7 @@ from typing import List, Dict, Any, Optional, Tuple
 
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.agents.agent_factory import create_agent
+from llm_quest_benchmark.agents.llm_agent import LLMAgent
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.dataclasses.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.core.time import calculate_benchmark_timeout, DEFAULT_QUEST_TIMEOUT
@@ -97,7 +98,6 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         num_quests=len(quest_files),
         num_agents=len(config.agents),
         num_workers=config.max_workers,
-        quest_timeout=quest_timeout
     )
 
     # Initialize benchmark metrics
@@ -126,7 +126,7 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         }
     }
 
-    # Run tasks in parallel
+    # Run tasks
     results = []
     with ThreadPoolExecutor(max_workers=config.max_workers) as executor:
         # Submit all tasks
@@ -137,6 +137,7 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 agent,
                 timeout=quest_timeout,  # Use calculated quest timeout
                 debug=config.debug,
+                renderer=renderer,  # Pass the renderer
             ): (quest, agent, agent_config)
             for quest, agent, agent_config in all_tasks
         }
@@ -150,6 +151,11 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 result['model'] = agent_config.model
                 result['template'] = agent_config.template
                 result['temperature'] = agent_config.temperature
+
+                # Track LLM errors
+                if isinstance(agent, LLMAgent):
+                    result['llm_error'] = getattr(agent, 'last_error', None) is not None
+
                 results.append(result)
 
                 outcome = QuestOutcome[result['outcome']]
@@ -158,7 +164,8 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                         quest_name=quest.stem,
                         model=agent_config.model,
                         outcome=outcome,
-                        error=result.get('error')
+                        error=result.get('error'),
+                        llm_error=result.get('llm_error', False)
                     )
                 else:
                     status = 'SUCCESS' if outcome == QuestOutcome.SUCCESS else 'FAILED'
@@ -178,7 +185,8 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                     'outcome': QuestOutcome.TIMEOUT.name if isinstance(e, TimeoutError) else QuestOutcome.ERROR.name,
                     'error': error_msg,
                     'timestamp': datetime.now().isoformat(),
-                    'steps': []
+                    'steps': [],
+                    'llm_error': isinstance(agent, LLMAgent) and getattr(agent, 'last_error', None) is not None
                 }
                 results.append(result)
 
@@ -187,7 +195,8 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                         quest_name=quest.stem,
                         model=agent_config.model,
                         outcome=QuestOutcome[result['outcome']],
-                        error=error_msg
+                        error=error_msg,
+                        llm_error=result.get('llm_error', False)
                     )
 
             # Update benchmark metrics with outcomes
@@ -271,9 +280,11 @@ def calculate_summary_stats(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         'total_runs': len(results),
         'total_errors': len([r for r in results if r['error']]),
         'total_timeouts': len([r for r in results if r['outcome'] == QuestOutcome.TIMEOUT.name]),
+        'total_llm_errors': len([r for r in results if r.get('llm_error', False)]),
         'success_rate': 0,
         'error_rate': 0,
-        'timeout_rate': 0
+        'timeout_rate': 0,
+        'llm_error_rate': 0
     }
 
     # Calculate per-model statistics
@@ -284,6 +295,7 @@ def calculate_summary_stats(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         failed = len([r for r in model_results if r['outcome'] == QuestOutcome.FAILURE.name])
         error = len([r for r in model_results if r['outcome'] in (QuestOutcome.ERROR.name, QuestOutcome.TIMEOUT.name)])
         timeout = len([r for r in model_results if r['outcome'] == QuestOutcome.TIMEOUT.name])
+        llm_errors = len([r for r in model_results if r.get('llm_error', False)])
         total = len(model_results)
 
         summary['models'][model] = {
@@ -295,7 +307,9 @@ def calculate_summary_stats(results: List[Dict[str, Any]]) -> Dict[str, Any]:
             'errors': error,
             'error_rate': error/total if total > 0 else 0,
             'timeouts': timeout,
-            'timeout_rate': timeout/total if total > 0 else 0
+            'timeout_rate': timeout/total if total > 0 else 0,
+            'llm_errors': llm_errors,
+            'llm_error_rate': llm_errors/total if total > 0 else 0
         }
 
     # Calculate overall rates
@@ -304,6 +318,7 @@ def calculate_summary_stats(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         summary['success_rate'] = len([r for r in results if r['outcome'] == QuestOutcome.SUCCESS.name]) / total
         summary['error_rate'] = summary['total_errors'] / total
         summary['timeout_rate'] = summary['total_timeouts'] / total
+        summary['llm_error_rate'] = summary['total_llm_errors'] / total
 
     return summary
 
@@ -325,6 +340,7 @@ def print_summary(results: List[Dict[str, Any]]) -> None:
         failed = len([r for r in model_results if r['outcome'] == QuestOutcome.FAILURE.name])
         error = len([r for r in model_results if r['outcome'] in (QuestOutcome.ERROR.name, QuestOutcome.TIMEOUT.name)])
         timeout = len([r for r in model_results if r['outcome'] == QuestOutcome.TIMEOUT.name])
+        llm_errors = len([r for r in model_results if r.get('llm_error', False)])
         total = len(model_results)
 
         print(f"\nModel: {model}")
@@ -333,6 +349,8 @@ def print_summary(results: List[Dict[str, Any]]) -> None:
         print(f"Failed: {failed} ({failed/total*100:.1f}%)")
         print(f"Error: {error} ({error/total*100:.1f}%)")
         print(f"Timeout: {timeout} ({timeout/total*100:.1f}%)")
+        if isinstance(model, str) and ('gpt' in model.lower() or 'llm' in model.lower() or 'claude' in model.lower()):
+            print(f"LLM Errors: {llm_errors} ({llm_errors/total*100:.1f}%)")
 
     # List errors if any
     errors = [r for r in results if r['error']]
@@ -340,4 +358,5 @@ def print_summary(results: List[Dict[str, Any]]) -> None:
         print("\nErrors encountered:")
         print("=" * 80)
         for r in errors:
-            print(f"{r['quest']} - {r['model']}: {r['error']}")
+            error_type = "LLM Error" if r.get('llm_error', False) else "Error"
+            print(f"{r['quest']} - {r['model']}: {error_type} - {r['error']}")
