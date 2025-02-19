@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from llm_quest_benchmark.executors.benchmark import run_benchmark
-from llm_quest_benchmark.executors.benchmark_config import BenchmarkConfig, AgentConfig
+from llm_quest_benchmark.dataclasses.config import BenchmarkConfig, AgentConfig
 
 
 @pytest.mark.timeout(20)  # 20 seconds timeout for benchmark test
@@ -30,7 +30,7 @@ def test_benchmark_e2e(caplog):
                 skip_single=True
             )
         ],
-        timeout_seconds=20,
+        quest_timeout=20,
         max_workers=2,
         debug=True  # Enable debug mode
     )

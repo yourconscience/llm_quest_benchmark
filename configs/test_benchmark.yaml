@@ -8,6 +8,5 @@ agents:
   # - model: sonnet
   #   template: default.jinja
 debug: true
-timeout_seconds: 30
 max_workers: 2
 output_dir: metrics/test

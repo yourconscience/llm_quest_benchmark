@@ -21,7 +21,7 @@ from llm_quest_benchmark.constants import (
     DEFAULT_TEMPERATURE,
     INFINITE_TIMEOUT,
 )
-from llm_quest_benchmark.executors.benchmark_config import BenchmarkConfig, AgentConfig
+from llm_quest_benchmark.dataclasses.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.agents.human_player import HumanPlayer
 
 # Initialize logging

@@ -2,13 +2,8 @@
 import logging
 import pytest
 
-from llm_quest_benchmark.constants import (
-    DEFAULT_QUEST,
-
-    DEFAULT_QUEST_TIMEOUT
-)
+from llm_quest_benchmark.constants import DEFAULT_QUEST, DEFAULT_QUEST_TIMEOUT
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
-from llm_quest_benchmark.agents.random_agent import RandomAgent
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.environments.state import QuestOutcome
 
@@ -29,7 +24,7 @@ def test_quest_run_with_llm(caplog):
     result = run_quest_with_timeout(
         quest_path=str(DEFAULT_QUEST),
         agent=agent,
-        timeout_seconds=TIMEOUT,  # Match the test timeout
+        timeout=TIMEOUT,  # Match the test timeout
         debug=True,  # Enable debug logging
     )
 
@@ -58,7 +53,7 @@ def test_random_agent_on_test_quest(caplog):
         quest_path=str(DEFAULT_QUEST),
         agent=agent,
         debug=True,  # Enable debug logging
-        timeout_seconds=TIMEOUT,  # Match the test timeout
+        timeout=TIMEOUT,  # Match the test timeout
     )
 
     # Convert string outcome back to enum

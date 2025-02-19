@@ -57,12 +57,12 @@ def calculate_benchmark_timeout(
     return min(timeout, MAX_BENCHMARK_TIMEOUT)
 
 
-def run_with_timeout(func: Callable, timeout_seconds: int, *args, **kwargs) -> Any:
+def run_with_timeout(func: Callable, timeout: int, *args, **kwargs) -> Any:
     """Run a function with a timeout using ThreadPoolExecutor
 
     Args:
         func: Function to run
-        timeout_seconds: Timeout in seconds
+        timeout: Timeout in seconds
         *args: Positional arguments for func
         **kwargs: Keyword arguments for func
 
@@ -75,10 +75,10 @@ def run_with_timeout(func: Callable, timeout_seconds: int, *args, **kwargs) -> A
     with ThreadPoolExecutor(max_workers=1) as executor:
         future = executor.submit(func, *args, **kwargs)
         try:
-            return future.result(timeout=timeout_seconds)
+            return future.result(timeout=timeout)
         except TimeoutError:
             future.cancel()
-            raise CommandTimeout(f"Operation timed out after {timeout_seconds} seconds")
+            raise CommandTimeout(f"Operation timed out after {timeout} seconds")
 
 
 @contextmanager

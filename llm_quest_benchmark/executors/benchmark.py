@@ -11,8 +11,10 @@ from typing import List, Dict, Any, Optional, Tuple
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.environments.state import QuestOutcome
-from llm_quest_benchmark.executors.benchmark_config import BenchmarkConfig, AgentConfig
+from llm_quest_benchmark.dataclasses.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.core.time import calculate_benchmark_timeout, DEFAULT_QUEST_TIMEOUT
+from llm_quest_benchmark.renderers.factory import create_renderer
+from llm_quest_benchmark.renderers.progress import ProgressRenderer
 
 # Configure logging
 logging.basicConfig(
@@ -81,8 +83,16 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         for agent, agent_config in agents
     ]
 
+    # Initialize renderer based on agent type and mode
+    renderer = create_renderer(
+        agent=agents[0][0],  # Use first agent to determine renderer type
+        debug=config.debug,
+        total_quests=len(quest_files),
+        total_runs=len(all_tasks)
+    )
+
+    quest_timeout = config.quest_timeout or DEFAULT_QUEST_TIMEOUT
     # Calculate appropriate timeouts
-    quest_timeout = min(config.timeout_seconds, DEFAULT_QUEST_TIMEOUT)  # Use shorter of configured or default
     benchmark_timeout = calculate_benchmark_timeout(
         num_quests=len(quest_files),
         num_agents=len(config.agents),
@@ -90,8 +100,7 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         quest_timeout=quest_timeout
     )
 
-    # Run tasks in parallel
-    results = []
+    # Initialize benchmark metrics
     benchmark_metrics = {
         'timestamp': datetime.now().isoformat(),
         'config': {
@@ -117,6 +126,8 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         }
     }
 
+    # Run tasks in parallel
+    results = []
     with ThreadPoolExecutor(max_workers=config.max_workers) as executor:
         # Submit all tasks
         future_to_task = {
@@ -126,7 +137,6 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 agent,
                 timeout_seconds=quest_timeout,  # Use calculated quest timeout
                 debug=config.debug,
-                skip_single=agent_config.skip_single,
             ): (quest, agent, agent_config)
             for quest, agent, agent_config in all_tasks
         }
@@ -142,9 +152,18 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 result['temperature'] = agent_config.temperature
                 results.append(result)
 
-                status = 'SUCCESS' if result['outcome'] == QuestOutcome.SUCCESS.name else 'FAILED'
-                error_msg = f" (Error: {result['error']})" if result['error'] else ""
-                logger.info(f"{result['quest']} - {agent_config.model}: {status}{error_msg}")
+                outcome = QuestOutcome[result['outcome']]
+                if isinstance(renderer, ProgressRenderer):
+                    renderer.update(
+                        quest_name=quest.stem,
+                        model=agent_config.model,
+                        outcome=outcome,
+                        error=result.get('error')
+                    )
+                else:
+                    status = 'SUCCESS' if outcome == QuestOutcome.SUCCESS else 'FAILED'
+                    error_msg = f" (Error: {result['error']})" if result.get('error') else ""
+                    logger.info(f"{result['quest']} - {agent_config.model}: {status}{error_msg}")
 
             except (TimeoutError, Exception) as e:
                 error_msg = f"Timeout" if isinstance(e, TimeoutError) else f"{type(e).__name__}: {str(e)}"
@@ -163,19 +182,30 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 }
                 results.append(result)
 
+                if isinstance(renderer, ProgressRenderer):
+                    renderer.update(
+                        quest_name=quest.stem,
+                        model=agent_config.model,
+                        outcome=QuestOutcome[result['outcome']],
+                        error=error_msg
+                    )
+
             # Update benchmark metrics with outcomes
             outcome = result['outcome']
             if outcome not in benchmark_metrics['summary']['outcomes']:
                 benchmark_metrics['summary']['outcomes'][outcome] = 0
             benchmark_metrics['summary']['outcomes'][outcome] += 1
 
-    # Save results if output directory specified
+    # Close renderer
+    renderer.close()
+
+    # Save results if output dir specified
     if config.output_dir:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        # Save detailed quest metrics
-        quests_dir = os.path.join(config.output_dir, "quests")
-        os.makedirs(quests_dir, exist_ok=True)
+        # Create metrics root directory
+        metrics_root = Path(config.output_dir)
+        metrics_root.mkdir(exist_ok=True)
 
         # Group results by quest
         quest_results = {}
@@ -185,35 +215,42 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 quest_results[quest_name] = []
             quest_results[quest_name].append(result)
 
-        # Add quest metrics to benchmark summary
+        # Add quest metrics to benchmark summary and save per-quest results
         for quest_name, quest_results_list in quest_results.items():
-            benchmark_metrics['quests'].append({
+            # Create quest-specific directory
+            quest_dir = metrics_root / quest_name
+            quest_dir.mkdir(exist_ok=True)
+
+            # Create run-specific directory with timestamp
+            run_dir = quest_dir / f"run_{timestamp}"
+            run_dir.mkdir(exist_ok=True)
+
+            # Create quest summary
+            quest_summary = {
                 'name': quest_name,
-                'results': [
-                    {
-                        'agent': {
-                            'model': result['model'],
-                            'template': result['template'],
-                            'temperature': result['temperature']
-                        },
-                        'outcome': result['outcome'],
-                        'error': result['error'],
-                        'timestamp': result['timestamp'],
-                        'steps': result['steps']
-                    }
-                    for result in quest_results_list
-                ]
-            })
+                'timestamp': timestamp,
+                'total_runs': len(quest_results_list),
+                'outcomes': {},
+                'results': quest_results_list
+            }
+
+            # Calculate quest-specific outcomes
+            for result in quest_results_list:
+                outcome = result['outcome']
+                if outcome not in quest_summary['outcomes']:
+                    quest_summary['outcomes'][outcome] = 0
+                quest_summary['outcomes'][outcome] += 1
 
             # Save quest-specific results
-            quest_dir = os.path.join(quests_dir, quest_name)
-            os.makedirs(quest_dir, exist_ok=True)
-            output_file = os.path.join(quest_dir, f"{timestamp}.json")
+            output_file = run_dir / "metrics.json"
             with open(output_file, 'w') as f:
-                json.dump(quest_results_list, f, indent=2)
+                json.dump(quest_summary, f, indent=2)
 
-        # Save benchmark summary
-        summary_file = os.path.join(config.output_dir, f"benchmark_{timestamp}.json")
+            # Add to benchmark metrics
+            benchmark_metrics['quests'].append(quest_summary)
+
+        # Save benchmark summary in the root metrics directory
+        summary_file = metrics_root / f"benchmark_{timestamp}.json"
         with open(summary_file, 'w') as f:
             json.dump(benchmark_metrics, f, indent=2)
 

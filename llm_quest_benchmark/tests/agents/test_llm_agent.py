@@ -24,7 +24,7 @@ def mock_openrouter_response():
 
 
 @pytest.mark.timeout(5)  # Quick unit test
-@patch('llm_quest_benchmark.agents.llm_client.OpenAI')
+@patch('llm_quest_benchmark.llm.client.OpenAI')
 def test_agent_basic_flow(mock_openai):
     """Test basic agent functionality with mocked LLM"""
     # Setup mock

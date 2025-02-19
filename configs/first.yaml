@@ -13,6 +13,6 @@ agents:
     template: reasoning.jinja
     temperature: 0.3
 debug: false
-timeout_seconds: 7200 # 2 hours
+quest_timeout: 120
 max_workers: 2
 output_dir: metrics/benchmarks

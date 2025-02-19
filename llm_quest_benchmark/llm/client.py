@@ -90,6 +90,17 @@ class OpenAIClient(LLMClient):
 class AnthropicClient(LLMClient):
     """Anthropic Claude client."""
 
+    def __init__(self, model_id: str = "", system_prompt: str = "", temperature: float = DEFAULT_TEMPERATURE):
+        """Initialize the Anthropic client.
+
+        Args:
+            model_id (str, optional): ID of the model to use. Defaults to "".
+            system_prompt (str, optional): System prompt to use. Defaults to "".
+            temperature (float, optional): Temperature parameter for sampling. Defaults to DEFAULT_TEMPERATURE.
+        """
+        super().__init__(model_id=model_id, system_prompt=system_prompt, temperature=temperature)
+        self.client = anthropic.Client(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
     def get_completion(self, prompt: str) -> str:
         """Get a completion from the model.
 
@@ -100,12 +111,12 @@ class AnthropicClient(LLMClient):
             str: The completion
         """
         try:
-            response = anthropic.messages.create(
+            response = self.client.messages.create(
                 model=self.model_id,
                 max_tokens=4096,
                 temperature=self.temperature,
                 system=self.system_prompt,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "user", "content": prompt}]
             )
             return response.content[0].text
         except Exception as e:

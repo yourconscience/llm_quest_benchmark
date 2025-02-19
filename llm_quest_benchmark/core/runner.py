@@ -15,7 +15,7 @@ from llm_quest_benchmark.renderers.terminal import RichRenderer, NoRenderer
 def run_quest_with_timeout(
     quest_path: str,
     agent: QuestPlayer,
-    timeout_seconds: int = DEFAULT_QUEST_TIMEOUT,
+    timeout: int = DEFAULT_QUEST_TIMEOUT,
     debug: bool = True,
 ) -> Dict[str, Any]:
     """Run a single quest with timeout and parameters
@@ -23,7 +23,7 @@ def run_quest_with_timeout(
     Args:
         quest_path (str): Path to quest file
         agent (QuestPlayer): Agent to use for quest execution
-        timeout_seconds (int, optional): Timeout in seconds. Defaults to 60.
+        timeout (int, optional): Timeout in seconds. Defaults to 60.
         debug (bool, optional): Enable debug mode. Defaults to False.
         skip_single (bool, optional): Auto-select single choices. Defaults to False.
 
@@ -52,12 +52,12 @@ def run_quest_with_timeout(
             # Run quest with timeout
             def run_quest():
                 return runner.run(quest_path)
-            outcome = run_with_timeout(run_quest, timeout_seconds)
+            outcome = run_with_timeout(run_quest, timeout)
             result['outcome'] = outcome.name
         except CommandTimeout:
-            logger.warning(f"Quest {quest_name} timed out after {timeout_seconds} seconds")
+            logger.warning(f"Quest {quest_name} timed out after {timeout} seconds")
             result['outcome'] = QuestOutcome.TIMEOUT.name
-            result['error'] = f"Timed out after {timeout_seconds} seconds"
+            result['error'] = f"Timed out after {timeout} seconds"
 
         # Collect detailed metrics from quest logger
         if runner.quest_logger:

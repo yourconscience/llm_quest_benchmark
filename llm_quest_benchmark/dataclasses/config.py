@@ -32,7 +32,7 @@ class BenchmarkConfig:
     quests: List[str]  # List of quest files or directories
     agents: List[AgentConfig]
     debug: bool = False
-    timeout_seconds: int = 60
+    quest_timeout: int = 60
     max_workers: int = 4
     output_dir: Optional[str] = "metrics/quests"
 

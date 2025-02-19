@@ -10,10 +10,10 @@ from llm_quest_benchmark.constants import (
     DEFAULT_TEMPERATURE,
     DEFAULT_MODEL
 )
-from llm_quest_benchmark.agents.llm_client import get_llm_client
+from llm_quest_benchmark.llm.client import get_llm_client
+from llm_quest_benchmark.llm.prompt import PromptRenderer
 from llm_quest_benchmark.agents.base import QuestPlayer
-from llm_quest_benchmark.renderers.prompt_renderer import PromptRenderer
-from llm_quest_benchmark.dataclasses.agent import LLMResponse
+from llm_quest_benchmark.dataclasses.response import LLMResponse
 
 
 def _parse_json_response(response: str, debug: bool = False, logger: Optional[logging.Logger] = None) -> Optional[Dict[str, Any]]:
