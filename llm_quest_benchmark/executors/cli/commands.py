@@ -9,7 +9,7 @@ import typer
 
 from llm_quest_benchmark.core.logging import LogManager
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
-from llm_quest_benchmark.core.analyzer import analyze_quest_run
+from llm_quest_benchmark.core.analyzer import analyze_quest_run, analyze_benchmark
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.benchmark import run_benchmark, print_summary
 from llm_quest_benchmark.constants import (
@@ -154,47 +154,53 @@ def play(
 
 @app.command()
 def analyze(
-    metrics_file: Optional[Path] = typer.Option(None, help="Path to the metrics JSON file. If not provided, uses most recent file."),
+    metrics_file: Optional[Path] = typer.Option(None, help="Path to a specific quest run metrics file to analyze. If not provided, analyzes the latest benchmark results."),
     debug: bool = typer.Option(False, help="Enable debug logging and output."),
 ):
-    """Analyze metrics from a quest run.
+    """Analyze metrics from benchmark runs or specific quest runs.
 
-    This command analyzes the metrics collected during a quest run, showing summary statistics
-    and step-by-step decision analysis. If no metrics file is specified, it uses the most recent one.
+    This command analyzes metrics, showing summary statistics and detailed analysis.
+    By default, it analyzes the latest benchmark results. To analyze a specific quest run,
+    provide the path to its metrics file.
 
     Example:
-        llm-quest analyze
-        llm-quest analyze --metrics-file metrics/quest_run_20250217_144717.jsonl --debug
+        llm-quest analyze  # Analyze latest benchmark results
+        llm-quest analyze --metrics-file metrics/quest_run_20250217_144717.jsonl  # Analyze specific quest run
     """
     try:
-        results = analyze_quest_run(metrics_file, debug)
+        # If metrics file is provided, analyze as quest run
+        if metrics_file and metrics_file.suffix == '.jsonl':
+            results = analyze_quest_run(metrics_file, debug)
 
-        # Print human-readable summary
-        typer.echo("\nQuest Run Summary")
-        typer.echo("================")
-        typer.echo(f"Quest File: {results['summary']['quest_file']}")
-        typer.echo(f"Player Type: {results['summary']['player_type']}")
-        if results['summary']['model']:
-            typer.echo(f"Model: {results['summary']['model']}")
-            typer.echo(f"Template: {results['summary']['template']}")
-        typer.echo(f"Total Steps: {results['summary']['total_steps']}")
-        typer.echo(f"Outcome: {results['summary']['outcome']}")
+            # Print human-readable summary
+            typer.echo("\nQuest Run Summary")
+            typer.echo("================")
+            typer.echo(f"Quest File: {results['summary']['quest_file']}")
+            typer.echo(f"Player Type: {results['summary']['player_type']}")
+            if results['summary']['model']:
+                typer.echo(f"Model: {results['summary']['model']}")
+                typer.echo(f"Template: {results['summary']['template']}")
+            typer.echo(f"Total Steps: {results['summary']['total_steps']}")
+            typer.echo(f"Outcome: {results['summary']['outcome']}")
 
-        # Print step summary
-        typer.echo("\nStep Summary")
-        typer.echo("============")
-        for step in results['steps']:
-            typer.echo(f"\nStep {step['step']}:")
-            typer.echo(f"  Action: {step['action']}")
-            typer.echo("  Available Choices:")
-            for choice in step['choices']:
-                typer.echo(f"    {choice['id']}: {choice['text']}")
-            if debug and step.get('state'):
-                typer.echo(f"  State: {step['state']}")
-                if step.get('prompt'):
-                    typer.echo(f"  Prompt: {step['prompt']}")
-                if step.get('metrics'):
-                    typer.echo(f"  Metrics: {step['metrics']}")
+            # Print step summary
+            typer.echo("\nStep Summary")
+            typer.echo("============")
+            for step in results['steps']:
+                typer.echo(f"\nStep {step['step']}:")
+                typer.echo(f"  Action: {step['action']}")
+                typer.echo("  Available Choices:")
+                for choice in step['choices']:
+                    typer.echo(f"    {choice['id']}: {choice['text']}")
+                if debug and step.get('state'):
+                    typer.echo(f"  State: {step['state']}")
+                    if step.get('prompt'):
+                        typer.echo(f"  Prompt: {step['prompt']}")
+                    if step.get('metrics'):
+                        typer.echo(f"  Metrics: {step['metrics']}")
+        else:
+            # Default to analyzing benchmark results
+            analyze_benchmark(metrics_file, debug)
 
     except ValueError as e:
         typer.echo(str(e), err=True)

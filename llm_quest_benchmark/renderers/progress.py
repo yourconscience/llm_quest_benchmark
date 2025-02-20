@@ -27,7 +27,7 @@ class ProgressRenderer(BaseRenderer):
         self.failure_count = 0
         self.error_count = 0
         self.timeout_count = 0
-        self.llm_error_count = 0  # Track LLM parsing errors
+        self.llm_error_count = 0
 
         # Create progress bar
         self.progress = tqdm(
@@ -65,12 +65,12 @@ class ProgressRenderer(BaseRenderer):
         """Render error in progress output"""
         self.console.print(f"[red]Error: {message}[/]")
 
-    def update(self, quest_name: str, model: str, outcome: QuestOutcome, error: Optional[str] = None, llm_error: bool = False) -> None:
+    def update(self, quest_name: str, agent: str, outcome: QuestOutcome, error: Optional[str] = None, llm_error: bool = False) -> None:
         """Update progress with latest quest run result
 
         Args:
             quest_name (str): Name of the quest
-            model (str): Name of the model/agent
+            agent (str): Full agent string representation
             outcome (QuestOutcome): Outcome of the quest run
             error (Optional[str]): Error message if any
             llm_error (bool): Whether this was an LLM parsing error
@@ -108,7 +108,7 @@ class ProgressRenderer(BaseRenderer):
             error = "LLM parsing error - defaulted to first choice"
 
         self.console.print(
-            f"[{status_color}]{quest_name} - {model}: {outcome.name}[/]" +
+            f"[{status_color}]{quest_name} - {agent}: {outcome.name}[/]" +
             (f" ({error})" if error else "")
         )
 

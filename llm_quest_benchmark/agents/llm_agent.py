@@ -74,7 +74,8 @@ def parse_llm_response(response: str, num_choices: int, debug: bool = False, log
             logger.error(f"Could not parse response as number: {response}")
 
     # Default to first choice if all parsing attempts fail
-    logger.error(f"Error during {response} parsing, defaulting to first choice.")
+    if debug and logger:
+        logger.error(f"Error during response parsing, defaulting to first choice. Response: {response[:100]}...")
     return LLMResponse(action=1, is_default=True)
 
 

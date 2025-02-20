@@ -71,7 +71,12 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
     agents = []
     for agent_config in config.agents:
         try:
-            agent = create_agent(agent_config.model)
+            agent = create_agent(model=agent_config.model,
+                                 template=agent_config.template,
+                                 temperature=agent_config.temperature,
+                                 debug=config.debug,
+                                 skip_single=agent_config.skip_single
+                                 )
             agents.append((agent, agent_config))
         except Exception as e:
             logger.error(f"Failed to create agent {agent_config.model}: {e}")
@@ -98,6 +103,7 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         num_quests=len(quest_files),
         num_agents=len(config.agents),
         num_workers=config.max_workers,
+        quest_timeout=quest_timeout
     )
 
     # Initialize benchmark metrics
@@ -162,7 +168,7 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 if isinstance(renderer, ProgressRenderer):
                     renderer.update(
                         quest_name=quest.stem,
-                        model=agent_config.model,
+                        agent=str(agent_config),
                         outcome=outcome,
                         error=result.get('error'),
                         llm_error=result.get('llm_error', False)
@@ -193,7 +199,7 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 if isinstance(renderer, ProgressRenderer):
                     renderer.update(
                         quest_name=quest.stem,
-                        model=agent_config.model,
+                        agent=str(agent_config),
                         outcome=QuestOutcome[result['outcome']],
                         error=error_msg,
                         llm_error=result.get('llm_error', False)

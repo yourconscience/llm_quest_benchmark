@@ -6,6 +6,8 @@ from typing import Optional, Dict, Any, List
 
 from llm_quest_benchmark.core.logging import LogManager
 from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
+from llm_quest_benchmark.environments.state import QuestOutcome
+from llm_quest_benchmark.renderers.benchmark_result import BenchmarkResultRenderer
 
 # Initialize logging
 log_manager = LogManager()
@@ -123,3 +125,62 @@ def analyze_quest_run(
     except Exception as e:
         log.exception(f"Error analyzing metrics: {e}")
         raise ValueError(f"Error analyzing metrics: {e}")
+
+
+def find_latest_benchmark_file() -> Optional[Path]:
+    """Find the most recent benchmark file in the metrics/benchmarks directory"""
+    metrics_dir = Path("metrics/benchmarks")
+    if not metrics_dir.exists():
+        return None
+
+    files = list(metrics_dir.glob("benchmark_*.json"))
+    if not files:
+        return None
+
+    # Sort by modification time in descending order
+    files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    return files[0]
+
+
+def analyze_benchmark(
+    benchmark_file: Optional[Path] = None,
+    debug: bool = False,
+) -> Dict[str, Any]:
+    """Analyze metrics from a benchmark run.
+
+    Args:
+        benchmark_file: Path to the benchmark JSON file. If not provided, uses most recent file.
+        debug: Enable debug logging and output.
+
+    Returns:
+        Dict containing analysis results
+
+    Raises:
+        ValueError: If benchmark file is not found or invalid
+    """
+    log_manager.setup(debug)
+
+    # If no file provided, use most recent
+    if benchmark_file is None:
+        benchmark_file = find_latest_benchmark_file()
+        if benchmark_file is None:
+            raise ValueError("No benchmark files found")
+        log.info(f"Using benchmark file: {benchmark_file}")
+
+    if not benchmark_file.exists():
+        raise ValueError(f"Benchmark file not found: {benchmark_file}")
+
+    try:
+        # Read and parse JSON file
+        with open(str(benchmark_file), "r", encoding='utf-8') as f:
+            benchmark_data = json.load(f)
+
+        # Create renderer and display results
+        renderer = BenchmarkResultRenderer(debug=debug)
+        renderer.render_benchmark_results(benchmark_data, debug=debug)
+
+        return benchmark_data
+
+    except Exception as e:
+        log.exception(f"Error analyzing benchmark: {e}")
+        raise ValueError(f"Error analyzing benchmark: {e}")

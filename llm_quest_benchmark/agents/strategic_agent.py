@@ -3,7 +3,7 @@ import logging
 from typing import Dict, Any
 
 from llm_quest_benchmark.agents.base import QuestPlayer
-from llm_quest_benchmark.renderers.prompt_renderer import PromptRenderer
+from llm_quest_benchmark.llm.prompt import PromptRenderer
 from llm_quest_benchmark.constants import DEFAULT_TEMPLATE
 
 

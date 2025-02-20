@@ -2,17 +2,19 @@
 quests:
   - quests/kr1
 agents:
-  - model: random_choice
-  - model: gpt-4o-mini
-    template: default.jinja
+  - model: gpt-4o
+    template: reasoning.jinja
+    temperature: 0.3
+  - model: claude-3-5-sonnet-20241022
+    template: reasoning.jinja
     temperature: 0.3
   - model: gpt-4o
     template: reasoning.jinja
     temperature: 0.3
-  - model: sonnet
+  - model: claude-3-5-sonnet-20241022
     template: reasoning.jinja
     temperature: 0.3
 debug: false
 quest_timeout: 120
-max_workers: 2
+max_workers: 4
 output_dir: metrics/benchmarks

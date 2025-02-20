@@ -1,4 +1,4 @@
-{# Tier 2: Structured reasoning #}
+{# Tier 2: Structured reasoning with concise output #}
 {# Enhanced template for interactive fiction reasoning #}
 Current story state:
 {{ observation }}
@@ -8,17 +8,16 @@ Available actions:
 {{ loop.index }}. {{ choice.text }}
 {% endfor %}
 
-Analyze this situation through these lenses:
-1. Immediate Context: What just happened? What objects/characters are present?
-2. Story Clues: What narrative elements from previous scenes are relevant?
-3. Goal Inference: Based on the story introduction and progression, what is the likely objective?
-4. Choice Impact: What could each action lead to? Consider both direct and indirect consequences
+Analyze briefly:
+1. Context: What's happening now?
+2. Goal: What's the current objective?
+3. Impact: What could each choice lead to?
 
-Your response should be:
+Your response should be exactly in this JSON format:
 ```json
 {
-    "analysis": "<focused breakdown of current situation and critical clues>",
-    "reasoning": "<concise narrative connecting clues to action choice>",
+    "analysis": "<25 words on key situation elements>",
+    "reasoning": "<25 words on why this choice>",
     "result": <action_number>
 }
 ```

@@ -2,7 +2,7 @@
 from pathlib import Path
 
 # Model choices
-MODEL_CHOICES = ["gpt-4o", "gpt-4o-mini", "sonnet", "deepseek", "random_choice"]
+MODEL_CHOICES = ["gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet-20241022", "random_choice"]
 DEFAULT_MODEL = "gpt-4o"
 
 # Language choices

@@ -8,4 +8,5 @@ Available actions:
 {{ loop.index }}. {{ choice.text }}
 {% endfor %}
 
-Please respond with just the action number (1-{{ choices|length }}).
+IMPORTANT: Please respond with ONLY a single number between 1 and {{ choices|length }}.
+Do not include any additional text, explanations, or formatting.

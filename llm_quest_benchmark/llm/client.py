@@ -9,6 +9,8 @@ from openai import OpenAI
 from llm_quest_benchmark.constants import MODEL_CHOICES, DEFAULT_TEMPERATURE
 
 logger = logging.getLogger(__name__)
+# Configure httpx logger to only show in debug mode
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 class LLMClient(ABC):
@@ -138,13 +140,13 @@ def get_llm_client(model_name: str, system_prompt: str = "", temperature: float 
     Raises:
         NotImplementedError: If the model is not yet supported
     """
-    if model_name == "sonnet":
+    if model_name.startswith("claude"):
         return AnthropicClient(
-            model_id="claude-3-sonnet-20240229",
+            model_id=model_name,
             system_prompt=system_prompt,
             temperature=temperature
         )
-    elif model_name in ["gpt-4o", "gpt-4o-mini"]:
+    elif model_name.startswith("gpt"):
         return OpenAIClient(
             model_id=model_name,
             system_prompt=system_prompt,
