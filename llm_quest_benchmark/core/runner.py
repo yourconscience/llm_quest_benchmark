@@ -147,7 +147,7 @@ class QuestRunner:
 
                 # Check if there are any choices available
                 if not self.env.state['choices']:
-                    self.logger.info("No more choices available - quest ended")
+                    self.logger.debug("No more choices available - quest ended")
                     if self.env and self.env.state:
                         self.agent.on_game_end(self.env.state)
                     return QuestOutcome.FAILURE
@@ -182,11 +182,11 @@ class QuestRunner:
                     if done:
                         # Quest completed
                         if success:
-                            self.logger.warning("Quest completed successfully!")
+                            self.logger.debug("Quest completed successfully!")
                             self.agent.on_game_end(self.env.state)
                             return QuestOutcome.SUCCESS
                         else:
-                            self.logger.warning("Quest failed.")
+                            self.logger.debug("Quest failed.")
                             self.agent.on_game_end(self.env.state)
                             return QuestOutcome.FAILURE
 

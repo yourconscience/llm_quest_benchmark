@@ -3,15 +3,15 @@ quests:
   - quests/test  # Example quests dir, will be replaced with actual quest paths
 agents:
   # - model: random_choice
-  - model: gpt-4o
+  - model: claude-3-5-sonnet-20241022
     template: reasoning.jinja
-    temperature: 0.3
+    temperature: 0.4
     skip_single: true
   - model: gpt-4o
     template: reasoning.jinja
-    temperature: 0.7
+    temperature: 0.4
     skip_single: true
 debug: false
-quest_timeout: 60
+quest_timeout: 90
 max_workers: 2
 output_dir: metrics/benchmarks

@@ -4,6 +4,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
+from rich import box
 
 from llm_quest_benchmark.renderers.base import BaseRenderer
 
@@ -69,33 +70,49 @@ class BenchmarkResultRenderer(BaseRenderer):
             self.console.print(table)
             self.console.print()
 
-    def render_summary(self, summary: Dict[str, Any]) -> None:
-        """Render overall benchmark summary
-
-        Args:
-            summary: Benchmark summary dictionary
-        """
+    def render_summary(self, summary: Dict[str, Any], quests: list) -> None:
+        """Render overall benchmark summary"""
         self.console.print("\n[bold cyan]Overall Results[/]")
         self.console.print("=" * 80)
 
-        table = Table(show_header=True)
-        table.add_column("Metric", style="cyan")
-        table.add_column("Count", justify="right", style="green")
-        table.add_column("Percentage", justify="right", style="blue")
+        # Outcome table
+        outcome_table = Table(title="Outcome Summary", box=box.ROUNDED)
+        outcome_table.add_column("Outcome", style="cyan")
+        outcome_table.add_column("Count", style="magenta")
+        outcome_table.add_column("Percentage", style="green")
 
-        total_runs = summary['total_runs']
+        total = summary['total_runs']
         for outcome, count in summary['outcomes'].items():
-            percentage = (count / total_runs) * 100
-            table.add_row(
+            outcome_table.add_row(
                 outcome,
                 str(count),
-                f"{percentage:.1f}%"
+                f"{count/total*100:.1f}%" if total else "0%"
             )
 
-        table.add_row("Total Quests", str(summary['total_quests']), "")
-        table.add_row("Total Runs", str(total_runs), "100%")
+        # Step table
+        step_table = Table(title="Step Statistics", box=box.ROUNDED)
+        step_table.add_column("Model", style="cyan")
+        step_table.add_column("Total Steps", style="magenta")
+        step_table.add_column("Avg Steps/Run", style="green")
 
-        self.console.print(Panel(table, expand=False))
+        # Global stats
+        step_table.add_row(
+            "[bold]All Models[/]",
+            str(summary['steps']['total']),
+            f"{summary['steps']['average']:.1f}"
+        )
+
+        # Per-model stats
+        for model, stats in summary['models'].items():
+            step_table.add_row(
+                model,
+                str(stats['steps']['total']),
+                f"{stats['steps']['average']:.1f}"
+            )
+
+        # Render both panels
+        self.console.print(Panel(outcome_table, title="Benchmark Outcomes", expand=False))
+        self.console.print(Panel(step_table, title="Step Analysis", expand=False))
 
     def render_quest_details(self, quest: Dict[str, Any], debug: bool = False) -> None:
         """Render detailed results for a single quest
@@ -159,11 +176,31 @@ class BenchmarkResultRenderer(BaseRenderer):
         # Render sections
         self.render_config(data['config'])
         self.render_agents(data['agents'])
-        self.render_summary(data['summary'])
+        self.render_summary(data['summary'], data['quests'])
 
-        # Quest details
-        self.console.print("\n[bold cyan]Quest Details[/]")
+        # Add step metrics to quest details
+        self.console.print("\n[bold cyan]Step Metrics[/]")
         self.console.print("=" * 80)
 
+        step_table = Table(box=box.ROUNDED)
+        step_table.add_column("Quest", style="cyan")
+        step_table.add_column("Model", style="magenta")
+        step_table.add_column("Steps Taken", style="green")
+        step_table.add_column("Outcome", style="yellow")
+
+        for quest in data['quests']:
+            for result in quest['results']:
+                step_table.add_row(
+                    quest['name'],
+                    result['model'],
+                    str(len(result.get('steps', []))),
+                    result['outcome']
+                )
+
+        self.console.print(step_table)
+
+        # Existing quest details rendering
+        self.console.print("\n[bold cyan]Quest Details[/]")
+        self.console.print("=" * 80)
         for quest in data['quests']:
             self.render_quest_details(quest, debug)
