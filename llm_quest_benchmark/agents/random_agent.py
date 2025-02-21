@@ -10,19 +10,14 @@ class RandomAgent(QuestPlayer):
     """Agent that randomly selects from available choices.
     Used for testing quests and finding edge cases."""
 
-    def __init__(self, seed: int = None, debug: bool = False, skip_single: bool = False):
+    def __init__(self, seed: int = None, **kwargs):
         """Initialize random agent.
 
         Args:
             seed (int, optional): Random seed for reproducibility. Defaults to None.
-            debug (bool, optional): Enable debug logging. Defaults to False.
-            skip_single (bool, optional): Auto-select single choices. Defaults to False.
         """
-        super().__init__(skip_single=skip_single)
-        self.debug = debug
+        super().__init__(skip_single=True)
         self.logger = logging.getLogger(self.__class__.__name__)
-        if debug:
-            self.logger.setLevel(logging.DEBUG)
         self.rng = random.Random(seed)
 
     def _get_action_impl(self, observation: str, choices: List[Dict[str, str]]) -> int:
@@ -35,9 +30,6 @@ class RandomAgent(QuestPlayer):
         Returns:
             int: Selected choice number (1-based)
         """
-        if self.debug:
-            self.logger.debug(f"Observation: {observation}")
-            self.logger.debug(f"Available choices: {len(choices)}")
         return self.rng.randint(1, len(choices))
 
     def reset(self) -> None:

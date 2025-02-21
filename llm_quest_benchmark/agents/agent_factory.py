@@ -35,8 +35,6 @@ def create_agent(
     Raises:
         ValueError: If model type is not recognized
     """
-    logger.debug(f"Creating agent for model: {model}")
-
     # Human player
     if model == "human":
         return HumanPlayer(skip_single=skip_single)

@@ -83,6 +83,14 @@ def run_quest_with_timeout(
     return result
 
 
+def log_state(logger: logging.Logger, state: Dict[str, Any], step_count: int = 0) -> None:
+    """Log state of the environment"""
+    choices_str = '\n'.join([f'{i}. {choice}' for i, choice in enumerate(state['choices'], 1)])
+    logger.debug(f"Step {step_count}" if step_count else "")
+    logger.debug(f"Observation: {state['text']}")
+    logger.debug(f"Choices:\n{choices_str}")
+
+
 class QuestRunner:
     """Manages quest execution with logging and metrics"""
     def __init__(self, agent: QuestPlayer, debug: bool = False, logger: Any = None, renderer: Optional[BaseRenderer] = None):
@@ -130,41 +138,37 @@ class QuestRunner:
         try:
             # Initialize environment and logger
             self.initialize(quest)
-            self.logger.debug("Environment initialized successfully")
-
             self.renderer.render_title()
 
             # Get initial state
+            step_count = 0
             observation = self.env.reset()
-            self.logger.debug("Initial observation: %s", observation)
-            self.logger.debug("Initial state: %s", self.env.state)
 
+            log_state(self.logger, self.env.state, step_count)
             self.renderer.render_game_state(self.env.state)
 
             while True:
-                self.step_count += 1
-                self.logger.debug("Step %d: Processing action", self.step_count)
+                step_count += 1
 
                 # Check if there are any choices available
                 if not self.env.state['choices']:
-                    self.logger.info("No more choices available - quest ended")
+                    self.logger.warning("No more choices available - quest ended")
                     if self.env and self.env.state:
                         self.agent.on_game_end(self.env.state)
                     return QuestOutcome.FAILURE
 
                 # Get agent's action
                 action = self.agent.get_action(observation, self.env.state['choices'])
-                self.logger.debug("Agent selected action: %s (type: %s)", action, type(action))
+                self.logger.debug(f"Selected: {action}. {self.env.state['choices'][action - 1]['text']}")
+                if isinstance(self.agent, LLMAgent) and self.agent.get_last_response():
+                    self.logger.debug("LLM response: %s", self.agent.get_last_response())
 
                 try:
                     # Take action in environment
                     step_result = self.env.step(action)
-                    self.logger.debug("Raw step result: %s", step_result)
 
                     observation, done, success, info = step_result
-                    self.logger.debug("Step result unpacked - observation: %s, done: %s, success: %s, info: %s",
-                                 observation[:100] + "..." if observation and len(observation) > 100 else observation,
-                                 done, success, info)
+                    log_state(self.logger, self.env.state, step_count)
 
                     self.renderer.render_game_state(self.env.state)
 

@@ -90,7 +90,7 @@ class QuestLogger:
         )
         self.steps.append(quest_step)
         # Log into console if debug is enabled
-        self.logger.debug(quest_step.to_console_line())
+        # self.logger.debug(quest_step.to_console_line())
 
         # Add quest metadata to first step
         step_data = quest_step.to_json()
@@ -106,13 +106,12 @@ class QuestLogger:
             f.write(json.dumps(step_data, ensure_ascii=False) + "\n")
 
         # Debug logging if enabled
-        if self.debug:
-            self.logger.debug(f"Step {step} details:")
-            self.logger.debug(f"State: {state[:200]}...")
-            self.logger.debug(f"Response: {response}")
-            self.logger.debug(f"Reward: {reward}")
-            if metrics:
-                self.logger.debug(f"Metrics: {json.dumps(metrics, indent=2, ensure_ascii=False)}")
+        # if self.debug:
+        #     self.logger.debug(f"Step {step} details:")
+        #     self.logger.debug(f"State: {state[:200]}...")
+        #     self.logger.debug(f"Response: {response}")
+        #     if metrics:
+        #         self.logger.debug(f"Metrics: {json.dumps(metrics, indent=2, ensure_ascii=False)}")
 
     def get_metrics(self) -> Dict[str, Any]:
         """Get aggregated metrics for the quest run"""

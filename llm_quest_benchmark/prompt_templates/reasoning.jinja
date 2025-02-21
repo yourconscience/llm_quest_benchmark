@@ -9,15 +9,16 @@ Available actions:
 {% endfor %}
 
 Analyze briefly:
-1. Context: What's happening now?
-2. Goal: What's the current objective?
-3. Impact: What could each choice lead to?
+1. Context: Key facts + cultural/biological clues
+2. Goal: Immediate vs long-term mission impact
+3. Risks: Physical dangers AND capability mismatches
+4. Options: Surface approach vs alternative interpretations
 
 Your response should be exactly in this JSON format:
 ```json
 {
-    "analysis": "<25 words on key situation elements>",
-    "reasoning": "<25 words on why this choice>",
+    "analysis": "<25 words: analysis of provided context and given actions>",
+    "reasoning": "<35 words: which action is the best option given the context and the goals>",
     "result": <action_number>
 }
 ```

@@ -155,6 +155,7 @@ def play(
 @app.command()
 def analyze(
     metrics_file: Optional[Path] = typer.Option(None, help="Path to a specific quest run metrics file to analyze. If not provided, analyzes the latest benchmark results."),
+    quest: Optional[str] = typer.Option(None, help="Filter benchmark results to show detailed analysis for a specific quest (e.g. 'boat.qm')."),
     debug: bool = typer.Option(False, help="Enable debug logging and output."),
 ):
     """Analyze metrics from benchmark runs or specific quest runs.
@@ -163,8 +164,9 @@ def analyze(
     By default, it analyzes the latest benchmark results. To analyze a specific quest run,
     provide the path to its metrics file.
 
-    Example:
+    Examples:
         llm-quest analyze  # Analyze latest benchmark results
+        llm-quest analyze --quest boat.qm  # Show detailed analysis for boat quest
         llm-quest analyze --metrics-file metrics/quest_run_20250217_144717.jsonl  # Analyze specific quest run
     """
     try:
@@ -200,7 +202,7 @@ def analyze(
                         typer.echo(f"  Metrics: {step['metrics']}")
         else:
             # Default to analyzing benchmark results
-            analyze_benchmark(metrics_file, debug)
+            analyze_benchmark(metrics_file, quest_filter=quest, debug=debug)
 
     except ValueError as e:
         typer.echo(str(e), err=True)

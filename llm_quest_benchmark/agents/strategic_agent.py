@@ -38,16 +38,9 @@ class StrategicAgent(QuestPlayer):
         """Implementation of action selection logic with strategic analysis"""
         if hasattr(self.agent, 'llm'):
             # First, get situation analysis
-            if self.debug:
-                self.logger.debug(f"\nObservation:\n{observation}")
-
             analysis = self.agent.llm(
                 "Analyze this situation and explain your thinking step-by-step instead of choosing an action:\n"
                 + observation)
-
-            if self.debug:
-                self.logger.debug(f"\nAnalysis:\n{analysis}")
-
             # Store analysis in history
             self.history.append({
                 'observation': observation,

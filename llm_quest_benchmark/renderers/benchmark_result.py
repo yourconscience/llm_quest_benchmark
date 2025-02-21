@@ -69,33 +69,78 @@ class BenchmarkResultRenderer(BaseRenderer):
             self.console.print(table)
             self.console.print()
 
-    def render_summary(self, summary: Dict[str, Any]) -> None:
+    def render_summary(self, summary: Dict[str, Any], quests: list) -> None:
         """Render overall benchmark summary
 
         Args:
             summary: Benchmark summary dictionary
+            quests: List of quest results
         """
         self.console.print("\n[bold cyan]Overall Results[/]")
         self.console.print("=" * 80)
 
+        # Calculate step statistics
+        total_steps = summary.get('total_steps', 0)
+        failure_steps = summary.get('failure_steps', 0)
+        avg_steps_per_failure = failure_steps / summary['outcomes'].get('FAILURE', 1) if summary['outcomes'].get('FAILURE') else 0
+
+        # Print quest names first
+        self.console.print("\n[bold]Quests tested:[/]")
+        for quest in quests:
+            self.console.print(f"- {quest['name']}")
+
+        # Results table
         table = Table(show_header=True)
         table.add_column("Metric", style="cyan")
         table.add_column("Count", justify="right", style="green")
         table.add_column("Percentage", justify="right", style="blue")
+        table.add_column("Steps", justify="right", style="magenta")
 
         total_runs = summary['total_runs']
         for outcome, count in summary['outcomes'].items():
             percentage = (count / total_runs) * 100
+            step_info = f"Ø{avg_steps_per_failure:.1f}" if outcome == 'FAILURE' else "-"
             table.add_row(
                 outcome,
                 str(count),
-                f"{percentage:.1f}%"
+                f"{percentage:.1f}%",
+                step_info
             )
 
-        table.add_row("Total Quests", str(summary['total_quests']), "")
-        table.add_row("Total Runs", str(total_runs), "100%")
+        table.add_row("Total Quests", str(summary['total_quests']), "", "")
+        table.add_row("Total Runs", str(total_runs), "100%", str(total_steps))
 
         self.console.print(Panel(table, expand=False))
+
+    def render_step(self, step: Dict[str, Any]) -> None:
+        """Render a single step with full details
+
+        Args:
+            step: Step information dictionary
+        """
+        self.console.print(f"\n[bold]Step {step.get('step', '?')}:[/]")
+
+        # Print full state text
+        if step.get('state'):
+            self.console.print(Text(step['state'], style="blue"))
+
+        # Print choices without duplication
+        if step.get('choices'):
+            self.console.print("\n[bold]Available actions:[/]")
+            for choice in step['choices']:
+                self.console.print(f"  {choice['id']}: {choice['text']}")
+
+        # Print selected action
+        if step.get('action'):
+            self.console.print(f"\n[bold]Selected:[/] {step['action']}")
+
+        # Print LLM response details if available
+        if step.get('llm_response'):
+            self.console.print(f"\n[bold]LLM Response:[/] {step['llm_response']}")
+        if step.get('reasoning'):
+            self.console.print(f"\n[bold]Reasoning:[/] {step['reasoning']}")
+        if step.get('analysis'):
+            self.console.print(f"\n[bold]Analysis:[/] {step['analysis']}")
 
     def render_quest_details(self, quest: Dict[str, Any], debug: bool = False) -> None:
         """Render detailed results for a single quest
@@ -134,20 +179,7 @@ class BenchmarkResultRenderer(BaseRenderer):
 
                 # Show steps if available
                 for step in result.get('steps', []):
-                    self.console.print(f"\n[bold]Step {step.get('step', '?')}:[/]")
-                    if step.get('state'):
-                        self.console.print(Text(step['state'][:200] + "..." if len(step['state']) > 200 else step['state'], style="blue"))
-
-                    if step.get('choices'):
-                        self.console.print("\nChoices:")
-                        for choice in step['choices']:
-                            self.console.print(f"  {choice['id']}: {choice['text']}")
-
-                    if step.get('response'):
-                        self.console.print(f"\nSelected: {step['response']}")
-
-                    if step.get('reasoning'):
-                        self.console.print(Text(f"\nReasoning: {step['reasoning']}", style="yellow"))
+                    self.render_step(step)
 
     def render_benchmark_results(self, data: Dict[str, Any], debug: bool = False) -> None:
         """Render complete benchmark results
@@ -159,7 +191,7 @@ class BenchmarkResultRenderer(BaseRenderer):
         # Render sections
         self.render_config(data['config'])
         self.render_agents(data['agents'])
-        self.render_summary(data['summary'])
+        self.render_summary(data['summary'], data['quests'])
 
         # Quest details
         self.console.print("\n[bold cyan]Quest Details[/]")

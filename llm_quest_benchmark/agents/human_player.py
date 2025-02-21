@@ -7,12 +7,9 @@ from llm_quest_benchmark.agents.base import QuestPlayer
 
 class HumanPlayer(QuestPlayer):
     """Interactive console player that takes input from user"""
-    def __init__(self, skip_single: bool = False, debug: bool = False):
+    def __init__(self, skip_single: bool = False, **kwargs):
         super().__init__(skip_single=skip_single)
-        self.debug = debug
         self.logger = logging.getLogger(__name__)
-        if debug:
-            self.logger.setLevel(logging.DEBUG)
 
     def _get_action_impl(self, observation: str, choices: list) -> int:
         """Implementation of action selection logic"""
@@ -37,8 +34,7 @@ class HumanPlayer(QuestPlayer):
 
     def on_game_start(self) -> None:
         """Called when game starts"""
-        if self.debug:
-            self.logger.debug("Starting new game")
+        pass
 
     def on_game_end(self, final_state: Dict[str, Any]) -> None:
         """Called when game ends"""

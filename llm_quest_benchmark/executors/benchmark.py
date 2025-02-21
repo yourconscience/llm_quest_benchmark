@@ -128,7 +128,11 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         'summary': {
             'total_quests': len(quest_files),
             'total_runs': len(all_tasks),
-            'outcomes': {}
+            'outcomes': {
+                'SUCCESS': 0,  # Initialize to 0
+                'FAILURE': 0,
+                'ERROR': 0
+            }
         }
     }
 
@@ -196,6 +200,10 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 }
                 results.append(result)
 
+                # Single debug log instead of multiple
+                logger.debug(f"Recorded failed result for {quest.name} - Outcome: {result['outcome']}")
+
+                # Progress renderer should handle its own logging
                 if isinstance(renderer, ProgressRenderer):
                     renderer.update(
                         quest_name=quest.stem,
@@ -207,9 +215,11 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
 
             # Update benchmark metrics with outcomes
             outcome = result['outcome']
-            if outcome not in benchmark_metrics['summary']['outcomes']:
-                benchmark_metrics['summary']['outcomes'][outcome] = 0
-            benchmark_metrics['summary']['outcomes'][outcome] += 1
+            if outcome in benchmark_metrics['summary']['outcomes']:
+                benchmark_metrics['summary']['outcomes'][outcome] += 1
+            else:
+                logger.warning(f"Unexpected outcome: {outcome}")
+                benchmark_metrics['summary']['outcomes'][outcome] = 1
 
     # Close renderer
     renderer.close()
@@ -290,7 +300,11 @@ def calculate_summary_stats(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         'success_rate': 0,
         'error_rate': 0,
         'timeout_rate': 0,
-        'llm_error_rate': 0
+        'llm_error_rate': 0,
+        'steps': {
+            'total': sum(len(r['steps']) for r in results),
+            'average': sum(len(r['steps']) for r in results) / len(results) if results else 0
+        }
     }
 
     # Calculate per-model statistics
@@ -315,7 +329,11 @@ def calculate_summary_stats(results: List[Dict[str, Any]]) -> Dict[str, Any]:
             'timeouts': timeout,
             'timeout_rate': timeout/total if total > 0 else 0,
             'llm_errors': llm_errors,
-            'llm_error_rate': llm_errors/total if total > 0 else 0
+            'llm_error_rate': llm_errors/total if total > 0 else 0,
+            'steps': {
+                'total': sum(len(r['steps']) for r in model_results),
+                'average': sum(len(r['steps']) for r in model_results) / len(model_results) if model_results else 0
+            }
         }
 
     # Calculate overall rates
