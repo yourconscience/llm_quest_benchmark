@@ -6,7 +6,7 @@ def test_anthropic_integration(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
 
     # Use a supported model from MODEL_CHOICES
-    agent = create_agent("sonnet")  # Using sonnet as it's in MODEL_CHOICES
+    agent = create_agent("claude-3-5-sonnet-latest")  # Using the correct model name
 
     # Test basic response handling with properly formatted choices
     response = agent.get_action("Test prompt", [{"text": "Choice 1"}, {"text": "Choice 2"}])

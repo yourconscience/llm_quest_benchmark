@@ -28,9 +28,13 @@ CONTEXT_FILES:
 # Tools and Commands (Specific to this project)
 # Provide concise descriptions and usage examples.
 TOOLS:
-  - uv: Modern Python package manager
+  - uv: Modern Python package manager (Required)
     - Usage: uv pip install [package]
     - Priority: 0 (Always use instead of pip)
+    - Notes: 
+      - Use for all Python package operations
+      - Keep uv.lock in version control
+      - Use virtual environments managed by uv
   - ensure-env: Setup environment
     - Usage: source ensure_env.sh
     - Priority: 1 (Run before any Python commands)
@@ -40,7 +44,7 @@ TOOLS:
       - Run with file: `goose run -i instructions.txt`
       - Debug output: Add debug context to task description
     - Priority: 2 (Use for complex analysis and debugging)
- - llm-quest: CLI tool for running and playing quests
+  - llm-quest: CLI tool for running and playing quests
     - Usage: 
       - Run with LLM: `llm-quest run --quest <quest_path> --log-level <level>`
       - Play interactive: `llm-quest play --quest <quest_path> --log-level <level>`
@@ -48,10 +52,9 @@ TOOLS:
   - pre-commit: Maintain code quality
     - Usage: `pre-commit run --all-files`
 
-
 STANDARDS:
   - ENV_CONSISTENCY: Always use ensure_env.sh
-  - LOCK_FILES: requirements.lock must be committed
+  - LOCK_FILES: uv.lock must be committed
   - CODE_STYLE: All code must pass pre-commit checks and not duplicate existing code
   - TYPING: Use type hints for all public interfaces
   - DOCS: Keep docs updated with code changes

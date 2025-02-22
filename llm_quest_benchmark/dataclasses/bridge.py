@@ -1,6 +1,6 @@
 """Bridge dataclasses for TypeScript integration"""
-from dataclasses import dataclass
-from typing import List, Dict
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional, Any
 
 
 @dataclass

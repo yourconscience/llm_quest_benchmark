@@ -30,7 +30,7 @@
    - Structured prompt system
 
 4. **Metrics Collection**
-   - JSONL format with UTF-8 encoding
+   - SQLite database with UTF-8 encoding
    - Tracks all steps, choices, and outcomes
    - Supports both human and LLM players
    - Debug mode for detailed logging
@@ -50,7 +50,7 @@
    - Loop continues until episode ends
 
 2. **Metrics Analysis**
-   - Metrics stored in JSONL format
+   - Metrics stored in SQLite database
    - Each step includes:
      - State and choices
      - Player's action
@@ -70,6 +70,7 @@
 - Rich (Terminal UI)
 - LiteLLM (Model API)
 - pytest (Testing)
+- uv (Package Management)
 
 ### Development Tools
 - yapf + isort (Formatting)
@@ -84,6 +85,12 @@
 - Tests required for new features
 - Debug logging in core components
 - Clear error messages
+
+### Package Management
+- Use uv for all Python package operations
+- Lock files must be committed (uv.lock)
+- Virtual environments managed by uv
+- Dependencies specified in pyproject.toml
 
 ### Testing Strategy
 - Unit tests for core logic

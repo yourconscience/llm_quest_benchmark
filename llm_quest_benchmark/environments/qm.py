@@ -40,6 +40,7 @@ class QMPlayerEnv:
         self.bridge = QMBridge(quest_file, debug=debug)
         self.state_history: List[QMState] = []
         self.choice_mapper: Optional[ChoiceMapper] = None
+        self._current_state: Dict[str, Any] = {}  # Internal state storage
 
     def _format_observation(self, state) -> str:
         """Format observation text from game state"""
@@ -53,77 +54,50 @@ class QMPlayerEnv:
         return text
 
     def reset(self) -> str:
-        """Reset the environment to initial state"""
-        # Close existing bridge if any
-        if hasattr(self, 'bridge'):
-            self.bridge.close()
-
-        # Create new bridge and start game
-        self.bridge = QMBridge(self.quest_file, debug=self.debug)
+        """Reset environment to initial state"""
         initial_bridge_state = self.bridge.start_game()
+        self._current_state = {
+            'location_id': initial_bridge_state.location_id,
+            'text': initial_bridge_state.text,
+            'choices': initial_bridge_state.choices,
+            'done': initial_bridge_state.game_ended,
+            'info': {}
+        }
+        return self._current_state['text']
 
-        # Create initial state
-        initial_state = QMState(
-            location_id=initial_bridge_state.location_id,
-            text=initial_bridge_state.text,
-            choices=initial_bridge_state.choices,
-            reward=initial_bridge_state.reward,
-            done=initial_bridge_state.game_ended,
-            info={}
-        )
-
-        # Update choice mapper and history
-        self.choice_mapper = ChoiceMapper(initial_state.choices)
-        self.state_history = [deepcopy(initial_state)]
-
-        return self._format_observation(initial_state)
-
-    def step(self, choice_num: int) -> Tuple[str, float, bool, Dict[str, Any]]:
-        """Take a step in the environment
+    def step(self, action: str) -> Tuple[str, bool, bool, Dict[str, Any]]:
+        """Take action in environment and return new state
 
         Args:
-            choice_num: Integer containing the choice number (1-based)
+            action: Action to take (choice number or text)
 
         Returns:
-            Tuple of (observation, reward, done, info)
+            Tuple of (observation, done, success, info)
         """
-        current_state = self.state_history[-1]
-        if current_state.done:
-            return self._format_observation(current_state), 0, True, current_state.info
+        # Take action in bridge
+        new_bridge_state = self.bridge.step(action)
 
-        try:
-            if not self.choice_mapper or choice_num not in self.choice_mapper:
-                raise ValueError(
-                    f"Invalid choice {choice_num}. Valid choices: {self.choice_mapper.get_valid_choices() if self.choice_mapper else []}"
-                )
+        # Update internal state
+        self._current_state = {
+            'location_id': new_bridge_state.location_id,
+            'text': new_bridge_state.text,
+            'choices': new_bridge_state.choices,
+            'done': new_bridge_state.game_ended,
+            'info': {}
+        }
 
-            # Take step through bridge - convert to string for TypeScript bridge
-            new_bridge_state = self.bridge.step(str(choice_num))
+        # Return step results - success is when game is done and reward is positive
+        success = new_bridge_state.game_ended and new_bridge_state.reward > 0
+        return (
+            self._current_state['text'],
+            self._current_state['done'],
+            success,
+            self._current_state['info']
+        )
 
-            # Create new state
-            new_state = QMState(
-                location_id=new_bridge_state.location_id,
-                text=new_bridge_state.text,
-                choices=new_bridge_state.choices,
-                reward=new_bridge_state.reward,
-                done=new_bridge_state.game_ended,
-                info={}
-            )
-
-            # Update choice mapper and history
-            self.choice_mapper = ChoiceMapper(new_state.choices)
-            self.state_history.append(deepcopy(new_state))
-
-            return (
-                self._format_observation(new_state),
-                new_state.reward,
-                new_state.done,
-                new_state.info
-            )
-
-        except Exception as e:
-            self.logger.error(f"Error during step: {e}")
-            raise
+    def get_state(self) -> Dict[str, Any]:
+        """Get current environment state"""
+        return self._current_state.copy()
 
     def close(self):
         """Clean up resources"""
@@ -133,20 +107,12 @@ class QMPlayerEnv:
     @property
     def state(self) -> Dict[str, Any]:
         """Get current state for renderer compatibility"""
-        current_state = self.state_history[-1] if self.state_history else None
-        if not current_state:
+        if not self._current_state:
             return {}
-        return {
-            'location_id': current_state.location_id,
-            'text': current_state.text,
-            'choices': current_state.choices,
-            'reward': current_state.reward,
-            'done': current_state.done,
-            'info': current_state.info
-        }
+        return self._current_state.copy()
 
     def current_observation(self) -> str:
         """Get current observation for renderer compatibility"""
-        if not self.state_history:
+        if not self._current_state:
             return ""
-        return self._format_observation(self.state_history[-1])
+        return self._format_observation(self._current_state)

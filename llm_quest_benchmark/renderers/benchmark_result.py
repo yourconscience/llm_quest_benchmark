@@ -174,13 +174,64 @@ class BenchmarkResultRenderer(BaseRenderer):
             data: Complete benchmark data dictionary
             debug: Whether to show debug information
         """
-        # Render sections
-        self.render_config(data['config'])
-        self.render_agents(data['agents'])
-        self.render_summary(data['summary'], data['quests'])
-
-        # Existing quest details rendering
-        self.console.print("\n[bold cyan]Quest Details[/]")
+        # Print overall summary
+        self.console.print("\n[bold cyan]Benchmark Results[/]")
         self.console.print("=" * 80)
+
+        # Print benchmark name if available
+        if "benchmark_name" in data:
+            self.console.print(f"\nBenchmark: {data['benchmark_name']}")
+
+        # Overall statistics
+        summary = data['summary']
+        self.console.print(f"\nTotal Runs: {summary['total_runs']}")
+        self.console.print(f"Success Rate: {summary['success_rate']:.1f}%")
+        self.console.print(f"Average Success Reward: {summary['avg_success_reward']:.2f}")
+
+        # Outcome table
+        outcome_table = Table(title="Outcome Summary", box=box.ROUNDED)
+        outcome_table.add_column("Outcome", style="cyan")
+        outcome_table.add_column("Count", style="magenta")
+        outcome_table.add_column("Percentage", style="green")
+
+        total = summary['total_runs']
+        for outcome, count in summary['outcomes'].items():
+            outcome_table.add_row(
+                outcome,
+                str(count),
+                f"{count/total*100:.1f}%" if total else "0%"
+            )
+
+        self.console.print(Panel(outcome_table, title="Outcomes", expand=False))
+
+        # Model statistics
+        model_table = Table(title="Model Performance", box=box.ROUNDED)
+        model_table.add_column("Model", style="cyan")
+        model_table.add_column("Runs", style="magenta")
+        model_table.add_column("Success Rate", style="green")
+        model_table.add_column("Avg Reward", style="blue")
+
+        for model in data['models']:
+            model_table.add_row(
+                model['name'],
+                str(model['runs']),
+                f"{model['success_rate']:.1f}%",
+                f"{model['avg_reward']:.2f}"
+            )
+
+        self.console.print(Panel(model_table, title="Model Statistics", expand=False))
+
+        # Quest statistics
+        quest_table = Table(title="Quest Results", box=box.ROUNDED)
+        quest_table.add_column("Quest", style="cyan")
+        quest_table.add_column("Runs", style="magenta")
+        quest_table.add_column("Success Rate", style="green")
+
         for quest in data['quests']:
-            self.render_quest_details(quest, debug)
+            quest_table.add_row(
+                quest['name'],
+                str(quest['runs']),
+                f"{quest['success_rate']:.1f}%"
+            )
+
+        self.console.print(Panel(quest_table, title="Quest Statistics", expand=False))

@@ -14,6 +14,7 @@ from llm_quest_benchmark.constants import DEFAULT_LANG, DEFAULT_QUEST_TIMEOUT
 from llm_quest_benchmark.renderers.terminal import RichRenderer
 from llm_quest_benchmark.renderers.null import NoRenderer
 from llm_quest_benchmark.renderers.base import BaseRenderer
+from llm_quest_benchmark.dataclasses.state import AgentState, QMState
 
 # Configure logging
 logging.getLogger('quest').setLevel(logging.WARNING)
@@ -148,7 +149,8 @@ class QuestRunner:
             if self.debug:
                 self.logger.debug("Initial state: %s", self.env.state)
 
-            self.renderer.render_game_state(self.env.state)
+            # Start with step 0
+            self.step_count = 0
 
             while True:
                 self.step_count += 1
@@ -163,37 +165,34 @@ class QuestRunner:
                         self.agent.on_game_end(self.env.state)
                     return QuestOutcome.FAILURE
 
+                # Create agent state for current observation and choices
+                agent_state = AgentState(
+                    step=self.step_count,
+                    location_id=self.env.state['location_id'],
+                    observation=observation,
+                    choices=self.env.state['choices'],
+                    action="",  # Will be set after getting action
+                    llm_response=None  # Will be set after getting action
+                )
+
                 # Get agent's action
                 action = self.agent.get_action(observation, self.env.state['choices'])
                 if self.debug:
                     self.logger.debug("Agent selected action: %s", action)
 
+                # Update state with agent's action and response
+                agent_state.action = str(action)
+                agent_state.llm_response = self.agent.get_last_response()
+
+                # Render and log the state
+                self.renderer.render_game_state(agent_state)
+                if self.quest_logger:
+                    self.quest_logger.log_step(agent_state)
+
                 try:
                     # Take action in environment
                     step_result = self.env.step(action)
                     observation, done, success, info = step_result
-
-                    # If this is an LLM agent, get its response for rendering
-                    llm_response = None
-                    if isinstance(self.agent, LLMAgent) and self.agent.get_last_response():
-                        llm_response = str(self.agent.get_last_response())
-                        # Add LLM response to state for rendering
-                        self.env.state['llm_response'] = llm_response
-                    elif self.step_count != 1:
-                        raise Exception(f"No LLM response. History: {self.agent.history}")
-
-                    self.renderer.render_game_state(self.env.state)
-
-                    if self.quest_logger:
-                        self.quest_logger.log_step(
-                            step=self.step_count,
-                            state=observation,
-                            choices=self.env.state['choices'],
-                            response=action,
-                            reward=info.get('reward', 0),
-                            metrics=info,
-                            llm_response=llm_response
-                        )
 
                     if done:
                         # Quest completed

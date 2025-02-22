@@ -34,3 +34,6 @@ dist/
 build/
 .coverage
 htmlcov/
+
+# Database
+metrics.db

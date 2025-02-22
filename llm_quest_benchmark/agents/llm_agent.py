@@ -1,7 +1,7 @@
 """LLM agent for Space Rangers quests"""
 import json
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from json_repair import repair_json
 
 from llm_quest_benchmark.constants import (
@@ -58,6 +58,7 @@ def parse_llm_response(response: str, num_choices: int, debug: bool = False, log
                     return LLMResponse(
                         action=action,
                         reasoning=response_json.get('reasoning'),
+                        analysis=response_json.get('analysis'),
                         is_default=False
                     )
             except (ValueError, TypeError):
@@ -116,57 +117,60 @@ class LLMAgent(QuestPlayer):
             temperature=temperature
         )
         self.history: List[LLMResponse] = []
+        self._last_response = LLMResponse(action=1, is_default=True)  # Initialize with default response
 
     def get_last_response(self) -> Optional[LLMResponse]:
         """Get the last LLM response from history"""
-        return self.history[-1] if self.history else None
+        return self.history[-1] if self.history else self._last_response
 
-    def _get_action_impl(self, observation: str, choices: list) -> int:
-        """Implementation of action selection logic"""
-        if self.debug:
-            self.logger.debug(f"\nObservation:\n{observation}")
-            self.logger.debug(f"Available choices: {choices}")
+    def _get_action_impl(self, state: str, choices: List[Dict[str, str]]) -> int:
+        """Implementation of action selection logic.
 
-        # Render prompt using template
-        prompt = self.prompt_renderer.render_action_prompt(observation, choices)
-        if self.debug:
-            self.logger.debug(f"\nPrompt:\n{prompt}")
+        Args:
+            state (str): Current game state text
+            choices (List[Dict[str, str]]): List of available choices
 
+        Returns:
+            int: Selected action number (1-based)
+        """
         try:
-            response = self.llm(prompt)
-            self.logger.error(f"LLM response: {response}")
+            # Format prompt
+            prompt = self._format_prompt(state, choices)
             if self.debug:
-                self.logger.debug(f"Raw LLM response: {response}")
+                self.logger.debug(f"\nPrompt:\n{prompt}")
 
-            llm_response = parse_llm_response(response, len(choices), self.debug, self.logger)
+            # Get LLM response
+            llm_response = self.llm.get_completion(prompt)
             if self.debug:
-                self.logger.debug(f"Parsed LLM response: {llm_response}")
-                self.logger.debug(f"Response action type: {type(llm_response.action)}")
+                self.logger.debug(f"LLM response: {llm_response}")
 
-            if self.debug and llm_response.reasoning:
-                self.logger.debug(f"Reasoning: {llm_response.reasoning}")
+            # Parse response
+            parsed_response = parse_llm_response(llm_response, len(choices), self.debug, self.logger)
+            if self.debug:
+                self.logger.debug(f"Parsed LLM response: {parsed_response}")
 
             # Store response in history
-            self.history.append(llm_response)
-            self.prompt_renderer.add_to_history(llm_response)
+            self.history.append(parsed_response)
+            self._last_response = parsed_response
 
-            # Track if this was a parsing error
-            if llm_response.is_default:
-                self.logger.error(f"Error during {response} parsing, defaulting to first choice.")
-                self.last_error = "LLM parsing error"
-            else:
-                self.last_error = None
-
-            return llm_response.action
+            return parsed_response.action
 
         except Exception as e:
-            self.logger.error(f"LLM call failed: {str(e)}", exc_info=True)
-            self.last_error = str(e)
-            return 1  # Default to first choice
+            self.logger.error(f"Error during LLM call: {e}")
+            default_response = LLMResponse(action=1, is_default=True)
+            self.history.append(default_response)
+            self._last_response = default_response
+            return 1  # Default to first choice on error
 
     def reset(self) -> None:
         """Reset agent state"""
         self.history = []
+        self._last_response = LLMResponse(action=1, is_default=True)  # Reset to default response
+
+    def on_game_start(self) -> None:
+        """Called when game starts"""
+        super().on_game_start()
+        self._last_response = LLMResponse(action=1, is_default=True)  # Reset to default response
 
     def on_game_end(self, final_state: Dict[str, Any]) -> None:
         """Log final state for analysis"""
@@ -176,3 +180,28 @@ class LLMAgent(QuestPlayer):
     def __str__(self) -> str:
         """String representation of the agent"""
         return f"LLMAgent(model={self.model_name}, template={self.template}, temperature={self.temperature})"
+
+    def _format_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
+        """Format the prompt for the LLM"""
+        # Format choices as numbered list
+        choices_text = "\n".join([f"{i+1}. {c['text']}" for i, c in enumerate(choices)])
+
+        return f"""Current story state:
+{state}
+
+Available actions:
+{choices_text}
+
+Analyze briefly:
+1. Context: What's happening now?
+2. Goal: What's the current objective?
+3. Impact: What could each choice lead to?
+
+Your response should be exactly in this JSON format:
+```json
+{{
+    "analysis": "<25 words on key situation elements>",
+    "reasoning": "<25 words on why this choice>",
+    "result": <action_number>
+}}
+```"""

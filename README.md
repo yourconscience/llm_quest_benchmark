@@ -18,16 +18,26 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 - Python 3.11 or higher
 - Node.js 18 or higher (Note: For Node.js 23+ you'll need to set `NODE_OPTIONS=--openssl-legacy-provider`)
 - npm 9 or higher
+- uv (modern Python package manager)
 
 ### Installation
 
-1. Clone the repository with submodules:
+1. Install uv if you haven't already:
+```bash
+# On Unix/Mac:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows PowerShell:
+(Invoke-WebRequest -Uri https://astral.sh/uv/install.ps1).Content | pwsh
+```
+
+2. Clone the repository with submodules:
 ```bash
 git clone --recursive https://github.com/your-username/llm_quest_benchmark.git
 cd llm_quest_benchmark
 ```
 
-2. Run the installation script:
+3. Run the installation script:
 ```bash
 # On Unix/Mac:
 chmod +x install.sh
@@ -38,13 +48,12 @@ chmod +x install.sh
 ```
 
 The script will:
-- Install uv (modern Python package manager)
 - Set up a virtual environment
-- Install Python dependencies
+- Install Python dependencies using uv
 - Set up the Space Rangers Quest TypeScript bridge
 - Create a default .env file
 
-3. Configure your API keys in .env file or set it in the environment:
+4. Configure your API keys in .env file or set it in the environment:
 ```bash
 export OPENAI_API_KEY=your-api-key  # On Windows: set OPENAI_API_KEY=your-api-key
 ```

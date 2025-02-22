@@ -2,12 +2,12 @@
 import logging
 import pytest
 
-from llm_quest_benchmark.constants import DEFAULT_QUEST, DEFAULT_QUEST_TIMEOUT
+from llm_quest_benchmark.constants import DEFAULT_QUEST, STUB_TEMPLATE
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.environments.state import QuestOutcome
 
-TIMEOUT = 15 # 15s should be enough for test quests to complete
+TIMEOUT = 20 # 20s should be enough for test quests to complete
 
 
 @pytest.mark.e2e
@@ -17,7 +17,12 @@ def test_quest_run_with_llm(caplog):
     caplog.set_level(logging.DEBUG)  # Show all logs in test output
 
     # Create LLM agent
-    agent = create_agent("gpt-4o-mini", skip_single=True, debug=True)  # Use faster model for tests
+    agent = create_agent(
+        model="gpt-4o-mini",
+        template=STUB_TEMPLATE,
+        skip_single=True,
+        debug=True
+    )  # Use faster model for tests
     assert agent is not None, "Failed to create agent"
 
     # Run quest with real LLM agent

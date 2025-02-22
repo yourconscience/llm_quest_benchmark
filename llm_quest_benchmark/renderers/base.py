@@ -1,7 +1,9 @@
 """Base interface for all renderers"""
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import time
+
+from llm_quest_benchmark.dataclasses.state import AgentState
 
 
 class BaseRenderer(ABC):
@@ -16,11 +18,11 @@ class BaseRenderer(ABC):
         time.sleep(seconds)
 
     @abstractmethod
-    def render_game_state(self, state: Dict[str, Any]) -> None:
+    def render_game_state(self, state: AgentState) -> None:
         """Render the current game state
 
         Args:
-            state (Dict[str, Any]): Current game state including text, choices, etc.
+            state (AgentState): Current game state including observation, choices, action, etc.
         """
         pass
 
@@ -36,11 +38,11 @@ class BaseRenderer(ABC):
         """
         pass
 
-    def render_choices(self, choices: list) -> None:
+    def render_choices(self, choices: List[Dict[str, str]]) -> None:
         """Optional: Render available choices
 
         Args:
-            choices (list): List of available choices
+            choices (List[Dict[str, str]]): List of available choices
         """
         pass
 

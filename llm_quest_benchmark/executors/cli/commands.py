@@ -3,6 +3,9 @@ import logging
 import click
 from pathlib import Path
 from typing import Optional, List
+import subprocess
+from rich import print
+import socket
 
 from llm_quest_benchmark.agents.agent_factory import create_agent
 import typer
@@ -153,87 +156,78 @@ def play(
 
 @app.command()
 def analyze(
-    quest: Optional[Path] = typer.Option(None, help="Path to a specific quest run metrics file (.jsonl) to analyze."),
-    benchmark: Optional[Path] = typer.Option(None, help="Path to a benchmark directory or specific benchmark file (.json) to analyze. If not provided, uses the latest benchmark results."),
+    quest: Optional[str] = typer.Option(None, help="Name of the quest to analyze (e.g. 'boat.qm')."),
+    benchmark: Optional[str] = typer.Option(None, help="Name of the benchmark to analyze (e.g. 'baseline')."),
+    db: Path = typer.Option("metrics.db", help="Path to SQLite database."),
     debug: bool = typer.Option(False, help="Enable debug logging and output."),
 ):
-    """Analyze metrics from benchmark runs or specific quest runs.
+    """Analyze metrics from quest runs or benchmark results.
 
-    This command analyzes metrics, showing summary statistics and detailed analysis.
-    You can either analyze a specific quest run (using --quest) or benchmark results (using --benchmark).
-    If neither is provided, it analyzes the latest benchmark results.
+    This command analyzes metrics from the SQLite database, showing summary statistics and detailed analysis.
+    You can either analyze a specific quest (using --quest) or a benchmark (using --benchmark).
 
     Example:
-        llm-quest analyze  # Analyze latest benchmark results
-        llm-quest analyze --quest metrics/quest_run_20250217_144717.jsonl  # Analyze specific quest run
-        llm-quest analyze --benchmark metrics/benchmarks/  # Analyze latest benchmark in directory
-        llm-quest analyze --benchmark metrics/benchmarks/benchmark_20250217_144717.json  # Analyze specific benchmark
+        llm-quest analyze --benchmark baseline  # Analyze baseline benchmark results
+        llm-quest analyze --quest boat.qm  # Analyze specific quest
+        llm-quest analyze --quest boat.qm --db custom.db  # Use custom database
     """
     try:
-        # Validate input - can't specify both
+        # Validate input - must specify either quest or benchmark
+        if not quest and not benchmark:
+            typer.echo("Must specify either --quest or --benchmark.", err=True)
+            raise typer.Exit(code=1)
         if quest and benchmark:
             typer.echo("Cannot specify both --quest and --benchmark. Please choose one.", err=True)
             raise typer.Exit(code=1)
 
-        # If quest file is provided, analyze as quest run
-        if quest:
-            if not quest.suffix == '.jsonl':
-                typer.echo("Quest metrics file must be a .jsonl file", err=True)
-                raise typer.Exit(code=1)
+        # Validate database exists
+        if not db.exists():
+            typer.echo(f"Database not found: {db}", err=True)
+            raise typer.Exit(code=1)
 
-            results = analyze_quest_run(quest, debug)
+        # Analyze quest run
+        if quest:
+            results = analyze_quest_run(quest, db, debug)
 
             # Print human-readable summary
             typer.echo("\nQuest Run Summary")
             typer.echo("================")
-            typer.echo(f"Quest File: {results['summary']['quest_file']}")
-            typer.echo(f"Player Type: {results['summary']['player_type']}")
-            if results['summary']['model']:
-                typer.echo(f"Model: {results['summary']['model']}")
-                typer.echo(f"Template: {results['summary']['template']}")
-            typer.echo(f"Total Steps: {results['summary']['total_steps']}")
-            typer.echo(f"Outcome: {results['summary']['outcome']}")
+            typer.echo(f"Quest: {results['quest_name']}")
+            typer.echo(f"Total Runs: {results['total_runs']}")
+            for outcome, count in results['outcomes'].items():
+                typer.echo(f"{outcome}: {count}")
 
-            # Print step summary
-            typer.echo("\nStep Summary")
-            typer.echo("============")
-            for step in results['steps']:
-                typer.echo(f"\nStep {step['step']}:")
-                typer.echo(f"  Action: {step['action']}")
-                typer.echo("  Available Choices:")
-                for choice in step['choices']:
-                    typer.echo(f"    {choice['id']}: {choice['text']}")
-                if debug and step.get('state'):
-                    typer.echo(f"  State: {step['state']}")
-                    if step.get('prompt'):
-                        typer.echo(f"  Prompt: {step['prompt']}")
-                    if step.get('metrics'):
-                        typer.echo(f"  Metrics: {step['metrics']}")
+            # Print run details
+            for run in results['runs']:
+                typer.echo(f"\nRun at {run['start_time']}")
+                typer.echo(f"Model: {run['model']}")
+                typer.echo(f"Template: {run['template']}")
+                typer.echo(f"Outcome: {run['outcome']}")
+                typer.echo(f"Reward: {run['reward']}")
+
+                if debug and run['steps']:
+                    typer.echo("\nSteps:")
+                    for step in run['steps']:
+                        typer.echo(f"\nStep {step['step']}:")
+                        typer.echo(f"Observation: {step['observation']}")
+                        typer.echo("Choices:")
+                        for choice in step['choices']:
+                            typer.echo(f"  {choice['id']}: {choice['text']}")
+                        typer.echo(f"Action: {step['action']}")
+                        typer.echo(f"Reward: {step['reward']}")
+                        if step.get('llm_response'):
+                            typer.echo(f"LLM Response: {step['llm_response']}")
+
+        # Analyze benchmark results
         else:
-            # Handle benchmark analysis
-            if benchmark:
-                # If benchmark is a directory, find latest file in it
-                if benchmark.is_dir():
-                    files = list(benchmark.glob("benchmark_*.json"))
-                    if not files:
-                        typer.echo(f"No benchmark files found in directory: {benchmark}", err=True)
-                        raise typer.Exit(code=1)
-                    # Sort by modification time in descending order
-                    files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-                    benchmark = files[0]
-                elif not benchmark.suffix == '.json':
-                    typer.echo("Benchmark file must be a .json file", err=True)
-                    raise typer.Exit(code=1)
-
-            # Analyze benchmark (will use latest if benchmark is None)
-            analyze_benchmark(benchmark, debug)
+            analyze_benchmark(db, benchmark, debug)
 
     except ValueError as e:
         typer.echo(str(e), err=True)
         raise typer.Exit(code=1)
     except Exception as e:
         log.exception(f"Error during analysis: {e}")
-        raise typer.Exit(code=2)
+        raise typer.Exit(code=1)
 
 @app.command()
 def benchmark(
@@ -296,6 +290,50 @@ def benchmark(
     except Exception as e:
         typer.echo(f"Error during benchmark: {str(e)}", err=True)
         raise typer.Exit(code=2)
+
+def find_available_port(start_port: int = 8501, max_attempts: int = 100) -> int:
+    """Find an available port starting from start_port"""
+    for port in range(start_port, start_port + max_attempts):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(('', port))
+                return port
+            except OSError:
+                continue
+    raise RuntimeError(f"Could not find an available port after {max_attempts} attempts")
+
+@app.command()
+def server(
+    port: int = typer.Option(8501, help="Port to run the server on (will auto-increment if taken)"),
+    debug: bool = typer.Option(False, help="Enable debug mode")
+):
+    """Start the Streamlit web interface"""
+    try:
+        # Get the path to the app.py file
+        app_path = Path(__file__).parent.parent.parent / "web" / "app.py"
+        if not app_path.exists():
+            raise FileNotFoundError(f"Could not find app.py at {app_path}")
+
+        # Find available port
+        try:
+            available_port = find_available_port(start_port=port)
+            if available_port != port:
+                print(f"[yellow]Port {port} is taken, using port {available_port} instead[/yellow]")
+            port = available_port
+        except RuntimeError as e:
+            print(f"[red]Error finding available port: {e}[/red]")
+            raise typer.Exit(1)
+
+        print(f"[green]Starting server on port {port}...[/green]")
+        cmd = ["streamlit", "run", str(app_path), "--server.port", str(port)]
+        if debug:
+            cmd.append("--logger.level=debug")
+
+        # Run the Streamlit server
+        subprocess.run(cmd)
+    except Exception as e:
+        print(f"[red]Failed to start server: {str(e)}[/red]")
+        raise typer.Exit(1)
 
 if __name__ == "__main__":
     app()

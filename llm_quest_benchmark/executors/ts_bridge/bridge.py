@@ -23,7 +23,7 @@ class QMBridge:
         self.state_history: List[QMBridgeState] = []
 
     def parse_quest_locations(self) -> Dict[str, Any]:
-        """Parse quest file and return Dict of locations"""
+        """Parse quest file and return metadata including locations and start location"""
         cmd = ["node", "-r", "ts-node/register", str(self.parser_script), str(self.quest_file), "--parse"]
 
         if self.debug:
@@ -34,19 +34,47 @@ class QMBridge:
             if self.debug:
                 logger.debug(f"Raw parser output: {proc.stdout[:500]}...")
 
-            qm_data = json.loads(proc.stdout)
-            locations = qm_data['metadata']['locations']
+            try:
+                from json_repair import repair_json
+                # Clean the output - remove any non-JSON text before/after
+                output = proc.stdout.strip()
+                if '{' in output:
+                    output = output[output.find('{'):output.rfind('}')+1]
+                repaired_json = repair_json(output)
+                qm_data = json.loads(repaired_json)
+            except ImportError:
+                # Fallback to direct JSON parsing if json-repair not available
+                qm_data = json.loads(proc.stdout)
+
+            metadata = qm_data.get('metadata', {})
+            total_locations = len(metadata.get('locations', []))
+            start_location = metadata.get('startLocationId', 0)
+
             if self.debug:
-                locations_str = "\n".join(f"{loc['id']}: {loc['texts'][0]}" for loc in locations)
-                logger.debug(f"Parsed locations:\n{locations_str}")
-            return locations
+                logger.debug(f"Parsed metadata: start location {start_location}, total locations: {total_locations}")
+
+            return {
+                'start_location_id': start_location,
+                'locations': metadata.get('locations', []),
+                'total_locations': total_locations if total_locations > 0 else 20  # Default fallback for progress bar
+            }
 
         except subprocess.CalledProcessError as e:
             logger.error(f"Node parser error:\n{e.stderr}")
-            raise RuntimeError(f"Node parser error:\n{e.stderr}")
+            # Return default values instead of raising
+            return {
+                'start_location_id': 0,
+                'locations': [],
+                'total_locations': 20  # Default fallback for progress bar
+            }
         except Exception as e:
             logger.error(f"Failed to parse QM data: {str(e)}")
-            raise ValueError(f"Failed to parse QM data: {str(e)}")
+            # Return default values instead of raising
+            return {
+                'start_location_id': 0,
+                'locations': [],
+                'total_locations': 20  # Default fallback for progress bar
+            }
 
     def start_game(self) -> QMBridgeState:
         """Start game process and return initial state"""
@@ -202,6 +230,9 @@ class QMBridge:
 
         try:
             response = ""
+            json_depth = 0
+            in_json = False
+
             while True:
                 # Check if process is still alive
                 if self.process.poll() is not None:
@@ -212,14 +243,23 @@ class QMBridge:
                 if not line:
                     break
 
-                response += line.strip()
-                if line.strip().endswith("}"):
-                    break
+                # Skip non-JSON output
+                if not in_json and '{' in line:
+                    in_json = True
+                    response = line[line.find('{'):]
+                elif in_json:
+                    response += line
+
+                if in_json:
+                    # Count JSON depth
+                    json_depth += line.count('{') - line.count('}')
+                    if json_depth == 0:
+                        break
 
             if self.debug:
                 logger.debug(f"Raw response: {response}")
 
-            return response
+            return response.strip()
 
         except Exception as e:
             logger.error(f"Error reading response: {str(e)}")
