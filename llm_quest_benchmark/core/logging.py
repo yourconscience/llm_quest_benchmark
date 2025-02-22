@@ -1,6 +1,7 @@
 """Unified logging module for LLM Quest Benchmark"""
 import json
 import logging
+import sqlite3
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, Optional, List
@@ -48,12 +49,35 @@ class QuestLogger:
         self.agent = agent
         self.steps: List[QuestStep] = []
         self.quest_file: Optional[str] = None
+        self.current_run_id: Optional[int] = None
 
-        # Always set up metrics file
+        # Set up SQLite database
         metrics_dir = Path("metrics")
         metrics_dir.mkdir(exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.metrics_file = metrics_dir / f"quest_run_{timestamp}.jsonl"
+        db_path = metrics_dir / "metrics.db"
+        self.conn = sqlite3.connect(str(db_path))
+        self.cursor = self.conn.cursor()
+
+        # Create tables if they don't exist
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS runs (
+                id INTEGER PRIMARY KEY,
+                quest_name TEXT,
+                start_time TIMESTAMP,
+                end_time TIMESTAMP
+            )''')
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS steps (
+                run_id INTEGER,
+                step INTEGER,
+                observation TEXT,
+                choices TEXT,
+                action INTEGER,
+                reward REAL,
+                FOREIGN KEY(run_id) REFERENCES runs(id)
+            )''')
+        self.conn.commit()
 
         # Configure console output if not already configured
         if not self.logger.handlers:
@@ -65,10 +89,18 @@ class QuestLogger:
         self.logger.setLevel(logging.DEBUG if debug else logging.INFO)
 
     def set_quest_file(self, quest_file: str) -> None:
-        """Set the quest file being run"""
+        """Set the quest file being run and create a new run entry"""
         self.quest_file = quest_file
         if self.debug:
             self.logger.debug(f"Running quest: {quest_file}")
+
+        # Create a new run entry
+        self.cursor.execute('''
+            INSERT INTO runs (quest_name, start_time)
+            VALUES (?, ?)
+        ''', (quest_file, datetime.now().isoformat()))
+        self.conn.commit()
+        self.current_run_id = self.cursor.lastrowid
 
     def log_step(self,
                  step: int,
@@ -78,7 +110,10 @@ class QuestLogger:
                  reward: float = 0.0,
                  metrics: Dict[str, Any] = None,
                  llm_response: Optional[Dict[str, Any]] = None) -> None:
-        """Log a quest step with metrics"""
+        """Log a quest step to SQLite database"""
+        if not self.current_run_id:
+            raise ValueError("Quest file not set. Call set_quest_file first.")
+
         quest_step = QuestStep(
             step=step,
             state=state,
@@ -89,21 +124,24 @@ class QuestLogger:
             llm_response=llm_response
         )
         self.steps.append(quest_step)
+
         # Log into console if debug is enabled
         self.logger.debug(quest_step.to_console_line())
 
-        # Add quest metadata to first step
-        step_data = quest_step.to_json()
-        if step == 1:
-            step_data.update({
-                "quest_file": self.quest_file,
-                "agent": self.agent,
-                "debug": self.debug
-            })
+        # Convert choices to JSON string for storage
+        choices_json = json.dumps(choices, ensure_ascii=False)
 
-        # Always save metrics in JSONL format with UTF-8 encoding
-        with open(self.metrics_file, "a", encoding='utf-8') as f:
-            f.write(json.dumps(step_data, ensure_ascii=False) + "\n")
+        # Store step in SQLite
+        try:
+            action = int(response)  # Convert response to integer for storage
+        except (ValueError, TypeError):
+            action = 0  # Default value if conversion fails
+
+        self.cursor.execute('''
+            INSERT INTO steps (run_id, step, observation, choices, action, reward)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (self.current_run_id, step, state, choices_json, action, reward))
+        self.conn.commit()
 
         # Debug logging if enabled
         if self.debug:
@@ -111,19 +149,14 @@ class QuestLogger:
             self.logger.debug(f"State: {state[:200]}...")
             self.logger.debug(f"Response: {response}")
             self.logger.debug(f"Reward: {reward}")
-            if metrics:
-                self.logger.debug(f"Metrics: {json.dumps(metrics, indent=2, ensure_ascii=False)}")
 
-    def get_metrics(self) -> Dict[str, Any]:
-        """Get aggregated metrics for the quest run"""
-        return {
-            "quest_file": self.quest_file,
-            "agent": self.agent,
-            "total_steps": len(self.steps),
-            "total_reward": sum(step.reward for step in self.steps),
-            "steps": [step.to_json() for step in self.steps],
-        }
-
-    def get_log_entries(self) -> List[Dict[str, Any]]:
-        """Get all log entries for the quest run"""
-        return [step.to_json() for step in self.steps]
+    def __del__(self):
+        """Close database connection on cleanup"""
+        if hasattr(self, 'conn'):
+            # Update end time for the run
+            if self.current_run_id:
+                self.cursor.execute('''
+                    UPDATE runs SET end_time = ? WHERE id = ?
+                ''', (datetime.now().isoformat(), self.current_run_id))
+                self.conn.commit()
+            self.conn.close()
