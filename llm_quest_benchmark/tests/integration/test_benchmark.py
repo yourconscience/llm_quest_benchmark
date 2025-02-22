@@ -7,6 +7,10 @@ import pytest
 
 from llm_quest_benchmark.executors.benchmark import run_benchmark
 from llm_quest_benchmark.dataclasses.config import BenchmarkConfig, AgentConfig
+from llm_quest_benchmark.constants import (
+    SYSTEM_ROLE_TEMPLATE,
+    DEFAULT_TEMPLATE
+)
 
 
 @pytest.mark.timeout(20)  # 20 seconds timeout for benchmark test
@@ -19,12 +23,16 @@ def test_benchmark_e2e(caplog):
         agents=[
             AgentConfig(
                 model="gpt-4o-mini",
-                template="reasoning.jinja",
+                system_template=SYSTEM_ROLE_TEMPLATE,
+                action_template=DEFAULT_TEMPLATE,
                 temperature=0.4,
                 skip_single=True
             ),
             AgentConfig(
                 model="random_choice",
+                system_template=SYSTEM_ROLE_TEMPLATE,
+                action_template=DEFAULT_TEMPLATE,
+                temperature=0.0
             )
         ],
         quest_timeout=20,

@@ -6,16 +6,17 @@ from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
 from llm_quest_benchmark.agents.random_agent import RandomAgent
 from llm_quest_benchmark.agents.human_player import HumanPlayer
-from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_TEMPLATE, DEFAULT_TEMPERATURE
+from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_TEMPLATE, DEFAULT_TEMPERATURE, SYSTEM_ROLE_TEMPLATE
 
 logger = logging.getLogger(__name__)
 
 def create_agent(
     model: str = DEFAULT_MODEL,
-    debug: bool = False,
-    template: str = DEFAULT_TEMPLATE,
-    skip_single: bool = False,
+    system_template: str = SYSTEM_ROLE_TEMPLATE,
+    action_template: str = DEFAULT_TEMPLATE,
     temperature: float = DEFAULT_TEMPERATURE,
+    skip_single: bool = False,
+    debug: bool = False,
 ) -> QuestPlayer:
     """Create a quest agent based on model name and parameters.
 
@@ -25,9 +26,10 @@ def create_agent(
             - 'random_choice' for random testing agent (can include seed e.g. 'random_choice_123')
             - 'human' for interactive human player
         debug (bool): Enable debug logging
-        template (str): Prompt template for LLM agents
-        skip_single (bool): Auto-select single choices
+        system_template (str): System template for LLM agents
+        action_template (str): Action template for LLM agents
         temperature (float): Temperature for LLM sampling
+        skip_single (bool): Auto-select single choices
 
     Returns:
         QuestPlayer: Appropriate agent instance
@@ -55,7 +57,8 @@ def create_agent(
     return LLMAgent(
         debug=debug,
         model_name=model,
-        template=template,
-        skip_single=skip_single,
-        temperature=temperature
+        system_template=system_template,
+        action_template=action_template,
+        temperature=temperature,
+        skip_single=skip_single
     )

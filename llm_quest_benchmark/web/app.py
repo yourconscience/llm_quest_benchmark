@@ -19,7 +19,8 @@ from llm_quest_benchmark.constants import (
     DEFAULT_TEMPLATE,
     DEFAULT_TEMPERATURE,
     PROMPT_TEMPLATES_DIR,
-    DEFAULT_QUEST_TIMEOUT
+    DEFAULT_QUEST_TIMEOUT,
+    SYSTEM_ROLE_TEMPLATE,
 )
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.agents.agent_factory import create_agent
@@ -33,6 +34,7 @@ from llm_quest_benchmark.utils import choice_mapper, text_processor
 from llm_quest_benchmark.dataclasses.state import AgentState
 from llm_quest_benchmark.dataclasses.response import LLMResponse
 from llm_quest_benchmark.renderers.terminal import RichRenderer
+from llm_quest_benchmark.llm.prompt import PromptRenderer
 
 # Initialize logging
 log_manager = LogManager()
@@ -109,32 +111,32 @@ def run_quest(quest_path: str, agent: QuestPlayer):
             """Unified callback handler for quest events"""
             try:
                 ctx = add_script_run_ctx(thread=current_thread())
-                
+
                 if event == "progress":
                     status_container.info(f"Step {data['step']}: {data['message']}")
                 elif event == "game_state":
                     # Store step for final display
                     steps.append(data)
-                    
+
                     # Real-time update
                     with output_container:
                         st.markdown(f"## Step {data.step}")
                         st.markdown("### Current Situation")
                         st.markdown(text_processor.clean_qm_text(data.observation))
-                        
+
                         if data.choices:
                             st.markdown("### Choices")
                             formatted_choices = choice_mapper.ChoiceMapper.format_choices_for_display(data.choices)
                             for choice in formatted_choices:
                                 st.markdown(f"- {choice}")
-                                
+
                         if data.llm_response:
                             st.markdown("### Agent's Response")
                             # Use the standardized string representation
                             st.code(str(data.llm_response), language="markdown")
-                                
+
                         st.markdown("---")
-                        
+
                 elif event == "error":
                     st.error(str(data))
             except Exception as e:
@@ -157,12 +159,12 @@ def run_quest(quest_path: str, agent: QuestPlayer):
                     with st.expander(f"Step {step.step}", expanded=False):
                         st.markdown(f"**Location:** {step.location_id}")
                         st.markdown(f"**Observation:** {text_processor.clean_qm_text(step.observation)}")
-                        
+
                         if step.choices:
                             st.markdown("**Available Choices:**")
                             for choice in step.choices:
                                 st.markdown(f"- {choice['text']}")
-                        
+
                         if step.llm_response:
                             st.markdown("**Agent's Response**")
                             # Use the full string representation from LLMResponse
@@ -174,7 +176,7 @@ def run_quest(quest_path: str, agent: QuestPlayer):
                     outcome = QuestOutcome[result['outcome']]
                 except KeyError:
                     outcome = QuestOutcome.UNKNOWN
-                
+
                 if outcome == QuestOutcome.SUCCESS:
                     final_status_container.success("Quest completed successfully! 🎉")
                 elif outcome == QuestOutcome.FAILURE:
@@ -194,25 +196,79 @@ def show_quest_runner():
     """Main quest runner interface"""
     st.header("Quest Runner")
 
+    # Initialize prompt renderer
+    prompt_renderer = PromptRenderer(env=None)
+
+    # Get template contents
+    system_template = prompt_renderer.get_system_template_content()
+    action_template = prompt_renderer.get_action_template_content()
+
     # Quest selection
     quests = get_available_quests()
     if not quests:
         st.error("No quests found in quests/kr1/")
         return
 
-    selected_quest = st.selectbox("Select Quest", quests)
+    # Configuration columns
+    col1, col2 = st.columns(2)
 
-    # Basic agent configuration
-    model = st.selectbox("Model", MODEL_CHOICES, index=MODEL_CHOICES.index(DEFAULT_MODEL))
-    temperature = st.slider("Temperature", 0.0, 1.0, DEFAULT_TEMPERATURE)
+    # CSS для выравнивания контента вниз
+    st.markdown("""
+    <style>
+        .st-emotion-cache-1v7f65g {
+            align-items: flex-end !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    with col1:
+        st.subheader("Quest Configuration")
+        with st.container(height=650):  # Фиксированная высота контейнера
+            selected_quest = st.selectbox("Select Quest", quests)
+            skip_single = st.checkbox(
+                "Skip steps with single choice",
+                value=True,
+                help="Automatically proceed when only one choice is available"
+            )
+            system_prompt = st.text_area(
+                "System Prompt Template",
+                value=system_template,
+                height=400,
+                help="Jinja2 template for system instructions"
+            )
+
+    with col2:
+        st.subheader("Agent Configuration")
+        with st.container(height=650):  # Фиксированная высота контейнера
+            model = st.selectbox(
+                "Model",
+                MODEL_CHOICES,
+                index=MODEL_CHOICES.index(DEFAULT_MODEL)
+            )
+            temperature = st.slider(
+                "Temperature",
+                0.0, 1.0,
+                value=DEFAULT_TEMPERATURE,
+                step=0.1
+            )
+            action_prompt = st.text_area(
+                "Action Prompt Template",
+                value=action_template,
+                height=400,
+                help="Jinja2 template for action selection"
+            )
 
     if st.button("Run Quest"):
         quest_path = f"quests/kr1/{selected_quest}"
+        # Save edited templates
+        (PROMPT_TEMPLATES_DIR / SYSTEM_ROLE_TEMPLATE).write_text(system_prompt)
+        (PROMPT_TEMPLATES_DIR / DEFAULT_TEMPLATE).write_text(action_prompt)
         agent = create_agent(
             model=model,
-            template=DEFAULT_TEMPLATE,
+            system_template=SYSTEM_ROLE_TEMPLATE,
+            action_template=DEFAULT_TEMPLATE,
             temperature=temperature,
-            skip_single=True,
+            skip_single=skip_single,
             debug=True
         )
         run_quest(quest_path, agent)

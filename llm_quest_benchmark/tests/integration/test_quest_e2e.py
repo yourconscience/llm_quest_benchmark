@@ -3,7 +3,7 @@ import logging
 import pytest
 from typing import Any
 
-from llm_quest_benchmark.constants import DEFAULT_QUEST, DEFAULT_TEMPLATE
+from llm_quest_benchmark.constants import DEFAULT_QUEST, DEFAULT_TEMPLATE, SYSTEM_ROLE_TEMPLATE
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.environments.state import QuestOutcome
@@ -19,11 +19,13 @@ def test_quest_run_with_llm(caplog):
 
     # Create LLM agent
     agent = create_agent(
-        model="gpt-4o-mini",
-        template=DEFAULT_TEMPLATE,
-        skip_single=True,
+        model="random_choice",  # Use random for testing
+        system_template=SYSTEM_ROLE_TEMPLATE,
+        action_template=DEFAULT_TEMPLATE,
+        temperature=0.0,
+        skip_single=False,
         debug=True
-    )  # Use faster model for tests
+    )
     assert agent is not None, "Failed to create agent"
 
     # Mock callback for testing

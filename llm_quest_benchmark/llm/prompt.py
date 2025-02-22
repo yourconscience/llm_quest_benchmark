@@ -4,37 +4,53 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, Template
 
 from llm_quest_benchmark.dataclasses.state import QMState
-from llm_quest_benchmark.constants import PROMPT_TEMPLATES_DIR, DEFAULT_TEMPLATE
+from llm_quest_benchmark.constants import (
+    PROMPT_TEMPLATES_DIR,
+    DEFAULT_TEMPLATE,
+    SYSTEM_ROLE_TEMPLATE
+)
 
 
 class PromptRenderer:
     """Handles prompt rendering and history tracking for LLM agents"""
 
-    def __init__(self, env, templates_dir: Optional[Path] = None, template: str = DEFAULT_TEMPLATE):
+    def __init__(
+        self,
+        env,
+        templates_dir: Optional[Path] = None,
+        system_template: str = SYSTEM_ROLE_TEMPLATE,
+        action_template: str = DEFAULT_TEMPLATE
+    ):
         """Initialize renderer with environment and templates
 
         Args:
             env: Environment instance (can be None for standalone use)
             templates_dir (Optional[Path], optional): Directory containing templates. Defaults to None.
-            template (str, optional): Template name to use. Defaults to DEFAULT_TEMPLATE.
+            system_template (str, optional): System template name to use. Defaults to SYSTEM_ROLE_TEMPLATE.
+            action_template (str, optional): Action template name to use. Defaults to DEFAULT_TEMPLATE.
         """
         self.env = env
         self.history: List[Dict[str, Any]] = []
-        self.template = template
-
-        # Initialize Jinja environment
         self.templates_dir = templates_dir or PROMPT_TEMPLATES_DIR
+        self.system_template_name = system_template
+        self.action_template_name = action_template
         self.jinja_env = Environment(
             loader=FileSystemLoader(self.templates_dir),
             trim_blocks=True,
             lstrip_blocks=True
         )
         self._load_templates()
+        self._load_template_contents()
 
     def _load_templates(self) -> None:
-        """Load all template files"""
-        self.action_template = self.jinja_env.get_template(self.template)
-        self.system_template = self.jinja_env.get_template("system_role.jinja")
+        """Load Jinja template objects"""
+        self.action_template = self.jinja_env.get_template(self.action_template_name)
+        self.system_template = self.jinja_env.get_template(self.system_template_name)
+
+    def _load_template_contents(self):
+        """Загрузка сырого содержимого шаблонов для UI"""
+        self.action_template_content = (self.templates_dir / self.action_template_name).read_text(encoding="utf-8")
+        self.system_template_content = (self.templates_dir / self.system_template_name).read_text(encoding="utf-8")
 
     def render_action_prompt(self, observation: str, choices: list) -> str:
         """Render the action choice prompt
@@ -104,3 +120,11 @@ class PromptRenderer:
         if last_n is not None:
             return self.history[-last_n:]
         return self.history
+
+    def get_system_template_content(self) -> str:
+        """Get raw system template content"""
+        return self.system_template_content
+
+    def get_action_template_content(self) -> str:
+        """Get raw action template content"""
+        return self.action_template_content

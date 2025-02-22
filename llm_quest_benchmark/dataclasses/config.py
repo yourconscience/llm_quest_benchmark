@@ -7,7 +7,8 @@ from llm_quest_benchmark.constants import (
     DEFAULT_MODEL,
     DEFAULT_TEMPLATE,
     DEFAULT_TEMPERATURE,
-    MODEL_CHOICES
+    MODEL_CHOICES,
+    SYSTEM_ROLE_TEMPLATE
 )
 
 
@@ -15,9 +16,11 @@ from llm_quest_benchmark.constants import (
 class AgentConfig:
     """Configuration for a single agent in benchmark"""
     model: str = DEFAULT_MODEL
-    template: str = DEFAULT_TEMPLATE
+    system_template: str = SYSTEM_ROLE_TEMPLATE
+    action_template: str = DEFAULT_TEMPLATE
     temperature: float = DEFAULT_TEMPERATURE
     skip_single: bool = False
+    debug: bool = False
 
     def __post_init__(self):
         if self.model not in MODEL_CHOICES:

@@ -8,7 +8,8 @@ from llm_quest_benchmark.constants import (
     MODEL_CHOICES,
     DEFAULT_TEMPLATE,
     DEFAULT_TEMPERATURE,
-    DEFAULT_MODEL
+    DEFAULT_MODEL,
+    SYSTEM_ROLE_TEMPLATE
 )
 from llm_quest_benchmark.llm.client import get_llm_client
 from llm_quest_benchmark.llm.prompt import PromptRenderer
@@ -85,16 +86,20 @@ class LLMAgent(QuestPlayer):
 
     SUPPORTED_MODELS = MODEL_CHOICES
 
-    def __init__(self,
-                 debug: bool = False,
-                 model_name: str = DEFAULT_MODEL,
-                 template: str = DEFAULT_TEMPLATE,
-                 skip_single: bool = False,
-                 temperature: float = DEFAULT_TEMPERATURE):
+    def __init__(
+        self,
+        model_name: str = DEFAULT_MODEL,
+        system_template: str = SYSTEM_ROLE_TEMPLATE,
+        action_template: str = DEFAULT_TEMPLATE,
+        temperature: float = DEFAULT_TEMPERATURE,
+        skip_single: bool = False,
+        debug: bool = False,
+    ):
         super().__init__(skip_single=skip_single)
         self.debug = debug
         self.model_name = model_name.lower()
-        self.template = template
+        self.system_template = system_template
+        self.action_template = action_template
         self.temperature = temperature
 
         if self.model_name not in self.SUPPORTED_MODELS:
@@ -108,7 +113,11 @@ class LLMAgent(QuestPlayer):
             self.logger.addHandler(handler)
 
         # Initialize prompt renderer
-        self.prompt_renderer = PromptRenderer(None, template=template)  # None for env since we don't need it here
+        self.prompt_renderer = PromptRenderer(
+            None,
+            system_template=system_template,
+            action_template=action_template
+        )
 
         # Initialize LLM client with system prompt and temperature
         self.llm = get_llm_client(
@@ -179,7 +188,7 @@ class LLMAgent(QuestPlayer):
 
     def __str__(self) -> str:
         """String representation of the agent"""
-        return f"LLMAgent(model={self.model_name}, template={self.template}, temperature={self.temperature})"
+        return f"LLMAgent(model={self.model_name}, system_template={self.system_template}, action_template={self.action_template}, temperature={self.temperature})"
 
     def _format_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
         """Format the prompt for the LLM"""

@@ -24,9 +24,10 @@ PROMPT_TEMPLATES_DIR = Path(__file__).parent / "prompt_templates"
 # Templates
 STUB_TEMPLATE = "stub.jinja"
 DEFAULT_TEMPLATE = "reasoning.jinja"
+SYSTEM_ROLE_TEMPLATE = "system_role.jinja"
 
 # Default temperature
-DEFAULT_TEMPERATURE = 0.4  # Lower temperature for more focused responses
+DEFAULT_TEMPERATURE = 0.6  # Lower temperature for more focused responses
 
 # Timeout settings (in seconds)
 READABILITY_DELAY = 0.5  # Delay between steps for readability in interactive mode

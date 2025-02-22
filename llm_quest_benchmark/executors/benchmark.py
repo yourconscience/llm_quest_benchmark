@@ -68,19 +68,20 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         return []
 
     # Create agents first
-    agents = []
-    for agent_config in config.agents:
-        try:
-            agent = create_agent(model=agent_config.model,
-                                 template=agent_config.template,
-                                 temperature=agent_config.temperature,
-                                 debug=config.debug,
-                                 skip_single=agent_config.skip_single
-                                 )
-            agents.append((agent, agent_config))
-        except Exception as e:
-            logger.error(f"Failed to create agent {agent_config.model}: {e}")
-            continue
+    agents = [
+        (
+            create_agent(
+                model=agent_cfg.model,
+                system_template=agent_cfg.system_template,
+                action_template=agent_cfg.action_template,
+                temperature=agent_cfg.temperature,
+                skip_single=agent_cfg.skip_single,
+                debug=agent_cfg.debug
+            ),
+            agent_cfg
+        )
+        for agent_cfg in config.agents
+    ]
 
     # Prepare tasks - each quest with each agent
     all_tasks: List[Tuple[Path, Any, AgentConfig]] = [
@@ -118,7 +119,8 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         'agents': [
             {
                 'model': agent_config.model,
-                'template': agent_config.template,
+                'system_template': agent_config.system_template,
+                'action_template': agent_config.action_template,
                 'temperature': agent_config.temperature,
                 'skip_single': agent_config.skip_single
             }
@@ -160,7 +162,8 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 result = future.result(timeout=quest_timeout)  # Use same timeout for consistency
                 # Add agent config info to result
                 result['model'] = agent_config.model
-                result['template'] = agent_config.template
+                result['system_template'] = agent_config.system_template
+                result['action_template'] = agent_config.action_template
                 result['temperature'] = agent_config.temperature
 
                 # Track LLM errors
@@ -191,7 +194,8 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                 result = {
                     'quest': quest.name,
                     'model': agent_config.model,
-                    'template': agent_config.template,
+                    'system_template': agent_config.system_template,
+                    'action_template': agent_config.action_template,
                     'temperature': agent_config.temperature,
                     'outcome': QuestOutcome.TIMEOUT.name if isinstance(e, TimeoutError) else QuestOutcome.ERROR.name,
                     'error': error_msg,
