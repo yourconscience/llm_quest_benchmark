@@ -22,6 +22,7 @@ from llm_quest_benchmark.constants import (
     DEFAULT_TEMPLATE,
     DEFAULT_TEMPERATURE,
     INFINITE_TIMEOUT,
+    SYSTEM_ROLE_TEMPLATE,
 )
 from llm_quest_benchmark.dataclasses.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.agents.human_player import HumanPlayer
@@ -75,7 +76,8 @@ def run(
     quest: Path = typer.Option(DEFAULT_QUEST, help="Path to the QM quest file."),
     model: str = typer.Option(DEFAULT_MODEL, help=f"Model for the LLM agent (choices: {', '.join(MODEL_CHOICES)})."),
     temperature: float = typer.Option(DEFAULT_TEMPERATURE, help="Temperature for LLM sampling"),
-    template: str = typer.Option(DEFAULT_TEMPLATE, help=f"Template to use for action prompts (default: {DEFAULT_TEMPLATE})."),
+    system_template: str = typer.Option(SYSTEM_ROLE_TEMPLATE, help="Template to use for system instructions."),
+    action_template: str = typer.Option(DEFAULT_TEMPLATE, help="Template to use for action prompts."),
     timeout: int = typer.Option(60, help="Timeout in seconds for run (0 for no timeout)."),
     skip: bool = typer.Option(True, help="Auto-select single choices without asking agent."),
     debug: bool = typer.Option(False, help="Enable debug logging and output, remove terminal UI."),
@@ -90,11 +92,14 @@ def run(
     """
     try:
         log_manager.setup(debug)
-        agent = create_agent(model=model,
-                             template=template,
-                             temperature=temperature,
-                             skip_single=skip,
-                             debug=debug)
+        agent = create_agent(
+            model=model,
+            system_template=system_template,
+            action_template=action_template,
+            temperature=temperature,
+            skip_single=skip,
+            debug=debug
+        )
 
         log.warning(f"Starting quest run with agent {str(agent)}")
         log.debug(f"Quest file: {quest}")
