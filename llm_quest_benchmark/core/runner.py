@@ -57,7 +57,8 @@ def run_quest_with_timeout(
         'outcome': QuestOutcome.ERROR.name,
         'error': None,
         'steps': [],
-        'llm_error': False
+        'llm_error': False,
+        'model': agent.model_name if isinstance(agent, LLMAgent) else None
     }
 
     logger = logging.getLogger(__name__)

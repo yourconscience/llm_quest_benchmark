@@ -6,6 +6,7 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 
 ## Features
 
+- 🔥 **Live Demo**: [llm-quest-benchmark.streamlit.app](http://192.168.100.4:8504/)
 - 👾 **Quest Environment**: Classic Space Rangers text quests act as single-agent environments
 - 🤖 **LLM Agents**: Simple yet customizable via prompt templates and optional thinking
 - ⭐️ **Latest LLM Providers**: OpenAI, Anthropic, Deepseek, OpenRouter models are supported

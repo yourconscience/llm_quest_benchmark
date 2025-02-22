@@ -81,17 +81,18 @@ class QuestLogger:
         self.conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
         self.cursor = self.conn.cursor()
 
-        # Drop existing tables to ensure clean schema
-        self.cursor.execute("DROP TABLE IF EXISTS steps")
-        self.cursor.execute("DROP TABLE IF EXISTS runs")
-
-        # Create tables with all required columns
+        # Create tables with all required columns - don't drop existing tables
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS runs (
                 id INTEGER PRIMARY KEY,
                 quest_name TEXT,
                 start_time TIMESTAMP,
-                end_time TIMESTAMP
+                end_time TIMESTAMP,
+                model TEXT,
+                template TEXT,
+                outcome TEXT,
+                reward REAL,
+                benchmark_name TEXT
             )''')
 
         self.cursor.execute('''
@@ -100,9 +101,10 @@ class QuestLogger:
                 step INTEGER,
                 location_id TEXT,
                 observation TEXT,
-                choices TEXT,
-                action TEXT,
-                llm_response TEXT,
+                choices TEXT,  -- JSON array of choice objects
+                action TEXT,   -- Chosen action
+                llm_response TEXT,  -- JSON object of LLMResponse
+                reward REAL,
                 FOREIGN KEY(run_id) REFERENCES runs(id)
             )''')
 
@@ -245,3 +247,57 @@ class QuestLogger:
                 # Log but don't raise during cleanup
                 if hasattr(self, 'logger'):
                     self.logger.error(f"Error during cleanup: {e}")
+
+    def start_quest_run(self, quest_file: str, model: str = None, template: str = None, benchmark_name: str = None):
+        """Start recording a new quest run"""
+        self.quest_file = quest_file
+        self.steps = []
+
+        # Insert new run record
+        self.cursor.execute('''
+            INSERT INTO runs (quest_name, start_time, model, template, benchmark_name)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (quest_file, datetime.now().isoformat(), model, template, benchmark_name))
+        self.current_run_id = self.cursor.lastrowid
+        self.conn.commit()
+
+    def record_step(self, state: AgentState):
+        """Record a quest step"""
+        if not self.current_run_id:
+            return
+
+        # Convert choices to JSON string
+        choices_json = json.dumps([{
+            'id': str(i),
+            'text': choice
+        } for i, choice in enumerate(state.choices)])
+
+        # Record step in database
+        self.cursor.execute('''
+            INSERT INTO steps (run_id, step, location_id, observation, choices, action, llm_response, reward)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            self.current_run_id,
+            len(self.steps) + 1,
+            state.location_id,
+            state.observation,
+            choices_json,
+            state.action,
+            json.dumps(state.llm_response) if state.llm_response else None,
+            state.reward
+        ))
+        self.conn.commit()
+        self.steps.append(state)
+
+    def end_quest_run(self, outcome: str = None, reward: float = None):
+        """End the current quest run"""
+        if self.current_run_id:
+            self.cursor.execute('''
+                UPDATE runs
+                SET end_time = ?, outcome = ?, reward = ?
+                WHERE id = ?
+            ''', (datetime.now().isoformat(), outcome, reward, self.current_run_id))
+            self.conn.commit()
+            self.current_run_id = None
+            self.quest_file = None
+            self.steps = []

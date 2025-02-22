@@ -2,7 +2,7 @@
 quests:
   - quests/kr1
 agents:
-  - model: claude-3-5-sonnet-20241022
+  - model: claude-3-5-sonnet-latest
     template: reasoning.jinja
     temperature: 0.5
     skip_single: true

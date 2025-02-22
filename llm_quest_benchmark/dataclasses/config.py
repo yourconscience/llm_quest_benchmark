@@ -36,8 +36,11 @@ class BenchmarkConfig:
     agents: List[AgentConfig]
     debug: bool = False
     quest_timeout: int = 60
+    benchmark_timeout: Optional[int] = None  # Total timeout for all quests, defaults to quest_timeout * num_quests
     max_workers: int = 4
     output_dir: Optional[str] = "metrics/quests"
+    name: Optional[str] = "baseline"  # Name of the benchmark run
+    renderer: str = "progress"  # Type of renderer to use (progress, simple, etc.)
 
     def __post_init__(self):
         # Validate quest paths
