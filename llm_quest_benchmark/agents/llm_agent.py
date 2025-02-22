@@ -117,9 +117,9 @@ class LLMAgent(QuestPlayer):
         )
         self.history: List[LLMResponse] = []
 
-    def get_last_response(self) -> LLMResponse:
+    def get_last_response(self) -> Optional[LLMResponse]:
         """Get the last LLM response from history"""
-        return self.history[-1]
+        return self.history[-1] if self.history else None
 
     def _get_action_impl(self, observation: str, choices: list) -> int:
         """Implementation of action selection logic"""
@@ -134,6 +134,7 @@ class LLMAgent(QuestPlayer):
 
         try:
             response = self.llm(prompt)
+            self.logger.error(f"LLM response: {response}")
             if self.debug:
                 self.logger.debug(f"Raw LLM response: {response}")
 

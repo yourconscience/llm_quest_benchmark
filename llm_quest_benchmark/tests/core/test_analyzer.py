@@ -61,7 +61,7 @@ def test_analyze_metrics(tmp_path):
     # Test CLI command
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(app, ["analyze", "--metrics-file", str(metrics_file)])
+        result = runner.invoke(app, ["analyze", "--quest", str(metrics_file)])
         assert result.exit_code == 0
 
         # Check that summary info is present
@@ -84,7 +84,7 @@ def test_analyze_no_metrics_dir(tmp_path):
     with runner.isolated_filesystem():
         result = runner.invoke(app, ["analyze"])
         assert result.exit_code == 1
-        assert "No metrics files found" in result.stdout
+        assert "No benchmark files found" in result.stdout
 
 
 def test_analyze_empty_metrics_dir(tmp_path):
@@ -98,7 +98,7 @@ def test_analyze_empty_metrics_dir(tmp_path):
         metrics_dir.mkdir()
         result = runner.invoke(app, ["analyze"])
         assert result.exit_code == 1
-        assert "No metrics files found" in result.stdout
+        assert "No benchmark files found" in result.stdout
 
 
 def test_analyze_invalid_file(tmp_path):
@@ -108,6 +108,38 @@ def test_analyze_invalid_file(tmp_path):
 
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(app, ["analyze", "--metrics-file", str(metrics_file)])
+        result = runner.invoke(app, ["analyze", "--quest", str(metrics_file)])
         assert result.exit_code == 1
         assert "Error analyzing metrics" in result.stdout
+
+
+def test_analyze_both_params(tmp_path):
+    """Test analyze command with both quest and benchmark parameters"""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(app, ["analyze", "--quest", "test.jsonl", "--benchmark", "test.json"])
+        assert result.exit_code == 1
+        assert "Cannot specify both --quest and --benchmark" in result.stdout
+
+
+def test_analyze_invalid_benchmark_file(tmp_path):
+    """Test analyze command with invalid benchmark file type"""
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(app, ["analyze", "--benchmark", "test.txt"])
+        assert result.exit_code == 1
+        assert "Benchmark file must be a .json file" in result.stdout
+
+
+def test_analyze_benchmark_directory(tmp_path):
+    """Test analyze command with benchmark directory"""
+    # Create benchmark directory with a test file
+    benchmark_dir = tmp_path / "metrics" / "benchmarks"
+    benchmark_dir.mkdir(parents=True)
+    benchmark_file = benchmark_dir / "benchmark_20250217_144717.json"
+    benchmark_file.write_text("{}")  # Empty but valid JSON
+
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        result = runner.invoke(app, ["analyze", "--benchmark", str(benchmark_dir)])
+        assert result.exit_code == 0

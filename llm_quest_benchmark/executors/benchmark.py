@@ -128,7 +128,12 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         'summary': {
             'total_quests': len(quest_files),
             'total_runs': len(all_tasks),
-            'outcomes': {}
+            'outcomes': {},
+            'steps': {
+                'total': 0,
+                'average': 0,
+                'by_model': {}
+            }
         }
     }
 
@@ -205,14 +210,39 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                         llm_error=result.get('llm_error', False)
                     )
 
-            # Update benchmark metrics with outcomes
+            # Update benchmark metrics with outcomes and steps
             outcome = result['outcome']
             if outcome not in benchmark_metrics['summary']['outcomes']:
                 benchmark_metrics['summary']['outcomes'][outcome] = 0
             benchmark_metrics['summary']['outcomes'][outcome] += 1
 
+            # Track steps
+            steps_count = len(result.get('steps', []))
+            benchmark_metrics['summary']['steps']['total'] += steps_count
+
+            # Track steps by model
+            model = result['model']
+            if model not in benchmark_metrics['summary']['steps']['by_model']:
+                benchmark_metrics['summary']['steps']['by_model'][model] = {
+                    'total': 0,
+                    'count': 0,
+                    'average': 0
+                }
+            benchmark_metrics['summary']['steps']['by_model'][model]['total'] += steps_count
+            benchmark_metrics['summary']['steps']['by_model'][model]['count'] += 1
+
     # Close renderer
     renderer.close()
+
+    # Calculate average steps
+    total_runs = len(results)
+    if total_runs > 0:
+        benchmark_metrics['summary']['steps']['average'] = benchmark_metrics['summary']['steps']['total'] / total_runs
+
+        # Calculate per-model averages
+        for model_stats in benchmark_metrics['summary']['steps']['by_model'].values():
+            if model_stats['count'] > 0:
+                model_stats['average'] = model_stats['total'] / model_stats['count']
 
     # Save results if output dir specified
     if config.output_dir:
@@ -338,6 +368,10 @@ def print_summary(results: List[Dict[str, Any]]) -> None:
     print("\nResults Summary:")
     print("=" * 80)
 
+    # Calculate total steps
+    total_steps = sum(len(r.get('steps', [])) for r in results)
+    steps_by_model = {}
+
     # Group by model
     models = {r['model'] for r in results}
     for model in sorted(models):
@@ -349,14 +383,27 @@ def print_summary(results: List[Dict[str, Any]]) -> None:
         llm_errors = len([r for r in model_results if r.get('llm_error', False)])
         total = len(model_results)
 
+        # Calculate steps for this model
+        model_steps = sum(len(r.get('steps', [])) for r in model_results)
+        avg_steps = model_steps / total if total > 0 else 0
+        steps_by_model[model] = (model_steps, avg_steps)
+
         print(f"\nModel: {model}")
         print(f"Total quests: {total}")
         print(f"Success: {success} ({success/total*100:.1f}%)")
         print(f"Failed: {failed} ({failed/total*100:.1f}%)")
         print(f"Error: {error} ({error/total*100:.1f}%)")
         print(f"Timeout: {timeout} ({timeout/total*100:.1f}%)")
+        print(f"Total steps: {model_steps}")
+        print(f"Average steps per quest: {avg_steps:.1f}")
         if isinstance(model, str) and ('gpt' in model.lower() or 'llm' in model.lower() or 'claude' in model.lower()):
             print(f"LLM Errors: {llm_errors} ({llm_errors/total*100:.1f}%)")
+
+    # Print overall steps summary
+    print("\nOverall Steps Summary:")
+    print("=" * 80)
+    print(f"Total steps across all models: {total_steps}")
+    print(f"Average steps per quest: {total_steps/len(results):.1f}")
 
     # List errors if any
     errors = [r for r in results if r['error']]

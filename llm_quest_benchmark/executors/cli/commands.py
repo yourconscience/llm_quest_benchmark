@@ -17,7 +17,6 @@ from llm_quest_benchmark.constants import (
     DEFAULT_MODEL,
     DEFAULT_QUEST,
     DEFAULT_TEMPLATE,
-    REASONING_TEMPLATE,
     DEFAULT_TEMPERATURE,
     INFINITE_TIMEOUT,
 )
@@ -73,7 +72,7 @@ def run(
     quest: Path = typer.Option(DEFAULT_QUEST, help="Path to the QM quest file."),
     model: str = typer.Option(DEFAULT_MODEL, help=f"Model for the LLM agent (choices: {', '.join(MODEL_CHOICES)})."),
     temperature: float = typer.Option(DEFAULT_TEMPERATURE, help="Temperature for LLM sampling"),
-    template: str = typer.Option(DEFAULT_TEMPLATE, help=f"Template to use for action prompts (default: {DEFAULT_TEMPLATE}, reasoning: {REASONING_TEMPLATE})."),
+    template: str = typer.Option(DEFAULT_TEMPLATE, help=f"Template to use for action prompts (default: {DEFAULT_TEMPLATE})."),
     timeout: int = typer.Option(60, help="Timeout in seconds for run (0 for no timeout)."),
     skip: bool = typer.Option(True, help="Auto-select single choices without asking agent."),
     debug: bool = typer.Option(False, help="Enable debug logging and output, remove terminal UI."),
@@ -154,23 +153,35 @@ def play(
 
 @app.command()
 def analyze(
-    metrics_file: Optional[Path] = typer.Option(None, help="Path to a specific quest run metrics file to analyze. If not provided, analyzes the latest benchmark results."),
+    quest: Optional[Path] = typer.Option(None, help="Path to a specific quest run metrics file (.jsonl) to analyze."),
+    benchmark: Optional[Path] = typer.Option(None, help="Path to a benchmark directory or specific benchmark file (.json) to analyze. If not provided, uses the latest benchmark results."),
     debug: bool = typer.Option(False, help="Enable debug logging and output."),
 ):
     """Analyze metrics from benchmark runs or specific quest runs.
 
     This command analyzes metrics, showing summary statistics and detailed analysis.
-    By default, it analyzes the latest benchmark results. To analyze a specific quest run,
-    provide the path to its metrics file.
+    You can either analyze a specific quest run (using --quest) or benchmark results (using --benchmark).
+    If neither is provided, it analyzes the latest benchmark results.
 
     Example:
         llm-quest analyze  # Analyze latest benchmark results
-        llm-quest analyze --metrics-file metrics/quest_run_20250217_144717.jsonl  # Analyze specific quest run
+        llm-quest analyze --quest metrics/quest_run_20250217_144717.jsonl  # Analyze specific quest run
+        llm-quest analyze --benchmark metrics/benchmarks/  # Analyze latest benchmark in directory
+        llm-quest analyze --benchmark metrics/benchmarks/benchmark_20250217_144717.json  # Analyze specific benchmark
     """
     try:
-        # If metrics file is provided, analyze as quest run
-        if metrics_file and metrics_file.suffix == '.jsonl':
-            results = analyze_quest_run(metrics_file, debug)
+        # Validate input - can't specify both
+        if quest and benchmark:
+            typer.echo("Cannot specify both --quest and --benchmark. Please choose one.", err=True)
+            raise typer.Exit(code=1)
+
+        # If quest file is provided, analyze as quest run
+        if quest:
+            if not quest.suffix == '.jsonl':
+                typer.echo("Quest metrics file must be a .jsonl file", err=True)
+                raise typer.Exit(code=1)
+
+            results = analyze_quest_run(quest, debug)
 
             # Print human-readable summary
             typer.echo("\nQuest Run Summary")
@@ -199,8 +210,23 @@ def analyze(
                     if step.get('metrics'):
                         typer.echo(f"  Metrics: {step['metrics']}")
         else:
-            # Default to analyzing benchmark results
-            analyze_benchmark(metrics_file, debug)
+            # Handle benchmark analysis
+            if benchmark:
+                # If benchmark is a directory, find latest file in it
+                if benchmark.is_dir():
+                    files = list(benchmark.glob("benchmark_*.json"))
+                    if not files:
+                        typer.echo(f"No benchmark files found in directory: {benchmark}", err=True)
+                        raise typer.Exit(code=1)
+                    # Sort by modification time in descending order
+                    files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+                    benchmark = files[0]
+                elif not benchmark.suffix == '.json':
+                    typer.echo("Benchmark file must be a .json file", err=True)
+                    raise typer.Exit(code=1)
+
+            # Analyze benchmark (will use latest if benchmark is None)
+            analyze_benchmark(benchmark, debug)
 
     except ValueError as e:
         typer.echo(str(e), err=True)
@@ -269,36 +295,6 @@ def benchmark(
         raise  # Re-raise typer.Exit without logging
     except Exception as e:
         typer.echo(f"Error during benchmark: {str(e)}", err=True)
-        raise typer.Exit(code=2)
-
-@app.command()
-def test(
-    quest: Path = typer.Option(DEFAULT_QUEST, help="Path to the QM quest file."),
-    debug: bool = typer.Option(False, help="Enable debug logging and output."),
-    model: str = typer.Option(DEFAULT_MODEL, help=f"Model for the LLM agent (choices: {', '.join(MODEL_CHOICES)})."),
-    template: str = typer.Option(DEFAULT_TEMPLATE, help=f"Template to use for action prompts (default: {DEFAULT_TEMPLATE}, reasoning: {REASONING_TEMPLATE})."),
-):
-    """Test a quest with specified agent (headless)"""
-    try:
-        log_manager.setup(debug)
-        log.info(f"Testing quest {quest} with model {model}")
-
-        result = run_quest_with_timeout(
-            quest_path=str(quest),
-            model=model,
-            debug=debug,
-            headless=True,
-            template=template,
-            timeout=60  # Use default timeout for tests
-        )
-
-        outcome = QuestOutcome[result['outcome']]
-        _handle_quest_outcome(outcome, "Quest test")
-
-    except typer.Exit:
-        raise
-    except Exception as e:
-        log.exception(f"Error during quest test: {e}")
         raise typer.Exit(code=2)
 
 if __name__ == "__main__":

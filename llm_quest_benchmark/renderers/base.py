@@ -1,10 +1,19 @@
 """Base interface for all renderers"""
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
+import time
 
 
 class BaseRenderer(ABC):
     """Base interface for all renderers"""
+
+    def _sleep_for_readability(self, seconds: float = 1.0) -> None:
+        """Sleep for specified duration to allow text to be read
+
+        Args:
+            seconds (float): Number of seconds to sleep
+        """
+        time.sleep(seconds)
 
     @abstractmethod
     def render_game_state(self, state: Dict[str, Any]) -> None:

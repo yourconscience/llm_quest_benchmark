@@ -19,15 +19,12 @@ def test_benchmark_e2e(caplog):
         agents=[
             AgentConfig(
                 model="gpt-4o-mini",
-                template="default.jinja",
-                temperature=0.3,
+                template="reasoning.jinja",
+                temperature=0.4,
                 skip_single=True
             ),
             AgentConfig(
                 model="random_choice",
-                template="default.jinja",
-                temperature=0.0,
-                skip_single=True
             )
         ],
         quest_timeout=20,

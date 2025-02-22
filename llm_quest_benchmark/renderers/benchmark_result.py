@@ -96,19 +96,20 @@ class BenchmarkResultRenderer(BaseRenderer):
         step_table.add_column("Avg Steps/Run", style="green")
 
         # Global stats
-        step_table.add_row(
-            "[bold]All Models[/]",
-            str(summary['steps']['total']),
-            f"{summary['steps']['average']:.1f}"
-        )
-
-        # Per-model stats
-        for model, stats in summary['models'].items():
+        if 'steps' in summary:
             step_table.add_row(
-                model,
-                str(stats['steps']['total']),
-                f"{stats['steps']['average']:.1f}"
+                "[bold]All Models[/]",
+                str(summary['steps']['total']),
+                f"{summary['steps']['average']:.1f}"
             )
+
+            # Per-model stats
+            for model, stats in summary['steps']['by_model'].items():
+                step_table.add_row(
+                    model,
+                    str(stats['total']),
+                    f"{stats['average']:.1f}"
+                )
 
         # Render both panels
         self.console.print(Panel(outcome_table, title="Benchmark Outcomes", expand=False))
@@ -177,27 +178,6 @@ class BenchmarkResultRenderer(BaseRenderer):
         self.render_config(data['config'])
         self.render_agents(data['agents'])
         self.render_summary(data['summary'], data['quests'])
-
-        # Add step metrics to quest details
-        self.console.print("\n[bold cyan]Step Metrics[/]")
-        self.console.print("=" * 80)
-
-        step_table = Table(box=box.ROUNDED)
-        step_table.add_column("Quest", style="cyan")
-        step_table.add_column("Model", style="magenta")
-        step_table.add_column("Steps Taken", style="green")
-        step_table.add_column("Outcome", style="yellow")
-
-        for quest in data['quests']:
-            for result in quest['results']:
-                step_table.add_row(
-                    quest['name'],
-                    result['model'],
-                    str(len(result.get('steps', []))),
-                    result['outcome']
-                )
-
-        self.console.print(step_table)
 
         # Existing quest details rendering
         self.console.print("\n[bold cyan]Quest Details[/]")

@@ -15,6 +15,10 @@ from llm_quest_benchmark.renderers.terminal import RichRenderer
 from llm_quest_benchmark.renderers.null import NoRenderer
 from llm_quest_benchmark.renderers.base import BaseRenderer
 
+# Configure logging
+logging.getLogger('quest').setLevel(logging.WARNING)
+logging.getLogger('LLMAgent').setLevel(logging.WARNING)
+
 def run_quest_with_timeout(
     quest_path: str,
     agent: QuestPlayer,
@@ -47,6 +51,8 @@ def run_quest_with_timeout(
     logger = logging.getLogger(__name__)
     if debug:
         logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
 
     try:
         logger.info(f"Starting quest {quest_name} with agent {agent}")
@@ -108,12 +114,14 @@ class QuestRunner:
             agent=str(self.agent)
         )
 
-        self.logger.debug("QuestRunner initialized with agent: %s", str(agent))
+        if debug:
+            self.logger.debug("QuestRunner initialized with agent: %s", str(agent))
 
     def initialize(self, quest: str) -> None:
         """Initialize environment and logger for a new quest"""
         try:
-            self.logger.debug("Initializing environment for quest: %s", quest)
+            if self.debug:
+                self.logger.debug("Initializing environment for quest: %s", quest)
             self.env = QMPlayerEnv(quest, language=DEFAULT_LANG, debug=self.debug)
             self.quest_logger.set_quest_file(quest)
             self.logger.info(f"Running quest {quest} with agent: {str(self.agent)}")
@@ -130,41 +138,49 @@ class QuestRunner:
         try:
             # Initialize environment and logger
             self.initialize(quest)
-            self.logger.debug("Environment initialized successfully")
+            if self.debug:
+                self.logger.debug("Environment initialized successfully")
 
             self.renderer.render_title()
 
             # Get initial state
             observation = self.env.reset()
-            self.logger.debug("Initial observation: %s", observation)
-            self.logger.debug("Initial state: %s", self.env.state)
+            if self.debug:
+                self.logger.debug("Initial state: %s", self.env.state)
 
             self.renderer.render_game_state(self.env.state)
 
             while True:
                 self.step_count += 1
-                self.logger.debug("Step %d: Processing action", self.step_count)
+                if self.debug:
+                    self.logger.debug("Step %d: Processing action", self.step_count)
 
                 # Check if there are any choices available
                 if not self.env.state['choices']:
-                    self.logger.debug("No more choices available - quest ended")
+                    if self.debug:
+                        self.logger.debug("No more choices available - quest ended")
                     if self.env and self.env.state:
                         self.agent.on_game_end(self.env.state)
                     return QuestOutcome.FAILURE
 
                 # Get agent's action
                 action = self.agent.get_action(observation, self.env.state['choices'])
-                self.logger.debug("Agent selected action: %s (type: %s)", action, type(action))
+                if self.debug:
+                    self.logger.debug("Agent selected action: %s", action)
 
                 try:
                     # Take action in environment
                     step_result = self.env.step(action)
-                    self.logger.debug("Raw step result: %s", step_result)
-
                     observation, done, success, info = step_result
-                    self.logger.debug("Step result unpacked - observation: %s, done: %s, success: %s, info: %s",
-                                 observation[:100] + "..." if observation and len(observation) > 100 else observation,
-                                 done, success, info)
+
+                    # If this is an LLM agent, get its response for rendering
+                    llm_response = None
+                    if isinstance(self.agent, LLMAgent) and self.agent.get_last_response():
+                        llm_response = str(self.agent.get_last_response())
+                        # Add LLM response to state for rendering
+                        self.env.state['llm_response'] = llm_response
+                    elif self.step_count != 1:
+                        raise Exception(f"No LLM response. History: {self.agent.history}")
 
                     self.renderer.render_game_state(self.env.state)
 
@@ -176,17 +192,19 @@ class QuestRunner:
                             response=action,
                             reward=info.get('reward', 0),
                             metrics=info,
-                            llm_response=None
+                            llm_response=llm_response
                         )
 
                     if done:
                         # Quest completed
                         if success:
-                            self.logger.debug("Quest completed successfully!")
+                            if self.debug:
+                                self.logger.debug("Quest completed successfully!")
                             self.agent.on_game_end(self.env.state)
                             return QuestOutcome.SUCCESS
                         else:
-                            self.logger.debug("Quest failed.")
+                            if self.debug:
+                                self.logger.debug("Quest failed.")
                             self.agent.on_game_end(self.env.state)
                             return QuestOutcome.FAILURE
 
