@@ -1,8 +1,9 @@
 """End-to-end tests for quest CLI"""
 import logging
 import pytest
+from typing import Any
 
-from llm_quest_benchmark.constants import DEFAULT_QUEST, STUB_TEMPLATE
+from llm_quest_benchmark.constants import DEFAULT_QUEST, DEFAULT_TEMPLATE
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.environments.state import QuestOutcome
@@ -19,11 +20,20 @@ def test_quest_run_with_llm(caplog):
     # Create LLM agent
     agent = create_agent(
         model="gpt-4o-mini",
-        template=STUB_TEMPLATE,
+        template=DEFAULT_TEMPLATE,
         skip_single=True,
         debug=True
     )  # Use faster model for tests
     assert agent is not None, "Failed to create agent"
+
+    # Mock callback for testing
+    def mock_callback(event: str, data: Any) -> None:
+        if event == "progress":
+            caplog.info(f"Progress update - Step {data['step']}: {data['message']}")
+        elif event == "game_state":
+            caplog.info(f"Game state update - Step {data.step}")
+        elif event == "error":
+            caplog.error(f"Error: {data}")
 
     # Run quest with real LLM agent
     result = run_quest_with_timeout(
@@ -31,6 +41,7 @@ def test_quest_run_with_llm(caplog):
         agent=agent,
         timeout=TIMEOUT,  # Match the test timeout
         debug=True,  # Enable debug logging
+        callbacks=[mock_callback]
     )
 
     # Convert string outcome back to enum
@@ -53,12 +64,22 @@ def test_random_agent_on_test_quest(caplog):
     agent = create_agent("random_choice", skip_single=True, debug=True)
     assert agent is not None, "Failed to create random agent"
 
+    # Mock callback for testing
+    def mock_callback(event: str, data: Any) -> None:
+        if event == "progress":
+            caplog.info(f"Progress update - Step {data['step']}: {data['message']}")
+        elif event == "game_state":
+            caplog.info(f"Game state update - Step {data.step}")
+        elif event == "error":
+            caplog.error(f"Error: {data}")
+
     # Run quest with random agent
     result = run_quest_with_timeout(
         quest_path=str(DEFAULT_QUEST),
         agent=agent,
         debug=True,  # Enable debug logging
         timeout=TIMEOUT,  # Match the test timeout
+        callbacks=[mock_callback]
     )
 
     # Convert string outcome back to enum
