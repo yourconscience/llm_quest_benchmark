@@ -3,10 +3,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Observe and analyze LLM agents decision-making through Space Rangers text adventures! 👾🚀📊
+Disclaimer: this project was created for fun with 99% code written by cursor's AI agent mode -- there could be some inconsistencies in the code.
 
 ## Features
 
-- 🔥 **Modern Web UI**: Beautiful Flask-based interface with Bootstrap 5
+- 🔥 **Modern Web UI**: Check out the demo [here](https://cf82-94-43-167-97.ngrok-free.app)
 - 👾 **Quest Environment**: Classic Space Rangers text quests act as single-agent environments
 - 🤖 **LLM Agents**: Simple yet customizable via prompt templates and optional thinking
 - ⭐️ **Latest LLM Providers**: OpenAI, Anthropic, Deepseek, OpenRouter models are supported

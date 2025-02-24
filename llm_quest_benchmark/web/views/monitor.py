@@ -88,6 +88,7 @@ def run_quest():
         model = data.get('model', DEFAULT_MODEL)
         timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
         template = data.get('template', DEFAULT_TEMPLATE)
+        temperature = float(data.get('temperature', DEFAULT_TEMPERATURE))
         logger.debug(f"Quest path: {quest_path}")
 
         # Create run record
@@ -97,6 +98,7 @@ def run_quest():
             agent_config=json.dumps({
                 'model': model,
                 'template': template,
+                'temperature': temperature,
                 'debug': True
             })
         )
@@ -109,7 +111,7 @@ def run_quest():
             model=model,
             system_template=SYSTEM_ROLE_TEMPLATE,
             action_template=template + '.jinja',
-            temperature=DEFAULT_TEMPERATURE,
+            temperature=temperature,
             skip_single=True,
             debug=True
         )
@@ -274,3 +276,26 @@ def get_run(run_id):
         'run': run.to_dict(),
         'steps': [step.to_dict() for step in steps]
     })
+
+@bp.route('/template/<template_name>')
+@handle_errors
+def get_template_content(template_name):
+    """Get content of a template file"""
+    try:
+        template_path = PROMPT_TEMPLATES_DIR / f"{template_name}.jinja"
+        if not template_path.exists():
+            return jsonify({'success': False, 'error': 'Template not found'}), 404
+
+        with open(template_path, 'r') as f:
+            content = f.read()
+
+        return jsonify({
+            'success': True,
+            'content': content
+        })
+    except Exception as e:
+        logger.error(f"Error reading template: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400

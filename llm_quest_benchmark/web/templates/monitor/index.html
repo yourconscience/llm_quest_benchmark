@@ -48,11 +48,25 @@
                         <label for="templateSelect" class="form-label">Prompt Template</label>
                         <select class="form-select" id="templateSelect" required>
                             {% for template in templates %}
+                            {% if template != 'system_role' %}
                             <option value="{{ template }}" {% if template == default_template %}selected{% endif %}>
                                 {{ template }}
                             </option>
+                            {% endif %}
                             {% endfor %}
                         </select>
+                    </div>
+
+                    <!-- Template Content -->
+                    <div class="mb-3">
+                        <label class="form-label">Template Content</label>
+                        <pre id="templateContent" class="bg-light p-2 rounded" style="max-height: 200px; overflow-y: auto; font-size: 12px;"></pre>
+                    </div>
+
+                    <!-- Temperature -->
+                    <div class="mb-3">
+                        <label for="temperature" class="form-label">Temperature</label>
+                        <input type="number" class="form-control" id="temperature" value="{{ default_temperature }}" min="0" max="2" step="0.1" required>
                     </div>
 
                     <!-- Timeout -->
@@ -99,16 +113,6 @@
         </div>
     </div>
 </div>
-
-<!-- Footer -->
-<footer class="footer mt-auto py-3 bg-light">
-    <div class="container text-center">
-        <span class="text-muted">© 2024 LLM Quest Benchmark</span>
-        <a href="https://github.com/conscience-still/llm_quest_benchmark" class="text-decoration-none ms-2" target="_blank">
-            <i class="bi bi-github"></i>
-        </a>
-    </div>
-</footer>
 {% endblock %}
 
 {% block scripts %}
@@ -124,6 +128,32 @@
         debugOutput.scrollTop = debugOutput.scrollHeight;
     }
 
+    // Load template content
+    async function loadTemplateContent() {
+        const templateSelect = document.getElementById('templateSelect');
+        const templateContent = document.getElementById('templateContent');
+
+        try {
+            const response = await fetch(`/monitor/template/${templateSelect.value}`);
+            const data = await response.json();
+
+            if (data.success) {
+                templateContent.textContent = data.content;
+            } else {
+                templateContent.textContent = 'Error loading template content';
+            }
+        } catch (error) {
+            console.error('Error loading template:', error);
+            templateContent.textContent = 'Error loading template content';
+        }
+    }
+
+    // Load initial template content
+    loadTemplateContent();
+
+    // Update template content when selection changes
+    document.getElementById('templateSelect').addEventListener('change', loadTemplateContent);
+
     // Handle form submission
     document.getElementById('questForm').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -134,7 +164,8 @@
             quest: document.getElementById('questSelect').value,
             model: document.getElementById('modelSelect').value,
             template: document.getElementById('templateSelect').value,
-            timeout: parseInt(document.getElementById('timeout').value)
+            timeout: parseInt(document.getElementById('timeout').value),
+            temperature: parseFloat(document.getElementById('temperature').value)
         };
         appendDebugLog(`Starting quest: ${formData.quest}`);
         appendDebugLog(`Configuration: ${JSON.stringify(formData, null, 2)}`);
