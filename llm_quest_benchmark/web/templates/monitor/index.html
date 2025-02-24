@@ -82,46 +82,19 @@
                 <div id="questProgress" class="d-none">
                     <div class="alert alert-info mb-3">
                         <div class="d-flex align-items-center">
-                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <div class="spinner-border text-primary me-3" role="status">
                                 <span class="visually-hidden">Running...</span>
                             </div>
                             <div>
-                                <strong>Running Quest:</strong>
-                                <span id="currentQuestInfo"></span>
+                                <h5 class="mb-1">Running Quest</h5>
+                                <div id="currentQuestInfo" class="text-muted small"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Output Tabs -->
-                <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link active" data-bs-toggle="tab" href="#stepByStep">
-                            <i class="fas fa-list-ol me-1"></i>Step by Step
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" data-bs-toggle="tab" href="#fullStory">
-                            <i class="fas fa-book me-1"></i>Full Story
-                        </a>
-                    </li>
-                </ul>
-
-                <div class="tab-content mt-3">
-                    <!-- Step by Step View -->
-                    <div class="tab-pane fade show active" id="stepByStep">
-                        <div id="stepOutput" class="accordion">
-                            <!-- Steps will be added here dynamically -->
-                        </div>
-                    </div>
-
-                    <!-- Full Story View -->
-                    <div class="tab-pane fade" id="fullStory">
-                        <div id="storyOutput" class="markdown-body">
-                            <!-- Story will be added here dynamically -->
-                        </div>
-                    </div>
-                </div>
+                <!-- Debug Output -->
+                <pre id="debugOutput" class="bg-dark text-light p-3 rounded" style="max-height: 600px; overflow-y: auto; font-size: 14px;"></pre>
             </div>
         </div>
     </div>
@@ -130,31 +103,26 @@
 
 {% block scripts %}
 <script>
-    // Initialize Monaco Editor
-    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
-
     // Update temperature value display
     document.getElementById('temperatureRange').addEventListener('input', function(e) {
         document.getElementById('temperatureValue').textContent = e.target.value;
     });
 
-    // Ensure marked is available
-    function safeMarkdownParse(text) {
-        if (typeof marked === 'undefined') {
-            console.warn('Marked library not loaded, displaying raw text');
-            return text;
-        }
-        try {
-            return marked.parse(text);
-        } catch (error) {
-            console.error('Error parsing markdown:', error);
-            return text;
-        }
+    // Global state
+    let debugLog = '';
+
+    function appendDebugLog(text) {
+        debugLog += text + '\n';
+        document.getElementById('debugOutput').textContent = debugLog;
+        // Auto-scroll to bottom
+        const debugOutput = document.getElementById('debugOutput');
+        debugOutput.scrollTop = debugOutput.scrollHeight;
     }
 
     // Handle form submission
     document.getElementById('questForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+        debugLog = ''; // Clear debug log
         console.log('Form submitted');
 
         const formData = {
@@ -163,23 +131,18 @@
             temperature: parseFloat(document.getElementById('temperatureRange').value),
             template: document.getElementById('templateSelect').value
         };
-        console.log('Form data:', formData);
+        appendDebugLog(`Starting quest: ${formData.quest}`);
+        appendDebugLog(`Configuration: ${JSON.stringify(formData, null, 2)}`);
 
         try {
             // Show progress with quest info
             const questProgress = document.getElementById('questProgress');
             const questInfo = document.getElementById('currentQuestInfo');
             questProgress.classList.remove('d-none');
-            questInfo.textContent = ` ${formData.quest} with ${formData.model} agent (${formData.template} template)`;
-            console.log('Progress bar shown with quest info');
-
-            // Clear previous output
-            document.getElementById('stepOutput').innerHTML = '';
-            document.getElementById('storyOutput').innerHTML = '';
-            console.log('Previous output cleared');
+            questInfo.textContent = `${formData.quest} with ${formData.model} agent (${formData.template} template)`;
 
             // Run quest
-            console.log('Sending request to /monitor/run');
+            appendDebugLog('Sending request to run quest...');
             const response = await fetch('/monitor/run', {
                 method: 'POST',
                 headers: {
@@ -187,89 +150,39 @@
                 },
                 body: JSON.stringify(formData)
             });
-            console.log('Received response:', response);
 
             const result = await response.json();
-            console.log('Response data:', result);
+            appendDebugLog(`Response: ${JSON.stringify(result, null, 2)}`);
 
             if (result.success) {
-                console.log('Quest run successful, fetching details');
-                // Load run details
-                const runDetails = await fetch(`/monitor/runs/${result.run_id}`).then(r => r.json());
-                console.log('Run details:', runDetails);
-                displayRun(runDetails);
+                currentRunId = result.run_id;
+
+                // Display all steps
+                result.steps.forEach((state, index) => {
+                    appendDebugLog(`\nStep ${state.step}:`);
+                    appendDebugLog(`Location: ${state.location_id}`);
+                    appendDebugLog(`Observation: ${state.observation}`);
+                    if (state.action) {
+                        appendDebugLog(`Action: ${state.action}`);
+                        appendDebugLog(`LLM Response: ${JSON.stringify(state.llm_response, null, 2)}`);
+                    }
+                    if (state.choices) {
+                        appendDebugLog(`Choices: ${JSON.stringify(state.choices, null, 2)}`);
+                    }
+                });
+
+                appendDebugLog(`\nOutcome: ${result.outcome}`);
             } else {
                 throw new Error(result.error);
             }
         } catch (error) {
             console.error('Error running quest:', error);
+            appendDebugLog(`Error: ${error.message}`);
             alert(`Error running quest: ${error.message}`);
         } finally {
             document.getElementById('questProgress').classList.add('d-none');
-            console.log('Progress bar hidden');
+            appendDebugLog('\nQuest run completed.');
         }
     });
-
-    function displayRun(data) {
-        console.log('Displaying run data:', data);
-        const stepOutput = document.getElementById('stepOutput');
-        const storyOutput = document.getElementById('storyOutput');
-        let story = '';
-
-        // Display outcome
-        if (data.run.outcome === 'SUCCESS') {
-            stepOutput.insertAdjacentHTML('beforebegin',
-                '<div class="alert alert-success"><i class="fas fa-trophy me-2"></i>Quest completed successfully!</div>');
-        } else if (data.run.outcome === 'FAILURE') {
-            stepOutput.insertAdjacentHTML('beforebegin',
-                '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>Quest failed!</div>');
-        }
-
-        // Display steps
-        data.steps.forEach((step, index) => {
-            console.log(`Processing step ${index}:`, step);
-            // Add to step view
-            const stepHtml = `
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step${index}">
-                            Step ${step.step} - ${step.location_id}
-                        </button>
-                    </h2>
-                    <div id="step${index}" class="accordion-collapse collapse">
-                        <div class="accordion-body">
-                            <h6>Observation:</h6>
-                            <p>${step.observation}</p>
-                            ${step.choices ? `
-                                <h6>Choices:</h6>
-                                <ul>
-                                    ${step.choices.map(c => `<li>${c.text}</li>`).join('')}
-                                </ul>
-                            ` : ''}
-                            ${step.action ? `
-                                <h6>Action:</h6>
-                                <p>${step.action}</p>
-                            ` : ''}
-                            ${step.llm_response ? `
-                                <h6>Agent Response:</h6>
-                                <pre><code>${JSON.stringify(step.llm_response, null, 2)}</code></pre>
-                            ` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-            stepOutput.insertAdjacentHTML('beforeend', stepHtml);
-
-            // Add to story
-            story += `${step.observation}\n\n`;
-            if (step.action) {
-                story += `*Agent chose: ${step.action}*\n\n`;
-            }
-        });
-
-        // Display story using marked for Markdown rendering with error handling
-        console.log('Rendering story:', story);
-        storyOutput.innerHTML = safeMarkdownParse(story);
-    }
 </script>
 {% endblock %}

@@ -118,6 +118,23 @@ class QMBridge:
             # Parse response and extract state
             try:
                 response = json.loads(initial_raw)
+                if 'state' not in response:
+                    raise RuntimeError("Invalid response format: missing 'state' field")
+
+                state = response['state']
+                initial_state = QMBridgeState(
+                    location_id=str(response['saving']['locationId']),
+                    text=state['text'],
+                    choices=[{'id': str(c['jumpId']), 'text': c['text']} for c in state['choices'] if c['active']],
+                    reward=0.0,  # Initial state has no reward
+                    game_ended=state['gameState'] != 'running'
+                )
+
+                if not initial_state.choices:
+                    raise RuntimeError("No valid choices in initial state")
+
+                self.state_history.append(initial_state)
+                return initial_state
             except json.JSONDecodeError as e:
                 raise RuntimeError(f"Invalid JSON response from TypeScript bridge: {e}")
 

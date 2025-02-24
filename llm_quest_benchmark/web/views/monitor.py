@@ -6,6 +6,8 @@ import json
 from datetime import datetime
 import logging
 import os
+import random
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +20,15 @@ from llm_quest_benchmark.constants import (
     SYSTEM_ROLE_TEMPLATE,
     PROMPT_TEMPLATES_DIR,
 )
-from llm_quest_benchmark.core.runner import run_quest_with_timeout
+from llm_quest_benchmark.environments.qm import QMPlayerEnv as QuestEnvironment
 from llm_quest_benchmark.agents.agent_factory import create_agent
+from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.environments.state import QuestOutcome
 from ..models.database import db, Run, Step
-from ..utils.errors import handle_errors, validate_quest_file, validate_model
+from ..utils.errors import handle_errors
+
+# Initialize TypeScript bridge
+os.environ['NODE_OPTIONS'] = '--openssl-legacy-provider'
 
 bp = Blueprint('monitor', __name__, url_prefix='/monitor')
 
@@ -46,7 +52,7 @@ def get_available_templates():
     logger.debug(f"Available templates: {templates}")
     return sorted(templates)  # Sort for consistent display
 
-@bp.route('/')
+@bp.route('')
 @handle_errors
 def index():
     """Quest runner and monitor page"""
@@ -66,7 +72,7 @@ def index():
 @bp.route('/run', methods=['POST'])
 @handle_errors
 def run_quest():
-    """Run a quest with specified configuration"""
+    """Create and start a new quest run"""
     logger.debug("Received quest run request")
     if not request.is_json:
         logger.error("Request is not JSON")
@@ -76,111 +82,173 @@ def run_quest():
     logger.debug(f"Request data: {data}")
 
     try:
-        # Extract and validate quest configuration
+        # Extract quest configuration
         quest_name = data.get('quest')
         quest_path = f"quests/{quest_name}"
-        logger.debug(f"Quest path: {quest_path}")
-        validate_quest_file(quest_path)
-
-        # Extract and validate agent configuration
         model = data.get('model', DEFAULT_MODEL)
-        validate_model(model)
         temperature = float(data.get('temperature', DEFAULT_TEMPERATURE))
         template = data.get('template', DEFAULT_TEMPLATE)
-        logger.debug(f"Agent config - model: {model}, temperature: {temperature}, template: {template}")
+        logger.debug(f"Quest path: {quest_path}")
 
-        # Create agent with CLI-compatible configuration
-        logger.info(f"Starting quest '{quest_name}' with {model} agent using {template} template")
+        # Create run record
+        run = Run(
+            quest_name=quest_name,
+            agent_id=model,
+            agent_config=json.dumps({
+                'model': model,
+                'temperature': temperature,
+                'template': template,
+                'debug': True
+            })
+        )
+        db.session.add(run)
+        db.session.commit()
+        logger.debug(f"Run record created with ID: {run.id}")
+
+        # Create agent
         agent = create_agent(
             model=model,
+            system_template=SYSTEM_ROLE_TEMPLATE,
+            action_template=template + '.jinja',
             temperature=temperature,
-            system_template=SYSTEM_ROLE_TEMPLATE,  # Use system role template for consistency
-            action_template=f"{template}.jinja",  # Add .jinja only for action template
-            skip_single=True,  # Match CLI default
-            debug=True  # Enable debug mode for more logging
+            skip_single=True,
+            debug=True
         )
-        logger.debug(f"Agent created: {agent}")
 
-        try:
-            # Create run record
-            logger.debug("Creating run record")
-            run = Run(
-                quest_name=quest_name,
-                agent_id=model,  # Add agent_id to match CLI
-                agent_config=json.dumps({
-                    'model': model,
-                    'temperature': temperature,
-                    'template': template,
-                    'skip_single': True,
-                    'debug': True
-                })
-            )
-            db.session.add(run)
-            db.session.commit()
-            logger.debug(f"Run record created with ID: {run.id}")
+        # Run quest using the runner
+        steps = []
+        def step_callback(event: str, data: Any) -> None:
+            if event == "game_state":
+                step_data = {
+                    'step': data.step,
+                    'location_id': data.location_id,
+                    'observation': data.observation,
+                    'choices': data.choices,
+                    'action': data.action,
+                    'llm_response': data.llm_response
+                }
+                steps.append(step_data)
 
-            def store_step(event: str, step_data=None):
-                """Store step in database"""
-                logger.debug(f"Received event: {event}")
-                if event != "game_state" or not step_data:
-                    logger.debug(f"Skipping event {event} - no step data or not game_state")
-                    return
+                # Store in database
+                step = Step(
+                    run_id=run.id,
+                    step=data.step,
+                    location_id=data.location_id,
+                    observation=data.observation,
+                    choices=json.dumps(data.choices),
+                    action=data.action
+                )
+                db.session.add(step)
+                db.session.commit()
 
-                try:
-                    logger.debug(f"Storing step data: {step_data}")
-                    step = Step(
-                        run_id=run.id,
-                        step=step_data.step,
-                        location_id=step_data.location_id,
-                        observation=step_data.observation,
-                        choices=json.dumps([c.dict() for c in step_data.choices]) if step_data.choices else None,
-                        action=step_data.action,
-                        llm_response=json.dumps(step_data.llm_response.dict()) if step_data.llm_response else None
-                    )
-                    db.session.add(step)
-                    db.session.commit()
-                    logger.debug(f"Step stored successfully: {step.id}")
-                except Exception as e:
-                    logger.error(f"Failed to store step: {e}", exc_info=True)
+        # Run quest
+        outcome = run_quest_with_timeout(
+            quest_path=quest_path,
+            agent=agent,
+            timeout=DEFAULT_QUEST_TIMEOUT,
+            debug=True,
+            callbacks=[step_callback]
+        )
 
-            # Run quest using the CLI's run_quest_with_timeout
-            logger.info(f"Starting quest run: {quest_path}")
-            outcome = run_quest_with_timeout(
-                quest_path=quest_path,
-                agent=agent,
-                timeout=DEFAULT_QUEST_TIMEOUT,
-                callbacks=[store_step],
-                debug=True  # Enable debug mode for more logging
-            )
-            logger.info(f"Quest run completed with outcome: {outcome}")
+        if outcome is None:
+            run.outcome = 'TIMEOUT'
+        else:
+            run.outcome = 'SUCCESS' if outcome == QuestOutcome.SUCCESS else 'FAILURE'
 
-            # Update run with outcome
-            run.end_time = datetime.utcnow()
-            run.outcome = outcome.name if isinstance(outcome, QuestOutcome) else str(outcome)
-            db.session.commit()
-            logger.debug(f"Run record updated with outcome: {run.outcome}")
+        run.end_time = datetime.utcnow()
+        db.session.commit()
 
-            return jsonify({
-                'success': True,
-                'run_id': run.id,
-                'outcome': run.outcome
-            })
-
-        except Exception as e:
-            # Rollback on error
-            db.session.rollback()
-            logger.error(f"Error running quest: {e}", exc_info=True)
-            return jsonify({
-                'success': False,
-                'error': str(e)
-            }), 500
+        return jsonify({
+            'success': True,
+            'run_id': run.id,
+            'steps': steps,
+            'outcome': run.outcome
+        })
 
     except Exception as e:
         logger.error(f"Error in run_quest: {e}", exc_info=True)
         return jsonify({
             'success': False,
             'error': str(e)
-        }), 500
+        }), 400
+
+@bp.route('/step/<int:run_id>', methods=['POST'])
+@handle_errors
+def take_step(run_id):
+    """Take a step in an existing quest run"""
+    logger.debug(f"Received step request for run {run_id}")
+    if not request.is_json:
+        logger.error("Request is not JSON")
+        return jsonify({'success': False, 'error': 'Request must be JSON'}), 400
+
+    data = request.get_json()
+    choice_num = data.get('choice')
+    if choice_num is None:
+        return jsonify({'success': False, 'error': 'No choice provided'}), 400
+
+    try:
+        # Get run and verify it exists
+        run = Run.query.get_or_404(run_id)
+        if run.end_time:
+            return jsonify({'success': False, 'error': 'Quest run already completed'}), 400
+
+        # Get last step
+        last_step = Step.query.filter_by(run_id=run_id).order_by(Step.step.desc()).first()
+        if not last_step:
+            return jsonify({'success': False, 'error': 'No steps found for run'}), 400
+
+        # Initialize environment
+        quest_path = f"quests/{run.quest_name}"
+        env = QuestEnvironment(quest_path, debug=True)
+
+        try:
+            # Start game and replay steps to current state
+            env.reset()
+            for step in Step.query.filter_by(run_id=run_id).order_by(Step.step).all():
+                if step.action:
+                    env.step(int(step.action))
+
+            # Take new step
+            new_state = env.step(int(choice_num))
+
+            # Store step
+            step = Step(
+                run_id=run_id,
+                step=last_step.step + 1,
+                location_id=new_state['location_id'],
+                observation=new_state['text'],
+                choices=json.dumps(new_state['choices']),
+                action=str(choice_num)
+            )
+            db.session.add(step)
+
+            # Update run if game ended
+            if new_state['game_ended']:
+                run.end_time = datetime.utcnow()
+                run.outcome = 'SUCCESS'
+
+            db.session.commit()
+
+            return jsonify({
+                'success': True,
+                'state': {
+                    'step': step.step,
+                    'location_id': new_state['location_id'],
+                    'observation': new_state['text'],
+                    'choices': new_state['choices'],
+                    'game_ended': new_state['game_ended']
+                }
+            })
+
+        finally:
+            env.close()
+
+    except Exception as e:
+        logger.error(f"Error in take_step: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
 
 @bp.route('/runs')
 @handle_errors

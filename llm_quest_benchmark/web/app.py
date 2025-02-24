@@ -63,15 +63,6 @@ def create_app(test_config=None):
         """Redirect root to monitor page"""
         return redirect('/monitor')
 
-    @app.before_request
-    def remove_trailing_slashes():
-        """Remove trailing slashes from URLs"""
-        if request.path != '/' and request.path.endswith('/'):
-            return redirect(request.path.rstrip('/'), code=302)
-
-    # Configure URL generation
-    app.url_map.strict_slashes = False
-
     return app
 
 def main():

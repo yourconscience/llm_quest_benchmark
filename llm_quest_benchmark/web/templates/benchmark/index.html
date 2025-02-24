@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Benchmark - LLM Quest Benchmark{% endblock %}
+{% block title %}Quest Benchmark - LLM Quest Benchmark{% endblock %}
 
 {% block head %}
 <!-- Monaco Editor -->
@@ -8,6 +8,19 @@
 {% endblock %}
 
 {% block content %}
+<div class="container py-5">
+    <div class="text-center">
+        <h1 class="display-4 mb-4">Quest Benchmark</h1>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Benchmarking is currently only available in CLI mode.
+            <br><br>
+            Please use the command line interface to run benchmarks:
+            <pre class="mt-3 text-start bg-dark text-light p-3 rounded">llm-quest benchmark [options]</pre>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <!-- Benchmark Configuration -->
     <div class="col-md-6">
