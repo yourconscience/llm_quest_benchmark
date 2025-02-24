@@ -86,7 +86,7 @@ def run_quest():
         quest_name = data.get('quest')
         quest_path = f"quests/{quest_name}"
         model = data.get('model', DEFAULT_MODEL)
-        temperature = float(data.get('temperature', DEFAULT_TEMPERATURE))
+        timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
         template = data.get('template', DEFAULT_TEMPLATE)
         logger.debug(f"Quest path: {quest_path}")
 
@@ -96,7 +96,6 @@ def run_quest():
             agent_id=model,
             agent_config=json.dumps({
                 'model': model,
-                'temperature': temperature,
                 'template': template,
                 'debug': True
             })
@@ -110,7 +109,7 @@ def run_quest():
             model=model,
             system_template=SYSTEM_ROLE_TEMPLATE,
             action_template=template + '.jinja',
-            temperature=temperature,
+            temperature=DEFAULT_TEMPERATURE,
             skip_single=True,
             debug=True
         )
@@ -145,7 +144,7 @@ def run_quest():
         outcome = run_quest_with_timeout(
             quest_path=quest_path,
             agent=agent,
-            timeout=DEFAULT_QUEST_TIMEOUT,
+            timeout=timeout,
             debug=True,
             callbacks=[step_callback]
         )

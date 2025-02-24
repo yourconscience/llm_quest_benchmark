@@ -3,47 +3,28 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 from pathlib import Path
 import logging
 import os
-from llm_quest_benchmark.web.models.database import db
 
 # Set working directory to workspace root
 workspace_root = Path(__file__).parent.parent.parent
-os.chdir(workspace_root)
+os.chdir(str(workspace_root))
 
-# Set NODE_OPTIONS for OpenSSL compatibility
-if 'NODE_OPTIONS' not in os.environ:
-    os.environ['NODE_OPTIONS'] = '--openssl-legacy-provider'
-
-from llm_quest_benchmark.core.logging import LogManager
-
-# Initialize logging
-log_manager = LogManager()
-logger = log_manager.get_logger()
-
-def create_app(test_config=None):
+def create_app():
     """Create and configure the Flask application"""
-    app = Flask(__name__,
-                instance_relative_config=True,
-                template_folder='templates',
-                static_folder='static')
+    app = Flask(__name__)
 
-    # Default configuration
-    app.config.from_mapping(
-        SECRET_KEY='dev',
-        SQLALCHEMY_DATABASE_URI=f'sqlite:///{os.path.join(app.instance_path, "llm_quest.sqlite")}',
-        SQLALCHEMY_TRACK_MODIFICATIONS=False
-    )
+    # Configure SQLAlchemy
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{workspace_root}/instance/llm_quest.sqlite'
 
-    if test_config is not None:
-        # Load test config if passed in
-        app.config.update(test_config)
-
-    # Ensure the instance folder exists
+    # Ensure instance folder exists
+    instance_path = workspace_root / 'instance'
     try:
-        os.makedirs(app.instance_path)
+        instance_path.mkdir(parents=True, exist_ok=True)
     except OSError:
         pass
 
     # Initialize database
+    from .models.database import db
     db.init_app(app)
     with app.app_context():
         db.create_all()
@@ -57,18 +38,18 @@ def create_app(test_config=None):
     app.register_blueprint(benchmark_bp)
     app.register_blueprint(analyze_bp)
 
-    # Register index route
     @app.route('/')
     def index():
-        """Redirect root to monitor page"""
-        return redirect('/monitor')
+        return redirect(url_for('monitor.index'))
 
     return app
 
 def main():
-    """Run the application"""
+    """Run the Flask application"""
     app = create_app()
-    app.run(debug=True)
+    port = 5000
+    app.logger.info(f'Starting server at http://127.0.0.1:{port}')
+    app.run(port=port)
 
 if __name__ == '__main__':
     main()

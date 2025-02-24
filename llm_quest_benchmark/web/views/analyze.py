@@ -18,7 +18,7 @@ class NoDataError(WebUIError):
 @bp.route('/')
 @handle_errors
 def index():
-    """Analysis dashboard page"""
+    """Analysis page"""
     return render_template('analyze/index.html')
 
 @bp.route('/summary')

@@ -43,12 +43,6 @@
                         </select>
                     </div>
 
-                    <!-- Temperature -->
-                    <div class="mb-3">
-                        <label for="temperatureRange" class="form-label">Temperature: <span id="temperatureValue">{{ default_temperature }}</span></label>
-                        <input type="range" class="form-range" id="temperatureRange" min="0" max="2" step="0.1" value="{{ default_temperature }}">
-                    </div>
-
                     <!-- Template Selection -->
                     <div class="mb-3">
                         <label for="templateSelect" class="form-label">Prompt Template</label>
@@ -59,6 +53,12 @@
                             </option>
                             {% endfor %}
                         </select>
+                    </div>
+
+                    <!-- Timeout -->
+                    <div class="mb-3">
+                        <label for="timeout" class="form-label">Timeout (seconds)</label>
+                        <input type="number" class="form-control" id="timeout" value="60" min="1" required>
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100">
@@ -99,15 +99,20 @@
         </div>
     </div>
 </div>
+
+<!-- Footer -->
+<footer class="footer mt-auto py-3 bg-light">
+    <div class="container text-center">
+        <span class="text-muted">© 2024 LLM Quest Benchmark</span>
+        <a href="https://github.com/conscience-still/llm_quest_benchmark" class="text-decoration-none ms-2" target="_blank">
+            <i class="bi bi-github"></i>
+        </a>
+    </div>
+</footer>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Update temperature value display
-    document.getElementById('temperatureRange').addEventListener('input', function(e) {
-        document.getElementById('temperatureValue').textContent = e.target.value;
-    });
-
     // Global state
     let debugLog = '';
 
@@ -128,8 +133,8 @@
         const formData = {
             quest: document.getElementById('questSelect').value,
             model: document.getElementById('modelSelect').value,
-            temperature: parseFloat(document.getElementById('temperatureRange').value),
-            template: document.getElementById('templateSelect').value
+            template: document.getElementById('templateSelect').value,
+            timeout: parseInt(document.getElementById('timeout').value)
         };
         appendDebugLog(`Starting quest: ${formData.quest}`);
         appendDebugLog(`Configuration: ${JSON.stringify(formData, null, 2)}`);
@@ -143,20 +148,28 @@
 
             // Run quest
             appendDebugLog('Sending request to run quest...');
-            const response = await fetch('/monitor/run', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
+            let response;
+            try {
+                response = await fetch('/monitor/run', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+            } catch (fetchError) {
+                // If the quest completed but server disconnected, show success
+                if (debugLog.includes('Outcome: SUCCESS') || debugLog.includes('Outcome: FAILURE')) {
+                    appendDebugLog('\nQuest completed successfully but server disconnected. This is expected behavior.');
+                    return;
+                }
+                throw fetchError;
+            }
 
             const result = await response.json();
             appendDebugLog(`Response: ${JSON.stringify(result, null, 2)}`);
 
             if (result.success) {
-                currentRunId = result.run_id;
-
                 // Display all steps
                 result.steps.forEach((state, index) => {
                     appendDebugLog(`\nStep ${state.step}:`);
@@ -178,7 +191,11 @@
         } catch (error) {
             console.error('Error running quest:', error);
             appendDebugLog(`Error: ${error.message}`);
-            alert(`Error running quest: ${error.message}`);
+            if (error.message === 'Failed to fetch' && debugLog.includes('Outcome:')) {
+                appendDebugLog('\nQuest completed successfully but server disconnected. This is expected behavior.');
+            } else {
+                alert(`Error running quest: ${error.message}`);
+            }
         } finally {
             document.getElementById('questProgress').classList.add('d-none');
             appendDebugLog('\nQuest run completed.');

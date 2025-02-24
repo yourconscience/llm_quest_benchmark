@@ -132,48 +132,51 @@ class QuestLogger:
         if not self.current_run_id:
             raise ValueError("Quest file not set. Call set_quest_file first.")
 
+        # Store the current state for reference
         self.steps.append(agent_state)
 
         # Log into console if debug is enabled
         if self.debug:
             self.logger.debug(self.format_step_for_console(agent_state))
 
-        # Format choices and LLM response as JSON for storage
-        choices_json = json.dumps(agent_state.choices)
-        llm_response_json = json.dumps(agent_state.llm_response.to_dict())
-
         try:
-            self.cursor.execute('''
-                INSERT INTO steps (run_id, step, location_id, observation, choices, action, llm_response)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                self.current_run_id,
-                agent_state.step,
-                agent_state.location_id,
-                agent_state.observation,
-                choices_json,
-                agent_state.action,
-                llm_response_json
-            ))
-            self.conn.commit()
-        except sqlite3.OperationalError as e:
-            if "no such column" in str(e):
-                # Reinitialize database with correct schema
-                self.init_database()
-                # Retry the insert
+            # If this state has an action/response, update the previous step
+            if agent_state.action is not None and agent_state.llm_response is not None and len(self.steps) > 1:
+                prev_step = self.steps[-2]  # Get the previous step
                 self.cursor.execute('''
-                    INSERT INTO steps (run_id, step, location_id, observation, choices, action, llm_response)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    UPDATE steps
+                    SET action = ?, llm_response = ?
+                    WHERE run_id = ? AND step = ?
+                ''', (
+                    agent_state.action,
+                    json.dumps(agent_state.llm_response.to_dict()),
+                    self.current_run_id,
+                    prev_step.step
+                ))
+                self.conn.commit()
+
+            # Only log new state if it has an observation (i.e., it's a new game state)
+            if agent_state.observation:
+                # Format choices as JSON for storage
+                choices_json = json.dumps(agent_state.choices)
+
+                self.cursor.execute('''
+                    INSERT INTO steps (run_id, step, location_id, observation, choices)
+                    VALUES (?, ?, ?, ?, ?)
                 ''', (
                     self.current_run_id,
                     agent_state.step,
                     agent_state.location_id,
                     agent_state.observation,
-                    choices_json,
-                    agent_state.action,
-                    llm_response_json
+                    choices_json
                 ))
                 self.conn.commit()
+
+        except sqlite3.OperationalError as e:
+            if "no such column" in str(e):
+                self.init_database()
+                # Retry the operation after reinitializing
+                self.log_step(agent_state)
             else:
                 raise
 
@@ -211,24 +214,25 @@ class QuestLogger:
         """Format step for console output"""
         lines = [
             f"\nStep {step.step}",
-            f"\nObservation:\n{step.observation}",
-            f"\nChoices:",
+            f"\nObservation:\n{step.observation}"
         ]
 
         # Format choices as numbered list
-        for i, choice in enumerate(step.choices, 1):
-            lines.append(f"{i}. {choice['text']}")
+        if step.choices:
+            lines.append(f"\nChoices:")
+            for i, choice in enumerate(step.choices, 1):
+                lines.append(f"{i}. {choice['text']}")
 
-        # Add action
-        lines.append(f"\nAction: {step.action}")
-
-        # Add LLM response if available
-        response = step.llm_response
-        if response:
-            if response.analysis:
-                lines.append(f"\nAnalysis: {response.analysis}")
-            if response.reasoning:
-                lines.append(f"\nReasoning: {response.reasoning}")
+        # Add action and LLM response from previous step if available
+        if len(self.steps) > 1 and self.steps[-2].action is not None:
+            prev_step = self.steps[-2]
+            lines.append(f"\nAgent Action: {prev_step.action}")
+            response = prev_step.llm_response
+            if response:
+                if response.analysis:
+                    lines.append(f"\nAnalysis: {response.analysis}")
+                if response.reasoning:
+                    lines.append(f"\nReasoning: {response.reasoning}")
 
         return "\n".join(lines)
 
