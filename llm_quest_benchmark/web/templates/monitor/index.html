@@ -24,16 +24,11 @@
                     <!-- Quest Selection -->
                     <div class="mb-3">
                         <label for="questSelect" class="form-label">Select Quest</label>
-                        <div class="input-group">
-                            <select class="form-select" id="questSelect" required>
-                                {% for quest in quests %}
-                                <option value="{{ quest }}">{{ quest }}</option>
-                                {% endfor %}
-                            </select>
-                            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#questExplorerModal">
-                                <i class="fas fa-folder-open"></i>
-                            </button>
-                        </div>
+                        <select class="form-select" id="questSelect" required>
+                            {% for quest in quests %}
+                            <option value="{{ quest }}">{{ quest }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
 
                     <!-- Model Selection -->
@@ -127,32 +122,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Quest Explorer Modal -->
-<div class="modal fade" id="questExplorerModal" tabindex="-1" aria-labelledby="questExplorerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="questExplorerModalLabel">Quest Explorer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="quest-explorer">
-                    <div class="list-group">
-                        {% for quest in quests %}
-                        <button type="button" class="list-group-item list-group-item-action quest-file" data-quest="{{ quest }}">
-                            <i class="fas fa-file-code me-2"></i>{{ quest }}
-                        </button>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -302,14 +271,5 @@
         console.log('Rendering story:', story);
         storyOutput.innerHTML = safeMarkdownParse(story);
     }
-
-    // Quest Explorer functionality
-    document.querySelectorAll('.quest-file').forEach(button => {
-        button.addEventListener('click', function() {
-            const questPath = this.dataset.quest;
-            document.getElementById('questSelect').value = questPath;
-            bootstrap.Modal.getInstance(document.getElementById('questExplorerModal')).hide();
-        });
-    });
 </script>
 {% endblock %}

@@ -78,9 +78,9 @@ def run_quest():
     try:
         # Extract and validate quest configuration
         quest_name = data.get('quest')
-        quest_path = Path("quests") / quest_name
+        quest_path = f"quests/{quest_name}"
         logger.debug(f"Quest path: {quest_path}")
-        validate_quest_file(str(quest_path))
+        validate_quest_file(quest_path)
 
         # Extract and validate agent configuration
         model = data.get('model', DEFAULT_MODEL)
@@ -94,10 +94,10 @@ def run_quest():
         agent = create_agent(
             model=model,
             temperature=temperature,
-            system_template=SYSTEM_ROLE_TEMPLATE,
-            action_template=f"{template}.jinja",
-            skip_single=True,
-            debug=True
+            system_template=SYSTEM_ROLE_TEMPLATE,  # Use system role template for consistency
+            action_template=f"{template}.jinja",  # Add .jinja only for action template
+            skip_single=True,  # Match CLI default
+            debug=True  # Enable debug mode for more logging
         )
         logger.debug(f"Agent created: {agent}")
 
@@ -106,7 +106,7 @@ def run_quest():
             logger.debug("Creating run record")
             run = Run(
                 quest_name=quest_name,
-                agent_id=model,
+                agent_id=model,  # Add agent_id to match CLI
                 agent_config=json.dumps({
                     'model': model,
                     'temperature': temperature,
@@ -145,20 +145,14 @@ def run_quest():
 
             # Run quest using the CLI's run_quest_with_timeout
             logger.info(f"Starting quest run: {quest_path}")
-            try:
-                outcome = run_quest_with_timeout(
-                    quest_path=str(quest_path),
-                    agent=agent,
-                    timeout=DEFAULT_QUEST_TIMEOUT,
-                    callbacks=[store_step],
-                    debug=True
-                )
-                logger.info(f"Quest run completed with outcome: {outcome}")
-            except RuntimeError as e:
-                if "No initial state received from TypeScript bridge" in str(e):
-                    logger.error("Failed to initialize TypeScript bridge")
-                    raise RuntimeError("Failed to initialize quest. Please try again.")
-                raise
+            outcome = run_quest_with_timeout(
+                quest_path=quest_path,
+                agent=agent,
+                timeout=DEFAULT_QUEST_TIMEOUT,
+                callbacks=[store_step],
+                debug=True  # Enable debug mode for more logging
+            )
+            logger.info(f"Quest run completed with outcome: {outcome}")
 
             # Update run with outcome
             run.end_time = datetime.utcnow()

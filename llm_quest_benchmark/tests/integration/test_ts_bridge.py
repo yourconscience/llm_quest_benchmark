@@ -1,100 +1,103 @@
-"""Integration tests for TypeScript bridge"""
+"""Tests for TypeScript bridge"""
 import pytest
 from pathlib import Path
-import json
-from unittest.mock import patch, MagicMock
-
-from llm_quest_benchmark.executors.ts_bridge.bridge import TypeScriptBridge
+from llm_quest_benchmark.executors.ts_bridge.bridge import QMBridge
 from llm_quest_benchmark.constants import DEFAULT_QUEST
 
-@pytest.fixture
-def mock_subprocess():
-    """Mock subprocess for TypeScript bridge"""
-    with patch('subprocess.Popen') as mock_popen:
-        # Mock the process
-        process_mock = MagicMock()
-        process_mock.stdout.readline.return_value = json.dumps({
-            "type": "init",
-            "data": {
-                "location_id": "start",
-                "observation": "You are in a boat.",
-                "choices": [
-                    {"id": "1", "text": "Go north"}
-                ]
+def test_bridge_initialization():
+    """Test bridge initialization"""
+    bridge = QMBridge(str(DEFAULT_QUEST))
+    assert bridge.quest_file == Path(DEFAULT_QUEST).resolve()
+    assert not bridge.debug
+    assert bridge.process is None
+
+def test_bridge_parse_quest():
+    """Test quest parsing"""
+    bridge = QMBridge(str(DEFAULT_QUEST))
+    metadata = bridge.parse_quest_locations()
+    assert isinstance(metadata, dict)
+    assert 'locations' in metadata
+    assert 'start_location_id' in metadata
+    assert isinstance(metadata['start_location_id'], int)
+    assert metadata['start_location_id'] > 0
+
+def test_bridge_invalid_quest():
+    """Test bridge with invalid quest file"""
+    with pytest.raises(FileNotFoundError):
+        QMBridge('nonexistent.qm')
+
+def test_bridge_start_game(monkeypatch):
+    """Test game start"""
+    def mock_read_response(*args, **kwargs):
+        return '''{
+            "state": {
+                "text": "Test",
+                "choices": [{"jumpId": "1", "text": "Choice 1", "active": true}],
+                "gameState": "running"
+            },
+            "saving": {
+                "locationId": 1
             }
-        }).encode()
-        process_mock.poll.return_value = None  # Process is running
-        mock_popen.return_value = process_mock
-        yield mock_popen
+        }'''
 
-@pytest.fixture
-def bridge(mock_subprocess, test_logger):
-    """Create TypeScript bridge instance with mocked subprocess"""
-    bridge = TypeScriptBridge(DEFAULT_QUEST, test_logger)
-    yield bridge
-    bridge.close()
-
-def test_bridge_initialization(bridge, mock_subprocess):
-    """Test that bridge initializes correctly"""
-    assert bridge.quest_path == DEFAULT_QUEST
-    mock_subprocess.assert_called_once()
-    cmd_args = mock_subprocess.call_args[0][0]
-    assert "node" in cmd_args[0]
-    assert "ts-node" in cmd_args[1]
-    assert str(DEFAULT_QUEST) in cmd_args[-1]
-
-def test_bridge_start_game(bridge):
-    """Test starting a game through the bridge"""
+    bridge = QMBridge(str(DEFAULT_QUEST))
+    monkeypatch.setattr(bridge, '_read_response', mock_read_response)
     state = bridge.start_game()
-    assert state is not None
-    assert state.location_id == "start"
-    assert state.observation == "You are in a boat."
+    assert state.location_id == "1"
+    assert state.text == "Test"
     assert len(state.choices) == 1
-    assert state.choices[0].text == "Go north"
+    assert state.choices[0]['id'] == "1"
+    assert state.choices[0]['text'] == "Choice 1"
+    assert not state.game_ended
 
-def test_bridge_make_choice(bridge):
-    """Test making a choice through the bridge"""
-    # First start the game
+def test_bridge_make_choice(monkeypatch):
+    """Test making a choice"""
+    def mock_read_response(*args, **kwargs):
+        return '''{
+            "state": {
+                "text": "Choice made",
+                "choices": [{"jumpId": "2", "text": "Choice 2", "active": true}],
+                "gameState": "running"
+            },
+            "saving": {
+                "locationId": 2
+            }
+        }'''
+
+    bridge = QMBridge(str(DEFAULT_QUEST))
+    monkeypatch.setattr(bridge, '_read_response', mock_read_response)
     bridge.start_game()
+    state = bridge.step("1")
+    assert state.location_id == "2"
+    assert state.text == "Choice made"
+    assert len(state.choices) == 1
+    assert state.choices[0]['id'] == "2"
+    assert state.choices[0]['text'] == "Choice 2"
+    assert not state.game_ended
 
-    # Mock the next response for make_choice
-    bridge.process.stdout.readline.return_value = json.dumps({
-        "type": "state",
-        "data": {
-            "location_id": "end_success",
-            "observation": "You made it!",
-            "choices": []
-        }
-    }).encode()
+def test_bridge_error_handling(monkeypatch):
+    """Test error handling"""
+    def mock_read_response(*args, **kwargs):
+        return 'invalid json'
 
-    state = bridge.make_choice("1")
-    assert state is not None
-    assert state.location_id == "end_success"
-    assert state.observation == "You made it!"
-    assert len(state.choices) == 0
-
-def test_bridge_error_handling(mock_subprocess, test_logger):
-    """Test bridge error handling for invalid responses"""
-    # Mock invalid JSON response
-    mock_subprocess.return_value.stdout.readline.return_value = b"invalid json"
-
-    bridge = TypeScriptBridge(DEFAULT_QUEST, test_logger)
-    with pytest.raises(RuntimeError, match="Failed to parse JSON"):
+    bridge = QMBridge(str(DEFAULT_QUEST))
+    monkeypatch.setattr(bridge, '_read_response', mock_read_response)
+    with pytest.raises(RuntimeError, match="Invalid JSON response from TypeScript bridge"):
         bridge.start_game()
 
-def test_bridge_missing_state(mock_subprocess, test_logger):
-    """Test bridge handling when no state is received"""
-    # Mock empty response
-    mock_subprocess.return_value.stdout.readline.return_value = b""
+def test_bridge_missing_state(monkeypatch):
+    """Test missing state handling"""
+    def mock_read_response(*args, **kwargs):
+        return ''
 
-    bridge = TypeScriptBridge(DEFAULT_QUEST, test_logger)
+    bridge = QMBridge(str(DEFAULT_QUEST))
+    monkeypatch.setattr(bridge, '_read_response', mock_read_response)
     with pytest.raises(RuntimeError, match="No initial state received"):
         bridge.start_game()
 
-def test_bridge_process_termination(bridge):
-    """Test bridge handling when process terminates"""
-    # Mock process termination
-    bridge.process.poll.return_value = 1
-
-    with pytest.raises(RuntimeError, match="Bridge process terminated"):
-        bridge.make_choice("1")
+def test_bridge_process_termination(monkeypatch):
+    """Test process termination handling"""
+    bridge = QMBridge(str(DEFAULT_QUEST))
+    bridge.process = None  # Simulate process not started
+    with pytest.raises(RuntimeError, match="Game process not started"):
+        bridge._read_response()

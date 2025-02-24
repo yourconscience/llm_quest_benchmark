@@ -38,20 +38,24 @@ def test_quest_run_with_llm(caplog):
             caplog.error(f"Error: {data}")
 
     # Run quest with real LLM agent
-    outcome = run_quest_with_timeout(
-        quest_path=str(DEFAULT_QUEST),
-        agent=agent,
-        timeout=TIMEOUT,  # Match the test timeout
-        debug=True,  # Enable debug logging
-        callbacks=[mock_callback]
-    )
+    try:
+        outcome = run_quest_with_timeout(
+            quest_path=str(DEFAULT_QUEST),
+            agent=agent,
+            timeout=TIMEOUT,  # Match the test timeout
+            debug=True,  # Enable debug logging
+            callbacks=[mock_callback]
+        )
 
-    # Check that we got a valid outcome
-    assert outcome is not None, "Quest returned no outcome"
-    assert not outcome.is_error, "Quest ended with an error"
-    assert outcome in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE], \
-        "Quest did not reach a final state"
-    assert outcome.exit_code == 0, "Quest should have a successful exit code"
+        # Check that we got a valid outcome
+        assert outcome is not None, "Quest returned no outcome"
+        assert not outcome.is_error, f"Quest ended with an error: {caplog.text}"
+        assert outcome in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE], \
+            f"Quest did not reach a final state. State: {outcome}"
+        assert outcome.exit_code == 0, f"Quest should have a successful exit code, got {outcome.exit_code}"
+
+    except Exception as e:
+        pytest.fail(f"Quest run failed with error: {e}\nLogs:\n{caplog.text}")
 
 
 @pytest.mark.e2e
@@ -74,17 +78,21 @@ def test_random_agent_on_test_quest(caplog):
             caplog.error(f"Error: {data}")
 
     # Run quest with random agent
-    outcome = run_quest_with_timeout(
-        quest_path=str(DEFAULT_QUEST),
-        agent=agent,
-        debug=True,  # Enable debug logging
-        timeout=TIMEOUT,  # Match the test timeout
-        callbacks=[mock_callback]
-    )
+    try:
+        outcome = run_quest_with_timeout(
+            quest_path=str(DEFAULT_QUEST),
+            agent=agent,
+            debug=True,  # Enable debug logging
+            timeout=TIMEOUT,  # Match the test timeout
+            callbacks=[mock_callback]
+        )
 
-    # Check that we got a valid outcome
-    assert outcome is not None, "Quest returned no outcome"
-    assert not outcome.is_error, "Quest ended with an error"
-    assert outcome in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE], \
-        "Quest did not reach a final state"
-    assert outcome.exit_code == 0, "Quest should have a successful exit code"
+        # Check that we got a valid outcome
+        assert outcome is not None, "Quest returned no outcome"
+        assert not outcome.is_error, f"Quest ended with an error: {caplog.text}"
+        assert outcome in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE], \
+            f"Quest did not reach a final state. State: {outcome}"
+        assert outcome.exit_code == 0, f"Quest should have a successful exit code, got {outcome.exit_code}"
+
+    except Exception as e:
+        pytest.fail(f"Quest run failed with error: {e}\nLogs:\n{caplog.text}")

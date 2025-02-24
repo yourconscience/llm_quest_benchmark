@@ -113,8 +113,7 @@ def run(
                 debug=debug,
                 timeout=timeout
         )
-        outcome = QuestOutcome[result['outcome']]
-        _handle_quest_outcome(outcome, "Quest run")
+        _handle_quest_outcome(result, "Quest run")
 
     except typer.Exit:
         raise  # Re-raise typer.Exit without logging
@@ -151,8 +150,7 @@ def play(
             timeout=INFINITE_TIMEOUT,
             debug=debug
         )
-        outcome = QuestOutcome[result['outcome']]
-        _handle_quest_outcome(outcome, "Quest play")
+        _handle_quest_outcome(result, "Quest play")
 
     except typer.Exit:
         raise  # Re-raise typer.Exit without logging

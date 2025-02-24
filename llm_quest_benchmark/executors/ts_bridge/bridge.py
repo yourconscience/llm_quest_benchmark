@@ -22,6 +22,28 @@ class QMBridge:
         self.parser_script = Path(__file__).parent / "consoleplayer.ts"
         self.state_history: List[QMBridgeState] = []
 
+        # Validate quest file exists
+        if not self.quest_file.exists():
+            raise FileNotFoundError(f"Quest file not found: {quest_file}")
+
+        # Validate parser script exists
+        if not self.parser_script.exists():
+            raise FileNotFoundError(f"Parser script not found: {self.parser_script}")
+
+    def _read_response(self, timeout: int = 10) -> str:
+        """Read response from process with timeout"""
+        if not self.process:
+            raise RuntimeError("Game process not started")
+
+        import select
+        if select.select([self.process.stdout], [], [], timeout)[0]:
+            response = self.process.stdout.readline()
+            if self.debug:
+                logger.debug(f"Raw response: {response[:500]}...")
+            return response
+        else:
+            raise TimeoutError("Timeout waiting for response from TypeScript bridge")
+
     def parse_quest_locations(self) -> Dict[str, Any]:
         """Parse quest file and return metadata including locations and start location"""
         cmd = ["node", "-r", "ts-node/register", str(self.parser_script), str(self.quest_file), "--parse"]
@@ -61,20 +83,10 @@ class QMBridge:
 
         except subprocess.CalledProcessError as e:
             logger.error(f"Node parser error:\n{e.stderr}")
-            # Return default values instead of raising
-            return {
-                'start_location_id': 0,
-                'locations': [],
-                'total_locations': 20  # Default fallback for progress bar
-            }
+            raise RuntimeError(f"Failed to parse quest file: {e.stderr}")
         except Exception as e:
             logger.error(f"Failed to parse QM data: {str(e)}")
-            # Return default values instead of raising
-            return {
-                'start_location_id': 0,
-                'locations': [],
-                'total_locations': 20  # Default fallback for progress bar
-            }
+            raise RuntimeError(f"Failed to parse quest file: {str(e)}")
 
     def start_game(self) -> QMBridgeState:
         """Start game process and return initial state"""
@@ -104,7 +116,11 @@ class QMBridge:
                 raise RuntimeError("No initial state received from TypeScript bridge")
 
             # Parse response and extract state
-            response = json.loads(initial_raw)
+            try:
+                response = json.loads(initial_raw)
+            except json.JSONDecodeError as e:
+                raise RuntimeError(f"Invalid JSON response from TypeScript bridge: {e}")
+
             if 'state' not in response:
                 raise RuntimeError("Invalid response format: missing 'state' field")
 
@@ -116,6 +132,9 @@ class QMBridge:
                 reward=0.0,  # Initial state has no reward
                 game_ended=state['gameState'] != 'running'
             )
+
+            if not initial_state.choices:
+                raise RuntimeError("No valid choices in initial state")
 
             self.state_history.append(initial_state)
             return initial_state
@@ -139,18 +158,27 @@ class QMBridge:
                 raise RuntimeError("No response received from TypeScript bridge")
 
             # Parse response and extract state
-            response_data = json.loads(response)
+            try:
+                response_data = json.loads(response)
+            except json.JSONDecodeError as e:
+                raise RuntimeError(f"Invalid JSON response from TypeScript bridge: {e}")
+
             if 'state' not in response_data:
                 raise RuntimeError("Invalid response format: missing 'state' field")
 
             state = response_data['state']
-            return QMBridgeState(
+            current_state = QMBridgeState(
                 location_id=str(response_data['saving']['locationId']),
                 text=state['text'],
                 choices=[{'id': str(c['jumpId']), 'text': c['text']} for c in state['choices'] if c['active']],
                 reward=0.0,  # Get reward from game state if available
                 game_ended=state['gameState'] != 'running'
             )
+
+            if not current_state.choices and not current_state.game_ended:
+                raise RuntimeError("No valid choices in current state")
+
+            return current_state
 
         except Exception as e:
             logger.error(f"Failed to get current state: {str(e)}")
@@ -199,7 +227,11 @@ class QMBridge:
                 raise RuntimeError("No response received from TypeScript bridge")
 
             # Parse response and extract state
-            response_data = json.loads(response)
+            try:
+                response_data = json.loads(response)
+            except json.JSONDecodeError as e:
+                raise RuntimeError(f"Invalid JSON response from TypeScript bridge: {e}")
+
             if 'state' not in response_data:
                 raise RuntimeError("Invalid response format: missing 'state' field")
 
@@ -208,62 +240,20 @@ class QMBridge:
                 location_id=str(response_data['saving']['locationId']),
                 text=state['text'],
                 choices=[{'id': str(c['jumpId']), 'text': c['text']} for c in state['choices'] if c['active']],
-                reward=1.0 if state['gameState'] == 'win' else 0.0,  # Win state gives positive reward
+                reward=0.0,  # Get reward from game state if available
                 game_ended=state['gameState'] != 'running'
             )
 
-            self.state_history.append(deepcopy(new_state))
+            if not new_state.choices and not new_state.game_ended:
+                raise RuntimeError("No valid choices in new state")
+
+            self.state_history.append(new_state)
             return new_state
 
-        except ValueError as e:
-            # Re-raise validation errors
-            raise
         except Exception as e:
-            logger.error(f"Failed to process step: {str(e)}")
+            logger.error(f"Failed to take step: {str(e)}")
             self.close()  # Clean up on error
-            raise RuntimeError(f"Failed to process step: {str(e)}")
-
-    def _read_response(self) -> str:
-        """Read response from TypeScript bridge with error handling"""
-        if not self.process:
-            raise RuntimeError("Game process not started")
-
-        try:
-            response = ""
-            json_depth = 0
-            in_json = False
-
-            while True:
-                # Check if process is still alive
-                if self.process.poll() is not None:
-                    stderr = self.process.stderr.read()
-                    raise RuntimeError(f"Game process terminated unexpectedly. stderr: {stderr}")
-
-                line = self.process.stdout.readline()
-                if not line:
-                    break
-
-                # Skip non-JSON output
-                if not in_json and '{' in line:
-                    in_json = True
-                    response = line[line.find('{'):]
-                elif in_json:
-                    response += line
-
-                if in_json:
-                    # Count JSON depth
-                    json_depth += line.count('{') - line.count('}')
-                    if json_depth == 0:
-                        break
-
-            if self.debug:
-                logger.debug(f"Raw response: {response}")
-
-            return response.strip()
-
-        except Exception as e:
-            logger.error(f"Error reading response: {str(e)}")
-            raise
+            raise RuntimeError(f"Failed to take step: {str(e)}")
 
     def get_debug_state(self) -> str:
         """Get formatted debug state"""
@@ -278,12 +268,13 @@ class QMBridge:
         )
 
     def close(self):
-        """Clean up game process"""
+        """Clean up resources"""
         if self.process:
             try:
                 self.process.terminate()
-                self.process.wait(timeout=1)  # Wait for process to terminate
+                self.process.wait(timeout=5)
             except subprocess.TimeoutExpired:
-                self.process.kill()  # Force kill if not terminated
+                self.process.kill()
             finally:
                 self.process = None
+                self.state_history.clear()

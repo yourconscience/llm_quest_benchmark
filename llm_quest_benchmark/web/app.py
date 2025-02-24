@@ -2,6 +2,16 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from pathlib import Path
 import logging
+import os
+from llm_quest_benchmark.web.models.database import db
+
+# Set working directory to workspace root
+workspace_root = Path(__file__).parent.parent.parent
+os.chdir(workspace_root)
+
+# Set NODE_OPTIONS for OpenSSL compatibility
+if 'NODE_OPTIONS' not in os.environ:
+    os.environ['NODE_OPTIONS'] = '--openssl-legacy-provider'
 
 from llm_quest_benchmark.core.logging import LogManager
 
@@ -19,25 +29,24 @@ def create_app(test_config=None):
     # Default configuration
     app.config.from_mapping(
         SECRET_KEY='dev',
-        DATABASE=Path('metrics.db'),
+        SQLALCHEMY_DATABASE_URI=f'sqlite:///{os.path.join(app.instance_path, "llm_quest.sqlite")}',
+        SQLALCHEMY_TRACK_MODIFICATIONS=False
     )
 
-    if test_config is None:
-        # Load the instance config, if it exists, when not testing
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        # Load the test config if passed in
+    if test_config is not None:
+        # Load test config if passed in
         app.config.update(test_config)
 
     # Ensure the instance folder exists
     try:
-        Path(app.instance_path).mkdir(parents=True, exist_ok=True)
-    except Exception as e:
-        logger.error(f"Failed to create instance path: {e}")
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
 
     # Initialize database
-    from .models.database import init_db
-    init_db(app)
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
 
     # Register blueprints
     from .views.monitor import bp as monitor_bp
@@ -51,7 +60,17 @@ def create_app(test_config=None):
     # Register index route
     @app.route('/')
     def index():
-        return redirect(url_for('monitor.index'))
+        """Redirect root to monitor page"""
+        return redirect('/monitor')
+
+    @app.before_request
+    def remove_trailing_slashes():
+        """Remove trailing slashes from URLs"""
+        if request.path != '/' and request.path.endswith('/'):
+            return redirect(request.path.rstrip('/'), code=302)
+
+    # Configure URL generation
+    app.url_map.strict_slashes = False
 
     return app
 

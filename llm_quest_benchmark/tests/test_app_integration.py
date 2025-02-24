@@ -1,54 +1,86 @@
-"""Integration tests for web application"""
+"""Tests for Flask application"""
 import pytest
-import tempfile
-import json
-from pathlib import Path
-from datetime import datetime
-
 from llm_quest_benchmark.web.app import create_app
-from llm_quest_benchmark.constants import DEFAULT_TEMPLATE, DEFAULT_QUEST_TIMEOUT
+from llm_quest_benchmark.web.models.database import db
+from llm_quest_benchmark.constants import DEFAULT_QUEST
 
 @pytest.fixture
 def app():
     """Create test Flask app"""
-    # Create temp db file
-    db_fd, db_path = tempfile.mkstemp()
-
-    app = create_app({
+    app = create_app()
+    app.config.update({
         'TESTING': True,
-        'DATABASE': Path(db_path),
-        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
-        'SQLALCHEMY_TRACK_MODIFICATIONS': False
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'DEFAULT_QUEST': str(DEFAULT_QUEST)
     })
 
-    # Create test context
-    with app.test_client() as client:
-        with app.app_context():
-            yield client
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.drop_all()
 
-    # Clean up
-    Path(db_path).unlink(missing_ok=True)
+@pytest.fixture
+def client(app):
+    """Create test client"""
+    return app.test_client()
 
-def test_main_app_smoke(app):
-    """Basic smoke test for the main app"""
-    response = app.get('/')
-    assert response.status_code == 302  # Should redirect to monitor
-    assert '/monitor' in response.location
+def test_main_app_smoke(client):
+    """Test main app routes"""
+    # Test index redirect
+    response = client.get('/')
+    assert response.status_code == 302
+    assert response.location == '/monitor'
 
-def test_monitor_page(app):
-    """Test monitor page loads"""
-    response = app.get('/monitor/')
+    # Test monitor page
+    response = client.get('/monitor')
     assert response.status_code == 200
-    assert b'Quest Runner' in response.data
+    assert b'Quest Monitor' in response.data
 
-def test_benchmark_page(app):
-    """Test benchmark page loads"""
-    response = app.get('/benchmark/')
+    # Test benchmark page
+    response = client.get('/benchmark')
     assert response.status_code == 200
-    assert b'Benchmark Configuration' in response.data
+    assert b'Quest Benchmark' in response.data
 
-def test_analyze_page(app):
-    """Test analyze page loads"""
-    response = app.get('/analyze/')
+    # Test analyze page
+    response = client.get('/analyze')
     assert response.status_code == 200
-    assert b'Analysis' in response.data
+    assert b'Quest Analysis' in response.data
+
+def test_database_operations(app):
+    """Test basic database operations"""
+    from llm_quest_benchmark.web.models.database import Run, Step
+
+    with app.app_context():
+        # Create a test run
+        run = Run(
+            quest_name='test_quest',
+            agent_id='test_agent',
+            agent_config={'model': 'gpt-4'}
+        )
+        db.session.add(run)
+        db.session.commit()
+
+        # Add a step
+        step = Step(
+            run_id=run.id,
+            step=1,
+            location_id='start',
+            observation='Test observation',
+            choices=['choice1', 'choice2'],
+            action='choice1'
+        )
+        db.session.add(step)
+        db.session.commit()
+
+        # Verify data
+        saved_run = Run.query.first()
+        assert saved_run.quest_name == 'test_quest'
+        assert saved_run.agent_id == 'test_agent'
+        assert saved_run.agent_config == {'model': 'gpt-4'}
+
+        saved_step = Step.query.first()
+        assert saved_step.run_id == run.id
+        assert saved_step.step == 1
+        assert saved_step.location_id == 'start'
+        assert saved_step.choices == ['choice1', 'choice2']

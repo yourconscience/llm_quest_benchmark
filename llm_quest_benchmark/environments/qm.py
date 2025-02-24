@@ -36,34 +36,54 @@ class QMPlayerEnv:
         if self.debug:
             self.logger.setLevel(logging.DEBUG)
 
-        # Initialize bridge
-        self.bridge = QMBridge(quest_file, debug=debug)
-        self.state_history: List[QMState] = []
-        self.choice_mapper: Optional[ChoiceMapper] = None
-        self._current_state: Dict[str, Any] = {}  # Internal state storage
+        try:
+            # Initialize bridge
+            self.bridge = QMBridge(quest_file, debug=debug)
+            self.state_history: List[QMState] = []
+            self.choice_mapper: Optional[ChoiceMapper] = None
+            self._current_state: Dict[str, Any] = {}  # Internal state storage
+        except Exception as e:
+            self.logger.error(f"Failed to initialize QMPlayerEnv: {e}")
+            raise RuntimeError(f"Failed to initialize QMPlayerEnv: {e}")
 
     def _format_observation(self, state) -> str:
         """Format observation text from game state"""
-        text = state.text
+        if not state:
+            return "No state available"
 
-        # Add choices
-        text += "\n\nAvailable actions:\n"
-        for i, choice in enumerate(state.choices, 1):
-            text += f"{i}. {choice['text']}\n"
+        text = state.text or ""
+
+        # Add choices if available
+        if state.choices:
+            text += "\n\nAvailable actions:\n"
+            for i, choice in enumerate(state.choices, 1):
+                text += f"{i}. {choice['text']}\n"
 
         return text
 
     def reset(self) -> str:
         """Reset environment to initial state"""
-        initial_bridge_state = self.bridge.start_game()
-        self._current_state = {
-            'location_id': initial_bridge_state.location_id,
-            'text': initial_bridge_state.text,
-            'choices': initial_bridge_state.choices,
-            'done': initial_bridge_state.game_ended,
-            'info': {}
-        }
-        return self._current_state['text']
+        try:
+            initial_bridge_state = self.bridge.start_game()
+            if not initial_bridge_state:
+                raise RuntimeError("Failed to get initial state from bridge")
+
+            self._current_state = {
+                'location_id': initial_bridge_state.location_id,
+                'text': initial_bridge_state.text,
+                'choices': initial_bridge_state.choices,
+                'done': initial_bridge_state.game_ended,
+                'info': {}
+            }
+
+            if not self._current_state['choices']:
+                raise RuntimeError("No valid choices in initial state")
+
+            return self._current_state['text']
+        except Exception as e:
+            self.logger.error(f"Failed to reset environment: {e}")
+            self.bridge.close()  # Clean up on error
+            raise RuntimeError(f"Failed to reset environment: {e}")
 
     def step(self, action: str) -> Tuple[str, bool, bool, Dict[str, Any]]:
         """Take action in environment and return new state
@@ -74,29 +94,41 @@ class QMPlayerEnv:
         Returns:
             Tuple of (observation, done, success, info)
         """
-        # Take action in bridge
-        new_bridge_state = self.bridge.step(action)
+        if not self._current_state:
+            raise RuntimeError("Environment not initialized - call reset() first")
 
-        # Update internal state
-        self._current_state = {
-            'location_id': new_bridge_state.location_id,
-            'text': new_bridge_state.text,
-            'choices': new_bridge_state.choices,
-            'done': new_bridge_state.game_ended,
-            'info': {}
-        }
+        try:
+            # Take action in bridge
+            new_bridge_state = self.bridge.step(action)
+            if not new_bridge_state:
+                raise RuntimeError("Failed to get new state from bridge")
 
-        # Return step results - success is when game is done and reward is positive
-        success = new_bridge_state.game_ended and new_bridge_state.reward > 0
-        return (
-            self._current_state['text'],
-            self._current_state['done'],
-            success,
-            self._current_state['info']
-        )
+            # Update internal state
+            self._current_state = {
+                'location_id': new_bridge_state.location_id,
+                'text': new_bridge_state.text,
+                'choices': new_bridge_state.choices,
+                'done': new_bridge_state.game_ended,
+                'info': {}
+            }
+
+            # Return step results - success is when game is done and reward is positive
+            success = new_bridge_state.game_ended and new_bridge_state.reward > 0
+            return (
+                self._current_state['text'],
+                self._current_state['done'],
+                success,
+                self._current_state['info']
+            )
+        except Exception as e:
+            self.logger.error(f"Failed to take step: {e}")
+            self.bridge.close()  # Clean up on error
+            raise RuntimeError(f"Failed to take step: {e}")
 
     def get_state(self) -> Dict[str, Any]:
         """Get current environment state"""
+        if not self._current_state:
+            raise RuntimeError("Environment not initialized - call reset() first")
         return self._current_state.copy()
 
     def close(self):
