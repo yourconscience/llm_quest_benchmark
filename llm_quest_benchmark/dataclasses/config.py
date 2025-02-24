@@ -25,17 +25,17 @@ class AgentConfig:
     def __post_init__(self):
         if self.model not in MODEL_CHOICES:
             raise ValueError(f"Invalid model: {self.model}. Supported models: {MODEL_CHOICES}")
-        if not (0.0 <= self.temperature <= 1.0):
-            raise ValueError(f"Temperature must be between 0.0 and 1.0, got {self.temperature}")
+        if not (0.0 <= self.temperature <= 2.0):
+            raise ValueError(f"Temperature must be between 0.0 and 2.0, got {self.temperature}")
 
 
 @dataclass
 class BenchmarkConfig:
     """Configuration for benchmark run"""
     quests: List[str]  # List of quest files or directories
-    agents: List[AgentConfig]
+    agents: List[AgentConfig]  # List of agent configurations to test
     debug: bool = False
-    quest_timeout: int = 60
+    quest_timeout: int = 60  # Timeout per quest
     benchmark_timeout: Optional[int] = None  # Total timeout for all quests, defaults to quest_timeout * num_quests
     max_workers: int = 4
     output_dir: Optional[str] = "metrics/quests"

@@ -88,7 +88,9 @@ def test_quest_logger_log_step(quest_logger):
 
 def test_quest_logger_multiple_steps(quest_logger):
     """Test logging multiple steps in sequence"""
+    # Set up quest file once at the beginning
     quest_logger.set_quest_file("test_quest.qm")
+    run_id = quest_logger.current_run_id
 
     # Create and log multiple steps
     steps = [
@@ -123,7 +125,7 @@ def test_quest_logger_multiple_steps(quest_logger):
 
     # Check all steps were logged
     cursor = quest_logger.cursor
-    cursor.execute("SELECT * FROM steps ORDER BY step")
+    cursor.execute("SELECT * FROM steps WHERE run_id = ? ORDER BY step", (run_id,))
     logged_steps = cursor.fetchall()
     assert len(logged_steps) == 3
 

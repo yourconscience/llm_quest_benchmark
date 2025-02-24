@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Benchmark - LLM Quest Benchmark{% endblock %}
+
+{% block head %}
+<!-- Monaco Editor -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Benchmark Configuration -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cog me-2"></i>Benchmark Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="editor" style="height: 500px; border: 1px solid #ccc;"></div>
+                <div class="mt-3">
+                    <button id="runBtn" class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>Run Benchmark
+                    </button>
+                    <button id="saveBtn" class="btn btn-secondary ms-2">
+                        <i class="fas fa-save me-2"></i>Save Configuration
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Benchmark Progress -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tasks me-2"></i>Benchmark Progress
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Progress -->
+                <div id="benchmarkProgress" class="d-none">
+                    <div class="progress mb-3">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"></div>
+                    </div>
+                </div>
+
+                <!-- Output -->
+                <div id="output" class="border rounded p-3 bg-light" style="height: 400px; overflow-y: auto;">
+                    <div id="outputContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Modal -->
+<div class="modal fade" id="resultsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Benchmark Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="resultsContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="viewAnalysisBtn">View Analysis</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let editor;
+
+    // Initialize Monaco Editor
+    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+    require(['vs/editor/editor.main'], function() {
+        editor = monaco.editor.create(document.getElementById('editor'), {
+            value: `{{ default_config | safe }}`,
+            language: 'yaml',
+            theme: 'vs-dark',
+            automaticLayout: true
+        });
+    });
+
+    // Handle benchmark run
+    document.getElementById('runBtn').addEventListener('click', async function() {
+        try {
+            const config = editor.getValue();
+            const progress = document.getElementById('benchmarkProgress');
+            const output = document.getElementById('outputContent');
+
+            // Show progress
+            progress.classList.remove('d-none');
+            output.innerHTML = '';
+
+            // Run benchmark
+            const response = await fetch('/benchmark/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ config })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Show results
+                const resultsContent = document.getElementById('resultsContent');
+                resultsContent.innerHTML = `
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Quest</th>
+                                    <th>Model</th>
+                                    <th>Success Rate</th>
+                                    <th>Avg Steps</th>
+                                    <th>Avg Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.entries(result.result).map(([quest, stats]) => `
+                                    <tr>
+                                        <td>${quest}</td>
+                                        <td>${stats.model}</td>
+                                        <td>${(stats.success_rate * 100).toFixed(1)}%</td>
+                                        <td>${stats.avg_steps.toFixed(1)}</td>
+                                        <td>${stats.avg_time.toFixed(1)}s</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                // Show modal
+                new bootstrap.Modal(document.getElementById('resultsModal')).show();
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            alert(`Error running benchmark: ${error.message}`);
+        } finally {
+            document.getElementById('benchmarkProgress').classList.add('d-none');
+        }
+    });
+
+    // Handle save configuration
+    document.getElementById('saveBtn').addEventListener('click', function() {
+        const config = editor.getValue();
+        const blob = new Blob([config], { type: 'text/yaml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'benchmark_config.yaml';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+
+    // Handle view analysis button
+    document.getElementById('viewAnalysisBtn').addEventListener('click', function() {
+        window.location.href = '/analyze';
+    });
+</script>
+{% endblock %}

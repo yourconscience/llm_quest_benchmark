@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Quest Runner - LLM Quest Benchmark{% endblock %}
+
+{% block head %}
+<!-- Monaco Editor -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+<!-- Marked for Markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Quest Configuration -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cog me-2"></i>Quest Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="questForm">
+                    <!-- Quest Selection -->
+                    <div class="mb-3">
+                        <label for="questSelect" class="form-label">Select Quest</label>
+                        <div class="input-group">
+                            <select class="form-select" id="questSelect" required>
+                                {% for quest in quests %}
+                                <option value="{{ quest }}">{{ quest }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#questExplorerModal">
+                                <i class="fas fa-folder-open"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Model Selection -->
+                    <div class="mb-3">
+                        <label for="modelSelect" class="form-label">Model</label>
+                        <select class="form-select" id="modelSelect" required>
+                            {% for model in models %}
+                            <option value="{{ model }}" {% if model == default_model %}selected{% endif %}>
+                                {{ model }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Temperature -->
+                    <div class="mb-3">
+                        <label for="temperatureRange" class="form-label">Temperature: <span id="temperatureValue">{{ default_temperature }}</span></label>
+                        <input type="range" class="form-range" id="temperatureRange" min="0" max="2" step="0.1" value="{{ default_temperature }}">
+                    </div>
+
+                    <!-- Template Selection -->
+                    <div class="mb-3">
+                        <label for="templateSelect" class="form-label">Prompt Template</label>
+                        <select class="form-select" id="templateSelect" required>
+                            {% for template in templates %}
+                            <option value="{{ template }}" {% if template == default_template %}selected{% endif %}>
+                                {{ template }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-play me-2"></i>Run Quest
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quest Output -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-terminal me-2"></i>Quest Output
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Progress -->
+                <div id="questProgress" class="d-none">
+                    <div class="alert alert-info mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Running...</span>
+                            </div>
+                            <div>
+                                <strong>Running Quest:</strong>
+                                <span id="currentQuestInfo"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Output Tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#stepByStep">
+                            <i class="fas fa-list-ol me-1"></i>Step by Step
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#fullStory">
+                            <i class="fas fa-book me-1"></i>Full Story
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content mt-3">
+                    <!-- Step by Step View -->
+                    <div class="tab-pane fade show active" id="stepByStep">
+                        <div id="stepOutput" class="accordion">
+                            <!-- Steps will be added here dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Full Story View -->
+                    <div class="tab-pane fade" id="fullStory">
+                        <div id="storyOutput" class="markdown-body">
+                            <!-- Story will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quest Explorer Modal -->
+<div class="modal fade" id="questExplorerModal" tabindex="-1" aria-labelledby="questExplorerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="questExplorerModalLabel">Quest Explorer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="quest-explorer">
+                    <div class="list-group">
+                        {% for quest in quests %}
+                        <button type="button" class="list-group-item list-group-item-action quest-file" data-quest="{{ quest }}">
+                            <i class="fas fa-file-code me-2"></i>{{ quest }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize Monaco Editor
+    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+
+    // Update temperature value display
+    document.getElementById('temperatureRange').addEventListener('input', function(e) {
+        document.getElementById('temperatureValue').textContent = e.target.value;
+    });
+
+    // Ensure marked is available
+    function safeMarkdownParse(text) {
+        if (typeof marked === 'undefined') {
+            console.warn('Marked library not loaded, displaying raw text');
+            return text;
+        }
+        try {
+            return marked.parse(text);
+        } catch (error) {
+            console.error('Error parsing markdown:', error);
+            return text;
+        }
+    }
+
+    // Handle form submission
+    document.getElementById('questForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        console.log('Form submitted');
+
+        const formData = {
+            quest: document.getElementById('questSelect').value,
+            model: document.getElementById('modelSelect').value,
+            temperature: parseFloat(document.getElementById('temperatureRange').value),
+            template: document.getElementById('templateSelect').value
+        };
+        console.log('Form data:', formData);
+
+        try {
+            // Show progress with quest info
+            const questProgress = document.getElementById('questProgress');
+            const questInfo = document.getElementById('currentQuestInfo');
+            questProgress.classList.remove('d-none');
+            questInfo.textContent = ` ${formData.quest} with ${formData.model} agent (${formData.template} template)`;
+            console.log('Progress bar shown with quest info');
+
+            // Clear previous output
+            document.getElementById('stepOutput').innerHTML = '';
+            document.getElementById('storyOutput').innerHTML = '';
+            console.log('Previous output cleared');
+
+            // Run quest
+            console.log('Sending request to /monitor/run');
+            const response = await fetch('/monitor/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            console.log('Received response:', response);
+
+            const result = await response.json();
+            console.log('Response data:', result);
+
+            if (result.success) {
+                console.log('Quest run successful, fetching details');
+                // Load run details
+                const runDetails = await fetch(`/monitor/runs/${result.run_id}`).then(r => r.json());
+                console.log('Run details:', runDetails);
+                displayRun(runDetails);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Error running quest:', error);
+            alert(`Error running quest: ${error.message}`);
+        } finally {
+            document.getElementById('questProgress').classList.add('d-none');
+            console.log('Progress bar hidden');
+        }
+    });
+
+    function displayRun(data) {
+        console.log('Displaying run data:', data);
+        const stepOutput = document.getElementById('stepOutput');
+        const storyOutput = document.getElementById('storyOutput');
+        let story = '';
+
+        // Display outcome
+        if (data.run.outcome === 'SUCCESS') {
+            stepOutput.insertAdjacentHTML('beforebegin',
+                '<div class="alert alert-success"><i class="fas fa-trophy me-2"></i>Quest completed successfully!</div>');
+        } else if (data.run.outcome === 'FAILURE') {
+            stepOutput.insertAdjacentHTML('beforebegin',
+                '<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>Quest failed!</div>');
+        }
+
+        // Display steps
+        data.steps.forEach((step, index) => {
+            console.log(`Processing step ${index}:`, step);
+            // Add to step view
+            const stepHtml = `
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step${index}">
+                            Step ${step.step} - ${step.location_id}
+                        </button>
+                    </h2>
+                    <div id="step${index}" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <h6>Observation:</h6>
+                            <p>${step.observation}</p>
+                            ${step.choices ? `
+                                <h6>Choices:</h6>
+                                <ul>
+                                    ${step.choices.map(c => `<li>${c.text}</li>`).join('')}
+                                </ul>
+                            ` : ''}
+                            ${step.action ? `
+                                <h6>Action:</h6>
+                                <p>${step.action}</p>
+                            ` : ''}
+                            ${step.llm_response ? `
+                                <h6>Agent Response:</h6>
+                                <pre><code>${JSON.stringify(step.llm_response, null, 2)}</code></pre>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            stepOutput.insertAdjacentHTML('beforeend', stepHtml);
+
+            // Add to story
+            story += `${step.observation}\n\n`;
+            if (step.action) {
+                story += `*Agent chose: ${step.action}*\n\n`;
+            }
+        });
+
+        // Display story using marked for Markdown rendering with error handling
+        console.log('Rendering story:', story);
+        storyOutput.innerHTML = safeMarkdownParse(story);
+    }
+
+    // Quest Explorer functionality
+    document.querySelectorAll('.quest-file').forEach(button => {
+        button.addEventListener('click', function() {
+            const questPath = this.dataset.quest;
+            document.getElementById('questSelect').value = questPath;
+            bootstrap.Modal.getInstance(document.getElementById('questExplorerModal')).hide();
+        });
+    });
+</script>
+{% endblock %}

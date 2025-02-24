@@ -1,0 +1,191 @@
+/* Global Styles */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #34495e;
+    --accent-color: #3498db;
+    --success-color: #2ecc71;
+    --warning-color: #f1c40f;
+    --danger-color: #e74c3c;
+    --light-color: #ecf0f1;
+    --dark-color: #2c3e50;
+}
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navigation */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    padding: 1rem;
+}
+
+.card-title {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Forms */
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+/* Progress Bars */
+.progress {
+    height: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+/* Alerts */
+.alert {
+    border: none;
+    border-radius: 10px;
+}
+
+/* Tables */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table th {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    font-weight: 600;
+}
+
+.table td, .table th {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+/* Modals */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    background-color: var(--light-color);
+}
+
+/* Charts */
+canvas {
+    max-width: 100%;
+}
+
+/* Code Editor */
+.monaco-editor {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Markdown Content */
+.markdown-body {
+    padding: 1rem;
+    background-color: white;
+    border-radius: 8px;
+}
+
+.markdown-body pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+/* Accordion */
+.accordion-button {
+    padding: 1rem;
+    background-color: white;
+    font-weight: 500;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+}
+
+/* Stats Cards */
+.bg-primary {
+    background-color: var(--accent-color) !important;
+}
+
+.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.bg-info {
+    background-color: var(--secondary-color) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .table-responsive {
+        border-radius: 8px;
+    }
+}
+
+/* Footer */
+.footer {
+    background-color: white !important;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    padding: 1rem 0;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}

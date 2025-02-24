@@ -26,6 +26,7 @@ from llm_quest_benchmark.constants import (
 )
 from llm_quest_benchmark.dataclasses.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.agents.human_player import HumanPlayer
+from llm_quest_benchmark.web.app import create_app
 
 # Initialize logging
 log_manager = LogManager()
@@ -296,49 +297,82 @@ def benchmark(
         typer.echo(f"Error during benchmark: {str(e)}", err=True)
         raise typer.Exit(code=2)
 
-def find_available_port(start_port: int = 8501, max_attempts: int = 100) -> int:
-    """Find an available port starting from start_port"""
+def find_available_port(start_port: int = 8000, max_attempts: int = 100) -> int:
+    """Find an available port starting from start_port."""
     for port in range(start_port, start_port + max_attempts):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
                 s.bind(('', port))
                 return port
-            except OSError:
+            except socket.error:
                 continue
     raise RuntimeError(f"Could not find an available port after {max_attempts} attempts")
 
 @app.command()
 def server(
-    port: int = typer.Option(8501, help="Port to run the server on (will auto-increment if taken)"),
-    debug: bool = typer.Option(False, help="Enable debug mode")
+    host: str = typer.Option("127.0.0.1", help="Host to run the server on"),
+    port: int = typer.Option(8000, help="Port to run the server on (will auto-increment if taken)"),
+    debug: bool = typer.Option(False, help="Enable debug mode"),
+    workers: int = typer.Option(1, help="Number of worker processes (only used in production mode)"),
+    production: bool = typer.Option(False, help="Run in production mode using gunicorn")
 ):
-    """Start the Streamlit web interface"""
+    """Start the web interface server.
+
+    This command starts the Flask web interface for running and analyzing quests.
+    In development mode, it uses Flask's built-in server. In production mode, it uses gunicorn.
+
+    Example:
+        llm-quest server  # Run development server
+        llm-quest server --production --workers 4  # Run production server with gunicorn
+    """
     try:
-        # Get the path to the app.py file
-        app_path = Path(__file__).parent.parent.parent / "web" / "app.py"
-        if not app_path.exists():
-            raise FileNotFoundError(f"Could not find app.py at {app_path}")
+        # Setup logging
+        log_manager.setup(debug)
+        log.info("Starting web interface server")
 
         # Find available port
-        try:
-            available_port = find_available_port(start_port=port)
-            if available_port != port:
-                print(f"[yellow]Port {port} is taken, using port {available_port} instead[/yellow]")
-            port = available_port
-        except RuntimeError as e:
-            print(f"[red]Error finding available port: {e}[/red]")
-            raise typer.Exit(1)
+        port = find_available_port(port)
+        log.info(f"Using port {port}")
 
-        print(f"[green]Starting server on port {port}...[/green]")
-        cmd = ["streamlit", "run", str(app_path), "--server.port", str(port)]
-        if debug:
-            cmd.append("--logger.level=debug")
+        if production:
+            try:
+                import gunicorn.app.base
 
-        # Run the Streamlit server
-        subprocess.run(cmd)
+                class GunicornApp(gunicorn.app.base.BaseApplication):
+                    def __init__(self, app, options=None):
+                        self.options = options or {}
+                        self.application = app
+                        super().__init__()
+
+                    def load_config(self):
+                        for key, value in self.options.items():
+                            self.cfg.set(key.lower(), value)
+
+                    def load(self):
+                        return self.application
+
+                options = {
+                    'bind': f"{host}:{port}",
+                    'workers': workers,
+                    'worker_class': 'sync',
+                    'timeout': 120,
+                    'reload': debug
+                }
+
+                app = create_app()
+                GunicornApp(app, options).run()
+
+            except ImportError:
+                log.error("Gunicorn not found. Please install it with: pip install gunicorn")
+                raise typer.Exit(code=1)
+        else:
+            # Development mode - use Flask's built-in server
+            app = create_app()
+            app.run(host=host, port=port, debug=debug)
+
     except Exception as e:
-        print(f"[red]Failed to start server: {str(e)}[/red]")
-        raise typer.Exit(1)
+        log.exception(f"Error starting server: {e}")
+        raise typer.Exit(code=1)
 
 if __name__ == "__main__":
     app()

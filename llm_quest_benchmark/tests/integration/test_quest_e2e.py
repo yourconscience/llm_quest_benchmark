@@ -38,7 +38,7 @@ def test_quest_run_with_llm(caplog):
             caplog.error(f"Error: {data}")
 
     # Run quest with real LLM agent
-    result = run_quest_with_timeout(
+    outcome = run_quest_with_timeout(
         quest_path=str(DEFAULT_QUEST),
         agent=agent,
         timeout=TIMEOUT,  # Match the test timeout
@@ -46,14 +46,12 @@ def test_quest_run_with_llm(caplog):
         callbacks=[mock_callback]
     )
 
-    # Convert string outcome back to enum
-    outcome = QuestOutcome[result['outcome']]
-
     # Check that we got a valid outcome
-    assert not outcome.is_error, f"Quest ended with an error: {result.get('error')}"
+    assert outcome is not None, "Quest returned no outcome"
+    assert not outcome.is_error, "Quest ended with an error"
     assert outcome in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE], \
         "Quest did not reach a final state"
-    assert outcome.exit_code == 0, "Normal quest outcomes should have exit code 0"
+    assert outcome.exit_code == 0, "Quest should have a successful exit code"
 
 
 @pytest.mark.e2e
@@ -76,7 +74,7 @@ def test_random_agent_on_test_quest(caplog):
             caplog.error(f"Error: {data}")
 
     # Run quest with random agent
-    result = run_quest_with_timeout(
+    outcome = run_quest_with_timeout(
         quest_path=str(DEFAULT_QUEST),
         agent=agent,
         debug=True,  # Enable debug logging
@@ -84,15 +82,9 @@ def test_random_agent_on_test_quest(caplog):
         callbacks=[mock_callback]
     )
 
-    # Convert string outcome back to enum
-    outcome = QuestOutcome[result['outcome']]
-
     # Check that we got a valid outcome
-    assert not outcome.is_error, f"Quest ended with an error: {result.get('error')}"
+    assert outcome is not None, "Quest returned no outcome"
+    assert not outcome.is_error, "Quest ended with an error"
     assert outcome in [QuestOutcome.SUCCESS, QuestOutcome.FAILURE], \
         "Quest did not reach a final state"
-    assert outcome.exit_code == 0, "Normal quest outcomes should have exit code 0"
-
-    # Check steps were recorded
-    assert len(result['steps']) > 0
-    assert result['error'] is None
+    assert outcome.exit_code == 0, "Quest should have a successful exit code"

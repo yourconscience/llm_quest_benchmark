@@ -4,10 +4,11 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List, Callable
 from datetime import datetime
 import warnings
+from concurrent.futures import ThreadPoolExecutor
 
 from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
-from llm_quest_benchmark.environments.qm import QMPlayerEnv
+from llm_quest_benchmark.environments.qm import QMPlayerEnv as QuestEnvironment
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.core.logging import QuestLogger, LogManager
 from llm_quest_benchmark.core.time import run_with_timeout, CommandTimeout
@@ -25,92 +26,61 @@ def run_quest_with_timeout(
     quest_path: str,
     agent: QuestPlayer,
     timeout: int = DEFAULT_QUEST_TIMEOUT,
-    debug: bool = True,
-    callbacks: List[Callable[[str, Any], None]] = None,
-    renderer: Optional[BaseRenderer] = None,  # Deprecated
-) -> Dict[str, Any]:
-    """Run a single quest with timeout and parameters
+    agent_id: Optional[str] = None,
+    agent_config: Optional[str] = None,
+    debug: bool = False,
+    callbacks: List[Callable[[str, Any], None]] = None
+) -> Optional[QuestOutcome]:
+    """Run quest with timeout.
 
     Args:
-        quest_path (str): Path to quest file
-        agent (QuestPlayer): Agent to run quest with
-        timeout (int, optional): Timeout in seconds. Defaults to DEFAULT_QUEST_TIMEOUT.
-        debug (bool, optional): Enable debug output. Defaults to True.
-        callbacks (List[Callable], optional): List of callback functions that take (event_type: str, data: Any).
-        renderer (Optional[BaseRenderer], optional): DEPRECATED. Use callbacks instead.
+        quest_path: Path to quest file
+        agent: Quest player agent
+        timeout: Timeout in seconds
+        agent_id: Optional unique identifier for the agent
+        agent_config: Optional JSON string containing agent configuration
+        debug: Enable debug logging and output
+        callbacks: Optional list of callback functions for progress updates
 
     Returns:
-        Dict[str, Any]: Quest run result with outcome and metrics
+        QuestOutcome if quest completed, None if timed out
     """
-    if renderer is not None:
-        warnings.warn("renderer parameter is deprecated. Use callbacks instead.", DeprecationWarning)
-        # Convert renderer to callback if provided
-        if not callbacks:
-            callbacks = []
-        callbacks.append(lambda event, data: _renderer_to_callback(renderer, event, data))
-
-    callbacks = callbacks or []
-    quest_name = Path(quest_path).name
-    result = {
-        'quest': quest_name,
-        'timestamp': datetime.now().isoformat(),
-        'outcome': QuestOutcome.ERROR.name,
-        'error': None,
-        'steps': [],
-        'llm_error': False,
-        'model': agent.model_name if isinstance(agent, LLMAgent) else None
-    }
-
-    logger = logging.getLogger(__name__)
-    if debug:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
-
     try:
-        logger.info(f"Starting quest {quest_name} with agent {agent}")
+        # Initialize logger with agent_id
+        logger = QuestLogger(debug=debug, agent=agent_id)
 
-        runner = QuestRunner(agent=agent, debug=debug, callbacks=callbacks)
-        try:
-            # Run quest with timeout
-            def run_quest():
-                return runner.run(quest_path)
-            outcome = run_with_timeout(run_quest, timeout)
-            result['outcome'] = outcome.name
-        except CommandTimeout:
-            logger.warning(f"Quest {quest_name} timed out after {timeout} seconds")
-            result['outcome'] = QuestOutcome.TIMEOUT.name
-            result['error'] = f"Timed out after {timeout} seconds"
+        # Set quest file for logging
+        logger.set_quest_file(quest_path)
 
-        # Collect detailed metrics from quest logger
-        if runner.quest_logger:
-            result['steps'] = runner.quest_logger.get_log_entries()
+        # Create quest environment
+        env = QuestEnvironment(quest_path)
 
-        # Check for LLM errors
-        if isinstance(agent, LLMAgent):
-            result['llm_error'] = getattr(agent, 'last_error', None) is not None
-            if result['llm_error']:
-                result['error'] = f"LLM Error: {agent.last_error}"
+        # Create quest runner with callbacks
+        runner = QuestRunner(agent=agent, debug=debug, callbacks=callbacks or [])
+
+        # Run quest with timeout
+        with ThreadPoolExecutor() as executor:
+            future = executor.submit(runner.run, quest_path)
+            try:
+                outcome = future.result(timeout=timeout)
+
+                # Update run with agent_id and config if provided
+                if agent_id or agent_config:
+                    logger.cursor.execute('''
+                        UPDATE runs
+                        SET agent_id = ?, agent_config = ?
+                        WHERE id = ?
+                    ''', (agent_id, agent_config, logger.current_run_id))
+                    logger.conn.commit()
+
+                return outcome
+            except TimeoutError:
+                logger.logger.warning(f"Quest timed out after {timeout} seconds")
+                return None
 
     except Exception as e:
-        error_msg = f"{type(e).__name__}: {str(e)}"
-        logger.error(f"Quest {quest_name} failed with error: {error_msg}")
-        result['error'] = error_msg
-        if isinstance(agent, LLMAgent):
-            result['llm_error'] = getattr(agent, 'last_error', None) is not None
-
-    return result
-
-def _renderer_to_callback(renderer: BaseRenderer, event: str, data: Any) -> None:
-    """Convert renderer methods to callback format"""
-    if event == "title":
-        renderer.render_title()
-    elif event == "game_state":
-        renderer.render_game_state(data)
-    elif event == "error":
-        renderer.render_error(data)
-    elif event == "close":
-        renderer.close()
+        logger.logger.error(f"Error running quest: {e}")
+        raise
 
 class QuestRunner:
     """Manages quest execution with logging and metrics"""
@@ -152,7 +122,7 @@ class QuestRunner:
         try:
             if self.debug:
                 self.logger.debug("Initializing environment for quest: %s", quest)
-            self.env = QMPlayerEnv(quest, language=DEFAULT_LANG, debug=self.debug)
+            self.env = QuestEnvironment(quest, language=DEFAULT_LANG, debug=self.debug)
             self.quest_logger.set_quest_file(quest)
             self.logger.info(f"Running quest {quest} with agent: {str(self.agent)}")
         except Exception as e:

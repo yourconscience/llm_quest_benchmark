@@ -6,7 +6,7 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 
 ## Features
 
-- 🔥 **Live Demo**: [llm-quest-benchmark.streamlit.app](http://192.168.100.4:8504/)
+- 🔥 **Modern Web UI**: Beautiful Flask-based interface with Bootstrap 5
 - 👾 **Quest Environment**: Classic Space Rangers text quests act as single-agent environments
 - 🤖 **LLM Agents**: Simple yet customizable via prompt templates and optional thinking
 - ⭐️ **Latest LLM Providers**: OpenAI, Anthropic, Deepseek, OpenRouter models are supported
@@ -49,7 +49,7 @@ chmod +x install.sh
 ```
 
 The script will:
-- Set up a virtual environment
+- Set up a virtual environment using uv
 - Install Python dependencies using uv
 - Set up the Space Rangers Quest TypeScript bridge
 - Create a default .env file
@@ -61,6 +61,7 @@ export OPENAI_API_KEY=your-api-key  # On Windows: set OPENAI_API_KEY=your-api-ke
 
 ## Usage
 
+### CLI Interface
 ```bash
 # Run with LLM agent
 llm-quest run -q quests/boat.qm --model gpt-4o-mini
@@ -75,6 +76,17 @@ llm-quest analyze  # Uses most recent run
 llm-quest benchmark --config configs/test_benchmark.yaml
 ```
 
+### Web Interface
+```bash
+# Start the web server
+llm-quest web
+
+# Or with gunicorn (production)
+gunicorn -w 4 -b 0.0.0.0:8000 'llm_quest_benchmark.web.app:create_app()'
+```
+
+Then open http://localhost:8000 in your browser.
+
 ## Project Structure
 
 - `llm_quest_benchmark/` - Core package
@@ -83,6 +95,7 @@ llm-quest benchmark --config configs/test_benchmark.yaml
   - `environments/` - Quest environments
   - `executors/` - CLI and bridges
   - `renderers/` - Terminal UI
+  - `web/` - Web interface
   - `utils/` - Shared utilities
   - `tests/` - Test suite
 - `quests/` - Example quests

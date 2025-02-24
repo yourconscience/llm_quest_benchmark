@@ -51,10 +51,8 @@ class QuestLogger:
         self.quest_file: Optional[str] = None
         self.current_run_id: Optional[int] = None
 
-        # Set up SQLite database path
-        metrics_dir = Path("metrics")
-        metrics_dir.mkdir(exist_ok=True)
-        self.db_path = metrics_dir / "metrics.db"
+        # Set up SQLite database path - use current directory
+        self.db_path = Path("metrics.db")
 
         # Configure console output if not already configured
         if not self.logger.handlers:
@@ -92,7 +90,9 @@ class QuestLogger:
                 template TEXT,
                 outcome TEXT,
                 reward REAL,
-                benchmark_name TEXT
+                benchmark_name TEXT,
+                agent_id TEXT,
+                agent_config TEXT
             )''')
 
         self.cursor.execute('''

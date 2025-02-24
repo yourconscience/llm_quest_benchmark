@@ -58,182 +58,74 @@ def get_quest_files(quest_paths: List[str]) -> List[Path]:
 
 def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
     """Run benchmark on a set of quests with multiple agents"""
-    # Initialize logging
-    log_manager = LogManager()
-    logger = log_manager.get_logger()
-    quest_logger = QuestLogger(debug=config.debug)
-
-    # Get quest files
-    quest_files = []
-    for quest_glob in config.quests:
-        quest_files.extend(glob.glob(quest_glob))
-
-    if not quest_files:
-        raise ValueError(f"No quest files found matching patterns: {config.quests}")
-
-    # Create agents
-    agents = []
-    for agent_config in config.agents:
-        try:
-            agent = create_agent(
-                model=agent_config.model,
-                system_template=agent_config.system_template,
-                action_template=agent_config.action_template,
-                temperature=agent_config.temperature,
-                skip_single=agent_config.skip_single
-            )
-            agents.append((agent_config, agent))
-        except Exception as e:
-            logger.error(f"Failed to create agent with config {agent_config}: {e}")
-            continue
-
-    if not agents:
-        raise ValueError("No valid agents created")
-
-    # Create all tasks
-    all_tasks = []
-    for quest_file in quest_files:
-        for agent_config, agent in agents:
-            all_tasks.append((Path(quest_file), agent_config, agent))
-
-    # Configure timeouts
-    quest_timeout = config.quest_timeout or DEFAULT_QUEST_TIMEOUT
-    benchmark_timeout = config.benchmark_timeout or (quest_timeout * len(all_tasks))
-
-    # Initialize renderer
-    renderer = create_renderer(config.renderer, debug=config.debug)
-
-    # Initialize benchmark metrics
+    results = []
     benchmark_metrics = {
+        'name': config.name,
         'timestamp': datetime.now().isoformat(),
-        'config': {
-            'quest_timeout': quest_timeout,
-            'benchmark_timeout': benchmark_timeout,
-            'debug': config.debug,
-            'max_workers': config.max_workers,
-        },
-        'agents': [
-            {
-                'model': agent_config.model,
-                'system_template': agent_config.system_template,
-                'action_template': agent_config.action_template,
-                'temperature': agent_config.temperature,
-                'skip_single': agent_config.skip_single
-            }
-            for _, agent_config in agents
-        ],
         'quests': [],
-        'summary': {
-            'total_quests': len(quest_files),
-            'total_runs': len(all_tasks),
-            'outcomes': {},
-            'steps': {
-                'total': 0,
-                'average': 0,
-                'by_model': {}
-            }
-        }
+        'agents': []
     }
 
-    # Run tasks
-    results = []
-    with ThreadPoolExecutor(max_workers=config.max_workers) as executor:
-        futures = []
-        for quest_file, agent_config, agent in all_tasks:
-            future = executor.submit(
-                run_quest_with_timeout,
-                quest_file=quest_file,
-                agent=agent,
-                timeout=quest_timeout,
-                debug=config.debug
+    # Create logger for benchmark
+    logger = QuestLogger(debug=config.debug)
+
+    for quest_file in config.quests:
+        quest_metrics = {'quest': quest_file, 'runs': []}
+
+        for agent_config in config.agents:
+            # Generate unique agent_id
+            agent_id = f"{agent_config.model}_t{agent_config.temperature}_{agent_config.system_template}"
+
+            # Create agent
+            agent = create_agent(
+                model=agent_config.model,
+                temperature=agent_config.temperature,
+                system_template=agent_config.system_template,
+                action_template=agent_config.action_template,
+                skip_single=agent_config.skip_single,
+                debug=agent_config.debug
             )
-            futures.append((quest_file, agent_config, future))
 
-        # Process results as they complete
-        for quest_file, agent_config, future in futures:
+            logger.logger.info(f"Running {quest_file} with agent {agent_id}")
+
             try:
-                result = future.result(timeout=quest_timeout)
-                error_msg = None
-
-                # Start recording metrics for this run
-                quest_logger.start_quest_run(
-                    quest_file=str(quest_file),
-                    model=agent_config.model,
-                    template=agent_config.system_template,
-                    benchmark_name=config.name
+                # Run quest with timeout
+                outcome = run_quest_with_timeout(
+                    quest_file,
+                    agent,
+                    timeout=config.quest_timeout,
+                    agent_id=agent_id,
+                    agent_config=json.dumps(agent_config.__dict__)
                 )
 
-                # Record each step
-                for step in result.get('steps', []):
-                    quest_logger.record_step(step)
+                if outcome:
+                    result = {
+                        'quest': quest_file,
+                        'model': agent_config.model,
+                        'temperature': agent_config.temperature,
+                        'template': agent_config.system_template,
+                        'agent_id': agent_id,
+                        'outcome': outcome.outcome.name if outcome else None,
+                        'reward': outcome.reward
+                    }
+                    results.append(result)
+                    quest_metrics['runs'].append(result)
 
-                # End run with outcome
-                quest_logger.end_quest_run(
-                    outcome=result.get('outcome'),
-                    reward=result.get('reward', 0.0)
-                )
-
-            except TimeoutError:
-                error_msg = "Quest timed out"
-                result = {
-                    'quest': str(quest_file),
-                    'model': agent_config.model,
-                    'outcome': 'TIMEOUT',
-                    'error': error_msg
-                }
             except Exception as e:
-                error_msg = str(e)
+                logger.logger.error(f"Error running quest {quest_file} with agent {agent_id}: {e}")
                 result = {
-                    'quest': str(quest_file),
+                    'quest': quest_file,
                     'model': agent_config.model,
-                    'outcome': 'ERROR',
-                    'error': error_msg
+                    'temperature': agent_config.temperature,
+                    'template': agent_config.system_template,
+                    'agent_id': agent_id,
+                    'outcome': QuestOutcome.ERROR.name,
+                    'error': str(e)
                 }
+                results.append(result)
+                quest_metrics['runs'].append(result)
 
-            results.append(result)
-
-            if isinstance(renderer, ProgressRenderer):
-                renderer.update(
-                    quest_name=quest_file.stem,
-                    agent=str(agent_config),
-                    outcome=QuestOutcome[result['outcome']],
-                    error=error_msg,
-                    llm_error=result.get('llm_error', False)
-                )
-
-            # Update benchmark metrics with outcomes and steps
-            outcome = result['outcome']
-            if outcome not in benchmark_metrics['summary']['outcomes']:
-                benchmark_metrics['summary']['outcomes'][outcome] = 0
-            benchmark_metrics['summary']['outcomes'][outcome] += 1
-
-            # Track steps
-            steps_count = len(result.get('steps', []))
-            benchmark_metrics['summary']['steps']['total'] += steps_count
-
-            # Track steps by model
-            model = result['model']
-            if model not in benchmark_metrics['summary']['steps']['by_model']:
-                benchmark_metrics['summary']['steps']['by_model'][model] = {
-                    'total': 0,
-                    'count': 0,
-                    'average': 0
-                }
-            benchmark_metrics['summary']['steps']['by_model'][model]['total'] += steps_count
-            benchmark_metrics['summary']['steps']['by_model'][model]['count'] += 1
-
-    # Close renderer
-    renderer.close()
-
-    # Calculate average steps
-    total_runs = len(results)
-    if total_runs > 0:
-        benchmark_metrics['summary']['steps']['average'] = benchmark_metrics['summary']['steps']['total'] / total_runs
-
-        # Calculate per-model averages
-        for model_stats in benchmark_metrics['summary']['steps']['by_model'].values():
-            if model_stats['count'] > 0:
-                model_stats['average'] = model_stats['total'] / model_stats['count']
+        benchmark_metrics['quests'].append(quest_metrics)
 
     # Save results if output dir specified
     if config.output_dir:

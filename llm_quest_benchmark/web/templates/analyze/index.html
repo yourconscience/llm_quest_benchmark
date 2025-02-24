@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis - LLM Quest Benchmark{% endblock %}
+
+{% block head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Summary Stats -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Summary Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="summaryStats">
+                    <!-- Stats will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Comparison -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Model Performance Comparison
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="modelComparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step Analysis -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Step Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="stepAnalysisChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Results -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-table me-2"></i>Detailed Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped" id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Quest</th>
+                                <th>Model</th>
+                                <th>Success Rate</th>
+                                <th>Avg Steps</th>
+                                <th>Avg Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Results will be added here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Run Details Modal -->
+<div class="modal fade" id="runDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Run Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="runDetailsContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Load data and initialize charts
+    async function loadData() {
+        try {
+            // Load summary data
+            const summaryResponse = await fetch('/analyze/summary');
+            const summaryData = await summaryResponse.json();
+            displaySummary(summaryData);
+
+            // Load model comparison data
+            const comparisonResponse = await fetch('/analyze/model_comparison');
+            const comparisonData = await comparisonResponse.json();
+            displayModelComparison(comparisonData);
+
+            // Load step analysis data
+            const stepResponse = await fetch('/analyze/step_analysis');
+            const stepData = await stepResponse.json();
+            displayStepAnalysis(stepData);
+
+        } catch (error) {
+            console.error('Error loading data:', error);
+            alert('Failed to load analysis data');
+        }
+    }
+
+    function displaySummary(data) {
+        const summaryStats = document.getElementById('summaryStats');
+
+        // Calculate overall stats
+        const totalRuns = data.reduce((sum, item) => sum + item.total_runs, 0);
+        const avgSuccessRate = data.reduce((sum, item) => sum + item.success_rate * item.total_runs, 0) / totalRuns;
+
+        summaryStats.innerHTML = `
+            <div class="col-md-4">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">Total Runs</h6>
+                        <h2 class="card-text">${totalRuns}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">Average Success Rate</h6>
+                        <h2 class="card-text">${(avgSuccessRate * 100).toFixed(1)}%</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h6 class="card-title">Total Quests</h6>
+                        <h2 class="card-text">${data.length}</h2>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function displayModelComparison(data) {
+        const ctx = document.getElementById('modelComparisonChart').getContext('2d');
+
+        // Group data by model
+        const models = [...new Set(data.map(item => item.model))];
+        const datasets = models.map(model => ({
+            label: model,
+            data: data.filter(item => item.model === model).map(item => item.success_rate * 100),
+            borderWidth: 1
+        }));
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [...new Set(data.map(item => item.quest_name))],
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Success Rate (%)'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Model Success Rate by Quest'
+                    }
+                }
+            }
+        });
+    }
+
+    function displayStepAnalysis(data) {
+        const ctx = document.getElementById('stepAnalysisChart').getContext('2d');
+
+        // Group data by model and calculate averages
+        const models = [...new Set(data.map(item => item.model))];
+        const datasets = models.map(model => ({
+            label: model,
+            data: data.filter(item => item.model === model).map(item => item.avg_latency),
+            borderWidth: 1,
+            fill: false
+        }));
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [...new Set(data.map(item => item.location_id))],
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Average Latency (ms)'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Model Latency by Step'
+                    }
+                }
+            }
+        });
+    }
+
+    // Show run details
+    async function showRunDetails(runId) {
+        try {
+            const response = await fetch(`/analyze/run/${runId}/analysis`);
+            const data = await response.json();
+
+            const content = document.getElementById('runDetailsContent');
+            content.innerHTML = `
+                <div class="mb-4">
+                    <h6>Run Information</h6>
+                    <dl class="row">
+                        <dt class="col-sm-3">Quest</dt>
+                        <dd class="col-sm-9">${data.run_info.quest_name}</dd>
+
+                        <dt class="col-sm-3">Model</dt>
+                        <dd class="col-sm-9">${data.run_info.agent_config.model}</dd>
+
+                        <dt class="col-sm-3">Total Steps</dt>
+                        <dd class="col-sm-9">${data.metrics.total_steps}</dd>
+
+                        <dt class="col-sm-3">Total Time</dt>
+                        <dd class="col-sm-9">${data.metrics.total_time.toFixed(2)}s</dd>
+
+                        <dt class="col-sm-3">Avg Time per Step</dt>
+                        <dd class="col-sm-9">${data.metrics.avg_time_per_step.toFixed(2)}s</dd>
+                    </dl>
+                </div>
+
+                <div>
+                    <h6>Step Details</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Step</th>
+                                    <th>Location</th>
+                                    <th>Choices</th>
+                                    <th>Latency</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.step_metrics.map(step => `
+                                    <tr>
+                                        <td>${step.step}</td>
+                                        <td>${step.location}</td>
+                                        <td>${step.num_choices}</td>
+                                        <td>${step.latency ? step.latency.toFixed(2) + 'ms' : '-'}</td>
+                                        <td>${step.action}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            new bootstrap.Modal(document.getElementById('runDetailsModal')).show();
+        } catch (error) {
+            console.error('Error loading run details:', error);
+            alert('Failed to load run details');
+        }
+    }
+
+    // Load data when page loads
+    document.addEventListener('DOMContentLoaded', loadData);
+</script>
+{% endblock %}
