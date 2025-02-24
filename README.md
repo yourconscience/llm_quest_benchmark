@@ -3,8 +3,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Observe and analyze LLM agents decision-making through Space Rangers text adventures! 👾🚀📊
-Disclaimer: this project was created for fun with 99% code written by cursor's AI agent mode -- there could be some inconsistencies in the code.
 
+
+Disclaimer: this project was created for fun with 99% code written by cursor's AI agent mode.
 ## Features
 
 - 🔥 **Modern Web UI**: Check out the demo [here](https://cf82-94-43-167-97.ngrok-free.app)
