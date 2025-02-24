@@ -23,6 +23,8 @@ from llm_quest_benchmark.constants import (
     DEFAULT_TEMPERATURE,
     INFINITE_TIMEOUT,
     SYSTEM_ROLE_TEMPLATE,
+    WEB_SERVER_HOST,
+    WEB_SERVER_PORT,
 )
 from llm_quest_benchmark.dataclasses.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.agents.human_player import HumanPlayer
@@ -308,8 +310,8 @@ def find_available_port(start_port: int = 8000, max_attempts: int = 100) -> int:
 
 @app.command()
 def server(
-    host: str = typer.Option("127.0.0.1", help="Host to run the server on"),
-    port: int = typer.Option(8000, help="Port to run the server on (will auto-increment if taken)"),
+    host: str = typer.Option(WEB_SERVER_HOST, help="Host to run the server on"),
+    port: int = typer.Option(WEB_SERVER_PORT, help="Port to run the server on (will auto-increment if taken)"),
     debug: bool = typer.Option(False, help="Enable debug mode"),
     workers: int = typer.Option(1, help="Number of worker processes (only used in production mode)"),
     production: bool = typer.Option(False, help="Run in production mode using gunicorn")

@@ -35,3 +35,7 @@ DEFAULT_QUEST_TIMEOUT = 120  # Default timeout for single quest run
 DEFAULT_BENCHMARK_TIMEOUT_FACTOR = 1.5  # Safety factor for benchmark timeout calculation
 MAX_BENCHMARK_TIMEOUT = 7200  # Maximum benchmark timeout (2 hours)
 INFINITE_TIMEOUT = 10**9  # Infinite timeout (used for interactive play)
+
+# Web server
+WEB_SERVER_HOST = "0.0.0.0"
+WEB_SERVER_PORT = 8000

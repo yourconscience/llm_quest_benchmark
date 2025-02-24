@@ -4,6 +4,7 @@ from pathlib import Path
 import logging
 import os
 
+from llm_quest_benchmark.constants import WEB_SERVER_HOST, WEB_SERVER_PORT
 # Set working directory to workspace root
 workspace_root = Path(__file__).parent.parent.parent
 os.chdir(str(workspace_root))
@@ -47,9 +48,9 @@ def create_app():
 def main():
     """Run the Flask application"""
     app = create_app()
-    port = 5000
-    app.logger.info(f'Starting server at http://127.0.0.1:{port}')
-    app.run(port=port)
+    port = WEB_SERVER_PORT
+    app.logger.info(f'Starting server at http://{WEB_SERVER_HOST}:{port}')
+    app.run(host=WEB_SERVER_HOST, port=port)
 
 if __name__ == '__main__':
     main()
