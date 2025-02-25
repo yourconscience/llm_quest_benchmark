@@ -4,8 +4,6 @@
 
 Observe and analyze LLM agents decision-making through Space Rangers text adventures! 👾🚀📊
 
-
-Disclaimer: this project was created for fun with 99% code written by cursor's AI agent mode.
 ## Features
 
 - 🔥 **Modern Web UI**: Check out the demo [here](https://cf82-94-43-167-97.ngrok-free.app)
@@ -99,6 +97,7 @@ Then open http://localhost:8000 in your browser.
 ## License
 MIT License - See LICENSE for details.
 
-Disclaimer: This project is not affiliated with Elemental Games or the Space Rangers franchise.
+## Disclaimer
+This project was created for fun with 99% code written by cursor's AI agent mode.
 
-4. If you see TypeScript/JSX errors, they can be safely ignored as they don't affect the bridge functionality.
+This project is not affiliated with Elemental Games or the Space Rangers franchise.
