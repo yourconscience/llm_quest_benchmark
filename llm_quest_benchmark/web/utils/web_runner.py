@@ -241,7 +241,7 @@ def take_manual_step(
 
         # Create manual agent with the selected choice
         manual_agent = ManualChoiceAgent(choice_num)
-        quest_path = f"quests/{run.quest_file}"
+        quest_path = run.quest_file
         logger.info(f"Quest path: {quest_path}")
 
         new_step = None

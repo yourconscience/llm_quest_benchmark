@@ -1,6 +1,7 @@
 """Choice mapping utilities"""
 from typing import Dict, List, Any, Optional
 from llm_quest_benchmark.dataclasses.response import LLMResponse
+from llm_quest_benchmark.utils.text_processor import clean_qm_text
 
 class ChoiceMapper:
     """Maps between sequential choice numbers and choice IDs"""
@@ -29,6 +30,20 @@ class ChoiceMapper:
     def __contains__(self, choice_number: int) -> bool:
         """Check if choice number is valid"""
         return choice_number in self.mapping
+
+    def get_numbered_choices(self) -> List[Dict[str, str]]:
+        """Get choices with sequential numbers and cleaned text.
+
+        Returns:
+            List of choices with sequential numbers as IDs and cleaned text
+        """
+        formatted_choices = []
+        for i, choice in enumerate(self.choices, 1):
+            formatted_choices.append({
+                'id': str(i),
+                'text': clean_qm_text(choice['text']) if choice.get('text') else choice.get('text', '')
+            })
+        return formatted_choices
 
     @staticmethod
     def format_agent_response(response: LLMResponse, choices: List[Dict[str, str]]) -> LLMResponse:
@@ -63,12 +78,12 @@ class ChoiceMapper:
 
     @staticmethod
     def format_choices_for_display(choices: List[Dict[str, str]]) -> List[str]:
-        """Format choices for display.
+        """Format choices for display with cleaned text.
 
         Args:
             choices: List of choice dictionaries
 
         Returns:
-            List of formatted choice strings
+            List of formatted choice strings with cleaned text
         """
-        return [f"{i+1}. {choice['text']}" for i, choice in enumerate(choices)]
+        return [f"{i+1}. {clean_qm_text(choice['text'])}" for i, choice in enumerate(choices)]
