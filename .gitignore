@@ -2,6 +2,7 @@
 tmp/
 metrics/
 results/
+logs/
 
 # Quest files and utils
 quests/

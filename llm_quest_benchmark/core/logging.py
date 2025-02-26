@@ -122,20 +122,27 @@ class QuestLogger:
         self.steps = []
 
         try:
-            # Create run record with quest_file
+            # Extract quest name from path (filename without extension)
+            quest_name = Path(quest_file).stem
+
+            # Create run record with both quest_file and quest_name
             self._local.cursor.execute('''
-                INSERT INTO runs (quest_file, start_time, agent_id)
-                VALUES (?, ?, ?)
-            ''', (quest_file, datetime.utcnow(), self.agent))
+                INSERT INTO runs (quest_file, quest_name, start_time, agent_id)
+                VALUES (?, ?, ?, ?)
+            ''', (quest_file, quest_name, datetime.utcnow(), self.agent))
             self._local.conn.commit()
         except sqlite3.OperationalError as e:
             if "no such column: quest_file" in str(e):
                 # Fallback for older schema without quest_file column
                 self.logger.warning("quest_file column not found in database, using quest_name instead")
+
+                # Extract quest name from path (filename without extension)
+                quest_name = Path(quest_file).stem
+
                 self._local.cursor.execute('''
                     INSERT INTO runs (quest_name, start_time, agent_id)
                     VALUES (?, ?, ?)
-                ''', (quest_file, datetime.utcnow(), self.agent))
+                ''', (quest_name, datetime.utcnow(), self.agent))
                 self._local.conn.commit()
             else:
                 raise
