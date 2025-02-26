@@ -3,8 +3,6 @@ import logging
 import click
 from pathlib import Path
 from typing import Optional, List
-import subprocess
-from rich import print
 import socket
 
 from llm_quest_benchmark.agents.agent_factory import create_agent
@@ -15,6 +13,7 @@ from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.core.analyzer import analyze_quest_run, analyze_benchmark
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.benchmark import run_benchmark, print_summary
+from llm_quest_benchmark.renderers.terminal import RichRenderer
 from llm_quest_benchmark.constants import (
     MODEL_CHOICES,
     DEFAULT_MODEL,
@@ -51,6 +50,10 @@ def _handle_quest_outcome(outcome: QuestOutcome, log_prefix: str) -> None:
         outcome: The quest outcome to handle
         log_prefix: Prefix for the log message (e.g. "Quest run" or "Quest play")
     """
+    if outcome is None:
+        log.error(f"{log_prefix} timed out")
+        raise typer.Exit(code=1)
+
     log.info(f"{log_prefix} completed with outcome: {outcome}")
     if outcome.is_error:
         log.error("Quest encountered an error")
@@ -95,6 +98,18 @@ def run(
     """
     try:
         log_manager.setup(debug)
+
+        # Create agent config
+        agent_config = AgentConfig(
+            model=model,
+            system_template=system_template,
+            action_template=action_template,
+            temperature=temperature,
+            skip_single=skip,
+            debug=debug
+        )
+
+        # Create agent
         agent = create_agent(
             model=model,
             system_template=system_template,
@@ -108,12 +123,50 @@ def run(
         log.debug(f"Quest file: {quest}")
         log.debug(f"Timeout: {timeout}s")
 
+        # Create callbacks based on debug mode
+        callbacks = []
+        if not debug:
+            # Create a rich renderer for terminal UI when not in debug mode
+            renderer = RichRenderer()
+
+            # Define callbacks that use the renderer
+            def title_callback(event, data):
+                if event == "title":
+                    renderer.render_title()
+
+            def game_state_callback(event, data):
+                if event == "game_state":
+                    renderer.render_game_state(data)
+
+            def progress_callback(event, data):
+                if event == "progress":
+                    # Optional: Show progress information
+                    pass
+
+            def error_callback(event, data):
+                if event == "error":
+                    renderer.render_error(data)
+
+            def close_callback(event, data):
+                if event == "close":
+                    renderer.close()
+
+            callbacks = [
+                title_callback,
+                game_state_callback,
+                progress_callback,
+                error_callback,
+                close_callback
+            ]
+
         timeout = timeout if timeout > 0 else 10**9
         result = run_quest_with_timeout(
                 quest_path=str(quest),
                 agent=agent,
                 debug=debug,
-                timeout=timeout
+                timeout=timeout,
+                agent_config=agent_config,
+                callbacks=callbacks
         )
         _handle_quest_outcome(result, "Quest run")
 
@@ -297,78 +350,40 @@ def benchmark(
         typer.echo(f"Error during benchmark: {str(e)}", err=True)
         raise typer.Exit(code=2)
 
-def find_available_port(start_port: int = 8000, max_attempts: int = 100) -> int:
-    """Find an available port starting from start_port."""
-    for port in range(start_port, start_port + max_attempts):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            try:
-                s.bind(('', port))
-                return port
-            except socket.error:
-                continue
-    raise RuntimeError(f"Could not find an available port after {max_attempts} attempts")
-
 @app.command()
 def server(
     host: str = typer.Option(WEB_SERVER_HOST, help="Host to run the server on"),
     port: int = typer.Option(WEB_SERVER_PORT, help="Port to run the server on (will auto-increment if taken)"),
     debug: bool = typer.Option(False, help="Enable debug mode"),
-    workers: int = typer.Option(1, help="Number of worker processes (only used in production mode)"),
+    workers: int = typer.Option(4, help="Number of worker processes (only used in production mode)"),
     production: bool = typer.Option(False, help="Run in production mode using gunicorn")
 ):
     """Start the web interface server.
 
     This command starts the Flask web interface for running and analyzing quests.
-    In development mode, it uses Flask's built-in server. In production mode, it uses gunicorn.
+    It uses Flask's built-in server which is suitable for local development.
+
+    For production use, set the --production flag to use gunicorn with multiple workers.
 
     Example:
-        llm-quest server  # Run development server
-        llm-quest server --production --workers 4  # Run production server with gunicorn
+        llm-quest server  # Run server on default port (8000)
+        llm-quest server --port 5000  # Run on a different port
+        llm-quest server --debug  # Run with debug mode enabled
+        llm-quest server --production --workers 8  # Run in production mode with 8 workers
     """
     try:
         # Setup logging
         log_manager.setup(debug)
         log.info("Starting web interface server")
 
-        # Find available port
-        port = find_available_port(port)
-        log.info(f"Using port {port}")
+        print(f"Starting server on http://{host}:{port}")
 
-        if production:
-            try:
-                import gunicorn.app.base
+        # Use server_logic to start the server
+        from llm_quest_benchmark.executors.cli.logic.server_logic import start_server
+        success, message = start_server(host, port, debug, workers, production)
 
-                class GunicornApp(gunicorn.app.base.BaseApplication):
-                    def __init__(self, app, options=None):
-                        self.options = options or {}
-                        self.application = app
-                        super().__init__()
-
-                    def load_config(self):
-                        for key, value in self.options.items():
-                            self.cfg.set(key.lower(), value)
-
-                    def load(self):
-                        return self.application
-
-                options = {
-                    'bind': f"{host}:{port}",
-                    'workers': workers,
-                    'worker_class': 'sync',
-                    'timeout': 120,
-                    'reload': debug
-                }
-
-                app = create_app()
-                GunicornApp(app, options).run()
-
-            except ImportError:
-                log.error("Gunicorn not found. Please install it with: pip install gunicorn")
-                raise typer.Exit(code=1)
-        else:
-            # Development mode - use Flask's built-in server
-            app = create_app()
-            app.run(host=host, port=port, debug=debug)
+        if not success:
+            raise Exception(message)
 
     except Exception as e:
         log.exception(f"Error starting server: {e}")

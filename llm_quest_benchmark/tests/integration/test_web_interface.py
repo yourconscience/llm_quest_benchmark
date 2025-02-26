@@ -105,7 +105,8 @@ def test_quest_initialization(client, app):
         # Verify database entry
         run = Run.query.get(response.json['run_id'])
         assert run is not None
-        assert run.quest_name == 'kr1/Boat.qm'
+        assert run.quest_name == 'Boat'
+        assert run.quest_file == 'quests/kr1/Boat.qm'
         assert run.agent_id.startswith('random_choice')
         assert run.end_time is None  # This is the key assertion for initialization
 

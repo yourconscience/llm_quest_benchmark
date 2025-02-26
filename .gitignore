@@ -1,7 +1,7 @@
 # Temporary files and metrics
 tmp/
 metrics/
-logs/
+results/
 
 # Quest files and utils
 quests/
