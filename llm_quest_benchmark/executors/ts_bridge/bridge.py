@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 from llm_quest_benchmark.dataclasses.bridge import QMBridgeState
+from llm_quest_benchmark.utils.text_processor import clean_qm_text
 
 logger = logging.getLogger(__name__)
 
@@ -124,8 +125,8 @@ class QMBridge:
                 state = response['state']
                 initial_state = QMBridgeState(
                     location_id=str(response['saving']['locationId']),
-                    text=state['text'],
-                    choices=[{'id': str(c['jumpId']), 'text': c['text']} for c in state['choices'] if c['active']],
+                    text=clean_qm_text(state['text']),
+                    choices=[{'id': str(c['jumpId']), 'text': clean_qm_text(c['text'])} for c in state['choices'] if c['active']],
                     reward=0.0,  # Initial state has no reward
                     game_ended=state['gameState'] != 'running'
                 )
@@ -144,8 +145,8 @@ class QMBridge:
             state = response['state']
             initial_state = QMBridgeState(
                 location_id=str(response['saving']['locationId']),
-                text=state['text'],
-                choices=[{'id': str(c['jumpId']), 'text': c['text']} for c in state['choices'] if c['active']],
+                text=clean_qm_text(state['text']),
+                choices=[{'id': str(c['jumpId']), 'text': clean_qm_text(c['text'])} for c in state['choices'] if c['active']],
                 reward=0.0,  # Initial state has no reward
                 game_ended=state['gameState'] != 'running'
             )
@@ -186,8 +187,8 @@ class QMBridge:
             state = response_data['state']
             current_state = QMBridgeState(
                 location_id=str(response_data['saving']['locationId']),
-                text=state['text'],
-                choices=[{'id': str(c['jumpId']), 'text': c['text']} for c in state['choices'] if c['active']],
+                text=clean_qm_text(state['text']),
+                choices=[{'id': str(c['jumpId']), 'text': clean_qm_text(c['text'])} for c in state['choices'] if c['active']],
                 reward=0.0,  # Get reward from game state if available
                 game_ended=state['gameState'] != 'running'
             )
@@ -255,9 +256,9 @@ class QMBridge:
             state = response_data['state']
             new_state = QMBridgeState(
                 location_id=str(response_data['saving']['locationId']),
-                text=state['text'],
-                choices=[{'id': str(c['jumpId']), 'text': c['text']} for c in state['choices'] if c['active']],
-                reward=0.0,  # Get reward from game state if available
+                text=clean_qm_text(state['text']),
+                choices=[{'id': str(c['jumpId']), 'text': clean_qm_text(c['text'])} for c in state['choices'] if c['active']],
+                reward=float(state.get('reward', 0.0)),
                 game_ended=state['gameState'] != 'running'
             )
 

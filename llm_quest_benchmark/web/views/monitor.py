@@ -21,6 +21,7 @@ from llm_quest_benchmark.constants import (
 )
 
 from llm_quest_benchmark.agents.agent_factory import create_agent
+from llm_quest_benchmark.utils.text_processor import clean_qm_text
 from ..models.database import db, Run, Step
 from ..utils.errors import handle_errors, validate_quest_file, validate_model, validate_choice
 from ..utils.web_runner import run_quest_with_db_logging, take_manual_step
@@ -315,11 +316,11 @@ def get_run_readable(run_id):
         readable_output.append(f"----- STEP {step.step} -----")
         readable_output.append("")
 
-        # Observation
+        # Observation - text is already cleaned at the source
         readable_output.append(f"{step.observation}")
         readable_output.append("")
 
-        # Choices
+        # Choices - text is already cleaned at the source
         if step.choices and len(step.choices) > 0:
             readable_output.append("Available choices:")
             for i, choice in enumerate(step.choices):
