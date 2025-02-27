@@ -20,6 +20,14 @@ def start_server(host: str, port: int, debug: bool, workers: int, production: bo
         Tuple of (success, message)
     """
     try:
+        # Initialize the database first
+        log.info("Initializing database before starting server...")
+        from llm_quest_benchmark.web.init_db import init_database
+        db_init_success = init_database()
+
+        if not db_init_success:
+            return False, "Database initialization failed"
+
         # Import here to avoid circular imports
         from llm_quest_benchmark.web.app import create_app
 
