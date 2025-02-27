@@ -346,23 +346,43 @@ def get_run_readable(run_id):
             next_step = steps[next_step_index]
             llm_response = next_step.llm_response
 
-            # If llm_response is a string, parse it as JSON
-            if isinstance(llm_response, str):
-                try:
-                    llm_response = json.loads(llm_response)
-                except json.JSONDecodeError:
-                    logger.error(f"Failed to parse LLM response as JSON: {llm_response}")
-                    llm_response = {}
+            # Process the LLM response to extract reasoning and analysis
+            try:
+                # If llm_response is a string, try to parse it as JSON
+                if isinstance(llm_response, str):
+                    try:
+                        llm_response = json.loads(llm_response)
+                    except json.JSONDecodeError:
+                        logger.error(f"Failed to parse LLM response as JSON: {llm_response}")
+                        llm_response = {}
 
-            # Reasoning if available
-            if llm_response and 'reasoning' in llm_response:
-                readable_output.append(f"Reasoning: {llm_response['reasoning']}")
-                readable_output.append("")
+                # Handle both dictionary and object-like structures
+                if llm_response:
+                    # Try to get reasoning - handle both attribute and dictionary access
+                    reasoning = None
+                    if isinstance(llm_response, dict) and 'reasoning' in llm_response:
+                        reasoning = llm_response['reasoning']
+                    elif hasattr(llm_response, 'reasoning'):
+                        reasoning = llm_response.reasoning
 
-            # Analysis if available
-            if llm_response and 'analysis' in llm_response:
-                readable_output.append(f"Analysis: {llm_response['analysis']}")
-                readable_output.append("")
+                    if reasoning:
+                        readable_output.append(f"Reasoning: {reasoning}")
+                        readable_output.append("")
+
+                    # Try to get analysis - handle both attribute and dictionary access
+                    analysis = None
+                    if isinstance(llm_response, dict) and 'analysis' in llm_response:
+                        analysis = llm_response['analysis']
+                    elif hasattr(llm_response, 'analysis'):
+                        analysis = llm_response.analysis
+
+                    if analysis:
+                        readable_output.append(f"Analysis: {analysis}")
+                        readable_output.append("")
+            except Exception as e:
+                logger.error(f"Error processing LLM response: {e}")
+                logger.error(f"LLM response type: {type(llm_response)}")
+                logger.error(f"LLM response: {llm_response}")
 
     # Final outcome
     if run.outcome:
