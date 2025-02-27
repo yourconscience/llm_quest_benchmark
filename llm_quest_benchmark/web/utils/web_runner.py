@@ -8,7 +8,7 @@ import traceback
 import uuid
 from pathlib import Path
 
-from flask import current_app, request
+from flask import current_app, request, Flask
 import sqlalchemy
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -49,6 +49,9 @@ def run_quest_with_db_logging(
     steps = []
     timeout_occurred = False
 
+    # Get the current Flask app
+    app = current_app._get_current_object()
+
     def step_callback(event: str, data: Any) -> None:
         """Callback for each step of the quest"""
         nonlocal timeout_occurred
@@ -61,16 +64,23 @@ def run_quest_with_db_logging(
 
         if event == "game_state" and isinstance(data, AgentState):
             steps.append(data)
-            step = Step(
-                run_id=run_record.id,
-                step=data.step,
-                location_id=data.location_id,
-                observation=data.observation,
-                choices=data.choices,
-                action=data.action,
-                llm_response=data.llm_response.to_dict() if data.llm_response else None
-            )
-            db.session.add(step)
+            # Use Flask application context to ensure database operations work
+            with app.app_context():
+                try:
+                    step = Step(
+                        run_id=run_record.id,
+                        step=data.step,
+                        location_id=data.location_id,
+                        observation=data.observation,
+                        choices=data.choices,
+                        action=data.action,
+                        llm_response=data.llm_response.to_dict() if data.llm_response else None
+                    )
+                    db.session.add(step)
+                    db.session.commit()
+                except Exception as e:
+                    logger.error(f"Error in step callback: {e}")
+                    logger.error(traceback.format_exc())
 
     # Create AgentConfig from run_record.agent_config
     agent_config = None
