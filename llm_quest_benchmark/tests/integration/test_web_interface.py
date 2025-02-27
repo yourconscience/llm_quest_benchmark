@@ -32,6 +32,22 @@ def client(app):
         client.testing = True
         yield client
 
+@pytest.fixture
+def init_quest(client, app):
+    """Initialize a quest and return the response data"""
+    with app.app_context():
+        # Test quest initialization
+        data = {
+            'quest': 'kr1/Boat.qm',
+            'model': 'random_choice',
+            'temperature': 0.7,
+            'template': 'reasoning'
+        }
+        response = client.post('/monitor/init', json=data)
+        assert response.status_code == 200
+        assert response.json['success']
+        return response.json
+
 def test_index_redirect(client):
     """Test index redirects to monitor page"""
     response = client.get('/')
@@ -263,3 +279,55 @@ def test_database_operations(app):
         assert len(json.loads(saved_step.choices)) == 2
         assert saved_step.action == '1'
         assert json.loads(saved_step.llm_response)['reasoning'] == 'Test reasoning'
+
+def test_readable_run_endpoint(client, init_quest):
+    """Test the human-readable run endpoint"""
+    # Get the run ID from the initialization
+    run_id = init_quest['run_id']
+
+    # Test the readable endpoint directly without taking a step
+    response = client.get(f'/monitor/runs/{run_id}/readable')
+
+    # Print response for debugging
+    print(f"Response status: {response.status_code}")
+    print(f"Response data: {response.data.decode('utf-8')}")
+
+    assert response.status_code == 200
+    data = response.get_json()
+
+    # Verify the response structure
+    assert data['success'] is True
+    assert 'readable_output' in data
+
+    # Check content of readable output
+    readable_output = data['readable_output']
+    assert isinstance(readable_output, str)
+
+    # Check for expected sections in the output
+    assert "QUEST:" in readable_output
+    assert "AGENT:" in readable_output
+    assert "START TIME:" in readable_output
+    assert "QUEST PLAYTHROUGH" in readable_output
+
+def test_readable_endpoint(client, init_quest):
+    """Test that the readable endpoint returns a 200 status code"""
+    # Get the run ID from the initialization
+    run_id = init_quest['run_id']
+
+    # Get the readable output
+    response = client.get(f'/monitor/runs/{run_id}/readable')
+
+    # Print response for debugging
+    print(f"Response status: {response.status_code}")
+    print(f"Response data: {response.data.decode('utf-8')}")
+
+    assert response.status_code == 200
+    data = response.get_json()
+
+    # Verify the response structure
+    assert data['success'] is True
+    assert 'readable_output' in data
+
+    # Basic check that the output contains expected sections
+    readable_output = data['readable_output']
+    assert "QUEST PLAYTHROUGH" in readable_output

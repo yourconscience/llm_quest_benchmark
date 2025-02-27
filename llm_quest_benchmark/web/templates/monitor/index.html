@@ -201,21 +201,81 @@
             appendDebugLog(`Response: ${JSON.stringify(result, null, 2)}`);
 
             if (result.success) {
-                // Display all steps
+                // Clear previous output
+                debugLog = '';
+
+                // Display quest header
+                appendDebugLog(`QUEST: ${result.run?.quest_name || result.quest_name || 'Unknown'}`);
+                appendDebugLog(`AGENT: ${result.run?.agent_id || 'Unknown'}`);
+                appendDebugLog(`START TIME: ${result.run?.start_time || 'Unknown'}`);
+                if (result.run?.end_time) {
+                    appendDebugLog(`END TIME: ${result.run.end_time}`);
+                }
+                if (result.outcome) {
+                    appendDebugLog(`OUTCOME: ${result.outcome}`);
+                }
+                appendDebugLog('');
+                appendDebugLog(`========== QUEST PLAYTHROUGH ==========\n`);
+
+                // Display all steps in a human-readable format
                 result.steps.forEach((state, index) => {
-                    appendDebugLog(`\nStep ${state.step}:`);
-                    appendDebugLog(`Location: ${state.location_id}`);
-                    appendDebugLog(`Observation: ${state.observation}`);
-                    if (state.action) {
-                        appendDebugLog(`Action: ${state.action}`);
-                        appendDebugLog(`LLM Response: ${JSON.stringify(state.llm_response, null, 2)}`);
+                    // Step header with number
+                    appendDebugLog(`\n----- STEP ${state.step} -----\n`);
+
+                    // Observation text
+                    appendDebugLog(`${state.observation}\n`);
+
+                    // Format choices as a numbered list
+                    if (state.choices && state.choices.length > 0) {
+                        appendDebugLog(`Available choices:`);
+                        state.choices.forEach((choice, i) => {
+                            appendDebugLog(`${i+1}. ${choice.text}`);
+                        });
+                        appendDebugLog(``);
                     }
-                    if (state.choices) {
-                        appendDebugLog(`Choices: ${JSON.stringify(state.choices, null, 2)}`);
+
+                    // Show the action taken
+                    if (state.action) {
+                        // Find the chosen option text
+                        let choiceText = "Unknown choice";
+                        if (state.choices && state.choices.length > 0) {
+                            const choiceIndex = parseInt(state.action) - 1;
+                            if (choiceIndex >= 0 && choiceIndex < state.choices.length) {
+                                choiceText = state.choices[choiceIndex].text;
+                            }
+                        }
+                        appendDebugLog(`Selected option ${state.action}: ${choiceText}\n`);
+                    }
+
+                    // Get the NEXT step's LLM response (if available) which corresponds to THIS step's choices
+                    const nextStepIndex = index + 1;
+                    if (nextStepIndex < result.steps.length && result.steps[nextStepIndex].llm_response) {
+                        let nextStepResponse = result.steps[nextStepIndex].llm_response;
+
+                        // If nextStepResponse is a string, parse it as JSON
+                        if (typeof nextStepResponse === 'string') {
+                            try {
+                                nextStepResponse = JSON.parse(nextStepResponse);
+                            } catch (e) {
+                                console.error('Failed to parse LLM response as JSON:', e);
+                                nextStepResponse = {};
+                            }
+                        }
+
+                        // Show reasoning if available
+                        if (nextStepResponse && nextStepResponse.reasoning) {
+                            appendDebugLog(`Reasoning: ${nextStepResponse.reasoning}\n`);
+                        }
+
+                        // Show analysis if available
+                        if (nextStepResponse && nextStepResponse.analysis) {
+                            appendDebugLog(`Analysis: ${nextStepResponse.analysis}\n`);
+                        }
                     }
                 });
 
-                appendDebugLog(`\nOutcome: ${result.outcome}`);
+                // Show final outcome
+                appendDebugLog(`\n========== QUEST OUTCOME: ${result.outcome} ==========\n`);
             } else {
                 throw new Error(result.error);
             }

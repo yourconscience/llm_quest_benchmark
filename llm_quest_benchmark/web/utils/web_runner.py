@@ -6,6 +6,7 @@ import os
 import json
 import traceback
 import uuid
+from pathlib import Path
 
 from flask import current_app, request
 import sqlalchemy
@@ -17,6 +18,7 @@ from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.dataclasses.state import AgentState
 from llm_quest_benchmark.dataclasses.config import AgentConfig
 from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
+from llm_quest_benchmark.environments.qm import QMPlayerEnv
 from ..models.database import db, Run, Step
 from .errors import validate_run, validate_choice, RunNotFoundError, RunCompletedError
 from llm_quest_benchmark.constants import DEFAULT_QUEST_TIMEOUT
@@ -106,12 +108,18 @@ def run_quest_with_db_logging(
     # Get the current state (first step) for the response
     current_state = steps[0].to_dict() if steps else None
 
+    # Extract quest name from path
+    quest_name = Path(quest_path).stem
+
+    # Return result
     return {
         'success': True,
         'run_id': run_record.id,
+        'quest_file': quest_path,
+        'quest_name': quest_name,
         'steps': [step.to_dict() for step in steps],
-        'outcome': run_record.outcome,
-        'state': current_state
+        'state': current_state,
+        'outcome': run_record.outcome
     }
 
 
@@ -219,80 +227,89 @@ def take_manual_step(
         run = validate_run(run_id)
         logger.info(f"Run validated: {run.id}, completed: {run.end_time is not None}")
 
-        # Get previous steps
-        previous_steps = Step.query.filter_by(run_id=run_id).order_by(Step.step).all()
-        logger.info(f"Found {len(previous_steps)} previous steps")
+        # Extract quest name from quest_file
+        quest_name = Path(run.quest_file).stem if run.quest_file else run.quest_name or "Unknown"
 
-        if not previous_steps:
-            logger.error("No steps found for run")
-            return {'success': False, 'error': 'No steps found for run'}
+        # Get the latest step
+        latest_step = Step.query.filter_by(run_id=run_id).order_by(Step.step.desc()).first()
+        if not latest_step:
+            logger.error(f"No steps found for run {run_id}")
+            return {'success': False, 'error': 'No steps found for this run'}
 
-        # Get last step to validate choice
-        last_step = Step.query.filter_by(run_id=run_id).order_by(Step.step.desc()).first()
-        logger.info(f"Last step: {last_step.step}, choices: {last_step.choices}")
+        # Validate choice
+        choices = latest_step.choices
+        logger.debug(f"Validating choice {choice_num} against {choices}")
+        validate_choice(choice_num, choices)
 
-        # Validate choice is valid for the current state
-        try:
-            choice_num = validate_choice(choice_num, last_step.choices)
-            logger.info(f"Choice validated: {choice_num}")
-        except Exception as e:
-            logger.error(f"Choice validation error: {str(e)}")
-            return {'success': False, 'error': str(e)}
+        # Update the latest step with the chosen action
+        latest_step.action = str(choice_num)
+        db.session.commit()
+        logger.debug(f"Updated step {latest_step.step} with action {latest_step.action}")
 
-        # Create manual agent with the selected choice
-        manual_agent = ManualChoiceAgent(choice_num)
+        # Take the next step in the quest
         quest_path = run.quest_file
-        logger.info(f"Quest path: {quest_path}")
+        logger.debug(f"Loading quest from {quest_path}")
 
-        new_step = None
+        # Create QMPlayerEnv directly
+        env = QMPlayerEnv(quest_path, debug=debug)
 
-        # Define callback to capture the new step
-        def step_callback(event: str, data: Any) -> None:
-            nonlocal new_step
-            if event == "game_state" and isinstance(data, AgentState):
-                new_step = Step(
-                    run_id=run_id,
-                    step=data.step,
-                    location_id=data.location_id,
-                    observation=data.observation,
-                    choices=data.choices,
-                    action=data.action,
-                    llm_response=data.llm_response.to_dict() if data.llm_response else None
-                )
+        # Get the current location
+        current_location = latest_step.location_id
+        logger.debug(f"Current location: {current_location}")
 
-        # Create and run the replay runner
-        runner = ReplayQuestRunner(agent=manual_agent, debug=debug, callbacks=[step_callback])
-        logger.info(f"Running replay with {len(previous_steps)} previous steps")
+        # Get the chosen option
+        choice_index = int(choice_num) - 1
+        chosen_option = choices[choice_index]['id']
+        logger.debug(f"Chosen option: {chosen_option}")
 
-        outcome = runner.run(quest_path, previous_steps)
-        logger.info(f"Replay outcome: {outcome}")
+        # Initialize the environment to the current state
+        env.reset()
 
-        # Store the new step
-        if new_step:
-            logger.info(f"New step created: {new_step.step}")
-            db.session.add(new_step)
+        # Take the step
+        observation, done, success, info = env.step(choice_num)
+        next_location = env.state['location_id']
+        next_choices = env.state['choices']
+        outcome = 'SUCCESS' if done and success else 'FAILURE' if done else None
+        logger.debug(f"Next location: {next_location}, Outcome: {outcome}")
 
-            # Update run if game ended
-            if outcome is not None:
-                run.end_time = datetime.utcnow()
-                run.outcome = 'SUCCESS' if outcome == QuestOutcome.SUCCESS else 'FAILURE'
-                logger.info(f"Game ended with outcome: {run.outcome}")
+        # Create a new step record
+        new_step = Step(
+            run_id=run_id,
+            step=latest_step.step + 1,
+            location_id=next_location,
+            observation=observation,
+            choices=next_choices,
+            action=None,
+            llm_response=None
+        )
+        db.session.add(new_step)
 
-            db.session.commit()
+        # Update run record if game ended
+        if outcome:
+            run.end_time = datetime.now()
+            run.outcome = outcome
+            logger.info(f"Quest ended with outcome: {outcome}")
 
-            return {
-                'success': True,
-                'state': {
-                    'step': new_step.step,
-                    'location_id': new_step.location_id,
-                    'observation': new_step.observation,
-                    'choices': new_step.choices,
-                    'game_ended': outcome is not None
-                }
-            }
-        else:
-            logger.error("Failed to create new step")
-            return {'success': False, 'error': 'Failed to create new step'}
+        db.session.commit()
+        logger.debug(f"Created new step {new_step.step}")
+
+        # Return the current state
+        current_state = {
+            'step': new_step.step,
+            'location_id': new_step.location_id,
+            'observation': new_step.observation,
+            'choices': new_step.choices,
+            'game_ended': outcome is not None
+        }
+
+        return {
+            'success': True,
+            'run_id': run.id,
+            'quest_file': run.quest_file,
+            'quest_name': quest_name,
+            'state': current_state,
+            'outcome': run.outcome
+        }
     except Exception as e:
         logger.error(f"Error in take_manual_step: {str(e)}", exc_info=True)
         return {'success': False, 'error': f'Error: {str(e)}'}

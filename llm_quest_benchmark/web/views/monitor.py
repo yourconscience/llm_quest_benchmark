@@ -268,10 +268,109 @@ def get_run(run_id):
     # Convert steps to dictionary form
     step_dicts = [step.to_dict() for step in steps]
 
+    # Get run as dictionary and ensure it has quest_name derived from quest_file
+    run_dict = run.to_dict()
+    if 'quest_file' in run_dict and run_dict['quest_file']:
+        run_dict['quest_name'] = Path(run_dict['quest_file']).stem
+    elif 'quest_name' not in run_dict or not run_dict['quest_name']:
+        run_dict['quest_name'] = "Unknown"
+
     return jsonify({
         'success': True,
-        'run': run.to_dict(),
-        'steps': step_dicts
+        'run': run_dict,
+        'steps': step_dicts,
+        'outcome': run.outcome
+    })
+
+@bp.route('/runs/<int:run_id>/readable')
+@handle_errors
+def get_run_readable(run_id):
+    """Get human-readable details of a specific run"""
+    logger.debug(f"Fetching human-readable run details for ID: {run_id}")
+    run = Run.query.get_or_404(run_id)
+    steps = Step.query.filter_by(run_id=run_id).order_by(Step.step).all()
+    logger.debug(f"Found run with {len(steps)} steps")
+
+    # Format the run details in a human-readable way
+    readable_output = []
+
+    # Extract quest name from quest_file if available, otherwise use quest_name
+    quest_name = Path(run.quest_file).stem if run.quest_file else run.quest_name or "Unknown"
+
+    # Run header
+    readable_output.append(f"QUEST: {quest_name}")
+    readable_output.append(f"AGENT: {run.agent_id}")
+    readable_output.append(f"START TIME: {run.start_time}")
+    if run.end_time:
+        readable_output.append(f"END TIME: {run.end_time}")
+    if run.outcome:
+        readable_output.append(f"OUTCOME: {run.outcome}")
+    readable_output.append("")
+    readable_output.append("========== QUEST PLAYTHROUGH ==========")
+
+    # Format each step
+    for i, step in enumerate(steps):
+        # Step header
+        readable_output.append("")
+        readable_output.append(f"----- STEP {step.step} -----")
+        readable_output.append("")
+
+        # Observation
+        readable_output.append(f"{step.observation}")
+        readable_output.append("")
+
+        # Choices
+        if step.choices and len(step.choices) > 0:
+            readable_output.append("Available choices:")
+            for i, choice in enumerate(step.choices):
+                readable_output.append(f"{i+1}. {choice['text']}")
+            readable_output.append("")
+
+        # Action taken and LLM response from the NEXT step (if available)
+        # This fixes the issue where LLM response for step N is actually for choices from step N-1
+        if step.action:
+            # Find the chosen option text
+            choice_text = "Unknown choice"
+            if step.choices and len(step.choices) > 0:
+                choice_index = int(step.action) - 1
+                if 0 <= choice_index < len(step.choices):
+                    choice_text = step.choices[choice_index]['text']
+
+            readable_output.append(f"Selected option {step.action}: {choice_text}")
+            readable_output.append("")
+
+        # Get the NEXT step's LLM response (if available) which corresponds to THIS step's choices
+        next_step_index = i + 1
+        if next_step_index < len(steps) and steps[next_step_index].llm_response:
+            next_step = steps[next_step_index]
+            llm_response = next_step.llm_response
+
+            # If llm_response is a string, parse it as JSON
+            if isinstance(llm_response, str):
+                try:
+                    llm_response = json.loads(llm_response)
+                except json.JSONDecodeError:
+                    logger.error(f"Failed to parse LLM response as JSON: {llm_response}")
+                    llm_response = {}
+
+            # Reasoning if available
+            if llm_response and 'reasoning' in llm_response:
+                readable_output.append(f"Reasoning: {llm_response['reasoning']}")
+                readable_output.append("")
+
+            # Analysis if available
+            if llm_response and 'analysis' in llm_response:
+                readable_output.append(f"Analysis: {llm_response['analysis']}")
+                readable_output.append("")
+
+    # Final outcome
+    if run.outcome:
+        readable_output.append("")
+        readable_output.append(f"========== QUEST OUTCOME: {run.outcome} ==========")
+
+    return jsonify({
+        'success': True,
+        'readable_output': '\n'.join(readable_output)
     })
 
 @bp.route('/template/<template_name>')
