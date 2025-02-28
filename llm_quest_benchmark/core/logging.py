@@ -9,7 +9,7 @@ import os
 import threading
 
 from rich.logging import RichHandler
-from llm_quest_benchmark.dataclasses.state import AgentState
+from llm_quest_benchmark.dataclasses import AgentState
 
 # Configure logging
 logging.basicConfig(
