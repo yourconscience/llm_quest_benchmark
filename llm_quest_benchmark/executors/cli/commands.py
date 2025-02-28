@@ -27,7 +27,7 @@ from llm_quest_benchmark.constants import (
     WEB_SERVER_HOST,
     WEB_SERVER_PORT,
 )
-from llm_quest_benchmark.dataclasses.config import AgentConfig, BenchmarkConfig
+from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.agents.human_player import HumanPlayer
 from llm_quest_benchmark.web.app import create_app
 

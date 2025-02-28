@@ -15,8 +15,8 @@ from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.core.logging import QuestLogger, LogManager
 from llm_quest_benchmark.core.time import run_with_timeout, CommandTimeout
 from llm_quest_benchmark.constants import DEFAULT_QUEST_TIMEOUT
-from llm_quest_benchmark.dataclasses.state import AgentState
-from llm_quest_benchmark.dataclasses.config import AgentConfig
+from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.schemas.config import AgentConfig
 
 # Configure logging
 logging.getLogger('quest').setLevel(logging.WARNING)

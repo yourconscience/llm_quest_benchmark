@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 
-from llm_quest_benchmark.dataclasses.response import LLMResponse
+from llm_quest_benchmark.schemas.response import LLMResponse
 
 
 class QuestPlayer(ABC):

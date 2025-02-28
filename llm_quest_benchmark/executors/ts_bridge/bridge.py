@@ -6,7 +6,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
-from llm_quest_benchmark.dataclasses.bridge import QMBridgeState
+from llm_quest_benchmark.schemas.bridge import QMBridgeState
 from llm_quest_benchmark.utils.text_processor import clean_qm_text
 
 logger = logging.getLogger(__name__)

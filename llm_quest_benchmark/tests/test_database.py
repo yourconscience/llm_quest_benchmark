@@ -6,8 +6,8 @@ from pathlib import Path
 import sqlite3
 from datetime import datetime
 from llm_quest_benchmark.core.logging import QuestLogger
-from llm_quest_benchmark.dataclasses.state import AgentState
-from llm_quest_benchmark.dataclasses.response import LLMResponse
+from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.schemas.response import LLMResponse
 
 @pytest.fixture
 def quest_logger():

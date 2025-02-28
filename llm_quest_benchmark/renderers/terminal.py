@@ -4,8 +4,8 @@ from rich.console import Console
 from llm_quest_benchmark.renderers.base import BaseRenderer
 from llm_quest_benchmark.utils import choice_mapper, text_processor
 from llm_quest_benchmark.constants import READABILITY_DELAY
-from llm_quest_benchmark.dataclasses.state import AgentState
-from llm_quest_benchmark.dataclasses.response import LLMResponse
+from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.schemas.response import LLMResponse
 
 class NoRenderer:
     def render_game_state(self, state: AgentState):

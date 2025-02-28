@@ -1,6 +1,6 @@
 """Choice mapping utilities"""
 from typing import Dict, List, Any, Optional
-from llm_quest_benchmark.dataclasses.response import LLMResponse
+from llm_quest_benchmark.schemas.response import LLMResponse
 from llm_quest_benchmark.utils.text_processor import clean_qm_text
 
 class ChoiceMapper:

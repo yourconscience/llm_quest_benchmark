@@ -54,3 +54,22 @@
 - Analyze by quest: `llm-quest analyze --quest Boat.qm`
 - Analyze benchmark: `llm-quest analyze --benchmark first`
 - Raw SQL query: `sqlite3 metrics.db 'SELECT * FROM runs ORDER BY id DESC LIMIT 5'`
+
+## Web Interface
+- Start the server: `llm-quest server`
+- Access the web UI at: http://localhost:8000
+- The web interface provides:
+  - Quest runner for interactive testing
+  - Benchmark configuration and execution
+  - Detailed analysis of quest runs and metrics
+  - Visualization of agent performance
+  - Export of run data for further analysis
+- The server uses Flask and can be run in debug mode: `llm-quest server --debug`
+- For production use: `llm-quest server --production --workers 4`
+
+## Project Architecture Notes
+- The `schemas` package contains all data models used throughout the system
+- Avoid importing directly from the Python standard library `dataclasses` module to prevent circular imports
+- Thread-safe database connections for metrics recording
+- Schema migration support for database upgrades
+- JSON export functionality for completed runs

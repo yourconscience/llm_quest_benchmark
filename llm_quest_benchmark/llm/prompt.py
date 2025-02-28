@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Any, Union
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, Template
 
-from llm_quest_benchmark.dataclasses.state import QMState
+from llm_quest_benchmark.schemas.state import QMState
 from llm_quest_benchmark.constants import (
     PROMPT_TEMPLATES_DIR,
     DEFAULT_TEMPLATE,

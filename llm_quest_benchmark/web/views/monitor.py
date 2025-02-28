@@ -25,7 +25,7 @@ from llm_quest_benchmark.utils.text_processor import clean_qm_text
 from ..models.database import db, Run, Step
 from ..utils.errors import handle_errors, validate_quest_file, validate_model, validate_choice
 from ..utils.web_runner import run_quest_with_db_logging, take_manual_step
-from llm_quest_benchmark.dataclasses.config import AgentConfig
+from llm_quest_benchmark.schemas.config import AgentConfig
 
 # Initialize TypeScript bridge
 os.environ['NODE_OPTIONS'] = '--openssl-legacy-provider'

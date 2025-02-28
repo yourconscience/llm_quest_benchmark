@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 from llm_quest_benchmark.executors.benchmark import run_benchmark
 from ..models.database import db, Run
 from ..utils.errors import handle_errors, validate_quest_file, validate_model, WebUIError
-from llm_quest_benchmark.dataclasses.config import BenchmarkConfig, AgentConfig
+from llm_quest_benchmark.schemas.config import BenchmarkConfig, AgentConfig
 
 bp = Blueprint('benchmark', __name__, url_prefix='/benchmark')
 

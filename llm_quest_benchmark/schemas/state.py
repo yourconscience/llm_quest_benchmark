@@ -2,7 +2,7 @@
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 
-from llm_quest_benchmark.dataclasses.response import LLMResponse
+from .response import LLMResponse
 
 
 @dataclass

@@ -1,6 +1,6 @@
 """Tests for logging dataclasses"""
-from llm_quest_benchmark.dataclasses.state import AgentState
-from llm_quest_benchmark.dataclasses.response import LLMResponse
+from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.schemas.response import LLMResponse
 
 
 def test_agent_state_basic():

@@ -13,7 +13,7 @@ from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
 from llm_quest_benchmark.environments.state import QuestOutcome
-from llm_quest_benchmark.dataclasses.config import AgentConfig, BenchmarkConfig
+from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.core.time import calculate_benchmark_timeout, DEFAULT_QUEST_TIMEOUT
 from llm_quest_benchmark.renderers.factory import create_renderer
 from llm_quest_benchmark.renderers.progress import ProgressRenderer

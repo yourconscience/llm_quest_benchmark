@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from llm_quest_benchmark.executors.benchmark import run_benchmark
-from llm_quest_benchmark.dataclasses.config import BenchmarkConfig, AgentConfig
+from llm_quest_benchmark.schemas.config import BenchmarkConfig, AgentConfig
 from llm_quest_benchmark.constants import (
     SYSTEM_ROLE_TEMPLATE,
     DEFAULT_TEMPLATE

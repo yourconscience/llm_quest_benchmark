@@ -15,8 +15,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from llm_quest_benchmark.core.runner import QuestRunner, run_quest_with_timeout
 from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.environments.state import QuestOutcome
-from llm_quest_benchmark.dataclasses.state import AgentState
-from llm_quest_benchmark.dataclasses.config import AgentConfig
+from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.schemas.config import AgentConfig
 from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
 from llm_quest_benchmark.environments.qm import QMPlayerEnv
 from ..models.database import db, Run, Step
@@ -141,7 +141,7 @@ class ManualChoiceAgent(QuestPlayer):
         self.last_response = None
 
     def get_action(self, observation: str, choices: List[Dict[str, Any]]) -> int:
-        from llm_quest_benchmark.dataclasses.response import LLMResponse
+        from llm_quest_benchmark.schemas.response import LLMResponse
 
         self.last_response = LLMResponse(
             action=self.choice,

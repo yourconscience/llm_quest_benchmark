@@ -5,7 +5,7 @@ import logging
 
 from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
 from llm_quest_benchmark.executors.ts_bridge.bridge import QMBridge
-from llm_quest_benchmark.dataclasses.state import QMState
+from llm_quest_benchmark.schemas.state import QMState
 
 
 class QMPlayerEnv:
