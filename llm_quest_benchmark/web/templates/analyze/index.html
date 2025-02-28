@@ -2,17 +2,331 @@
 
 {% block title %}Quest Analysis - LLM Quest Benchmark{% endblock %}
 
+{% block head %}
+<!-- Add Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <div class="text-center">
-        <h1 class="display-4 mb-4">Quest Analysis</h1>
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
-            Analysis tools are currently only available in CLI mode.
-            <br><br>
-            Please use the command line interface to analyze quests:
-            <pre class="mt-3 text-start bg-dark text-light p-3 rounded">llm-quest analyze [options]</pre>
+<div class="container-fluid py-4">
+    <h1 class="display-5 mb-4">Quest Analysis Dashboard</h1>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Overall Stats</h5>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-center p-3">
+                            <h3 class="mb-0">{{ total_runs }}</h3>
+                            <p class="text-muted mb-0">Total Runs</p>
+                        </div>
+                        <div class="text-center p-3">
+                            <h3 class="mb-0">{{ "%.1f"|format(success_rate) }}%</h3>
+                            <p class="text-muted mb-0">Success Rate</p>
+                        </div>
+                        <div class="text-center p-3">
+                            <h3 class="mb-0">{{ quest_names|length }}</h3>
+                            <p class="text-muted mb-0">Quests</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Success Rate</h5>
+                    <div class="position-relative" style="height: 150px">
+                        <canvas id="successRateChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Available Quests</h5>
+                    <div class="list-group list-group-flush">
+                        {% for quest in quest_names[:5] %}
+                        <a href="{{ url_for('analyze.quest_analysis', quest_name=quest) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            {{ quest }}
+                            <span class="badge bg-primary rounded-pill">View</span>
+                        </a>
+                        {% endfor %}
+                        {% if quest_names|length > 5 %}
+                        <div class="text-center mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#questListModal">
+                                View All ({{ quest_names|length }})
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Runs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Recent Runs</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Quest</th>
+                                    <th>Agent</th>
+                                    <th>Start Time</th>
+                                    <th>Outcome</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for run in recent_runs %}
+                                <tr>
+                                    <td>{{ run.id }}</td>
+                                    <td>{{ run.quest_name }}</td>
+                                    <td>{{ run.agent_id }}</td>
+                                    <td>{{ run.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>
+                                        {% if run.outcome == 'SUCCESS' %}
+                                        <span class="badge bg-success">Success</span>
+                                        {% elif run.outcome == 'FAILURE' %}
+                                        <span class="badge bg-danger">Failure</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ run.outcome }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('analyze.run_details', run_id=run.id) }}" class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            <button type="button" class="btn btn-outline-secondary view-readable" data-run-id="{{ run.id }}">
+                                                <i class="fas fa-file-alt"></i> Text
+                                            </button>
+                                            <a href="{{ url_for('analyze.export_metrics', run_id=run.id) }}" class="btn btn-outline-info">
+                                                <i class="fas fa-download"></i> Export
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not recent_runs %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="alert alert-info mb-0">
+                                            No runs available. Try running some quests first!
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Analysis Tools -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Quest Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Analyze performance metrics for a specific quest.</p>
+                    <div class="mb-3">
+                        <label for="questSelector" class="form-label">Select Quest</label>
+                        <select class="form-select" id="questSelector">
+                            <option value="">Select a quest...</option>
+                            {% for quest in quest_names %}
+                            <option value="{{ quest }}">{{ quest }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button id="analyzeQuestBtn" class="btn btn-primary" disabled>
+                        <i class="fas fa-chart-bar"></i> Analyze Quest
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Agent Comparison</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Compare performance between different LLM agents.</p>
+                    <div class="mb-3">
+                        <label class="form-label">Select Agents to Compare</label>
+                        <div class="agent-checkboxes">
+                            {% for agent in agent_types %}
+                            <div class="form-check">
+                                <input class="form-check-input agent-checkbox" type="checkbox" value="{{ agent }}" id="agent{{ loop.index }}">
+                                <label class="form-check-label" for="agent{{ loop.index }}">
+                                    {{ agent }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <button id="compareAgentsBtn" class="btn btn-primary" disabled>
+                        <i class="fas fa-balance-scale"></i> Compare Agents
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Quest List Modal -->
+<div class="modal fade" id="questListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">All Available Quests</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    {% for quest in quest_names %}
+                    <a href="{{ url_for('analyze.quest_analysis', quest_name=quest) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        {{ quest }}
+                        <span class="badge bg-primary rounded-pill">View</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Readable Output Modal -->
+<div class="modal fade" id="readableOutputModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quest Playthrough</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="readableOutput" class="bg-light p-3" style="white-space: pre-wrap;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="copyReadableBtn">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Success Rate Chart
+    const successRateData = {
+        labels: ['Success', 'Failure'],
+        datasets: [{
+            data: [{{ success_rate }}, {{ 100 - success_rate }}],
+            backgroundColor: ['#28a745', '#dc3545'],
+            borderWidth: 0
+        }]
+    };
+
+    const ctxSuccessRate = document.getElementById('successRateChart').getContext('2d');
+    new Chart(ctxSuccessRate, {
+        type: 'doughnut',
+        data: successRateData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // Quest Selector
+    const questSelector = document.getElementById('questSelector');
+    const analyzeQuestBtn = document.getElementById('analyzeQuestBtn');
+    
+    questSelector.addEventListener('change', function() {
+        analyzeQuestBtn.disabled = !this.value;
+    });
+    
+    analyzeQuestBtn.addEventListener('click', function() {
+        const selectedQuest = questSelector.value;
+        if (selectedQuest) {
+            window.location.href = "{{ url_for('analyze.quest_analysis', quest_name='PLACEHOLDER') }}".replace('PLACEHOLDER', selectedQuest);
+        }
+    });
+
+    // Agent Comparison
+    const agentCheckboxes = document.querySelectorAll('.agent-checkbox');
+    const compareAgentsBtn = document.getElementById('compareAgentsBtn');
+    
+    agentCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateCompareButtonState);
+    });
+    
+    function updateCompareButtonState() {
+        const checked = Array.from(agentCheckboxes).filter(cb => cb.checked);
+        compareAgentsBtn.disabled = checked.length < 2;
+    }
+    
+    // Readable Output Handlers
+    const viewReadableButtons = document.querySelectorAll('.view-readable');
+    const readableOutput = document.getElementById('readableOutput');
+    const copyReadableBtn = document.getElementById('copyReadableBtn');
+    
+    viewReadableButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const runId = this.dataset.runId;
+            fetchReadableOutput(runId);
+        });
+    });
+    
+    function fetchReadableOutput(runId) {
+        fetch(`/analyze/run/${runId}/readable`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    readableOutput.textContent = data.readable_output;
+                    new bootstrap.Modal(document.getElementById('readableOutputModal')).show();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+    
+    copyReadableBtn.addEventListener('click', function() {
+        navigator.clipboard.writeText(readableOutput.textContent)
+            .then(() => {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+    });
+</script>
 {% endblock %}

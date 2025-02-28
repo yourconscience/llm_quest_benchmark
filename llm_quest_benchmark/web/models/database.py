@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.types import TypeDecorator, TEXT
+from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
 
 db = SQLAlchemy()
 
@@ -26,6 +27,7 @@ class Run(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     quest_name = db.Column(db.String(100), nullable=False)
+    quest_file = db.Column(db.String(255), nullable=True)
     start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     end_time = db.Column(db.DateTime)
     agent_id = db.Column(db.String(100), nullable=False)
@@ -38,6 +40,7 @@ class Run(db.Model):
         return {
             'id': self.id,
             'quest_name': self.quest_name,
+            'quest_file': self.quest_file,
             'start_time': self.start_time.isoformat() if self.start_time else None,
             'end_time': self.end_time.isoformat() if self.end_time else None,
             'agent_id': self.agent_id,
@@ -60,15 +63,22 @@ class Step(db.Model):
 
     def to_dict(self):
         """Convert step to dictionary"""
+        # Use ChoiceMapper to format choices with sequential numbers
+        formatted_choices = []
+        if self.choices:
+            choice_mapper = ChoiceMapper(self.choices)
+            formatted_choices = choice_mapper.get_numbered_choices()
+
+        # Return fields in requested order: observation, choices, action, llm_response
         return {
-            'id': self.id,
-            'run_id': self.run_id,
-            'step': self.step,
-            'location_id': self.location_id,
             'observation': self.observation,
-            'choices': self.choices,
+            'choices': formatted_choices,
             'action': self.action,
-            'llm_response': self.llm_response
+            'llm_response': self.llm_response,
+            'location_id': self.location_id,
+            'step': self.step,
+            'id': self.id,
+            'run_id': self.run_id
         }
 
 def init_db(app):

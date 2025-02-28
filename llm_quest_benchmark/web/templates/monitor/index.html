@@ -108,7 +108,7 @@
                 </div>
 
                 <!-- Debug Output -->
-                <pre id="debugOutput" class="bg-dark text-light p-3 rounded" style="max-height: 600px; overflow-y: auto; font-size: 14px;"></pre>
+                <pre id="debugOutput" class="bg-dark text-light p-3 rounded" style="max-height: 600px; overflow-y: auto; font-family: monospace; font-size: 14px; line-height: 1.5;"></pre>
             </div>
         </div>
     </div>
@@ -122,7 +122,35 @@
 
     function appendDebugLog(text) {
         debugLog += text + '\n';
-        document.getElementById('debugOutput').textContent = debugLog;
+        
+        // Apply some formatting to the debug output
+        const formattedLog = debugLog
+            // Highlight step headers
+            .replace(/-----\s+STEP\s+\d+\s+-----/g, match => 
+                `<span style="color: #5bc0de; font-weight: bold;">${match}</span>`)
+            // Highlight section headers with outcome-specific colors
+            .replace(/==========\s+QUEST OUTCOME:\s+(SUCCESS)\s+==========+/g, 
+                '<span style="color: #5cb85c; font-weight: bold;">========== QUEST OUTCOME: $1 ==========</span>')
+            .replace(/==========\s+QUEST OUTCOME:\s+(FAILURE|ERROR|TIMEOUT)\s+==========+/g, 
+                '<span style="color: #d9534f; font-weight: bold;">========== QUEST OUTCOME: $1 ==========</span>')
+            .replace(/==========\s+QUEST PLAYTHROUGH\s+==========+/g, 
+                '<span style="color: #428bca; font-weight: bold;">========== QUEST PLAYTHROUGH ==========</span>')
+            // Highlight quest info
+            .replace(/(QUEST|AGENT|STEPS|END TIME):\s+([^\n]+)/g, 
+                '<span style="color: #428bca; font-weight: bold;">$1:</span> <span style="color: #d9d9d9;">$2</span>')
+            .replace(/OUTCOME:\s+(SUCCESS)/g,
+                '<span style="color: #5cb85c; font-weight: bold;">OUTCOME:</span> <span style="color: #5cb85c;">$1</span>')
+            .replace(/OUTCOME:\s+(FAILURE|ERROR|TIMEOUT)/g,
+                '<span style="color: #d9534f; font-weight: bold;">OUTCOME:</span> <span style="color: #d9534f;">$1</span>')
+            // Highlight selected option
+            .replace(/(Selected option \d+):\s+([^\n]+)/g, 
+                '<span style="color: #5bc0de;">$1:</span> <span style="color: #ffffff; font-style: italic;">$2</span>')
+            // Highlight reasoning and analysis
+            .replace(/(Reasoning|Analysis):\s+([^\n]+)/g, 
+                '<span style="color: #f0ad4e; font-weight: bold;">$1:</span> <span style="color: #d9d9d9; font-style: italic;">$2</span>');
+        
+        document.getElementById('debugOutput').innerHTML = formattedLog;
+        
         // Auto-scroll to bottom
         const debugOutput = document.getElementById('debugOutput');
         debugOutput.scrollTop = debugOutput.scrollHeight;
@@ -201,21 +229,84 @@
             appendDebugLog(`Response: ${JSON.stringify(result, null, 2)}`);
 
             if (result.success) {
-                // Display all steps
+                // Clear previous output
+                debugLog = '';
+
+                // Display quest header
+                appendDebugLog(`QUEST: ${result.run?.quest_name || result.quest_name || 'Unknown'}`);
+                // Use appropriate agent identification
+                let agentName = result.run?.agent_id || 'Unknown';
+                if (result.run?.agent_config?.model) {
+                    agentName = `${agentName} (${result.run.agent_config.model})`;
+                }
+                appendDebugLog(`AGENT: ${agentName}`);
+                // Show step count instead of start time
+                appendDebugLog(`STEPS: ${result.steps?.length || 0}`);
+                if (result.run?.end_time) {
+                    const endTime = new Date(result.run.end_time);
+                    appendDebugLog(`END TIME: ${endTime.toLocaleString()}`);
+                }
+                if (result.outcome) {
+                    appendDebugLog(`OUTCOME: ${result.outcome}`);
+                }
+                appendDebugLog('');
+                appendDebugLog(`========== QUEST PLAYTHROUGH ==========\n`);
+
+                // Display all steps in a human-readable format
                 result.steps.forEach((state, index) => {
-                    appendDebugLog(`\nStep ${state.step}:`);
-                    appendDebugLog(`Location: ${state.location_id}`);
-                    appendDebugLog(`Observation: ${state.observation}`);
-                    if (state.action) {
-                        appendDebugLog(`Action: ${state.action}`);
-                        appendDebugLog(`LLM Response: ${JSON.stringify(state.llm_response, null, 2)}`);
+                    // Step header with number
+                    appendDebugLog(`\n----- STEP ${state.step} -----\n`);
+
+                    // Observation text
+                    appendDebugLog(`${state.observation}\n`);
+
+                    // Format choices as a numbered list
+                    if (state.choices && state.choices.length > 0) {
+                        appendDebugLog(`Available choices:`);
+                        state.choices.forEach((choice, i) => {
+                            appendDebugLog(`${i+1}. ${choice.text}`);
+                        });
+                        appendDebugLog(``);
                     }
-                    if (state.choices) {
-                        appendDebugLog(`Choices: ${JSON.stringify(state.choices, null, 2)}`);
+
+                    // Show the action taken - only if we have choices
+                    if (state.action && state.choices && state.choices.length > 0) {
+                        const choiceIndex = parseInt(state.action) - 1;
+                        if (choiceIndex >= 0 && choiceIndex < state.choices.length) {
+                            const choiceText = state.choices[choiceIndex].text;
+                            appendDebugLog(`Selected option ${state.action}: ${choiceText}\n`);
+                        }
+                    }
+
+                    // Get the NEXT step's LLM response (if available) which corresponds to THIS step's choices
+                    const nextStepIndex = index + 1;
+                    if (nextStepIndex < result.steps.length && result.steps[nextStepIndex].llm_response) {
+                        let nextStepResponse = result.steps[nextStepIndex].llm_response;
+
+                        // If nextStepResponse is a string, parse it as JSON
+                        if (typeof nextStepResponse === 'string') {
+                            try {
+                                nextStepResponse = JSON.parse(nextStepResponse);
+                            } catch (e) {
+                                console.error('Failed to parse LLM response as JSON:', e);
+                                nextStepResponse = {};
+                            }
+                        }
+
+                        // Show reasoning if available
+                        if (nextStepResponse && nextStepResponse.reasoning) {
+                            appendDebugLog(`Reasoning: ${nextStepResponse.reasoning}\n`);
+                        }
+
+                        // Show analysis if available
+                        if (nextStepResponse && nextStepResponse.analysis) {
+                            appendDebugLog(`Analysis: ${nextStepResponse.analysis}\n`);
+                        }
                     }
                 });
 
-                appendDebugLog(`\nOutcome: ${result.outcome}`);
+                // Show final outcome
+                appendDebugLog(`\n========== QUEST OUTCOME: ${result.outcome} ==========\n`);
             } else {
                 throw new Error(result.error);
             }

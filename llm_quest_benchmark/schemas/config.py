@@ -28,6 +28,16 @@ class AgentConfig:
         if not (0.0 <= self.temperature <= 2.0):
             raise ValueError(f"Temperature must be between 0.0 and 2.0, got {self.temperature}")
 
+    @property
+    def agent_id(self) -> str:
+        """Generate a unique agent ID based on configuration values"""
+        import hashlib
+        # Create a string with the key configuration values
+        config_str = f"{self.model}_{self.temperature}_{self.system_template}_{self.action_template}"
+        # Generate a short hash (first 8 characters)
+        hash_val = hashlib.md5(config_str.encode()).hexdigest()[:8]
+        return f"{self.model}_{hash_val}"
+
 
 @dataclass
 class BenchmarkConfig:

@@ -13,13 +13,12 @@ from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
 from llm_quest_benchmark.environments.state import QuestOutcome
-from llm_quest_benchmark.dataclasses.config import AgentConfig, BenchmarkConfig
+from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.core.time import calculate_benchmark_timeout, DEFAULT_QUEST_TIMEOUT
 from llm_quest_benchmark.renderers.factory import create_renderer
 from llm_quest_benchmark.renderers.progress import ProgressRenderer
 from llm_quest_benchmark.core.logging import LogManager, QuestLogger
 from llm_quest_benchmark.constants import DEFAULT_QUEST_TIMEOUT
-from llm_quest_benchmark.dataclasses.config import BenchmarkConfig
 
 # Configure logging
 logging.basicConfig(
@@ -73,8 +72,8 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
         quest_metrics = {'quest': quest_file, 'runs': []}
 
         for agent_config in config.agents:
-            # Generate unique agent_id
-            agent_id = f"{agent_config.model}_t{agent_config.temperature}_{agent_config.system_template}"
+            # Get agent_id from agent_config
+            agent_id = agent_config.agent_id
 
             # Create agent
             agent = create_agent(
@@ -94,8 +93,7 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                     quest_file,
                     agent,
                     timeout=config.quest_timeout,
-                    agent_id=agent_id,
-                    agent_config=json.dumps(agent_config.__dict__)
+                    agent_config=agent_config
                 )
 
                 if outcome:

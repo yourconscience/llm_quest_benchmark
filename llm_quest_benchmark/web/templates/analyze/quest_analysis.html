@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}Quest Analysis - {{ quest_name }} - LLM Quest Benchmark{% endblock %}
+
+{% block head %}
+<!-- Add Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5">Quest Analysis: {{ quest_name }}</h1>
+        <a href="{{ url_for('analyze.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Analysis
+        </a>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Performance Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div class="text-center p-3">
+                                            <h3 class="mb-0">{{ total_runs }}</h3>
+                                            <p class="text-muted mb-0">Total Runs</p>
+                                        </div>
+                                        <div class="text-center p-3">
+                                            <h3 class="mb-0">{{ "%.1f"|format(success_rate) }}%</h3>
+                                            <p class="text-muted mb-0">Success Rate</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="position-relative" style="height: 150px">
+                                        <canvas id="outcomeChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Agent Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="position-relative" style="height: 200px">
+                        <canvas id="agentPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Run List -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="card-title mb-0">Quest Runs</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Agent</th>
+                            <th>Start Time</th>
+                            <th>Duration</th>
+                            <th>Outcome</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for run in runs %}
+                        <tr>
+                            <td>{{ run.id }}</td>
+                            <td>{{ run.agent_id }}</td>
+                            <td>{{ run.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                {% if run.end_time %}
+                                {{ ((run.end_time - run.start_time).total_seconds()|round(2)) }} sec
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if run.outcome == 'SUCCESS' %}
+                                <span class="badge bg-success">Success</span>
+                                {% elif run.outcome == 'FAILURE' %}
+                                <span class="badge bg-danger">Failure</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ run.outcome }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('analyze.run_details', run_id=run.id) }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <button type="button" class="btn btn-outline-secondary view-readable" data-run-id="{{ run.id }}">
+                                        <i class="fas fa-file-alt"></i> Text
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="card-title mb-0">Export Options</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>Export all data for {{ quest_name }} in various formats.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('analyze.export_metrics', quest_name=quest_name) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-download me-2"></i>Export JSON
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <p>Generate a performance report for this quest:</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-info" id="generateReportBtn">
+                            <i class="fas fa-file-export me-2"></i>Generate Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Readable Output Modal -->
+<div class="modal fade" id="readableOutputModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quest Playthrough</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="readableOutput" class="bg-light p-3" style="white-space: pre-wrap;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="copyReadableBtn">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Performance Report: {{ quest_name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reportContent" class="p-3">
+                    <h2>{{ quest_name }} - Performance Report</h2>
+                    <p>Generated on {{ now.strftime('%Y-%m-%d %H:%M:%S') if now else datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    
+                    <h3>Summary</h3>
+                    <p>The quest "{{ quest_name }}" has been run {{ total_runs }} times with a success rate of {{ "%.1f"|format(success_rate) }}%.</p>
+                    
+                    <h3>Agent Performance</h3>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Agent</th>
+                                <th>Runs</th>
+                                <th>Success</th>
+                                <th>Success Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for agent_id, stats in agent_stats.items() %}
+                            <tr>
+                                <td>{{ agent_id }}</td>
+                                <td>{{ stats.total }}</td>
+                                <td>{{ stats.success }}</td>
+                                <td>{{ "%.1f"|format(stats.success_rate) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <h3>Best Performing Runs</h3>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Run ID</th>
+                                <th>Agent</th>
+                                <th>Start Time</th>
+                                <th>Duration</th>
+                                <th>Outcome</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for run in runs if run.outcome == 'SUCCESS' %}
+                            {% if loop.index <= 5 %}
+                            <tr>
+                                <td>{{ run.id }}</td>
+                                <td>{{ run.agent_id }}</td>
+                                <td>{{ run.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>
+                                    {% if run.end_time %}
+                                    {{ ((run.end_time - run.start_time).total_seconds()|round(2)) }} sec
+                                    {% else %}
+                                    N/A
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if run.outcome == 'SUCCESS' %}
+                                    Success
+                                    {% elif run.outcome == 'FAILURE' %}
+                                    Failure
+                                    {% else %}
+                                    {{ run.outcome }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="copyReportBtn">
+                    <i class="fas fa-copy"></i> Copy Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Outcome Chart
+    const successRuns = {{ runs|selectattr('outcome', 'equalto', 'SUCCESS')|list|length }};
+    const failureRuns = {{ runs|selectattr('outcome', 'equalto', 'FAILURE')|list|length }};
+    const otherRuns = {{ total_runs - runs|selectattr('outcome', 'equalto', 'SUCCESS')|list|length - runs|selectattr('outcome', 'equalto', 'FAILURE')|list|length }};
+    
+    const ctxOutcome = document.getElementById('outcomeChart').getContext('2d');
+    new Chart(ctxOutcome, {
+        type: 'doughnut',
+        data: {
+            labels: ['Success', 'Failure', 'Other'],
+            datasets: [{
+                data: [successRuns, failureRuns, otherRuns],
+                backgroundColor: ['#28a745', '#dc3545', '#6c757d'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            cutout: '70%'
+        }
+    });
+    
+    // Agent Performance Chart
+    const agentLabels = [{% for agent_id, stats in agent_stats.items() %}'{{ agent_id }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+    const agentSuccessRates = [{% for agent_id, stats in agent_stats.items() %}{{ stats.success_rate }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    
+    const ctxAgentPerformance = document.getElementById('agentPerformanceChart').getContext('2d');
+    new Chart(ctxAgentPerformance, {
+        type: 'bar',
+        data: {
+            labels: agentLabels,
+            datasets: [{
+                label: 'Success Rate (%)',
+                data: agentSuccessRates,
+                backgroundColor: 'rgba(13, 110, 253, 0.5)',
+                borderColor: '#0d6efd',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Success Rate (%)'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Readable Output Handlers
+    const viewReadableButtons = document.querySelectorAll('.view-readable');
+    const readableOutput = document.getElementById('readableOutput');
+    const copyReadableBtn = document.getElementById('copyReadableBtn');
+    
+    viewReadableButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const runId = this.dataset.runId;
+            fetchReadableOutput(runId);
+        });
+    });
+    
+    function fetchReadableOutput(runId) {
+        fetch(`/analyze/run/${runId}/readable`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    readableOutput.textContent = data.readable_output;
+                    new bootstrap.Modal(document.getElementById('readableOutputModal')).show();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+    
+    copyReadableBtn.addEventListener('click', function() {
+        navigator.clipboard.writeText(readableOutput.textContent)
+            .then(() => {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+    });
+    
+    // Report Modal
+    const generateReportBtn = document.getElementById('generateReportBtn');
+    const copyReportBtn = document.getElementById('copyReportBtn');
+    
+    generateReportBtn.addEventListener('click', function() {
+        new bootstrap.Modal(document.getElementById('reportModal')).show();
+    });
+    
+    copyReportBtn.addEventListener('click', function() {
+        const reportContent = document.getElementById('reportContent').innerText;
+        navigator.clipboard.writeText(reportContent)
+            .then(() => {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+    });
+</script>
+{% endblock %}

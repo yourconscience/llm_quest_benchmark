@@ -5,7 +5,7 @@ import logging
 
 from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
 from llm_quest_benchmark.executors.ts_bridge.bridge import QMBridge
-from llm_quest_benchmark.dataclasses.state import QMState
+from llm_quest_benchmark.schemas.state import QMState
 
 
 class QMPlayerEnv:
@@ -112,8 +112,15 @@ class QMPlayerEnv:
                 'info': {}
             }
 
-            # Return step results - success is when game is done and reward is positive
+            # Determine success based solely on reward value
             success = new_bridge_state.game_ended and new_bridge_state.reward > 0
+
+            if new_bridge_state.game_ended:
+                self.logger.debug(f"Game ended with text: {new_bridge_state.text}")
+                self.logger.debug(f"Game ended with reward: {new_bridge_state.reward}")
+                self.logger.debug(f"Success determined as: {success}")
+                self.logger.debug(f"Game state: {new_bridge_state.__dict__}")
+
             return (
                 self._current_state['text'],
                 self._current_state['done'],

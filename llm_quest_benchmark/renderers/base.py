@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
 import time
 
-from llm_quest_benchmark.dataclasses.state import AgentState
+from llm_quest_benchmark.schemas.state import AgentState
 
 
 class BaseRenderer(ABC):

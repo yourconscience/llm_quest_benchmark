@@ -1,6 +1,7 @@
 ---
 description: LLM Quest Benchmark Project
 globs: 
+alwaysApply: false
 ---
 ################################################################################
 #  Rules for llm-quest-benchmark project     #
@@ -35,8 +36,8 @@ TOOLS:
       - Use for all Python package operations
       - Keep uv.lock in version control
       - Use virtual environments managed by uv
-  - ensure-env: Setup environment
-    - Usage: source ensure_env.sh
+  - install.sh: Setup environment
+    - Usage: install.sh
     - Priority: 1 (Run before any Python commands)
   - goose: AI agent for complex tasks and analysis
     - Usage:

@@ -47,8 +47,57 @@ def create_app():
 
 def main():
     """Run the Flask application"""
-    app = create_app()
+    import socket
+    import subprocess
+    import sys
+    import time
+
     port = WEB_SERVER_PORT
+    app = create_app()
+
+    # Check if port is in use and kill the process if needed
+    try:
+        # Try to create a socket on the port
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        result = sock.connect_ex((WEB_SERVER_HOST, port))
+        sock.close()
+
+        if result == 0:  # Port is in use
+            app.logger.info(f"Port {port} is already in use. Attempting to free it...")
+
+            # Find and kill the process using the port
+            if sys.platform.startswith('darwin') or sys.platform.startswith('linux'):
+                # For macOS and Linux
+                try:
+                    # Find the process ID using the port
+                    cmd = f"lsof -i :{port} -t"
+                    pid = subprocess.check_output(cmd, shell=True).decode().strip()
+
+                    if pid:
+                        # Kill the process
+                        app.logger.info(f"Killing process {pid} using port {port}")
+                        subprocess.run(f"kill -9 {pid}", shell=True)
+                        time.sleep(1)  # Give it a moment to release the port
+                except subprocess.CalledProcessError:
+                    app.logger.warning(f"Could not find process using port {port}")
+            elif sys.platform.startswith('win'):
+                # For Windows
+                try:
+                    # Find the process ID using the port
+                    cmd = f"netstat -ano | findstr :{port}"
+                    output = subprocess.check_output(cmd, shell=True).decode()
+                    if output:
+                        pid = output.strip().split()[-1]
+                        # Kill the process
+                        app.logger.info(f"Killing process {pid} using port {port}")
+                        subprocess.run(f"taskkill /F /PID {pid}", shell=True)
+                        time.sleep(1)  # Give it a moment to release the port
+                except subprocess.CalledProcessError:
+                    app.logger.warning(f"Could not find process using port {port}")
+    except Exception as e:
+        app.logger.error(f"Error checking port: {e}")
+
     app.logger.info(f'Starting server at http://{WEB_SERVER_HOST}:{port}')
     app.run(host=WEB_SERVER_HOST, port=port)
 

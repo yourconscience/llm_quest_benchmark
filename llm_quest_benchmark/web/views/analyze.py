@@ -1,8 +1,11 @@
 """Analysis and visualization of benchmark results"""
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, jsonify, request
 from sqlalchemy import func, case
 import json
 import logging
+import sqlite3
+from datetime import datetime
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +22,33 @@ class NoDataError(WebUIError):
 @handle_errors
 def index():
     """Analysis page"""
-    return render_template('analyze/index.html')
+    # Get recent runs for display
+    recent_runs = Run.query.order_by(Run.start_time.desc()).limit(10).all()
+    
+    # Get available quest names
+    quest_names = db.session.query(Run.quest_name).distinct().all()
+    quest_names = [q[0] for q in quest_names]
+    
+    # Get agent types
+    agent_types = db.session.query(Run.agent_id).distinct().all()
+    agent_types = [a[0] for a in agent_types]
+    
+    # Get success rates
+    stats = db.session.query(
+        func.count(Run.id).label('total_runs'),
+        func.sum(case((Run.outcome == 'SUCCESS', 1), else_=0)).label('successes')
+    ).first()
+    
+    success_rate = 0
+    if stats and stats.total_runs > 0:
+        success_rate = float(stats.successes / stats.total_runs) * 100
+    
+    return render_template('analyze/index.html', 
+                           recent_runs=recent_runs,
+                           quest_names=quest_names,
+                           agent_types=agent_types,
+                           total_runs=stats.total_runs if stats else 0,
+                           success_rate=success_rate)
 
 @bp.route('/summary')
 @handle_errors
@@ -28,8 +57,8 @@ def summary():
     # Get overall statistics
     stats = db.session.query(
         func.count(Run.id).label('total_runs'),
-        func.sum(case([(Run.outcome == 'SUCCESS', 1)], else_=0)).label('successes'),
-        func.sum(case([(Run.outcome == 'FAILURE', 1)], else_=0)).label('failures')
+        func.sum(case((Run.outcome == 'SUCCESS', 1), else_=0)).label('successes'),
+        func.sum(case((Run.outcome == 'FAILURE', 1), else_=0)).label('failures')
     ).first()
 
     if not stats or not stats.total_runs:
@@ -54,7 +83,7 @@ def model_comparison():
         Run.quest_name,
         func.json_extract(Run.agent_config, '$.model').label('model'),
         func.count(Run.id).label('total_runs'),
-        func.sum(case([(Run.outcome == 'SUCCESS', 1)], else_=0)).label('successes')
+        func.sum(case((Run.outcome == 'SUCCESS', 1), else_=0)).label('successes')
     ).group_by(
         Run.quest_name,
         func.json_extract(Run.agent_config, '$.model')
@@ -106,10 +135,82 @@ def step_analysis():
         'data': step_data
     })
 
+@bp.route('/run/<int:run_id>')
+@handle_errors
+def run_details(run_id):
+    """Show detailed analysis for a specific run"""
+    run = Run.query.get_or_404(run_id)
+    steps = Step.query.filter_by(run_id=run_id).order_by(Step.step).all()
+    
+    if not steps:
+        raise NoDataError(f"No step data found for run {run_id}")
+    
+    # Calculate run metrics
+    total_steps = len(steps)
+    total_time = None
+    if run.end_time and run.start_time:
+        total_time = (run.end_time - run.start_time).total_seconds()
+    
+    # Count decision points (steps with multiple choices)
+    decision_points = 0
+    for step in steps:
+        if step.choices and len(step.choices) > 1:
+            decision_points += 1
+    
+    return render_template('analyze/run_details.html',
+                           run=run,
+                           steps=steps,
+                           total_steps=total_steps,
+                           total_time=total_time,
+                           decision_points=decision_points)
+
+@bp.route('/quest/<quest_name>')
+@handle_errors
+def quest_analysis(quest_name):
+    """Analyze runs for a specific quest"""
+    # Import datetime here to avoid potential circular imports
+    from datetime import datetime
+    
+    # Get all runs for this quest
+    runs = Run.query.filter_by(quest_name=quest_name).order_by(Run.start_time.desc()).all()
+    
+    if not runs:
+        raise NoDataError(f"No runs found for quest: {quest_name}")
+    
+    # Calculate success rate
+    total_runs = len(runs)
+    success_runs = len([r for r in runs if r.outcome == 'SUCCESS'])
+    success_rate = (success_runs / total_runs * 100) if total_runs > 0 else 0
+    
+    # Get agent performance
+    agent_stats = {}
+    for run in runs:
+        agent_id = run.agent_id
+        if agent_id not in agent_stats:
+            agent_stats[agent_id] = {'total': 0, 'success': 0}
+        
+        agent_stats[agent_id]['total'] += 1
+        if run.outcome == 'SUCCESS':
+            agent_stats[agent_id]['success'] += 1
+    
+    # Calculate agent success rates
+    for agent_id in agent_stats:
+        stats = agent_stats[agent_id]
+        stats['success_rate'] = (stats['success'] / stats['total'] * 100) if stats['total'] > 0 else 0
+    
+    return render_template('analyze/quest_analysis.html',
+                           quest_name=quest_name,
+                           runs=runs,
+                           total_runs=total_runs,
+                           success_rate=success_rate,
+                           agent_stats=agent_stats,
+                           now=datetime.utcnow(),  # Pass current time for the report
+                           datetime=datetime)  # Pass datetime module for template use
+
 @bp.route('/run/<int:run_id>/analysis')
 @handle_errors
 def run_analysis(run_id):
-    """Get detailed analysis for a specific run"""
+    """Get detailed analysis for a specific run (API)"""
     run = Run.query.get_or_404(run_id)
     steps = Step.query.filter_by(run_id=run_id).order_by(Step.step).all()
 
@@ -118,21 +219,21 @@ def run_analysis(run_id):
 
     # Calculate run metrics
     total_steps = len(steps)
-    total_time = (run.end_time - run.start_time).total_seconds() if run.end_time else None
+    total_time = (run.end_time - run.start_time).total_seconds() if run.end_time and run.start_time else None
 
     # Analyze step choices and responses
     step_metrics = []
     for step in steps:
         try:
-            choices = step.choices and len(json.loads(step.choices))
+            choices = step.choices and len(step.choices)
             step_metrics.append({
                 'step': step.step,
                 'location': step.location_id,
                 'num_choices': choices,
                 'action': step.action
             })
-        except json.JSONDecodeError:
-            logger.warning(f"Invalid JSON data in step {step.id}")
+        except Exception as e:
+            logger.warning(f"Error processing step {step.id}: {e}")
             continue
 
     analysis = {
@@ -140,12 +241,192 @@ def run_analysis(run_id):
         'run_info': run.to_dict(),
         'metrics': {
             'total_steps': total_steps,
-            'total_time': total_time
+            'total_time': total_time,
+            'decision_points': len([s for s in step_metrics if s.get('num_choices', 0) > 1])
         },
         'step_metrics': step_metrics
     }
 
     return jsonify(analysis)
+
+@bp.route('/run/<int:run_id>/readable')
+@handle_errors
+def run_readable(run_id):
+    """Get human-readable formatted view of a run"""
+    run = Run.query.get_or_404(run_id)
+    steps = Step.query.filter_by(run_id=run_id).order_by(Step.step).all()
+    
+    if not steps:
+        raise NoDataError(f"No step data found for run {run_id}")
+    
+    # Extract quest name from quest_file if available, otherwise use quest_name
+    quest_name = Path(run.quest_file).stem if run.quest_file else run.quest_name or "Unknown"
+    
+    # Format the run details in a human-readable way
+    readable_output = []
+    
+    # Run header
+    readable_output.append(f"QUEST: {quest_name}")
+    
+    # Get agent name from agent_config if available
+    agent_name = run.agent_id if run.agent_id else "Unknown"
+    if run.agent_config and isinstance(run.agent_config, dict) and 'model' in run.agent_config:
+        agent_name = f"{agent_name} ({run.agent_config['model']})"
+    
+    readable_output.append(f"AGENT: {agent_name}")
+    
+    # Show number of steps instead of start time
+    readable_output.append(f"STEPS: {len(steps)}")
+    
+    if run.end_time:
+        readable_output.append(f"END TIME: {run.end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    if run.outcome:
+        readable_output.append(f"OUTCOME: {run.outcome}")
+    readable_output.append("")
+    readable_output.append("========== QUEST PLAYTHROUGH ==========")
+    
+    # Format each step
+    for i, step in enumerate(steps):
+        # Step header
+        readable_output.append("")
+        readable_output.append(f"----- STEP {step.step} -----")
+        readable_output.append("")
+        
+        # Observation
+        readable_output.append(f"{step.observation}")
+        readable_output.append("")
+        
+        # Choices
+        if step.choices and len(step.choices) > 0:
+            readable_output.append("Available choices:")
+            for i, choice in enumerate(step.choices):
+                readable_output.append(f"{i+1}. {choice['text']}")
+            readable_output.append("")
+        
+        # Action taken - only show for steps that have choices
+        if step.action and step.choices and len(step.choices) > 0:
+            choice_index = int(step.action) - 1
+            if 0 <= choice_index < len(step.choices):
+                choice_text = step.choices[choice_index]['text']
+                readable_output.append(f"Selected option {step.action}: {choice_text}")
+            readable_output.append("")
+        
+        # LLM reasoning and analysis if available
+        if step.llm_response:
+            try:
+                # If llm_response is a string, try to parse it as JSON
+                llm_response = step.llm_response
+                
+                # Handle both dictionary and object-like structures
+                if llm_response:
+                    # Try to get reasoning
+                    reasoning = None
+                    if isinstance(llm_response, dict) and 'reasoning' in llm_response:
+                        reasoning = llm_response['reasoning']
+                    
+                    if reasoning:
+                        readable_output.append(f"Reasoning: {reasoning}")
+                        readable_output.append("")
+                    
+                    # Try to get analysis
+                    analysis = None
+                    if isinstance(llm_response, dict) and 'analysis' in llm_response:
+                        analysis = llm_response['analysis']
+                    
+                    if analysis:
+                        readable_output.append(f"Analysis: {analysis}")
+                        readable_output.append("")
+            except Exception as e:
+                logger.error(f"Error processing LLM response: {e}")
+                logger.error(f"LLM response type: {type(step.llm_response)}")
+    
+    # Final outcome
+    if run.outcome:
+        readable_output.append("")
+        readable_output.append(f"========== QUEST OUTCOME: {run.outcome} ==========")
+    
+    return jsonify({
+        'success': True,
+        'readable_output': '\n'.join(readable_output)
+    })
+
+@bp.route('/export')
+@handle_errors
+def export_metrics():
+    """Export metrics data in various formats"""
+    # Parameters
+    export_format = request.args.get('format', 'json')
+    run_id = request.args.get('run_id')
+    quest_name = request.args.get('quest_name')
+    
+    if run_id:
+        # Export single run
+        run = Run.query.get_or_404(int(run_id))
+        steps = Step.query.filter_by(run_id=run.id).order_by(Step.step).all()
+        
+        # Format data
+        run_data = run.to_dict()
+        run_data['steps'] = [step.to_dict() for step in steps]
+        
+        return jsonify({
+            'success': True,
+            'data': run_data
+        })
+    elif quest_name:
+        # Export all runs for a quest
+        runs = Run.query.filter_by(quest_name=quest_name).order_by(Run.start_time.desc()).all()
+        
+        if not runs:
+            raise NoDataError(f"No runs found for quest: {quest_name}")
+        
+        # Format data
+        results = {
+            "quest_name": quest_name,
+            "total_runs": len(runs),
+            "outcomes": {"SUCCESS": 0, "FAILURE": 0},
+            "runs": []
+        }
+        
+        # Process each run
+        for run in runs:
+            results["outcomes"][run.outcome] = results["outcomes"].get(run.outcome, 0) + 1
+            
+            # Get steps for this run
+            steps = Step.query.filter_by(run_id=run.id).order_by(Step.step).all()
+            
+            run_data = run.to_dict()
+            run_data["steps"] = [step.to_dict() for step in steps]
+            
+            results["runs"].append(run_data)
+        
+        return jsonify({
+            'success': True,
+            'data': results
+        })
+    else:
+        # Export summary stats
+        stats = db.session.query(
+            func.count(Run.id).label('total_runs'),
+            func.sum(case((Run.outcome == 'SUCCESS', 1), else_=0)).label('successes'),
+            func.sum(case((Run.outcome == 'FAILURE', 1), else_=0)).label('failures')
+        ).first()
+        
+        if not stats or not stats.total_runs:
+            raise NoDataError("No data available. Run some quests first!")
+        
+        summary = {
+            'total_runs': stats.total_runs,
+            'success_rate': float(stats.successes / stats.total_runs) if stats.total_runs > 0 else 0.0,
+            'outcomes': {
+                'SUCCESS': stats.successes or 0,
+                'FAILURE': stats.failures or 0
+            }
+        }
+        
+        return jsonify({
+            'success': True,
+            'data': summary
+        })
 
 @bp.errorhandler(NoDataError)
 def handle_no_data_error(error):

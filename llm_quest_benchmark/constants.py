@@ -6,14 +6,11 @@ MODEL_CHOICES = [
     "random_choice", # LLM Stub: selects random choice
     "gpt-4o",
     "gpt-4o-mini",
+    "claude-3-7-sonnet-latest",
     "claude-3-5-sonnet-latest",
     "claude-3-5-haiku-latest",
 ]
 DEFAULT_MODEL = "gpt-4o"
-
-# Language choices
-LANG_CHOICES = ["rus", "eng"]
-DEFAULT_LANG = "rus"
 
 # Default quest
 DEFAULT_QUEST = Path("quests/kr1/Boat.qm")
@@ -27,7 +24,7 @@ DEFAULT_TEMPLATE = "reasoning.jinja"
 SYSTEM_ROLE_TEMPLATE = "system_role.jinja"
 
 # Default temperature
-DEFAULT_TEMPERATURE = 0.6  # Lower temperature for more focused responses
+DEFAULT_TEMPERATURE = 0.4  # Lower temperature for more focused responses
 
 # Timeout settings (in seconds)
 READABILITY_DELAY = 0.5  # Delay between steps for readability in interactive mode

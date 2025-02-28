@@ -24,6 +24,8 @@ class RandomAgent(QuestPlayer):
         if debug:
             self.logger.setLevel(logging.DEBUG)
         self.rng = random.Random(seed)
+        # Set agent_id for database records
+        self.agent_id = f"random_{seed}" if seed is not None else "random"
 
     def _get_action_impl(self, observation: str, choices: List[Dict[str, str]]) -> int:
         """Return random choice from available options.
