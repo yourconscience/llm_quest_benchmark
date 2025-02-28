@@ -123,7 +123,7 @@ def test_quest_initialization(client, app):
         assert run is not None
         assert run.quest_name == 'Boat'
         assert run.quest_file == 'quests/kr1/Boat.qm'
-        assert run.agent_id.startswith('random_choice')
+        assert run.agent_id.startswith('random')
         assert run.end_time is None  # This is the key assertion for initialization
 
         # Explicitly set end_time to None for initialization test
@@ -306,7 +306,7 @@ def test_readable_run_endpoint(client, init_quest):
     # Check for expected sections in the output
     assert "QUEST:" in readable_output
     assert "AGENT:" in readable_output
-    assert "START TIME:" in readable_output
+    assert "STEPS:" in readable_output
     assert "QUEST PLAYTHROUGH" in readable_output
 
 def test_readable_endpoint(client, init_quest):

@@ -1,39 +1,68 @@
 """LLM agent for Space Rangers quests"""
 import json
 import logging
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
 from json_repair import repair_json
 
+from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.constants import (
-    MODEL_CHOICES,
-    DEFAULT_TEMPLATE,
-    DEFAULT_TEMPERATURE,
     DEFAULT_MODEL,
-    SYSTEM_ROLE_TEMPLATE
+    DEFAULT_TEMPERATURE,
+    DEFAULT_TEMPLATE,
+    MODEL_CHOICES,
+    SYSTEM_ROLE_TEMPLATE,
 )
 from llm_quest_benchmark.llm.client import get_llm_client
 from llm_quest_benchmark.llm.prompt import PromptRenderer
-from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.schemas.response import LLMResponse
 
 
-def _parse_json_response(response: str, debug: bool = False, logger: Optional[logging.Logger] = None) -> Optional[Dict[str, Any]]:
+def _parse_json_response(response: str,
+                         debug: bool = False,
+                         logger: Optional[logging.Logger] = None) -> Optional[Dict[str, Any]]:
     """Try to parse response as JSON, with repair attempt if needed"""
     try:
-        return json.loads(response)
+        # Extract JSON from response if there are backticks
+        if '```json' in response:
+            # Find the start and end of the JSON block
+            start = response.find('```json') + 7
+            end = response.find('```', start)
+            if end > start:
+                json_str = response[start:end].strip()
+                if debug and logger:
+                    logger.debug(f"Extracted JSON: {json_str}")
+                result = json.loads(json_str)
+                if debug and logger:
+                    logger.debug(f"Parsed JSON: {result}")
+                return result
+
+        # Try to parse directly
+        result = json.loads(response)
+        if debug and logger:
+            logger.debug(f"Direct JSON parse successful: {result}")
+        return result
     except json.JSONDecodeError:
         if debug and logger:
             logger.debug("Initial JSON parse failed, attempting repair")
         try:
             repaired = repair_json(response)
-            return json.loads(repaired)
+            if debug and logger:
+                logger.debug(f"Repaired JSON: {repaired}")
+            result = json.loads(repaired)
+            if debug and logger:
+                logger.debug(f"Parse of repaired JSON successful: {result}")
+            return result
         except Exception as e:
             if debug and logger:
                 logger.error(f"JSON repair failed: {e}")
             return None
 
 
-def _validate_action_number(action: int, num_choices: int, debug: bool = False, logger: Optional[logging.Logger] = None) -> bool:
+def _validate_action_number(action: int,
+                            num_choices: int,
+                            debug: bool = False,
+                            logger: Optional[logging.Logger] = None) -> bool:
     """Validate that action number is within valid range"""
     if 1 <= action <= num_choices:
         return True
@@ -42,7 +71,10 @@ def _validate_action_number(action: int, num_choices: int, debug: bool = False, 
     return False
 
 
-def parse_llm_response(response: str, num_choices: int, debug: bool = False, logger: Optional[logging.Logger] = None) -> LLMResponse:
+def parse_llm_response(response: str,
+                       num_choices: int,
+                       debug: bool = False,
+                       logger: Optional[logging.Logger] = None) -> LLMResponse:
     """Parse LLM response and return structured response object."""
     if debug and logger:
         logger.debug(f"Raw LLM response: {response}")
@@ -56,12 +88,10 @@ def parse_llm_response(response: str, num_choices: int, debug: bool = False, log
             try:
                 action = int(action_value)
                 if _validate_action_number(action, num_choices, debug, logger):
-                    return LLMResponse(
-                        action=action,
-                        reasoning=response_json.get('reasoning'),
-                        analysis=response_json.get('analysis'),
-                        is_default=False
-                    )
+                    return LLMResponse(action=action,
+                                       reasoning=response_json.get('reasoning'),
+                                       analysis=response_json.get('analysis'),
+                                       is_default=False)
             except (ValueError, TypeError):
                 if debug and logger:
                     logger.error(f"Invalid action value in JSON: {action_value}")
@@ -77,7 +107,9 @@ def parse_llm_response(response: str, num_choices: int, debug: bool = False, log
 
     # Default to first choice if all parsing attempts fail
     if debug and logger:
-        logger.error(f"Error during response parsing, defaulting to first choice. Response: {response[:100]}...")
+        logger.error(
+            f"Error during response parsing, defaulting to first choice. Response: {response[:100]}..."
+        )
     return LLMResponse(action=1, is_default=True)
 
 
@@ -101,9 +133,12 @@ class LLMAgent(QuestPlayer):
         self.system_template = system_template
         self.action_template = action_template
         self.temperature = temperature
+        # Set agent_id for database records
+        self.agent_id = f"llm_{self.model_name}"
 
         if self.model_name not in self.SUPPORTED_MODELS:
-            raise ValueError(f"Unsupported model: {model_name}. Supported models are: {self.SUPPORTED_MODELS}")
+            raise ValueError(
+                f"Unsupported model: {model_name}. Supported models are: {self.SUPPORTED_MODELS}")
 
         self.logger = logging.getLogger(self.__class__.__name__)
         if self.debug:
@@ -113,20 +148,17 @@ class LLMAgent(QuestPlayer):
             self.logger.addHandler(handler)
 
         # Initialize prompt renderer
-        self.prompt_renderer = PromptRenderer(
-            None,
-            system_template=system_template,
-            action_template=action_template
-        )
+        self.prompt_renderer = PromptRenderer(None,
+                                              system_template=system_template,
+                                              action_template=action_template)
 
         # Initialize LLM client with system prompt and temperature
-        self.llm = get_llm_client(
-            model_name,
-            system_prompt=self.prompt_renderer.render_system_prompt(),
-            temperature=temperature
-        )
+        self.llm = get_llm_client(model_name,
+                                  system_prompt=self.prompt_renderer.render_system_prompt(),
+                                  temperature=temperature)
         self.history: List[LLMResponse] = []
-        self._last_response = LLMResponse(action=1, is_default=True)  # Initialize with default response
+        self._last_response = LLMResponse(action=1,
+                                          is_default=True)  # Initialize with default response
 
     def get_last_response(self) -> Optional[LLMResponse]:
         """Get the last LLM response from history"""
@@ -142,6 +174,10 @@ class LLMAgent(QuestPlayer):
         Returns:
             int: Selected action number (1-based)
         """
+        if self.debug:
+            self.logger.debug(f"Getting action for state with {len(choices)} choices available")
+            for i, choice in enumerate(choices):
+                self.logger.debug(f"Choice {i+1}: {choice.get('text', 'NO TEXT')}")
         try:
             # Format prompt
             prompt = self._format_prompt(state, choices)
@@ -152,15 +188,30 @@ class LLMAgent(QuestPlayer):
             llm_response = self.llm.get_completion(prompt)
             if self.debug:
                 self.logger.debug(f"LLM response: {llm_response}")
+                choices_debug = []
+                for i, c in enumerate(choices):
+                    choices_debug.append(f"{i+1}: {c['text']}")
+                self.logger.debug(f"Available choices: {choices_debug}")
 
             # Parse response
-            parsed_response = parse_llm_response(llm_response, len(choices), self.debug, self.logger)
+            parsed_response = parse_llm_response(llm_response, len(choices), self.debug,
+                                                 self.logger)
             if self.debug:
                 self.logger.debug(f"Parsed LLM response: {parsed_response}")
+                self.logger.debug(f"Final action to be returned: {parsed_response.action}")
 
             # Store response in history
             self.history.append(parsed_response)
             self._last_response = parsed_response
+
+            # Check that action is within valid range before returning
+            if parsed_response.action < 1 or parsed_response.action > len(choices):
+                self.logger.error(
+                    f"INVALID ACTION DETECTED: {parsed_response.action} not in range 1-{len(choices)}"
+                )
+                # Use default first action instead
+                parsed_response.action = 1
+                self.logger.warning(f"Defaulting to action 1 instead")
 
             return parsed_response.action
 

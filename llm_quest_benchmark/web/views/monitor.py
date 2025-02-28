@@ -302,19 +302,17 @@ def get_run_readable(run_id):
     readable_output.append(f"QUEST: {quest_name}")
 
     # Get agent name from agent_config if available
-    agent_name = "Unknown"
+    agent_name = run.agent_id if run.agent_id else "Unknown"
     if run.agent_config and isinstance(run.agent_config, dict) and 'model' in run.agent_config:
-        agent_name = run.agent_config['model']
-    elif run.agent_id:
-        agent_name = run.agent_id
-
+        agent_name = f"{agent_name} ({run.agent_config['model']})"
+    
     readable_output.append(f"AGENT: {agent_name}")
 
-    # Show total steps instead of start time
-    readable_output.append(f"TOTAL STEPS: {len(steps)}")
+    # Show number of steps instead of start time
+    readable_output.append(f"STEPS: {len(steps)}")
 
     if run.end_time:
-        readable_output.append(f"END TIME: {run.end_time}")
+        readable_output.append(f"END TIME: {run.end_time.strftime('%Y-%m-%d %H:%M:%S')}")
     if run.outcome:
         readable_output.append(f"OUTCOME: {run.outcome}")
     readable_output.append("")
@@ -338,18 +336,13 @@ def get_run_readable(run_id):
                 readable_output.append(f"{i+1}. {choice['text']}")
             readable_output.append("")
 
-        # Action taken and LLM response from the NEXT step (if available)
-        # This fixes the issue where LLM response for step N is actually for choices from step N-1
-        if step.action:
-            # Find the chosen option text
-            choice_text = "Unknown choice"
-            if step.choices and len(step.choices) > 0:
-                choice_index = int(step.action) - 1
-                if 0 <= choice_index < len(step.choices):
-                    choice_text = step.choices[choice_index]['text']
-
-            readable_output.append(f"Selected option {step.action}: {choice_text}")
-            readable_output.append("")
+        # Action taken - only show for steps that have choices
+        if step.action and step.choices and len(step.choices) > 0:
+            choice_index = int(step.action) - 1
+            if 0 <= choice_index < len(step.choices):
+                choice_text = step.choices[choice_index]['text']
+                readable_output.append(f"Selected option {step.action}: {choice_text}")
+                readable_output.append("")
 
         # Get the NEXT step's LLM response (if available) which corresponds to THIS step's choices
         next_step_index = i + 1

@@ -13,6 +13,8 @@ class HumanPlayer(QuestPlayer):
         self.logger = logging.getLogger(__name__)
         if debug:
             self.logger.setLevel(logging.DEBUG)
+        # Set agent_id for database records
+        self.agent_id = "human"
 
     def _get_action_impl(self, observation: str, choices: list) -> int:
         """Implementation of action selection logic"""

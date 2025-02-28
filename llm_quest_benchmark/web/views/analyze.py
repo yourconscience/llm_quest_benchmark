@@ -36,7 +36,7 @@ def index():
     # Get success rates
     stats = db.session.query(
         func.count(Run.id).label('total_runs'),
-        func.sum(case([(Run.outcome == 'SUCCESS', 1)], else_=0)).label('successes')
+        func.sum(case((Run.outcome == 'SUCCESS', 1), else_=0)).label('successes')
     ).first()
     
     success_rate = 0
@@ -57,8 +57,8 @@ def summary():
     # Get overall statistics
     stats = db.session.query(
         func.count(Run.id).label('total_runs'),
-        func.sum(case([(Run.outcome == 'SUCCESS', 1)], else_=0)).label('successes'),
-        func.sum(case([(Run.outcome == 'FAILURE', 1)], else_=0)).label('failures')
+        func.sum(case((Run.outcome == 'SUCCESS', 1), else_=0)).label('successes'),
+        func.sum(case((Run.outcome == 'FAILURE', 1), else_=0)).label('failures')
     ).first()
 
     if not stats or not stats.total_runs:
@@ -83,7 +83,7 @@ def model_comparison():
         Run.quest_name,
         func.json_extract(Run.agent_config, '$.model').label('model'),
         func.count(Run.id).label('total_runs'),
-        func.sum(case([(Run.outcome == 'SUCCESS', 1)], else_=0)).label('successes')
+        func.sum(case((Run.outcome == 'SUCCESS', 1), else_=0)).label('successes')
     ).group_by(
         Run.quest_name,
         func.json_extract(Run.agent_config, '$.model')
@@ -269,19 +269,17 @@ def run_readable(run_id):
     readable_output.append(f"QUEST: {quest_name}")
     
     # Get agent name from agent_config if available
-    agent_name = "Unknown"
+    agent_name = run.agent_id if run.agent_id else "Unknown"
     if run.agent_config and isinstance(run.agent_config, dict) and 'model' in run.agent_config:
-        agent_name = run.agent_config['model']
-    elif run.agent_id:
-        agent_name = run.agent_id
+        agent_name = f"{agent_name} ({run.agent_config['model']})"
     
     readable_output.append(f"AGENT: {agent_name}")
     
-    # Show total steps instead of start time
-    readable_output.append(f"TOTAL STEPS: {len(steps)}")
+    # Show number of steps instead of start time
+    readable_output.append(f"STEPS: {len(steps)}")
     
     if run.end_time:
-        readable_output.append(f"END TIME: {run.end_time}")
+        readable_output.append(f"END TIME: {run.end_time.strftime('%Y-%m-%d %H:%M:%S')}")
     if run.outcome:
         readable_output.append(f"OUTCOME: {run.outcome}")
     readable_output.append("")
@@ -305,16 +303,12 @@ def run_readable(run_id):
                 readable_output.append(f"{i+1}. {choice['text']}")
             readable_output.append("")
         
-        # Action taken
-        if step.action:
-            # Find the chosen option text
-            choice_text = "Unknown choice"
-            if step.choices and len(step.choices) > 0:
-                choice_index = int(step.action) - 1
-                if 0 <= choice_index < len(step.choices):
-                    choice_text = step.choices[choice_index]['text']
-            
-            readable_output.append(f"Selected option {step.action}: {choice_text}")
+        # Action taken - only show for steps that have choices
+        if step.action and step.choices and len(step.choices) > 0:
+            choice_index = int(step.action) - 1
+            if 0 <= choice_index < len(step.choices):
+                choice_text = step.choices[choice_index]['text']
+                readable_output.append(f"Selected option {step.action}: {choice_text}")
             readable_output.append("")
         
         # LLM reasoning and analysis if available
@@ -413,8 +407,8 @@ def export_metrics():
         # Export summary stats
         stats = db.session.query(
             func.count(Run.id).label('total_runs'),
-            func.sum(case([(Run.outcome == 'SUCCESS', 1)], else_=0)).label('successes'),
-            func.sum(case([(Run.outcome == 'FAILURE', 1)], else_=0)).label('failures')
+            func.sum(case((Run.outcome == 'SUCCESS', 1), else_=0)).label('successes'),
+            func.sum(case((Run.outcome == 'FAILURE', 1), else_=0)).label('failures')
         ).first()
         
         if not stats or not stats.total_runs:

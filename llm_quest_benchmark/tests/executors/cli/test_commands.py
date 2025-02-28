@@ -45,7 +45,7 @@ def test_analyze_invalid_input():
     """Test analyze command with invalid input"""
     result = runner.invoke(app, ["analyze"])
     assert result.exit_code == 1
-    assert "Must specify either --quest or --benchmark" in result.stdout or "Must specify either --quest or --benchmark" in result.stderr
+    assert "Must specify one of: --quest, --benchmark, --run-id, or --last" in result.stderr
 
 def test_benchmark_missing_config():
     """Test benchmark command with missing config"""

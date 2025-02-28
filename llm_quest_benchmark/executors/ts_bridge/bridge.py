@@ -233,7 +233,13 @@ class QMBridge:
             jump_id = self.validate_choice(choice_num)
 
             if self.debug:
-                logger.debug(f"Sending jump ID: {jump_id}")
+                current_state = self.state_history[-1] if self.state_history else self.get_current_state()
+                logger.debug(f"Step with choice_num: {choice_num}, jump_id: {jump_id}")
+                choices_debug = []
+                for i, c in enumerate(current_state.choices):
+                    choices_debug.append(f"{i+1}: {c['text']}")
+                logger.debug(f"Current choices: {choices_debug}")
+                logger.debug(f"Current choices raw: {current_state.choices}")
 
             # Send jump ID to process
             self.process.stdin.write(f"{jump_id}\n")

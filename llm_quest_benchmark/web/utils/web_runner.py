@@ -82,6 +82,13 @@ def run_quest_with_db_logging(
                     logger.error(f"Error in step callback: {e}")
                     logger.error(traceback.format_exc())
 
+    # Get agent_id directly from the agent
+    agent_id = getattr(agent, 'agent_id', None)
+    if agent_id:
+        # Update the agent_id in the run record
+        run_record.agent_id = agent_id
+        db.session.commit()
+        
     # Create AgentConfig from run_record.agent_config
     agent_config = None
     if run_record.agent_config:

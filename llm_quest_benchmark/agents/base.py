@@ -12,6 +12,7 @@ class QuestPlayer(ABC):
         """Initialize player with skip_single option"""
         self.skip_single = skip_single
         self._last_response: LLMResponse = None
+        self.agent_id = "base_agent"  # Default agent ID
 
     def get_action(self, observation: str, choices: list) -> int:
         """Get action number from observation and choices
