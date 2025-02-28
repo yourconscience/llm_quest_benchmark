@@ -4,7 +4,7 @@ import logging
 import sqlite3
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 import os
 import threading
 
@@ -41,7 +41,7 @@ class LogManager:
 
 
 class QuestLogger:
-    """Logs quest runs to SQLite database and agent-specific directories"""
+    """Logs quest runs to SQLite database and exports to JSON when complete"""
     # Thread-local storage for database connections
     _local = threading.local()
 
@@ -59,6 +59,8 @@ class QuestLogger:
         self.current_run_id = None
         self.quest_file = None
         self.steps = []
+        self.run_outcome = None
+        self.end_time = None
 
         # Setup logger
         self.logger = logging.getLogger('quest_logger')
@@ -89,7 +91,9 @@ class QuestLogger:
                 end_time TIMESTAMP,
                 agent_id TEXT,
                 agent_config TEXT,
-                outcome TEXT
+                outcome TEXT,
+                reward REAL,
+                run_duration REAL
             )
         ''')
 
@@ -120,6 +124,7 @@ class QuestLogger:
 
         self.quest_file = quest_file
         self.steps = []
+        self.start_time = datetime.utcnow()
 
         try:
             # Extract quest name from path (filename without extension)
@@ -129,7 +134,7 @@ class QuestLogger:
             self._local.cursor.execute('''
                 INSERT INTO runs (quest_file, quest_name, start_time, agent_id)
                 VALUES (?, ?, ?, ?)
-            ''', (quest_file, quest_name, datetime.utcnow(), self.agent))
+            ''', (quest_file, quest_name, self.start_time, self.agent))
             self._local.conn.commit()
         except sqlite3.OperationalError as e:
             if "no such column: quest_file" in str(e):
@@ -142,7 +147,7 @@ class QuestLogger:
                 self._local.cursor.execute('''
                     INSERT INTO runs (quest_name, start_time, agent_id)
                     VALUES (?, ?, ?)
-                ''', (quest_name, datetime.utcnow(), self.agent))
+                ''', (quest_name, self.start_time, self.agent))
                 self._local.conn.commit()
             else:
                 raise
@@ -152,7 +157,7 @@ class QuestLogger:
         self.logger.debug(f"Created run record with ID: {self.current_run_id}")
 
     def log_step(self, agent_state: AgentState):
-        """Log a step to the database and agent-specific directory.
+        """Log a step to the database.
 
         Args:
             agent_state: Agent state to log
@@ -189,19 +194,46 @@ class QuestLogger:
                 ))
                 self._local.conn.commit()
 
-                # Save to agent-specific directory if agent ID is provided
-                if self.agent and self.quest_file:
-                    self._save_to_agent_dir(agent_state)
-
         except Exception as e:
             self.logger.error(f"Error logging step: {e}")
 
-    def _save_to_agent_dir(self, agent_state: AgentState):
-        """Save step data to agent-specific directory.
+    def set_quest_outcome(self, outcome: str, reward: float = 0.0):
+        """Set the quest outcome and finalize the run.
 
         Args:
-            agent_state: Agent state to save
+            outcome: Quest outcome (SUCCESS, FAILURE, etc.)
+            reward: Final reward value
         """
+        if not self.current_run_id:
+            self.logger.warning("Cannot set outcome, no active run")
+            return
+
+        self.run_outcome = outcome
+        self.end_time = datetime.utcnow()
+        run_duration = (self.end_time - self.start_time).total_seconds()
+
+        try:
+            # Update the run record with outcome and end time
+            self._local.cursor.execute('''
+                UPDATE runs 
+                SET outcome = ?, end_time = ?, reward = ?, run_duration = ?
+                WHERE id = ?
+            ''', (outcome, self.end_time, reward, run_duration, self.current_run_id))
+            self._local.conn.commit()
+
+            # Export the run to JSON
+            self._export_run_to_json()
+
+        except Exception as e:
+            self.logger.error(f"Error setting quest outcome: {e}")
+
+    def _export_run_to_json(self):
+        """Export the complete run to JSON files.
+        Creates both individual step files and a full run summary file.
+        """
+        if not self.agent or not self.quest_file or not self.current_run_id:
+            return
+
         try:
             # Create agent directory if it doesn't exist
             agent_dir = RESULTS_DIR / self.agent
@@ -216,23 +248,81 @@ class QuestLogger:
             run_dir = quest_dir / f"run_{self.current_run_id}"
             run_dir.mkdir(exist_ok=True)
 
-            # Save step data
-            step_data = {
-                "step": agent_state.step,
-                "location_id": agent_state.location_id,
-                "observation": agent_state.observation,
-                "choices": agent_state.choices,
-                "action": agent_state.action,
-                "llm_response": agent_state.llm_response.to_dict() if agent_state.llm_response else None
-            }
+            # Fetch complete run data from database
+            run_data = self._get_run_data()
+            
+            # Save individual step files
+            for step in run_data["steps"]:
+                step_file = run_dir / f"step_{step['step']}.json"
+                with open(step_file, 'w') as f:
+                    json.dump(step, f, indent=2)
 
-            # Save to file
-            step_file = run_dir / f"step_{agent_state.step}.json"
-            with open(step_file, 'w') as f:
-                json.dump(step_data, f, indent=2)
+            # Save complete run summary
+            run_summary_file = run_dir / "run_summary.json"
+            with open(run_summary_file, 'w') as f:
+                json.dump(run_data, f, indent=2)
+
+            self.logger.debug(f"Exported run data to {run_summary_file}")
 
         except Exception as e:
-            self.logger.error(f"Error saving to agent directory: {e}")
+            self.logger.error(f"Error exporting run to JSON: {e}")
+
+    def _get_run_data(self) -> Dict[str, Any]:
+        """Get complete run data from the database for the current run.
+        
+        Returns:
+            Dict containing run and step data
+        """
+        # Ensure we have a connection for this thread
+        self._init_connection()
+        
+        # Get run data
+        self._local.cursor.execute('''
+            SELECT quest_file, quest_name, start_time, end_time, agent_id, 
+                   agent_config, outcome, reward, run_duration
+            FROM runs
+            WHERE id = ?
+        ''', (self.current_run_id,))
+        
+        run = self._local.cursor.fetchone()
+        if not run:
+            return {"error": f"Run with ID {self.current_run_id} not found"}
+            
+        quest_file, quest_name, start_time, end_time, agent_id, agent_config, outcome, reward, run_duration = run
+        
+        # Get steps for this run
+        self._local.cursor.execute('''
+            SELECT step, location_id, observation, choices, action, llm_response
+            FROM steps
+            WHERE run_id = ?
+            ORDER BY step
+        ''', (self.current_run_id,))
+        
+        steps = []
+        for step_data in self._local.cursor.fetchall():
+            step_num, location_id, obs, choices_json, action, llm_response = step_data
+            steps.append({
+                "step": step_num,
+                "location_id": location_id,
+                "observation": obs,
+                "choices": json.loads(choices_json) if choices_json else [],
+                "action": action,
+                "llm_response": json.loads(llm_response) if llm_response else None
+            })
+        
+        return {
+            "run_id": self.current_run_id,
+            "quest_file": quest_file,
+            "quest_name": quest_name,
+            "start_time": start_time,
+            "end_time": end_time,
+            "agent_id": agent_id,
+            "agent_config": json.loads(agent_config) if agent_config else None,
+            "outcome": outcome,
+            "reward": reward,
+            "run_duration": run_duration,
+            "steps": steps
+        }
 
     def format_step_for_console(self, agent_state: AgentState) -> str:
         """Format step for console output.

@@ -6,6 +6,7 @@ from datetime import datetime
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 import sqlite3
+import json
 
 from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
@@ -42,7 +43,12 @@ def run_quest_with_timeout(
 
         # Create quest environment and runner
         env = QuestEnvironment(quest_path)
-        runner = QuestRunner(agent=agent, debug=debug, callbacks=callbacks or [])
+        runner = QuestRunner(
+            agent=agent, 
+            debug=debug, 
+            callbacks=callbacks or [],
+            quest_logger=logger
+        )
 
         # Run quest with timeout
         with ThreadPoolExecutor() as executor:
@@ -58,11 +64,14 @@ def run_quest_with_timeout(
                         # Ensure we have a connection for this thread
                         logger._init_connection()
 
+                        # Store agent config as JSON for better storage/retrieval
+                        agent_config_json = json.dumps(agent_config.__dict__)
+
                         logger._local.cursor.execute('''
                             UPDATE runs
                             SET agent_id = ?, agent_config = ?
                             WHERE id = ?
-                        ''', (agent_id, str(agent_config.__dict__), logger.current_run_id))
+                        ''', (agent_id, agent_config_json, logger.current_run_id))
                         logger._local.conn.commit()
                     except sqlite3.OperationalError as e:
                         if "no such column: agent_id" in str(e):
@@ -70,10 +79,15 @@ def run_quest_with_timeout(
                         else:
                             raise
 
+                # The outcome is already recorded in the QuestRunner
+
                 return outcome
             except TimeoutError:
                 future.cancel()
                 logger.logger.warning(f"Quest timed out after {timeout} seconds")
+
+                # Set outcome for timeout case
+                logger.set_quest_outcome("TIMEOUT", 0.0)
 
                 # Notify callbacks about the timeout
                 if callbacks:
@@ -87,34 +101,37 @@ def run_quest_with_timeout(
 
     except Exception as e:
         logger.logger.error(f"Error running quest: {e}")
+        if logger:
+            logger.set_quest_outcome("ERROR", 0.0)
         raise
 
 class QuestRunner:
     """Manages quest execution with logging and metrics"""
-    def __init__(self, agent: QuestPlayer, debug: bool = False, logger: Any = None,
-                 callbacks: List[Callable[[str, Any], None]] = None):
+    def __init__(self, agent: QuestPlayer, debug: bool = False,
+                 callbacks: List[Callable[[str, Any], None]] = None, 
+                 quest_logger: QuestLogger = None):
         """Initialize components needed for quest execution"""
         self.agent = agent
         self.debug = debug
         self.callbacks = callbacks or []
-
-        self.logger = logger
-        if logger is None:
-            log_manager = LogManager()
-            log_manager.setup(debug=debug)
-            self.logger = log_manager.get_logger()
-
         self.step_count = 0
         self.env = None
 
-        # Initialize quest logger
-        self.quest_logger = QuestLogger(
-            debug=self.debug,
-            agent=str(self.agent)
-        )
+        # Set up central logging
+        log_manager = LogManager()
+        log_manager.setup(debug=debug)
+        self.logger = log_manager.get_logger()
+
+        # Use provided quest logger or create a new one
+        self.quest_logger = quest_logger
+        if self.quest_logger is None:
+            self.quest_logger = QuestLogger(
+                debug=self.debug,
+                agent=str(self.agent)
+            )
 
         if debug:
-            self.logger.debug("QuestRunner initialized with agent: %s", str(agent))
+            self.logger.debug(f"QuestRunner initialized with agent: {str(agent)}")
 
     def _notify_callbacks(self, event: str, data: Any = None) -> None:
         """Notify all callbacks of an event"""
@@ -162,7 +179,14 @@ class QuestRunner:
                 if not self.env.state['choices']:
                     if self.env and self.env.state:
                         self.agent.on_game_end(self.env.state)
-                    return QuestOutcome.FAILURE
+                    
+                    # Log quest outcome
+                    outcome = QuestOutcome.FAILURE
+                    reward = self.env.state.get('reward', 0.0) if self.env and self.env.state else 0.0
+                    if self.quest_logger:
+                        self.quest_logger.set_quest_outcome(outcome.name, reward)
+                        
+                    return outcome
 
                 # Get agent's action and take step
                 action = self.agent.get_action(observation, self.env.state['choices'])
@@ -186,11 +210,23 @@ class QuestRunner:
 
                     if done:
                         self.agent.on_game_end(self.env.state)
-                        return QuestOutcome.SUCCESS if success else QuestOutcome.FAILURE
+                        
+                        # Log quest outcome
+                        outcome = QuestOutcome.SUCCESS if success else QuestOutcome.FAILURE
+                        reward = self.env.state.get('reward', 0.0) if self.env and self.env.state else 0.0
+                        if self.quest_logger:
+                            self.quest_logger.set_quest_outcome(outcome.name, reward)
+                            
+                        return outcome
 
                 except Exception as e:
                     self.logger.error("Error during step: %s", str(e), exc_info=True)
                     self._notify_callbacks("error", str(e))
+                    
+                    # Log error outcome
+                    if self.quest_logger:
+                        self.quest_logger.set_quest_outcome(QuestOutcome.ERROR.name, 0.0)
+                        
                     raise
 
         except Exception as e:
@@ -198,6 +234,11 @@ class QuestRunner:
             self._notify_callbacks("error", str(e))
             if self.env and self.env.state:
                 self.agent.on_game_end(self.env.state)
+                
+            # Log error outcome
+            if self.quest_logger:
+                self.quest_logger.set_quest_outcome(QuestOutcome.ERROR.name, 0.0)
+                
             return QuestOutcome.ERROR
         finally:
             self._notify_callbacks("close")

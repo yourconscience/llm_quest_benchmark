@@ -300,8 +300,19 @@ def get_run_readable(run_id):
 
     # Run header
     readable_output.append(f"QUEST: {quest_name}")
-    readable_output.append(f"AGENT: {run.agent_id}")
-    readable_output.append(f"START TIME: {run.start_time}")
+
+    # Get agent name from agent_config if available
+    agent_name = "Unknown"
+    if run.agent_config and isinstance(run.agent_config, dict) and 'model' in run.agent_config:
+        agent_name = run.agent_config['model']
+    elif run.agent_id:
+        agent_name = run.agent_id
+
+    readable_output.append(f"AGENT: {agent_name}")
+
+    # Show total steps instead of start time
+    readable_output.append(f"TOTAL STEPS: {len(steps)}")
+
     if run.end_time:
         readable_output.append(f"END TIME: {run.end_time}")
     if run.outcome:
@@ -356,40 +367,29 @@ def get_run_readable(run_id):
                         logger.error(f"Failed to parse LLM response as JSON: {llm_response}")
                         llm_response = {}
 
-                # Only display reasoning and analysis if:
-                # 1. This step has multiple choices (not auto-selected)
-                # 2. The next step's LLM response is not a default response (is_default=False)
-                is_default = False
-                if isinstance(llm_response, dict) and 'is_default' in llm_response:
-                    is_default = llm_response['is_default']
-                elif hasattr(llm_response, 'is_default'):
-                    is_default = llm_response.is_default
+                # Handle both dictionary and object-like structures
+                if llm_response:
+                    # Try to get reasoning - handle both attribute and dictionary access
+                    reasoning = None
+                    if isinstance(llm_response, dict) and 'reasoning' in llm_response:
+                        reasoning = llm_response['reasoning']
+                    elif hasattr(llm_response, 'reasoning'):
+                        reasoning = llm_response.reasoning
 
-                # Skip displaying reasoning/analysis for single-choice steps (which are auto-selected)
-                if len(step.choices) > 1 and not is_default:
-                    # Handle both dictionary and object-like structures
-                    if llm_response:
-                        # Try to get reasoning - handle both attribute and dictionary access
-                        reasoning = None
-                        if isinstance(llm_response, dict) and 'reasoning' in llm_response:
-                            reasoning = llm_response['reasoning']
-                        elif hasattr(llm_response, 'reasoning'):
-                            reasoning = llm_response.reasoning
+                    if reasoning:
+                        readable_output.append(f"Reasoning: {reasoning}")
+                        readable_output.append("")
 
-                        if reasoning:
-                            readable_output.append(f"Reasoning: {reasoning}")
-                            readable_output.append("")
+                    # Try to get analysis - handle both attribute and dictionary access
+                    analysis = None
+                    if isinstance(llm_response, dict) and 'analysis' in llm_response:
+                        analysis = llm_response['analysis']
+                    elif hasattr(llm_response, 'analysis'):
+                        analysis = llm_response.analysis
 
-                        # Try to get analysis - handle both attribute and dictionary access
-                        analysis = None
-                        if isinstance(llm_response, dict) and 'analysis' in llm_response:
-                            analysis = llm_response['analysis']
-                        elif hasattr(llm_response, 'analysis'):
-                            analysis = llm_response.analysis
-
-                        if analysis:
-                            readable_output.append(f"Analysis: {analysis}")
-                            readable_output.append("")
+                    if analysis:
+                        readable_output.append(f"Analysis: {analysis}")
+                        readable_output.append("")
             except Exception as e:
                 logger.error(f"Error processing LLM response: {e}")
                 logger.error(f"LLM response type: {type(llm_response)}")

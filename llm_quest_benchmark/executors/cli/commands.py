@@ -1,6 +1,8 @@
 """CLI commands for llm-quest-benchmark"""
 import logging
 import click
+import json
+import sqlite3
 from pathlib import Path
 from typing import Optional, List
 import socket
@@ -217,69 +219,264 @@ def play(
 def analyze(
     quest: Optional[str] = typer.Option(None, help="Name of the quest to analyze (e.g. 'boat.qm')."),
     benchmark: Optional[str] = typer.Option(None, help="Name of the benchmark to analyze (e.g. 'baseline')."),
+    run_id: Optional[int] = typer.Option(None, help="Specific run ID to analyze in detail."),
+    last: bool = typer.Option(False, help="Analyze the most recent quest run."),
     db: Path = typer.Option("metrics.db", help="Path to SQLite database."),
+    export: Optional[Path] = typer.Option(None, help="Export results to JSON file."),
+    format: str = typer.Option("summary", help="Output format (summary, detail, or compact)."),
     debug: bool = typer.Option(False, help="Enable debug logging and output."),
 ):
     """Analyze metrics from quest runs or benchmark results.
 
     This command analyzes metrics from the SQLite database, showing summary statistics and detailed analysis.
-    You can either analyze a specific quest (using --quest) or a benchmark (using --benchmark).
+    You can either analyze a specific quest (using --quest), a benchmark (using --benchmark),
+    a specific run by ID (using --run-id), or the most recent run (using --last).
 
     Example:
-        llm-quest analyze --benchmark baseline  # Analyze baseline benchmark results
-        llm-quest analyze --quest boat.qm  # Analyze specific quest
-        llm-quest analyze --quest boat.qm --db custom.db  # Use custom database
+        llm-quest analyze --last                 # Analyze the most recent quest run
+        llm-quest analyze --run-id 123           # Analyze specific run by ID
+        llm-quest analyze --quest boat.qm        # Analyze all runs of specific quest
+        llm-quest analyze --benchmark baseline   # Analyze benchmark results
+        llm-quest analyze --quest boat.qm --export results.json  # Export to JSON
     """
     try:
-        # Validate input - must specify either quest or benchmark
-        if not quest and not benchmark:
-            typer.echo("Must specify either --quest or --benchmark.", err=True)
+        log_manager.setup(debug)
+        
+        # Validate input parameters
+        options_count = sum(1 for opt in [quest, benchmark, run_id, last] if opt)
+        if options_count == 0:
+            typer.echo("Must specify one of: --quest, --benchmark, --run-id, or --last", err=True)
             raise typer.Exit(code=1)
-        if quest and benchmark:
-            typer.echo("Cannot specify both --quest and --benchmark. Please choose one.", err=True)
+        if options_count > 1:
+            typer.echo("Please choose only one option from: --quest, --benchmark, --run-id, or --last", err=True)
             raise typer.Exit(code=1)
 
         # Validate database exists
         if not db.exists():
             typer.echo(f"Database not found: {db}", err=True)
             raise typer.Exit(code=1)
-
-        # Analyze quest run
-        if quest:
+        
+        # Connect to database
+        conn = sqlite3.connect(db)
+        cursor = conn.cursor()
+        
+        # Handle --last option (find most recent run)
+        if last:
+            cursor.execute("SELECT id, quest_name FROM runs ORDER BY start_time DESC LIMIT 1")
+            result = cursor.fetchone()
+            if not result:
+                typer.echo("No quest runs found in database", err=True)
+                raise typer.Exit(code=1)
+            run_id = result[0]
+            typer.echo(f"Analyzing most recent run (ID: {run_id}, Quest: {result[1]})")
+        
+        # Analyze specific run by ID
+        if run_id:
+            cursor.execute('''
+                SELECT r.id, r.quest_name, r.start_time, r.end_time, r.agent_id, 
+                       r.agent_config, r.outcome, r.reward, r.run_duration
+                FROM runs r
+                WHERE r.id = ?
+            ''', (run_id,))
+            
+            run = cursor.fetchone()
+            if not run:
+                typer.echo(f"Run ID {run_id} not found", err=True)
+                raise typer.Exit(code=1)
+                
+            run_id, quest_name, start_time, end_time, agent_id, agent_config, outcome, reward, run_duration = run
+            
+            # Get steps for this run
+            cursor.execute('''
+                SELECT step, location_id, observation, choices, action, llm_response
+                FROM steps
+                WHERE run_id = ?
+                ORDER BY step
+            ''', (run_id,))
+            
+            steps = []
+            step_count = 0
+            success_choices = 0
+            total_choices = 0
+            
+            for step_data in cursor.fetchall():
+                step_count += 1
+                step_num, location_id, obs, choices_json, action, llm_response = step_data
+                choices = json.loads(choices_json) if choices_json else []
+                total_choices += len(choices)
+                if len(choices) == 1:
+                    success_choices += 1
+                    
+                step = {
+                    "step": step_num,
+                    "location_id": location_id,
+                    "observation": obs,
+                    "choices": choices,
+                    "action": action,
+                    "llm_response": json.loads(llm_response) if llm_response else None
+                }
+                steps.append(step)
+            
+            run_data = {
+                "run_id": run_id,
+                "quest_name": quest_name,
+                "start_time": start_time,
+                "end_time": end_time,
+                "agent_id": agent_id,
+                "agent_config": json.loads(agent_config) if agent_config else None,
+                "outcome": outcome,
+                "reward": reward,
+                "run_duration": run_duration,
+                "steps": steps,
+                "stats": {
+                    "total_steps": step_count,
+                    "total_choices": total_choices,
+                    "auto_choices": success_choices,
+                    "decision_points": total_choices - success_choices
+                }
+            }
+            
+            # Export if requested
+            if export:
+                with open(export, 'w') as f:
+                    json.dump(run_data, f, indent=2)
+                typer.echo(f"Results exported to {export}")
+            
+            # Print human-readable summary based on format
+            if format == "summary":
+                typer.echo("\n📊 Run Summary")
+                typer.echo("==============")
+                typer.echo(f"Run ID: {run_id}")
+                typer.echo(f"Quest: {quest_name}")
+                typer.echo(f"Agent: {agent_id}")
+                typer.echo(f"Start Time: {start_time}")
+                typer.echo(f"Duration: {run_duration:.2f} seconds")
+                typer.echo(f"Outcome: {outcome}")
+                typer.echo(f"Reward: {reward}")
+                typer.echo(f"Total Steps: {step_count}")
+                typer.echo(f"Decision Points: {total_choices - success_choices}")
+                
+            elif format == "detail":
+                typer.echo("\n📊 Run Details")
+                typer.echo("=============")
+                typer.echo(f"Run ID: {run_id}")
+                typer.echo(f"Quest: {quest_name}")
+                typer.echo(f"Agent: {agent_id}")
+                typer.echo(f"Start Time: {start_time}")
+                typer.echo(f"End Time: {end_time}")
+                typer.echo(f"Duration: {run_duration:.2f} seconds")
+                typer.echo(f"Outcome: {outcome}")
+                typer.echo(f"Reward: {reward}")
+                
+                # Agent config details if available
+                if run_data.get('agent_config'):
+                    typer.echo("\nAgent Configuration:")
+                    for key, value in run_data['agent_config'].items():
+                        typer.echo(f"  {key}: {value}")
+                
+                # Step details
+                typer.echo(f"\nSteps ({len(steps)} total):")
+                for i, step in enumerate(steps, 1):
+                    typer.echo(f"\n🔹 Step {i}:")
+                    typer.echo(f"  Location: {step['location_id']}")
+                    
+                    # Truncate observation for readability
+                    obs = step['observation']
+                    if len(obs) > 100:
+                        obs = obs[:97] + "..."
+                    typer.echo(f"  Observation: {obs}")
+                    
+                    # Show choices
+                    if step['choices']:
+                        typer.echo(f"  Choices ({len(step['choices'])}):")
+                        for j, choice in enumerate(step['choices'], 1):
+                            choice_text = choice['text']
+                            if len(choice_text) > 50:
+                                choice_text = choice_text[:47] + "..."
+                            typer.echo(f"    {j}. {choice_text}")
+                    
+                    typer.echo(f"  Action: {step['action']}")
+                    
+                    # Show LLM reasoning if available and debug is enabled
+                    if debug and step.get('llm_response'):
+                        llm_resp = step['llm_response']
+                        if isinstance(llm_resp, dict) and llm_resp.get('reasoning'):
+                            typer.echo(f"  Reasoning: {llm_resp['reasoning']}")
+                
+            elif format == "compact":
+                typer.echo(f"Run {run_id}: {quest_name} - {outcome} (Reward: {reward}) - Steps: {step_count} - Agent: {agent_id}")
+                            
+        # Analyze quest runs
+        elif quest:
             results = analyze_quest_run(quest, db, debug)
 
-            # Print human-readable summary
-            typer.echo("\nQuest Run Summary")
-            typer.echo("================")
-            typer.echo(f"Quest: {results['quest_name']}")
-            typer.echo(f"Total Runs: {results['total_runs']}")
-            for outcome, count in results['outcomes'].items():
-                typer.echo(f"{outcome}: {count}")
+            # Export if requested
+            if export:
+                with open(export, 'w') as f:
+                    json.dump(results, f, indent=2)
+                typer.echo(f"Results exported to {export}")
 
-            # Print run details
-            for run in results['runs']:
-                typer.echo(f"\nRun at {run['start_time']}")
-                typer.echo(f"Model: {run['model']}")
-                typer.echo(f"Template: {run['template']}")
-                typer.echo(f"Outcome: {run['outcome']}")
-                typer.echo(f"Reward: {run['reward']}")
-
-                if debug and run['steps']:
-                    typer.echo("\nSteps:")
-                    for step in run['steps']:
-                        typer.echo(f"\nStep {step['step']}:")
-                        typer.echo(f"Observation: {step['observation']}")
-                        typer.echo("Choices:")
-                        for choice in step['choices']:
-                            typer.echo(f"  {choice['id']}: {choice['text']}")
-                        typer.echo(f"Action: {step['action']}")
-                        typer.echo(f"Reward: {step['reward']}")
-                        if step.get('llm_response'):
-                            typer.echo(f"LLM Response: {step['llm_response']}")
+            # Print human-readable summary based on format
+            if format == "summary" or format == "compact":
+                typer.echo("\n📊 Quest Run Summary")
+                typer.echo("===================")
+                typer.echo(f"Quest: {results['quest_name']}")
+                typer.echo(f"Total Runs: {results['total_runs']}")
+                
+                # Success rate calculation
+                success_count = results['outcomes'].get('SUCCESS', 0)
+                success_rate = (success_count / results['total_runs'] * 100) if results['total_runs'] > 0 else 0
+                typer.echo(f"Success Rate: {success_rate:.1f}%")
+                
+                # Outcome breakdown
+                typer.echo("\nOutcomes:")
+                for outcome, count in results['outcomes'].items():
+                    typer.echo(f"  {outcome}: {count} ({count/results['total_runs']*100:.1f}%)")
+                
+                # Agent performance
+                agents = {}
+                for run in results['runs']:
+                    agent = run.get('model', 'unknown')
+                    if agent not in agents:
+                        agents[agent] = {'total': 0, 'success': 0}
+                    
+                    agents[agent]['total'] += 1
+                    if run.get('outcome') == 'SUCCESS':
+                        agents[agent]['success'] += 1
+                
+                if agents and format == "summary":
+                    typer.echo("\nAgent Performance:")
+                    for agent, stats in agents.items():
+                        success_rate = (stats['success'] / stats['total'] * 100) if stats['total'] > 0 else 0
+                        typer.echo(f"  {agent}: {stats['success']}/{stats['total']} ({success_rate:.1f}%)")
+            
+            if format == "detail":
+                # Print detailed run information
+                typer.echo("\n📊 Run Details")
+                typer.echo("=============")
+                
+                for i, run in enumerate(results['runs'], 1):
+                    typer.echo(f"\n🔸 Run {i} (ID: {run.get('id', 'unknown')}):")
+                    typer.echo(f"  Start Time: {run['start_time']}")
+                    typer.echo(f"  Agent: {run.get('model', 'unknown')}")
+                    typer.echo(f"  Outcome: {run['outcome']}")
+                    typer.echo(f"  Reward: {run['reward']}")
+                    
+                    # Only show steps in debug mode to avoid output overload
+                    if debug and run.get('steps'):
+                        typer.echo(f"\n  Steps ({len(run['steps'])} total):")
+                        for step in run['steps']:
+                            typer.echo(f"    Step {step['step']}: Action {step['action']}")
 
         # Analyze benchmark results
         else:
-            analyze_benchmark(db, benchmark, debug)
+            results = analyze_benchmark(db, benchmark, debug)
+            
+            # Export if requested
+            if export and results:
+                with open(export, 'w') as f:
+                    json.dump(results, f, indent=2)
+                typer.echo(f"Results exported to {export}")
 
     except ValueError as e:
         typer.echo(str(e), err=True)
@@ -287,6 +484,10 @@ def analyze(
     except Exception as e:
         log.exception(f"Error during analysis: {e}")
         raise typer.Exit(code=1)
+        
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 @app.command()
 def benchmark(

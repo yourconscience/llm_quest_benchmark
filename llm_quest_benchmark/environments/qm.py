@@ -112,18 +112,14 @@ class QMPlayerEnv:
                 'info': {}
             }
 
-            # Return step results - success is when game is done and reward is positive
-            # Also consider success if the text mentions receiving money/credits
-            success = new_bridge_state.game_ended and (
-                new_bridge_state.reward > 0 or
-                (isinstance(new_bridge_state.text, str) and
-                 any(money_term in new_bridge_state.text.lower() for money_term in
-                     ["cr", "credit", "money", "получите", "payment", "reward", "paid"]))
-            )
+            # Determine success based solely on reward value
+            success = new_bridge_state.game_ended and new_bridge_state.reward > 0
 
             if new_bridge_state.game_ended:
                 self.logger.debug(f"Game ended with text: {new_bridge_state.text}")
+                self.logger.debug(f"Game ended with reward: {new_bridge_state.reward}")
                 self.logger.debug(f"Success determined as: {success}")
+                self.logger.debug(f"Game state: {new_bridge_state.__dict__}")
 
             return (
                 self._current_state['text'],
