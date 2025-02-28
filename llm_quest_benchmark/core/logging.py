@@ -82,21 +82,40 @@ class QuestLogger:
 
     def _create_tables(self):
         """Create database tables if they don't exist"""
-        self._local.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS runs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                quest_file TEXT,
-                quest_name TEXT,
-                start_time TIMESTAMP,
-                end_time TIMESTAMP,
-                agent_id TEXT,
-                agent_config TEXT,
-                outcome TEXT,
-                reward REAL,
-                run_duration REAL
-            )
-        ''')
+        # Check if the runs table already exists
+        self._local.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='runs'")
+        table_exists = self._local.cursor.fetchone() is not None
+        
+        if table_exists:
+            # Check if we need to add columns to existing table
+            self._local.cursor.execute("PRAGMA table_info(runs)")
+            columns = [column[1] for column in self._local.cursor.fetchall()]
+            
+            # Add missing columns
+            if 'outcome' not in columns:
+                self._local.cursor.execute("ALTER TABLE runs ADD COLUMN outcome TEXT")
+            if 'reward' not in columns:
+                self._local.cursor.execute("ALTER TABLE runs ADD COLUMN reward REAL")
+            if 'run_duration' not in columns:
+                self._local.cursor.execute("ALTER TABLE runs ADD COLUMN run_duration REAL")
+        else:
+            # Create the runs table if it doesn't exist
+            self._local.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS runs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    quest_file TEXT,
+                    quest_name TEXT,
+                    start_time TIMESTAMP,
+                    end_time TIMESTAMP,
+                    agent_id TEXT,
+                    agent_config TEXT,
+                    outcome TEXT,
+                    reward REAL,
+                    run_duration REAL
+                )
+            ''')
 
+        # Create steps table
         self._local.cursor.execute('''
             CREATE TABLE IF NOT EXISTS steps (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

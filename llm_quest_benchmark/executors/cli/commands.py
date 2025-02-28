@@ -272,12 +272,33 @@ def analyze(
         
         # Analyze specific run by ID
         if run_id:
-            cursor.execute('''
-                SELECT r.id, r.quest_name, r.start_time, r.end_time, r.agent_id, 
-                       r.agent_config, r.outcome, r.reward, r.run_duration
+            # First check schema to handle older database versions
+            cursor.execute("PRAGMA table_info(runs)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            # Construct query based on available columns
+            select_fields = ["r.id", "r.quest_name", "r.start_time", "r.end_time", "r.agent_id", "r.agent_config"]
+            if "outcome" in columns:
+                select_fields.append("r.outcome")
+            else:
+                select_fields.append("'UNKNOWN' as outcome")
+                
+            if "reward" in columns:
+                select_fields.append("r.reward")
+            else:
+                select_fields.append("0.0 as reward")
+                
+            if "run_duration" in columns:
+                select_fields.append("r.run_duration")
+            else:
+                select_fields.append("NULL as run_duration")
+                
+            query = f'''
+                SELECT {', '.join(select_fields)}
                 FROM runs r
                 WHERE r.id = ?
-            ''', (run_id,))
+            '''
+            cursor.execute(query, (run_id,))
             
             run = cursor.fetchone()
             if not run:
