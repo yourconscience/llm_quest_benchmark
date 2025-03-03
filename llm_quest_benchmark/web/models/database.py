@@ -18,7 +18,19 @@ class JSONEncodedDict(TypeDecorator):
 
     def process_result_value(self, value, dialect):
         if value is not None:
-            return json.loads(value)
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                # Try to repair damaged JSON
+                try:
+                    from json_repair import repair_json
+                    repaired = repair_json(value)
+                    return json.loads(repaired)
+                except ImportError:
+                    # Fallback if json-repair not available
+                    import logging
+                    logging.getLogger(__name__).warning("json-repair not available, returning raw value")
+                    return value
         return None
 
 class Run(db.Model):

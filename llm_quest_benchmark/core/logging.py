@@ -42,6 +42,38 @@ class LogManager:
 
 class QuestLogger:
     """Logs quest runs to SQLite database and exports to JSON when complete"""
+    
+    @staticmethod
+    def _safe_json_load(json_str, default=None):
+        """Safely load JSON with error handling and repair attempts"""
+        if not json_str:
+            return default
+            
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            # Try to repair damaged JSON
+            try:
+                from json_repair import repair_json
+                repaired = repair_json(json_str)
+                return json.loads(repaired)
+            except ImportError:
+                # Log warning about missing json-repair
+                import logging
+                logging.getLogger('quest_logger').warning("json-repair module not available - some JSON may not parse correctly")
+                
+                # Manual repair attempt
+                try:
+                    # If it starts with a string that looks like a dict
+                    if json_str.strip().startswith('{'):
+                        # Extract everything between the first { and the last }
+                        clean_str = json_str[json_str.find('{'):json_str.rfind('}')+1]
+                        return json.loads(clean_str)
+                except:
+                    pass
+            
+            # Return default if all repair attempts failed
+            return default
     # Thread-local storage for database connections
     _local = threading.local()
     # Track all instances for cleanup
@@ -365,9 +397,9 @@ class QuestLogger:
                 "step": step_num,
                 "location_id": location_id,
                 "observation": obs,
-                "choices": json.loads(choices_json) if choices_json else [],
+                "choices": self._safe_json_load(choices_json, []),
                 "action": action,
-                "llm_response": json.loads(llm_response) if llm_response else None
+                "llm_response": self._safe_json_load(llm_response)
             })
         
         return {
@@ -377,7 +409,7 @@ class QuestLogger:
             "start_time": start_time,
             "end_time": end_time,
             "agent_id": agent_id,
-            "agent_config": json.loads(agent_config) if agent_config else None,
+            "agent_config": self._safe_json_load(agent_config),
             "outcome": outcome,
             "reward": reward,
             "run_duration": run_duration,
