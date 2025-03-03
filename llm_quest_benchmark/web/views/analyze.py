@@ -361,6 +361,14 @@ def benchmark_analysis(benchmark_id):
     results = []
     if benchmark.status == 'complete' and benchmark.results:
         # Results are already stored as a Python object thanks to JSONEncodedDict
+        # Add debug logging
+        logger.info(f"Retrieved benchmark results from database: {type(benchmark.results)}")
+        if isinstance(benchmark.results, list):
+            logger.info(f"Results count: {len(benchmark.results)}")
+            if benchmark.results:
+                sample = benchmark.results[0]
+                logger.info(f"First result type: {type(sample)}, keys: {sample.keys() if hasattr(sample, 'keys') else 'N/A'}")
+        
         results = benchmark.results
     
     # For running benchmarks, try to gather partial results from runs with matching benchmark_id
@@ -382,8 +390,10 @@ def benchmark_analysis(benchmark_id):
     quest_names = list(set(r.get('quest', '') for r in results))
     models = list(set(r.get('model', '') for r in results if r.get('model')))
     total_runs = len(results)
-    # Ensure we use dict access for both benchmark.results and run objects
+    # Pre-calculate values for the template to reduce complexity in template rendering
     success_runs = len([r for r in results if isinstance(r, dict) and r.get('outcome') == 'SUCCESS'])
+    failure_runs = len([r for r in results if isinstance(r, dict) and r.get('outcome') == 'FAILURE'])
+    error_runs = len([r for r in results if isinstance(r, dict) and r.get('outcome') and r.get('outcome') not in ('SUCCESS', 'FAILURE')])
     success_rate = (success_runs / total_runs * 100) if total_runs > 0 else 0
     
     # Get stats per model
@@ -410,7 +420,10 @@ def benchmark_analysis(benchmark_id):
                           models=models,
                           model_stats=model_stats,
                           total_runs=total_runs,
-                          success_rate=success_rate)
+                          success_rate=success_rate,
+                          success_runs=success_runs,
+                          failure_runs=failure_runs,
+                          error_runs=error_runs)
 
 @bp.route('/export')
 @handle_errors

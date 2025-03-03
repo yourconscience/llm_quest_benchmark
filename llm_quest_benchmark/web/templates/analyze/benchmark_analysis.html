@@ -244,9 +244,9 @@
         labels: ['Success', 'Failure', 'Error'],
         datasets: [{
             data: [
-                {{ [r for r in results if r.get('outcome') == 'SUCCESS']|length }},
-                {{ [r for r in results if r.get('outcome') == 'FAILURE']|length }},
-                {{ [r for r in results if r.get('outcome') and r.get('outcome') not in ('SUCCESS', 'FAILURE')]|length }}
+                {{ success_runs }},
+                {{ failure_runs }},
+                {{ error_runs }}
             ],
             backgroundColor: ['#28a745', '#dc3545', '#6c757d'],
             borderWidth: 0

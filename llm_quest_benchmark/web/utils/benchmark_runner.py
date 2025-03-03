@@ -204,6 +204,12 @@ class BenchmarkThread(threading.Thread):
                     if benchmark_run:
                         benchmark_run.status = 'complete'
                         benchmark_run.end_time = datetime.now()
+                        
+                        # Log results for debugging
+                        logger.info(f"Storing benchmark results: {type(results)}, count: {len(results)}")
+                        for i, result in enumerate(results[:3]):  # Log first 3 results for debugging
+                            logger.info(f"Result {i}: {type(result)}, keys: {result.keys() if hasattr(result, 'keys') else 'N/A'}")
+                        
                         benchmark_run.results = results
                         db.session.commit()
                         logger.info(f"Updated benchmark record {benchmark_run.id}")
