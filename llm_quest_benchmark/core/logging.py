@@ -88,8 +88,15 @@ class QuestLogger:
             
             # Register shutdown handlers
             atexit.register(_shutdown_handler)
-            signal.signal(signal.SIGINT, _shutdown_handler)
-            signal.signal(signal.SIGTERM, _shutdown_handler)
+            
+            # Only register signal handlers in the main thread
+            if threading.current_thread() is threading.main_thread():
+                try:
+                    signal.signal(signal.SIGINT, _shutdown_handler)
+                    signal.signal(signal.SIGTERM, _shutdown_handler)
+                except ValueError:
+                    # Signal handlers can only be set in the main thread
+                    self.logger.debug("Skipping signal handlers in non-main thread")
 
     def _init_connection(self):
         """Initialize a thread-local database connection"""
