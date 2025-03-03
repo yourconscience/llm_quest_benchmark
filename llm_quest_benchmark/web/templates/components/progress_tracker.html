@@ -1,0 +1,127 @@
+<!-- Progress Tracker Component -->
+<div class="card border-0 shadow-sm mb-4" id="progressTrackerCard" style="display: none;">
+    <div class="card-header bg-white">
+        <h5 class="card-title mb-0" id="progressTrackerTitle">Progress</h5>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <p id="progressInfo">Running...</p>
+            <div class="progress mb-3">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                     role="progressbar" style="width: 0%"></div>
+            </div>
+            <div id="currentTask">Initializing...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Progress Tracker Functions
+    function initProgressTracker(options = {}) {
+        const card = document.getElementById('progressTrackerCard');
+        const title = document.getElementById('progressTrackerTitle');
+        const info = document.getElementById('progressInfo');
+        const task = document.getElementById('currentTask');
+        const bar = document.getElementById('progressBar');
+        
+        // Set title if provided
+        if (options.title) {
+            title.textContent = options.title;
+        }
+        
+        // Set initial task if provided
+        if (options.initialTask) {
+            task.textContent = options.initialTask;
+        }
+        
+        // Set initial info if provided
+        if (options.initialInfo) {
+            info.textContent = options.initialInfo;
+        }
+        
+        // Reset progress bar
+        bar.style.width = '0%';
+        bar.setAttribute('aria-valuenow', 0);
+        
+        // Show card if requested
+        if (options.showCard) {
+            card.style.display = 'block';
+        }
+        
+        return {
+            card,
+            title,
+            info,
+            task,
+            bar
+        };
+    }
+    
+    function updateProgress(progress) {
+        const bar = document.getElementById('progressBar');
+        bar.style.width = `${progress}%`;
+        bar.setAttribute('aria-valuenow', progress);
+    }
+    
+    function updateProgressTask(taskText) {
+        document.getElementById('currentTask').textContent = taskText;
+    }
+    
+    function updateProgressInfo(infoText) {
+        document.getElementById('progressInfo').textContent = infoText;
+    }
+    
+    function hideProgressTracker() {
+        document.getElementById('progressTrackerCard').style.display = 'none';
+    }
+    
+    function startPollingProgress(url, onComplete, onError, interval = 2000) {
+        const pollInterval = setInterval(() => {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update progress
+                        updateProgress(data.progress);
+                        updateProgressTask(data.current_task || 'Running...');
+                        
+                        // Update info if available
+                        if (data.status) {
+                            updateProgressInfo(`Status: ${data.status} | Progress: ${data.progress}%`);
+                        }
+                        
+                        // If complete, stop polling and call completion handler
+                        if (data.status === 'complete') {
+                            clearInterval(pollInterval);
+                            if (typeof onComplete === 'function') {
+                                onComplete(data);
+                            }
+                        } 
+                        // If error, stop polling and call error handler
+                        else if (data.status === 'error') {
+                            clearInterval(pollInterval);
+                            hideProgressTracker();
+                            if (typeof onError === 'function') {
+                                onError(data.error || 'An error occurred');
+                            }
+                        }
+                    } else {
+                        clearInterval(pollInterval);
+                        hideProgressTracker();
+                        if (typeof onError === 'function') {
+                            onError(data.error || 'Failed to get progress updates');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error polling progress:', error);
+                    // Don't stop polling on network errors, might be temporary
+                });
+        }, interval);
+        
+        // Return a function to stop polling if needed
+        return function stopPolling() {
+            clearInterval(pollInterval);
+        };
+    }
+</script>

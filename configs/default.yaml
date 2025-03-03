@@ -1,0 +1,10 @@
+# Example benchmark configuration
+quests:
+  - quests/kr1/Boat.qm
+agents:
+  - model: random_choice
+  - model: gpt-4o
+    template: reasoning.jinja
+debug: true
+max_workers: 2
+output_dir: metrics/test

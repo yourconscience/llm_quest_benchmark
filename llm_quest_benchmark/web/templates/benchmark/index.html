@@ -2,17 +2,232 @@
 
 {% block title %}Quest Benchmark - LLM Quest Benchmark{% endblock %}
 
+{% block head %}
+<!-- Add syntax highlighting for YAML -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/yaml/yaml.min.js"></script>
+<style>
+    .CodeMirror {
+        height: auto;
+        min-height: 300px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <div class="text-center">
-        <h1 class="display-4 mb-4">Quest Benchmark</h1>
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
-            Benchmarking is currently only available in CLI mode.
-            <br><br>
-            Please use the command line interface to run benchmarks:
-            <pre class="mt-3 text-start bg-dark text-light p-3 rounded">llm-quest benchmark [options]</pre>
+<div class="container py-4">
+    <h1 class="display-5 mb-4">Quest Benchmark</h1>
+    
+    <div class="row">
+        <!-- Configuration Form -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Benchmark Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <form id="benchmarkForm">
+                        <div class="mb-3">
+                            <textarea id="configEditor" class="form-control font-monospace" rows="15">{{ default_config }}</textarea>
+                            <div id="configError" class="invalid-feedback"></div>
+                        </div>
+                        <button type="submit" id="runBenchmarkBtn" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Run Benchmark
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <!-- Progress Tracker Component -->
+            {% include "components/progress_tracker.html" %}
+            
+            <!-- Recent Benchmark Results -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Recent Benchmark Results</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="benchmarkResultsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Benchmark results will be loaded here -->
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="alert alert-info mb-0">
+                                            Loading benchmark results...
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize CodeMirror for YAML editing
+    const editor = CodeMirror.fromTextArea(document.getElementById('configEditor'), {
+        mode: 'yaml',
+        lineNumbers: true,
+        lineWrapping: true,
+        theme: 'default'
+    });
+    
+    // Form submission
+    document.getElementById('benchmarkForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        runBenchmark();
+    });
+    
+    function runBenchmark() {
+        // Get configuration from CodeMirror
+        const config = editor.getValue();
+        
+        // Initialize progress tracker
+        initProgressTracker({
+            title: 'Benchmark Progress',
+            initialTask: 'Starting benchmark...',
+            initialInfo: 'Preparing benchmark run',
+            showCard: true
+        });
+        
+        // Disable run button during execution
+        document.getElementById('runBenchmarkBtn').disabled = true;
+        
+        // Send config to server
+        fetch('/benchmark/run', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                config: config
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Start polling for updates
+                const benchmarkId = data.benchmark_id;
+                updateProgressInfo(`Benchmark ID: ${benchmarkId}`);
+                startPollingProgress('/benchmark/status/' + benchmarkId, function(data) {
+                    // Success callback - what to do when progress completes
+                    document.getElementById('runBenchmarkBtn').disabled = false;
+                    loadBenchmarkResults();
+                }, function(error) {
+                    // Error callback
+                    showError(error);
+                    document.getElementById('runBenchmarkBtn').disabled = false;
+                });
+            } else {
+                hideProgressTracker();
+                showError(data.error);
+                document.getElementById('runBenchmarkBtn').disabled = false;
+            }
+        })
+        .catch(error => {
+            hideProgressTracker();
+            showError('Failed to start benchmark: ' + error);
+            document.getElementById('runBenchmarkBtn').disabled = false;
+        });
+    }
+    
+    function showError(message) {
+        const errorElement = document.getElementById('configError');
+        errorElement.innerText = message;
+        errorElement.style.display = 'block';
+        document.querySelector('.CodeMirror').classList.add('is-invalid');
+        
+        // Hide error after 5 seconds
+        setTimeout(() => {
+            errorElement.style.display = 'none';
+            document.querySelector('.CodeMirror').classList.remove('is-invalid');
+        }, 5000);
+    }
+    
+    function loadBenchmarkResults() {
+        // Load recent benchmark results
+        fetch('/benchmark/results')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateResultsTable(data.results);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading benchmark results:', error);
+            });
+    }
+    
+    function updateResultsTable(results) {
+        const tbody = document.querySelector('#benchmarkResultsTable tbody');
+        tbody.innerHTML = '';
+        
+        if (results.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td colspan="5" class="text-center py-4">
+                    <div class="alert alert-info mb-0">
+                        No benchmark results available yet.
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+            return;
+        }
+        
+        results.forEach(result => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${result.id || '-'}</td>
+                <td>${result.name || 'Unnamed'}</td>
+                <td>${new Date(result.timestamp).toLocaleString()}</td>
+                <td>
+                    <span class="badge ${getStatusBadgeClass(result.status)}">
+                        ${result.status}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="/analyze/benchmark/${result.id}" class="btn btn-outline-primary">
+                            <i class="fas fa-chart-bar"></i> Analyze
+                        </a>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    
+    function getStatusBadgeClass(status) {
+        switch (status.toLowerCase()) {
+            case 'complete': return 'bg-success';
+            case 'running': return 'bg-primary';
+            case 'error': return 'bg-danger';
+            default: return 'bg-secondary';
+        }
+    }
+    
+    // Initial load of benchmark results
+    loadBenchmarkResults();
+</script>
 {% endblock %}

@@ -9,7 +9,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-from ..models.database import db, Run, Step
+from ..models.database import db, Run, Step, BenchmarkRun
 from ..utils.errors import handle_errors, WebUIError
 
 bp = Blueprint('analyze', __name__, url_prefix='/analyze')
@@ -349,6 +349,67 @@ def run_readable(run_id):
         'success': True,
         'readable_output': '\n'.join(readable_output)
     })
+
+@bp.route('/benchmark/<int:benchmark_id>')
+@handle_errors
+def benchmark_analysis(benchmark_id):
+    """Analyze benchmark results"""
+    # Get benchmark run
+    benchmark = BenchmarkRun.query.get_or_404(benchmark_id)
+    
+    # If completed, get results
+    results = []
+    if benchmark.status == 'complete' and benchmark.results:
+        # Results are already stored as a Python object thanks to JSONEncodedDict
+        results = benchmark.results
+    
+    # For running benchmarks, try to gather partial results from runs with matching benchmark_id
+    elif benchmark.status == 'running':
+        runs = Run.query.filter_by(benchmark_id=benchmark.benchmark_id).all()
+        for run in runs:
+            results.append({
+                'quest': run.quest_name,
+                'model': run.agent_config.get('model') if run.agent_config else None,
+                'temperature': run.agent_config.get('temperature') if run.agent_config else None,
+                'template': run.agent_config.get('system_template') if run.agent_config else None,
+                'agent_id': run.agent_id,
+                'outcome': run.outcome,
+                'reward': run.reward,
+                'run_id': run.id
+            })
+    
+    # Calculate summary statistics
+    quest_names = list(set(r.get('quest', '') for r in results))
+    models = list(set(r.get('model', '') for r in results if r.get('model')))
+    total_runs = len(results)
+    success_runs = len([r for r in results if r.get('outcome') == 'SUCCESS'])
+    success_rate = (success_runs / total_runs * 100) if total_runs > 0 else 0
+    
+    # Get stats per model
+    model_stats = {}
+    for model in models:
+        model_results = [r for r in results if r.get('model') == model]
+        model_stats[model] = {
+            'total': len(model_results),
+            'success': len([r for r in model_results if r.get('outcome') == 'SUCCESS']),
+            'failure': len([r for r in model_results if r.get('outcome') == 'FAILURE']),
+            'error': len([r for r in model_results if r.get('outcome') and r.get('outcome') not in ('SUCCESS', 'FAILURE')]),
+        }
+        
+        # Calculate success rate
+        if model_stats[model]['total'] > 0:
+            model_stats[model]['success_rate'] = (model_stats[model]['success'] / model_stats[model]['total']) * 100
+        else:
+            model_stats[model]['success_rate'] = 0
+    
+    return render_template('analyze/benchmark_analysis.html',
+                          benchmark=benchmark,
+                          results=results,
+                          quest_names=quest_names,
+                          models=models,
+                          model_stats=model_stats,
+                          total_runs=total_runs,
+                          success_rate=success_rate)
 
 @bp.route('/export')
 @handle_errors

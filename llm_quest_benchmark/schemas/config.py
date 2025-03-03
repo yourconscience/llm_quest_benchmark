@@ -1,6 +1,8 @@
 """Configuration dataclasses for benchmark runs"""
+import os
+import yaml
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pathlib import Path
 
 from llm_quest_benchmark.constants import (
@@ -10,6 +12,56 @@ from llm_quest_benchmark.constants import (
     MODEL_CHOICES,
     SYSTEM_ROLE_TEMPLATE
 )
+
+# Default benchmark configuration
+DEFAULT_BENCHMARK_CONFIG = {
+    "quests": ["quests/boat.qm"],
+    "agents": [
+        {
+            "model": "random_choice",
+            "skip_single": True,
+            "temperature": 0.5,
+            "template": "reasoning.jinja"
+        },
+        {
+            "model": "gpt-4o",
+            "skip_single": True,
+            "temperature": 0.5,
+            "template": "reasoning.jinja"
+        }
+    ],
+    "debug": False,
+    "quest_timeout": 30,
+    "max_workers": 1,
+    "output_dir": "metrics/web_benchmark",
+    "name": "Default Benchmark"
+}
+
+def get_default_benchmark_yaml() -> str:
+    """Get the default benchmark configuration from default.yaml file"""
+    import os
+    from pathlib import Path
+    
+    # Find the project root (where configs directory is)
+    project_root = Path(__file__).parent.parent.parent
+    config_path = project_root / "configs" / "default.yaml"
+    
+    # Fallback to a basic config if file doesn't exist
+    if not config_path.exists():
+        return """# Example benchmark configuration
+quests:
+  - quests/boat.qm
+agents:
+  - model: random_choice
+  - model: gpt-4o
+    template: reasoning.jinja
+debug: true
+max_workers: 1
+output_dir: metrics/test"""
+    
+    # Read the file content
+    with open(config_path, 'r') as f:
+        return f.read()
 
 
 @dataclass
