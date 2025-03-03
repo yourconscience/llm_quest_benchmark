@@ -58,8 +58,14 @@ def get_quest_files(quest_paths: List[str]) -> List[Path]:
 def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[str, Any]]:
     """Run benchmark on a set of quests with multiple agents"""
     results = []
+    
+    # Generate a benchmark ID if not provided
+    if not hasattr(config, 'benchmark_id'):
+        config.benchmark_id = f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    
     benchmark_metrics = {
         'name': config.name,
+        'benchmark_id': config.benchmark_id,
         'timestamp': datetime.now().isoformat(),
         'quests': [],
         'agents': []
@@ -74,6 +80,9 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
         for agent_config in config.agents:
             # Get agent_id from agent_config
             agent_id = agent_config.agent_id
+            
+            # Set benchmark_id in agent_config for database tracking
+            agent_config.benchmark_id = config.benchmark_id
 
             # Create agent
             agent = create_agent(

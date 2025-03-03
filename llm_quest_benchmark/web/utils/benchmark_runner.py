@@ -139,7 +139,8 @@ class BenchmarkThread(threading.Thread):
                             for agent in self.config_dict['agents']
                         ]
                     
-                    # Create benchmark config
+                    # Create benchmark config with the benchmark_id
+                    self.config_dict['benchmark_id'] = self.benchmark_id
                     benchmark_config = BenchmarkConfig(**self.config_dict)
                     
                     # Update status

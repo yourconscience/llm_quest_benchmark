@@ -64,13 +64,26 @@ def run_quest_with_timeout(
 
                         # Store agent config as JSON for better storage/retrieval
                         agent_config_json = json.dumps(agent_config.__dict__)
-
-                        logger._local.cursor.execute(
-                            '''
-                            UPDATE runs
-                            SET agent_id = ?, agent_config = ?
-                            WHERE id = ?
-                        ''', (agent_id, agent_config_json, logger.current_run_id))
+                        
+                        # Also store benchmark_id if provided
+                        benchmark_id = getattr(agent_config, 'benchmark_id', None)
+                        
+                        if benchmark_id:
+                            # Include benchmark_id in the update if available
+                            logger._local.cursor.execute(
+                                '''
+                                UPDATE runs
+                                SET agent_id = ?, agent_config = ?, benchmark_id = ?
+                                WHERE id = ?
+                            ''', (agent_id, agent_config_json, benchmark_id, logger.current_run_id))
+                            logger.logger.info(f"Updated run {logger.current_run_id} with benchmark_id {benchmark_id}")
+                        else:
+                            logger._local.cursor.execute(
+                                '''
+                                UPDATE runs
+                                SET agent_id = ?, agent_config = ?
+                                WHERE id = ?
+                            ''', (agent_id, agent_config_json, logger.current_run_id))
                         logger._local.conn.commit()
                     except sqlite3.OperationalError as e:
                         if "no such column: agent_id" in str(e):

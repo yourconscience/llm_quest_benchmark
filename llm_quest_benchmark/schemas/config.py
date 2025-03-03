@@ -73,6 +73,7 @@ class AgentConfig:
     temperature: float = DEFAULT_TEMPERATURE
     skip_single: bool = False
     debug: bool = False
+    benchmark_id: Optional[str] = None  # Added to link runs to benchmarks
 
     def __post_init__(self):
         if self.model not in MODEL_CHOICES:
@@ -104,6 +105,7 @@ class BenchmarkConfig:
     output_dir: Optional[str] = "metrics/quests"
     name: Optional[str] = "baseline"  # Name of the benchmark run
     renderer: str = "progress"  # Type of renderer to use (progress, simple, etc.)
+    benchmark_id: Optional[str] = None  # Unique ID for the benchmark run
 
     def __post_init__(self):
         # Validate quest paths

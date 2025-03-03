@@ -164,7 +164,7 @@ def run_details(run_id):
                            total_time=total_time,
                            decision_points=decision_points)
 
-@bp.route('/quest/<quest_name>')
+@bp.route('/quest/<path:quest_name>')
 @handle_errors
 def quest_analysis(quest_name):
     """Analyze runs for a specific quest"""
