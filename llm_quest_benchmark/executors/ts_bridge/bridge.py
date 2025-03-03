@@ -41,6 +41,18 @@ class QMBridge:
             response = self.process.stdout.readline()
             if self.debug:
                 logger.debug(f"Raw response: {response[:500]}...")
+                
+            # Check for empty response, which can happen with some quests
+            if not response or response.strip() == '':
+                logger.warning("Empty response received from TypeScript bridge")
+                # Try one more time as sometimes the first line is empty
+                if select.select([self.process.stdout], [], [], timeout)[0]:
+                    response = self.process.stdout.readline()
+                    if self.debug:
+                        logger.debug(f"Second attempt raw response: {response[:500]}...")
+                else:
+                    raise TimeoutError("Timeout waiting for response after empty line")
+                    
             return response
         else:
             raise TimeoutError("Timeout waiting for response from TypeScript bridge")
@@ -118,7 +130,26 @@ class QMBridge:
 
             # Parse response and extract state
             try:
-                response = json.loads(initial_raw)
+                try:
+                    # First attempt direct parsing
+                    response = json.loads(initial_raw)
+                except json.JSONDecodeError:
+                    # If that fails, try more robust methods
+                    logger.warning(f"JSON parsing failed for initial response, attempting repair")
+                    try:
+                        # Try with json-repair library if available
+                        from json_repair import repair_json
+                        repaired_json = repair_json(initial_raw)
+                        response = json.loads(repaired_json)
+                        logger.debug("JSON repaired successfully")
+                    except ImportError:
+                        # Manual JSON repair if json-repair not available
+                        logger.debug("json-repair not available, attempting manual repair")
+                        clean_response = initial_raw.strip()
+                        if '{' in clean_response:
+                            clean_response = clean_response[clean_response.find('{'):clean_response.rfind('}')+1]
+                        response = json.loads(clean_response)
+                
                 if 'state' not in response:
                     raise RuntimeError("Invalid response format: missing 'state' field")
 
@@ -137,25 +168,13 @@ class QMBridge:
                 self.state_history.append(initial_state)
                 return initial_state
             except json.JSONDecodeError as e:
+                logger.error(f"JSON decode error: {e}")
+                logger.error(f"Initial response that failed parsing: {initial_raw[:300]}")
                 raise RuntimeError(f"Invalid JSON response from TypeScript bridge: {e}")
 
-            if 'state' not in response:
-                raise RuntimeError("Invalid response format: missing 'state' field")
-
-            state = response['state']
-            initial_state = QMBridgeState(
-                location_id=str(response['saving']['locationId']),
-                text=clean_qm_text(state['text']),
-                choices=[{'id': str(c['jumpId']), 'text': clean_qm_text(c['text'])} for c in state['choices'] if c['active']],
-                reward=0.0,  # Initial state has no reward
-                game_ended=state['gameState'] != 'running'
-            )
-
-            if not initial_state.choices:
-                raise RuntimeError("No valid choices in initial state")
-
-            self.state_history.append(initial_state)
-            return initial_state
+            # This line should never be reached due to the return inside the try block
+            # but just in case, let's raise an exception
+            raise RuntimeError("Unexpected execution path in start_game method")
 
         except Exception as e:
             logger.error(f"Failed to start game: {str(e)}")
@@ -252,8 +271,28 @@ class QMBridge:
 
             # Parse response and extract state
             try:
-                response_data = json.loads(response)
+                try:
+                    # First attempt direct parsing
+                    response_data = json.loads(response)
+                except json.JSONDecodeError:
+                    # If that fails, try more robust methods
+                    logger.warning(f"JSON parsing failed for response, attempting repair")
+                    try:
+                        # Try with json-repair library if available
+                        from json_repair import repair_json
+                        repaired_json = repair_json(response)
+                        response_data = json.loads(repaired_json)
+                        logger.debug("JSON repaired successfully")
+                    except ImportError:
+                        # Manual JSON repair if json-repair not available
+                        logger.debug("json-repair not available, attempting manual repair")
+                        clean_response = response.strip()
+                        if '{' in clean_response:
+                            clean_response = clean_response[clean_response.find('{'):clean_response.rfind('}')+1]
+                        response_data = json.loads(clean_response)
             except json.JSONDecodeError as e:
+                logger.error(f"JSON decode error: {e}")
+                logger.error(f"Response that failed parsing: {response[:300]}")
                 raise RuntimeError(f"Invalid JSON response from TypeScript bridge: {e}")
 
             if 'state' not in response_data:
