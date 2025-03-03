@@ -9,7 +9,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-from ..models.database import db, Run, Step
+from ..models.database import db, Run, Step, BenchmarkRun
 from ..utils.errors import handle_errors, WebUIError
 
 bp = Blueprint('analyze', __name__, url_prefix='/analyze')
@@ -164,7 +164,7 @@ def run_details(run_id):
                            total_time=total_time,
                            decision_points=decision_points)
 
-@bp.route('/quest/<quest_name>')
+@bp.route('/quest/<path:quest_name>')
 @handle_errors
 def quest_analysis(quest_name):
     """Analyze runs for a specific quest"""
@@ -350,6 +350,81 @@ def run_readable(run_id):
         'readable_output': '\n'.join(readable_output)
     })
 
+@bp.route('/benchmark/<int:benchmark_id>')
+@handle_errors
+def benchmark_analysis(benchmark_id):
+    """Analyze benchmark results"""
+    # Get benchmark run
+    benchmark = BenchmarkRun.query.get_or_404(benchmark_id)
+    
+    # If completed, get results
+    results = []
+    if benchmark.status == 'complete' and benchmark.results:
+        # Results are already stored as a Python object thanks to JSONEncodedDict
+        # Add debug logging
+        logger.info(f"Retrieved benchmark results from database: {type(benchmark.results)}")
+        if isinstance(benchmark.results, list):
+            logger.info(f"Results count: {len(benchmark.results)}")
+            if benchmark.results:
+                sample = benchmark.results[0]
+                logger.info(f"First result type: {type(sample)}, keys: {sample.keys() if hasattr(sample, 'keys') else 'N/A'}")
+        
+        results = benchmark.results
+    
+    # For running benchmarks, try to gather partial results from runs with matching benchmark_id
+    elif benchmark.status == 'running':
+        runs = Run.query.filter_by(benchmark_id=benchmark.benchmark_id).all()
+        for run in runs:
+            results.append({
+                'quest': run.quest_name,
+                'model': run.agent_config.get('model') if run.agent_config else None,
+                'temperature': run.agent_config.get('temperature') if run.agent_config else None,
+                'template': run.agent_config.get('system_template') if run.agent_config else None,
+                'agent_id': run.agent_id,
+                'outcome': run.outcome,
+                'reward': run.reward,
+                'run_id': run.id
+            })
+    
+    # Calculate summary statistics
+    quest_names = list(set(r.get('quest', '') for r in results))
+    models = list(set(r.get('model', '') for r in results if r.get('model')))
+    total_runs = len(results)
+    # Pre-calculate values for the template to reduce complexity in template rendering
+    success_runs = len([r for r in results if isinstance(r, dict) and r.get('outcome') == 'SUCCESS'])
+    failure_runs = len([r for r in results if isinstance(r, dict) and r.get('outcome') == 'FAILURE'])
+    error_runs = len([r for r in results if isinstance(r, dict) and r.get('outcome') and r.get('outcome') not in ('SUCCESS', 'FAILURE')])
+    success_rate = (success_runs / total_runs * 100) if total_runs > 0 else 0
+    
+    # Get stats per model
+    model_stats = {}
+    for model in models:
+        model_results = [r for r in results if r.get('model') == model]
+        model_stats[model] = {
+            'total': len(model_results),
+            'success': len([r for r in model_results if r.get('outcome') == 'SUCCESS']),
+            'failure': len([r for r in model_results if r.get('outcome') == 'FAILURE']),
+            'error': len([r for r in model_results if r.get('outcome') and r.get('outcome') not in ('SUCCESS', 'FAILURE')]),
+        }
+        
+        # Calculate success rate
+        if model_stats[model]['total'] > 0:
+            model_stats[model]['success_rate'] = (model_stats[model]['success'] / model_stats[model]['total']) * 100
+        else:
+            model_stats[model]['success_rate'] = 0
+    
+    return render_template('analyze/benchmark_analysis.html',
+                          benchmark=benchmark,
+                          results=results,
+                          quest_names=quest_names,
+                          models=models,
+                          model_stats=model_stats,
+                          total_runs=total_runs,
+                          success_rate=success_rate,
+                          success_runs=success_runs,
+                          failure_runs=failure_runs,
+                          error_runs=error_runs)
+
 @bp.route('/export')
 @handle_errors
 def export_metrics():
@@ -435,6 +510,83 @@ def handle_no_data_error(error):
         'success': False,
         'error': str(error)
     }), 400
+
+@bp.route('/cleanup', methods=['POST'])
+@handle_errors
+def cleanup_data():
+    """Clean up database records based on criteria
+    
+    Parameters:
+    - older_than: ISO date string (YYYY-MM-DD) to delete records older than this date
+    - run_ids: List of run IDs to delete
+    - benchmark_ids: List of benchmark IDs to delete
+    - all_runs: Boolean, if true delete all runs
+    - all_benchmarks: Boolean, if true delete all benchmarks
+    """
+    data = request.get_json() or {}
+    deleted_runs = 0
+    deleted_benchmarks = 0
+    
+    try:
+        # Delete runs older than a specific date
+        if 'older_than' in data:
+            try:
+                cutoff_date = datetime.fromisoformat(data['older_than'])
+                runs = Run.query.filter(Run.start_time < cutoff_date).all()
+                run_ids = [run.id for run in runs]
+                
+                # Delete steps first (due to foreign key constraint)
+                Step.query.filter(Step.run_id.in_(run_ids)).delete(synchronize_session=False)
+                deleted_runs = Run.query.filter(Run.start_time < cutoff_date).delete(synchronize_session=False)
+                
+                # Delete benchmark runs
+                deleted_benchmarks = BenchmarkRun.query.filter(BenchmarkRun.start_time < cutoff_date).delete(synchronize_session=False)
+                db.session.commit()
+            except ValueError:
+                return jsonify({'success': False, 'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+        
+        # Delete specific run IDs
+        if 'run_ids' in data and isinstance(data['run_ids'], list):
+            for run_id in data['run_ids']:
+                # Delete steps first
+                Step.query.filter_by(run_id=run_id).delete()
+                if Run.query.filter_by(id=run_id).delete():
+                    deleted_runs += 1
+            db.session.commit()
+        
+        # Delete specific benchmark IDs
+        if 'benchmark_ids' in data and isinstance(data['benchmark_ids'], list):
+            for benchmark_id in data['benchmark_ids']:
+                if BenchmarkRun.query.filter_by(id=benchmark_id).delete():
+                    deleted_benchmarks += 1
+            db.session.commit()
+        
+        # Delete all runs if requested
+        if data.get('all_runs', False):
+            # Delete all steps first
+            Step.query.delete()
+            deleted_runs = Run.query.delete()
+            db.session.commit()
+        
+        # Delete all benchmarks if requested
+        if data.get('all_benchmarks', False):
+            deleted_benchmarks = BenchmarkRun.query.delete()
+            db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'deleted_runs': deleted_runs,
+            'deleted_benchmarks': deleted_benchmarks,
+            'message': f'Successfully deleted {deleted_runs} runs and {deleted_benchmarks} benchmarks'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error in cleanup_data: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @bp.errorhandler(Exception)
 def handle_error(error):

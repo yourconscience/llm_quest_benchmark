@@ -21,7 +21,7 @@ from llm_quest_benchmark.constants import (
 )
 
 from llm_quest_benchmark.agents.agent_factory import create_agent
-from llm_quest_benchmark.utils.text_processor import clean_qm_text
+from llm_quest_benchmark.utils.text_processor import clean_qm_text, wrap_text
 from ..models.database import db, Run, Step
 from ..utils.errors import handle_errors, validate_quest_file, validate_model, validate_choice
 from ..utils.web_runner import run_quest_with_db_logging, take_manual_step
@@ -33,14 +33,19 @@ os.environ['NODE_OPTIONS'] = '--openssl-legacy-provider'
 bp = Blueprint('monitor', __name__, url_prefix='/monitor')
 
 def get_available_quests():
-    """Get list of available quests recursively"""
-    quest_files = []
-    for root, _, files in os.walk("quests"):
-        for file in files:
-            if file.endswith(".qm"):
-                rel_path = os.path.relpath(os.path.join(root, file), "quests")
-                quest_files.append(rel_path)
-    logger.debug(f"Found quest files: {quest_files}")
+    """Get list of available quests using the registry"""
+    from llm_quest_benchmark.core.quest_registry import get_registry
+    from llm_quest_benchmark.constants import QUEST_ROOT_DIRECTORY
+    
+    registry = get_registry()
+    
+    # Get unique quests only (filter out duplicates)
+    quest_infos = registry.get_unique_quests()
+    
+    # Return paths relative to QUEST_ROOT_DIRECTORY
+    quest_files = [info.relative_path for info in quest_infos]
+    
+    logger.debug(f"Found {len(quest_files)} unique quest files")
     return sorted(quest_files)
 
 def get_available_templates():
@@ -61,12 +66,16 @@ def index():
     templates = get_available_templates()
     logger.debug(f"Available quests: {quests}")
     logger.debug(f"Available templates: {templates}")
+    # Find the Diehard.qm quest in the list of quests (default to first in the list if not found)
+    default_quest = next((q for q in quests if "Diehard.qm" in q), quests[0] if quests else "")
+    
     return render_template('monitor/index.html',
                          quests=quests,
                          templates=templates,
                          models=MODEL_CHOICES,
                          default_model=DEFAULT_MODEL,
                          default_template=DEFAULT_TEMPLATE.replace('.jinja', ''),
+                         default_quest=default_quest,
                          default_temperature=DEFAULT_TEMPERATURE)
 
 @bp.route('/run', methods=['POST'])
@@ -83,7 +92,12 @@ def run_quest():
 
     # Extract quest configuration
     quest_name = data.get('quest')
-    quest_path = f"quests/{quest_name}"
+    
+    # If quest_name already starts with "quests/", use it as is, otherwise prepend
+    if quest_name.startswith("quests/"):
+        quest_path = quest_name
+    else:
+        quest_path = f"quests/{quest_name}"
     model = data.get('model', DEFAULT_MODEL)
     timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
     template = data.get('template', DEFAULT_TEMPLATE)
@@ -276,6 +290,16 @@ def get_run(run_id):
     elif 'quest_name' not in run_dict or not run_dict['quest_name']:
         run_dict['quest_name'] = "Unknown"
 
+    # Process steps to add wrapped text for better display
+    for step in step_dicts:
+        if 'observation' in step and step['observation']:
+            step['wrapped_observation'] = wrap_text(step['observation'], width=150)
+        
+        if 'choices' in step and step['choices']:
+            for choice in step['choices']:
+                if 'text' in choice and choice['text']:
+                    choice['wrapped_text'] = wrap_text(choice['text'], width=120)
+
     return jsonify({
         'success': True,
         'run': run_dict,
@@ -325,15 +349,23 @@ def get_run_readable(run_id):
         readable_output.append(f"----- STEP {step.step} -----")
         readable_output.append("")
 
-        # Observation - text is already cleaned at the source
-        readable_output.append(f"{step.observation}")
+        # Observation - wrap the text for better readability
+        wrapped_observation = wrap_text(step.observation, width=150)
+        readable_output.append(f"{wrapped_observation}")
         readable_output.append("")
 
         # Choices - text is already cleaned at the source
         if step.choices and len(step.choices) > 0:
             readable_output.append("Available choices:")
             for i, choice in enumerate(step.choices):
-                readable_output.append(f"{i+1}. {choice['text']}")
+                wrapped_choice = wrap_text(choice['text'], width=120)  # Slightly narrower for choices
+                # Indent all lines after the first one for better readability
+                lines = wrapped_choice.split('\n')
+                if len(lines) > 1:
+                    indented_text = lines[0] + '\n' + '\n'.join(['   ' + line for line in lines[1:]])
+                    readable_output.append(f"{i+1}. {indented_text}")
+                else:
+                    readable_output.append(f"{i+1}. {wrapped_choice}")
             readable_output.append("")
 
         # Action taken - only show for steps that have choices
@@ -341,7 +373,14 @@ def get_run_readable(run_id):
             choice_index = int(step.action) - 1
             if 0 <= choice_index < len(step.choices):
                 choice_text = step.choices[choice_index]['text']
-                readable_output.append(f"Selected option {step.action}: {choice_text}")
+                wrapped_choice = wrap_text(choice_text, width=120)
+                # Indent all lines after the first one for better readability
+                lines = wrapped_choice.split('\n')
+                if len(lines) > 1:
+                    indented_text = lines[0] + '\n' + '\n'.join(['   ' + line for line in lines[1:]])
+                    readable_output.append(f"Selected option {step.action}: {indented_text}")
+                else:
+                    readable_output.append(f"Selected option {step.action}: {wrapped_choice}")
                 readable_output.append("")
 
         # Get the NEXT step's LLM response (if available) which corresponds to THIS step's choices
@@ -370,7 +409,14 @@ def get_run_readable(run_id):
                         reasoning = llm_response.reasoning
 
                     if reasoning:
-                        readable_output.append(f"Reasoning: {reasoning}")
+                        wrapped_reasoning = wrap_text(reasoning, width=120)
+                        # Indent all lines after the first one for better readability
+                        lines = wrapped_reasoning.split('\n')
+                        if len(lines) > 1:
+                            indented_text = lines[0] + '\n' + '\n'.join(['   ' + line for line in lines[1:]])
+                            readable_output.append(f"Reasoning: {indented_text}")
+                        else:
+                            readable_output.append(f"Reasoning: {wrapped_reasoning}")
                         readable_output.append("")
 
                     # Try to get analysis - handle both attribute and dictionary access
@@ -381,7 +427,14 @@ def get_run_readable(run_id):
                         analysis = llm_response.analysis
 
                     if analysis:
-                        readable_output.append(f"Analysis: {analysis}")
+                        wrapped_analysis = wrap_text(analysis, width=120)
+                        # Indent all lines after the first one for better readability
+                        lines = wrapped_analysis.split('\n')
+                        if len(lines) > 1:
+                            indented_text = lines[0] + '\n' + '\n'.join(['   ' + line for line in lines[1:]])
+                            readable_output.append(f"Analysis: {indented_text}")
+                        else:
+                            readable_output.append(f"Analysis: {wrapped_analysis}")
                         readable_output.append("")
             except Exception as e:
                 logger.error(f"Error processing LLM response: {e}")

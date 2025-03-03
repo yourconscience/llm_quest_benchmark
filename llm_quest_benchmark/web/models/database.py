@@ -18,7 +18,19 @@ class JSONEncodedDict(TypeDecorator):
 
     def process_result_value(self, value, dialect):
         if value is not None:
-            return json.loads(value)
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                # Try to repair damaged JSON
+                try:
+                    from json_repair import repair_json
+                    repaired = repair_json(value)
+                    return json.loads(repaired)
+                except ImportError:
+                    # Fallback if json-repair not available
+                    import logging
+                    logging.getLogger(__name__).warning("json-repair not available, returning raw value")
+                    return value
         return None
 
 class Run(db.Model):
@@ -33,6 +45,8 @@ class Run(db.Model):
     agent_id = db.Column(db.String(100), nullable=False)
     agent_config = db.Column(JSONEncodedDict, nullable=True)
     outcome = db.Column(db.String(50))
+    reward = db.Column(db.Float, nullable=True)
+    benchmark_id = db.Column(db.String(64), nullable=True)  # Link to benchmark run if part of one
     steps = db.relationship('Step', backref='run', lazy=True)
 
     def to_dict(self):
@@ -45,7 +59,9 @@ class Run(db.Model):
             'end_time': self.end_time.isoformat() if self.end_time else None,
             'agent_id': self.agent_id,
             'agent_config': self.agent_config,
-            'outcome': self.outcome
+            'outcome': self.outcome,
+            'reward': self.reward,
+            'benchmark_id': self.benchmark_id
         }
 
 class Step(db.Model):
@@ -79,6 +95,32 @@ class Step(db.Model):
             'step': self.step,
             'id': self.id,
             'run_id': self.run_id
+        }
+
+class BenchmarkRun(db.Model):
+    """Model for benchmark runs"""
+    __tablename__ = 'benchmark_runs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    benchmark_id = db.Column(db.String(64), unique=True, nullable=False)
+    name = db.Column(db.String(128))
+    config = db.Column(JSONEncodedDict)  # Benchmark configuration
+    status = db.Column(db.String(32), default='running')  # running, complete, error
+    start_time = db.Column(db.DateTime, default=datetime.utcnow)
+    end_time = db.Column(db.DateTime, nullable=True)
+    results = db.Column(JSONEncodedDict, nullable=True)  # Benchmark results
+    error = db.Column(db.Text, nullable=True)
+    
+    def to_dict(self):
+        """Convert benchmark run to dictionary"""
+        return {
+            'id': self.id,
+            'benchmark_id': self.benchmark_id,
+            'name': self.name,
+            'status': self.status,
+            'start_time': self.start_time.isoformat() if self.start_time else None,
+            'end_time': self.end_time.isoformat() if self.end_time else None,
+            'error': self.error
         }
 
 def init_db(app):

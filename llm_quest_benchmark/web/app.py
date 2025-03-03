@@ -4,6 +4,10 @@ from pathlib import Path
 import logging
 import os
 
+# Initialize quest registry early
+from llm_quest_benchmark.core.quest_registry import get_registry
+get_registry(reset_cache=True)
+
 from llm_quest_benchmark.constants import WEB_SERVER_HOST, WEB_SERVER_PORT
 # Set working directory to workspace root
 workspace_root = Path(__file__).parent.parent.parent
@@ -42,6 +46,51 @@ def create_app():
     @app.route('/')
     def index():
         return redirect(url_for('monitor.index'))
+    
+    # Add shutdown handler to ensure database connections are properly closed
+    import atexit
+    import signal
+    import sys
+    import threading
+    
+    def shutdown_handler(sig=None, frame=None):
+        app.logger.info("Shutting down gracefully - closing database connections")
+        
+        # Import here to avoid circular imports
+        try:
+            from .utils.benchmark_runner import BenchmarkThread
+            BenchmarkThread.terminate_all()
+        except ImportError:
+            app.logger.warning("Could not import BenchmarkThread for cleanup")
+        except Exception as e:
+            app.logger.error(f"Error terminating benchmark threads: {e}")
+        
+        with app.app_context():
+            try:
+                db.session.remove()
+                db.engine.dispose()
+                app.logger.info("Database connections closed successfully")
+            except Exception as e:
+                app.logger.error(f"Error closing database connections: {e}")
+                
+        # Forceful exit to ensure all threads are terminated
+        if sig is not None:  # Only if called as signal handler
+            app.logger.info("Forcefully exiting to terminate all threads")
+            sys.exit(0)
+    
+    # Custom handler for clean SIGINT handling (Ctrl+C)
+    def sigint_handler(sig, frame):
+        app.logger.info("Received SIGINT (Ctrl+C), shutting down...")
+        shutdown_handler()
+        # Forcefully exit
+        sys.exit(0)
+    
+    # Register shutdown handler for normal exit
+    atexit.register(shutdown_handler)
+    
+    # Register signal handlers for SIGINT (Ctrl+C) and SIGTERM
+    signal.signal(signal.SIGINT, sigint_handler)
+    signal.signal(signal.SIGTERM, shutdown_handler)
 
     return app
 
@@ -99,7 +148,8 @@ def main():
         app.logger.error(f"Error checking port: {e}")
 
     app.logger.info(f'Starting server at http://{WEB_SERVER_HOST}:{port}')
-    app.run(host=WEB_SERVER_HOST, port=port)
+    # Run with use_reloader=False to allow our signal handlers to work properly
+    app.run(host=WEB_SERVER_HOST, port=port, use_reloader=False, threaded=True)
 
 if __name__ == '__main__':
     main()

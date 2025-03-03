@@ -1,16 +1,17 @@
 """Benchmark configuration and execution blueprint"""
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, current_app
 import yaml
+import json
 from pathlib import Path
 from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 
-from llm_quest_benchmark.executors.benchmark import run_benchmark
-from ..models.database import db, Run
+from ..models.database import db, Run, BenchmarkRun
 from ..utils.errors import handle_errors, validate_quest_file, validate_model, WebUIError
-from llm_quest_benchmark.schemas.config import BenchmarkConfig, AgentConfig
+from ..utils.benchmark_runner import get_benchmark_status, list_active_benchmarks, start_benchmark
+from llm_quest_benchmark.schemas.config import BenchmarkConfig, AgentConfig, get_default_benchmark_yaml
 
 bp = Blueprint('benchmark', __name__, url_prefix='/benchmark')
 
@@ -57,17 +58,8 @@ def validate_benchmark_config(config):
     except yaml.YAMLError as e:
         raise InvalidConfigError(f"Invalid YAML format: {str(e)}")
 
-DEFAULT_CONFIG = """# Main LLM benchmark configuration
-quests:
-  - quests/boat.qm  # Example quest path
-agents:
-  - model: random_choice
-    skip_single: true
-    temperature: 0.5
-    template: reasoning.jinja
-debug: false
-quest_timeout: 30
-max_workers: 1"""
+# Use the default config from schemas module
+DEFAULT_CONFIG = get_default_benchmark_yaml()
 
 @bp.route('/')
 @handle_errors
@@ -75,6 +67,7 @@ def index():
     """Benchmark configuration page"""
     return render_template('benchmark/index.html',
                          default_config=DEFAULT_CONFIG)
+
 
 @bp.route('/run', methods=['POST'])
 @handle_errors
@@ -88,26 +81,19 @@ def run():
         return jsonify({'success': False, 'error': 'Missing config field'}), 400
 
     try:
+        # Validate the config
         config_dict = validate_benchmark_config(data['config'])
-
-        # Convert agent dictionaries to AgentConfig objects
-        if 'agents' in config_dict:
-            config_dict['agents'] = [
-                AgentConfig(
-                    model=agent['model'],
-                    temperature=agent.get('temperature', 0.0),
-                    system_template=agent.get('template', 'reasoning.jinja'),
-                    skip_single=agent.get('skip_single', True)
-                )
-                for agent in config_dict['agents']
-            ]
-
-        benchmark_config = BenchmarkConfig(**config_dict)
-        run_benchmark(benchmark_config)
-
+        
+        # Get the current Flask app
+        flask_app = current_app._get_current_object()
+        
+        # Start benchmark using our utility function
+        benchmark_id = start_benchmark(config_dict, flask_app)
+        
         return jsonify({
             'success': True,
-            'message': 'Benchmark started successfully'
+            'message': 'Benchmark started successfully',
+            'benchmark_id': benchmark_id
         })
 
     except Exception as e:
@@ -117,12 +103,71 @@ def run():
             'error': str(e)
         }), 500
 
+@bp.route('/status/<benchmark_id>')
+@handle_errors
+def status(benchmark_id):
+    """Get benchmark status"""
+    # First check active benchmarks from our utility
+    benchmark_status = get_benchmark_status(benchmark_id)
+    if benchmark_status:
+        return jsonify({
+            'success': True,
+            'benchmark_id': benchmark_id,
+            'status': benchmark_status.status,
+            'progress': benchmark_status.progress,
+            'current_task': benchmark_status.current_task
+        })
+    
+    # If not active, check database for completed benchmark
+    benchmark_run = BenchmarkRun.query.filter_by(benchmark_id=benchmark_id).first()
+    if benchmark_run:
+        return jsonify({
+            'success': True,
+            'benchmark_id': benchmark_id,
+            'status': benchmark_run.status,
+            'progress': 100 if benchmark_run.status == 'complete' else 0,
+            'current_task': 'Complete' if benchmark_run.status == 'complete' else benchmark_run.error or 'Unknown'
+        })
+    
+    return jsonify({
+        'success': False,
+        'error': f'Benchmark {benchmark_id} not found'
+    }), 404
+
 @bp.route('/results')
 @handle_errors
 def results():
     """Get benchmark results"""
-    runs = Run.query.order_by(Run.start_time.desc()).all()
+    # Get recent benchmark runs from database
+    benchmark_runs = BenchmarkRun.query.order_by(BenchmarkRun.start_time.desc()).limit(10).all()
+    
+    # Format results
+    results = []
+    for run in benchmark_runs:
+        results.append({
+            'id': run.id,
+            'benchmark_id': run.benchmark_id,
+            'name': run.name,
+            'status': run.status,
+            'timestamp': run.start_time.isoformat(),
+            'end_time': run.end_time.isoformat() if run.end_time else None
+        })
+    
+    # Add active benchmarks from our utility
+    active_benchmarks_dict = list_active_benchmarks()
+    for benchmark_id, status in active_benchmarks_dict.items():
+        if status['status'] != 'complete' and not any(r['benchmark_id'] == benchmark_id for r in results):
+            # Create a result entry for active benchmarks
+            results.append({
+                'id': None,
+                'benchmark_id': benchmark_id,
+                'name': 'Running Benchmark',
+                'status': status['status'],
+                'timestamp': status['start_time'],
+                'end_time': None
+            })
+    
     return jsonify({
         'success': True,
-        'runs': [run.to_dict() for run in runs]
+        'results': results
     })

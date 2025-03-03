@@ -42,8 +42,42 @@ class LogManager:
 
 class QuestLogger:
     """Logs quest runs to SQLite database and exports to JSON when complete"""
+    
+    @staticmethod
+    def _safe_json_load(json_str, default=None):
+        """Safely load JSON with error handling and repair attempts"""
+        if not json_str:
+            return default
+            
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            # Try to repair damaged JSON
+            try:
+                from json_repair import repair_json
+                repaired = repair_json(json_str)
+                return json.loads(repaired)
+            except ImportError:
+                # Log warning about missing json-repair
+                import logging
+                logging.getLogger('quest_logger').warning("json-repair module not available - some JSON may not parse correctly")
+                
+                # Manual repair attempt
+                try:
+                    # If it starts with a string that looks like a dict
+                    if json_str.strip().startswith('{'):
+                        # Extract everything between the first { and the last }
+                        clean_str = json_str[json_str.find('{'):json_str.rfind('}')+1]
+                        return json.loads(clean_str)
+                except:
+                    pass
+            
+            # Return default if all repair attempts failed
+            return default
     # Thread-local storage for database connections
     _local = threading.local()
+    # Track all instances for cleanup
+    _instances = []
 
     def __init__(self, db_path: str = DEFAULT_DB_PATH, debug: bool = False, agent: Optional[str] = None):
         """Initialize the quest logger.
@@ -68,12 +102,40 @@ class QuestLogger:
 
         # Initialize connection for this thread
         self._init_connection()
+        
+        # Add this instance to the list of all instances
+        QuestLogger._instances.append(self)
+        
+        # Setup exit handler if this is the first instance
+        if len(QuestLogger._instances) == 1:
+            import atexit
+            import signal
+            
+            # Define shutdown handler
+            def _shutdown_handler(signal=None, frame=None):
+                self.logger.info("Shutting down gracefully - closing database connections")
+                for instance in QuestLogger._instances:
+                    instance.close()
+                QuestLogger._instances.clear()
+            
+            # Register shutdown handlers
+            atexit.register(_shutdown_handler)
+            
+            # Only register signal handlers in the main thread
+            if threading.current_thread() is threading.main_thread():
+                try:
+                    signal.signal(signal.SIGINT, _shutdown_handler)
+                    signal.signal(signal.SIGTERM, _shutdown_handler)
+                except ValueError:
+                    # Signal handlers can only be set in the main thread
+                    self.logger.debug("Skipping signal handlers in non-main thread")
 
     def _init_connection(self):
         """Initialize a thread-local database connection"""
         # Create a new connection for this thread if it doesn't exist
         if not hasattr(self._local, 'conn') or self._local.conn is None:
-            self.logger.debug(f"Creating new SQLite connection for thread {threading.get_ident()}")
+            # Reducing debug logging
+            pass  # Skip thread connection logging
             self._local.conn = sqlite3.connect(self.db_path)
             self._local.cursor = self._local.conn.cursor()
 
@@ -98,6 +160,8 @@ class QuestLogger:
                 self._local.cursor.execute("ALTER TABLE runs ADD COLUMN reward REAL")
             if 'run_duration' not in columns:
                 self._local.cursor.execute("ALTER TABLE runs ADD COLUMN run_duration REAL")
+            if 'benchmark_id' not in columns:
+                self._local.cursor.execute("ALTER TABLE runs ADD COLUMN benchmark_id TEXT")
         else:
             # Create the runs table if it doesn't exist
             self._local.cursor.execute('''
@@ -111,7 +175,8 @@ class QuestLogger:
                     agent_config TEXT,
                     outcome TEXT,
                     reward REAL,
-                    run_duration REAL
+                    run_duration REAL,
+                    benchmark_id TEXT
                 )
             ''')
 
@@ -173,7 +238,8 @@ class QuestLogger:
 
         # Get the run ID
         self.current_run_id = self._local.cursor.lastrowid
-        self.logger.debug(f"Created run record with ID: {self.current_run_id}")
+        # Skip logging run record ID to reduce output
+        pass
 
     def log_step(self, agent_state: AgentState):
         """Log a step to the database.
@@ -216,12 +282,13 @@ class QuestLogger:
         except Exception as e:
             self.logger.error(f"Error logging step: {e}")
 
-    def set_quest_outcome(self, outcome: str, reward: float = 0.0):
+    def set_quest_outcome(self, outcome: str, reward: float = 0.0, benchmark_id: str = None):
         """Set the quest outcome and finalize the run.
 
         Args:
             outcome: Quest outcome (SUCCESS, FAILURE, etc.)
             reward: Final reward value
+            benchmark_id: Optional benchmark ID to associate with this run
         """
         if not self.current_run_id:
             self.logger.warning("Cannot set outcome, no active run")
@@ -233,11 +300,19 @@ class QuestLogger:
 
         try:
             # Update the run record with outcome and end time
-            self._local.cursor.execute('''
-                UPDATE runs 
-                SET outcome = ?, end_time = ?, reward = ?, run_duration = ?
-                WHERE id = ?
-            ''', (outcome, self.end_time, reward, run_duration, self.current_run_id))
+            if benchmark_id:
+                self.logger.debug(f"Setting quest outcome with benchmark_id: {benchmark_id}")
+                self._local.cursor.execute('''
+                    UPDATE runs 
+                    SET outcome = ?, end_time = ?, reward = ?, run_duration = ?, benchmark_id = ?
+                    WHERE id = ?
+                ''', (outcome, self.end_time, reward, run_duration, benchmark_id, self.current_run_id))
+            else:
+                self._local.cursor.execute('''
+                    UPDATE runs 
+                    SET outcome = ?, end_time = ?, reward = ?, run_duration = ?
+                    WHERE id = ?
+                ''', (outcome, self.end_time, reward, run_duration, self.current_run_id))
             self._local.conn.commit()
 
             # Export the run to JSON
@@ -298,7 +373,7 @@ class QuestLogger:
         # Get run data
         self._local.cursor.execute('''
             SELECT quest_file, quest_name, start_time, end_time, agent_id, 
-                   agent_config, outcome, reward, run_duration
+                   agent_config, outcome, reward, run_duration, benchmark_id
             FROM runs
             WHERE id = ?
         ''', (self.current_run_id,))
@@ -307,7 +382,7 @@ class QuestLogger:
         if not run:
             return {"error": f"Run with ID {self.current_run_id} not found"}
             
-        quest_file, quest_name, start_time, end_time, agent_id, agent_config, outcome, reward, run_duration = run
+        quest_file, quest_name, start_time, end_time, agent_id, agent_config, outcome, reward, run_duration, benchmark_id = run
         
         # Get steps for this run
         self._local.cursor.execute('''
@@ -324,9 +399,9 @@ class QuestLogger:
                 "step": step_num,
                 "location_id": location_id,
                 "observation": obs,
-                "choices": json.loads(choices_json) if choices_json else [],
+                "choices": self._safe_json_load(choices_json, []),
                 "action": action,
-                "llm_response": json.loads(llm_response) if llm_response else None
+                "llm_response": self._safe_json_load(llm_response)
             })
         
         return {
@@ -336,10 +411,11 @@ class QuestLogger:
             "start_time": start_time,
             "end_time": end_time,
             "agent_id": agent_id,
-            "agent_config": json.loads(agent_config) if agent_config else None,
+            "agent_config": self._safe_json_load(agent_config),
             "outcome": outcome,
             "reward": reward,
             "run_duration": run_duration,
+            "benchmark_id": benchmark_id,
             "steps": steps
         }
 

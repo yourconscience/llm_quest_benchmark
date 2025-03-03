@@ -6,6 +6,12 @@ import sqlite3
 from pathlib import Path
 from typing import Optional, List
 import socket
+import shutil
+from datetime import datetime
+
+# Initialize quest registry early
+from llm_quest_benchmark.core.quest_registry import get_registry
+get_registry(reset_cache=True)
 
 from llm_quest_benchmark.agents.agent_factory import create_agent
 import typer
@@ -509,6 +515,134 @@ def analyze(
     finally:
         if 'conn' in locals():
             conn.close()
+            
+@app.command()
+def cleanup(
+    db_path: Path = typer.Option("metrics.db", help="Path to SQLite database file."),
+    older_than: Optional[str] = typer.Option(None, help="ISO date (YYYY-MM-DD) to delete records older than this date."),
+    all: bool = typer.Option(False, help="Delete all records from the database."),
+    truncate_json: bool = typer.Option(False, help="Also remove JSON result files from results/ directory."),
+    backup: bool = typer.Option(True, help="Create a backup before modifying the database."),
+):
+    """Clean up metrics database and optionally JSON result files.
+    
+    This command provides options to clean up the metrics database by deleting records older than
+    a specific date or by removing all records. It can also optionally remove JSON result files.
+    
+    Example:
+        llm-quest cleanup --older-than 2023-01-01  # Delete records older than 2023-01-01
+        llm-quest cleanup --all                    # Delete all database records
+        llm-quest cleanup --truncate-json          # Also delete JSON result files
+    """
+    try:
+        # Check if database exists
+        if not db_path.exists():
+            typer.echo(f"Database not found: {db_path}", err=True)
+            raise typer.Exit(code=1)
+            
+        # Create backup if requested
+        if backup:
+            backup_path = f"{db_path}.bak"
+            typer.echo(f"Creating backup at {backup_path}")
+            shutil.copy2(db_path, backup_path)
+            
+        # Connect to database
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Get initial counts
+        cursor.execute("SELECT count(*) FROM runs")
+        initial_runs = cursor.fetchone()[0]
+        cursor.execute("SELECT count(*) FROM steps")
+        initial_steps = cursor.fetchone()[0]
+        
+        deleted_runs = 0
+        deleted_steps = 0
+        
+        # Delete by date
+        if older_than:
+            try:
+                # Parse date string
+                cutoff_date = datetime.fromisoformat(older_than)
+                typer.echo(f"Deleting records older than {cutoff_date.strftime('%Y-%m-%d')}")
+                
+                # Get run IDs to delete
+                cursor.execute("SELECT id FROM runs WHERE start_time < ?", (cutoff_date.isoformat(),))
+                run_ids = [row[0] for row in cursor.fetchall()]
+                
+                # Delete steps first
+                if run_ids:
+                    placeholders = ','.join('?' for _ in run_ids)
+                    cursor.execute(f"DELETE FROM steps WHERE run_id IN ({placeholders})", run_ids)
+                    deleted_steps = cursor.rowcount
+                    
+                    # Then delete runs
+                    cursor.execute(f"DELETE FROM runs WHERE id IN ({placeholders})", run_ids)
+                    deleted_runs = cursor.rowcount
+                
+                conn.commit()
+                typer.echo(f"Deleted {deleted_runs} runs and {deleted_steps} steps")
+                
+            except ValueError:
+                typer.echo(f"Invalid date format: {older_than}. Use YYYY-MM-DD format.", err=True)
+                raise typer.Exit(code=1)
+                
+        # Delete all records
+        elif all:
+            typer.echo("Deleting all records from database")
+            
+            # Delete steps first (due to foreign key constraints)
+            cursor.execute("DELETE FROM steps")
+            deleted_steps = cursor.rowcount
+            
+            # Then delete runs
+            cursor.execute("DELETE FROM runs")
+            deleted_runs = cursor.rowcount
+            
+            conn.commit()
+            typer.echo(f"Deleted {deleted_runs} runs and {deleted_steps} steps")
+            
+        else:
+            typer.echo("No action specified. Use --older-than or --all to specify what to delete.")
+            
+        # Remove JSON files if requested
+        if truncate_json:
+            results_dir = Path("results")
+            if results_dir.exists() and results_dir.is_dir():
+                typer.echo("Removing JSON result files")
+                # Count files before deletion
+                file_count = sum(1 for _ in results_dir.glob("**/*.json"))
+                # Remove all JSON files
+                for json_file in results_dir.glob("**/*.json"):
+                    json_file.unlink()
+                typer.echo(f"Removed {file_count} JSON files")
+                
+                # Also remove empty directories
+                for agent_dir in results_dir.iterdir():
+                    if agent_dir.is_dir():
+                        # Check if directory is empty after removing JSONs
+                        if not any(agent_dir.iterdir()):
+                            agent_dir.rmdir()
+                            typer.echo(f"Removed empty directory: {agent_dir}")
+            else:
+                typer.echo("Results directory not found, no JSON files to remove")
+        
+        # Print summary of changes
+        cursor.execute("SELECT count(*) FROM runs")
+        final_runs = cursor.fetchone()[0]
+        cursor.execute("SELECT count(*) FROM steps")
+        final_steps = cursor.fetchone()[0]
+        
+        typer.echo(f"\nSummary:")
+        typer.echo(f"Runs: {initial_runs} -> {final_runs} ({initial_runs - final_runs} removed)")
+        typer.echo(f"Steps: {initial_steps} -> {final_steps} ({initial_steps - final_steps} removed)")
+        
+    except Exception as e:
+        typer.echo(f"Error during cleanup: {str(e)}", err=True)
+        raise typer.Exit(code=1)
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 @app.command()
 def benchmark(
@@ -549,9 +683,12 @@ def benchmark(
         log.info(f"Quests: {benchmark_config.quests}")
         log.info(f"Agents: {[a.model for a in benchmark_config.agents]}")
         log.info(f"Quest timeout: {benchmark_config.quest_timeout}s")
-        log.info(f"Workers: {benchmark_config.max_workers}")
         log.info(f"Output directory: {benchmark_config.output_dir}")
 
+        # Set benchmark_id if not in config
+        if not benchmark_config.benchmark_id:
+            benchmark_config.benchmark_id = f"CLI_benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            
         # Run benchmark
         results = run_benchmark(benchmark_config)
 

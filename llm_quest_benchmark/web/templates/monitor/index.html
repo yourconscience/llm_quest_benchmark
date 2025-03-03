@@ -26,7 +26,7 @@
                         <label for="questSelect" class="form-label">Select Quest</label>
                         <select class="form-select" id="questSelect" required>
                             {% for quest in quests %}
-                            <option value="{{ quest }}">{{ quest }}</option>
+                            <option value="{{ quest }}" {% if quest == default_quest %}selected{% endif %}>{{ quest }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -108,7 +108,7 @@
                 </div>
 
                 <!-- Debug Output -->
-                <pre id="debugOutput" class="bg-dark text-light p-3 rounded" style="max-height: 600px; overflow-y: auto; font-family: monospace; font-size: 14px; line-height: 1.5;"></pre>
+                <pre id="debugOutput" class="bg-dark text-light p-3 rounded" style="max-height: 600px; overflow-y: auto; font-family: monospace; font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word;"></pre>
             </div>
         </div>
     </div>
@@ -120,8 +120,69 @@
     // Global state
     let debugLog = '';
 
+    // Client-side text wrapping function
+    function wrapText(text, maxWidth = 120) {
+        if (!text) return '';
+        
+        // Check if text already appears to be wrapped (most lines shorter than maxWidth)
+        const lines = text.split('\n');
+        const longLines = lines.filter(line => line.length > maxWidth);
+        
+        // If less than 15% of lines are long, consider it pre-wrapped
+        if (lines.length > 5 && longLines.length / lines.length < 0.15) {
+            console.log("Text appears to be pre-wrapped, skipping rewrap");
+            return text;
+        }
+        
+        // Split text into paragraphs
+        const paragraphs = text.split('\n');
+        const wrappedParagraphs = [];
+        
+        for (const paragraph of paragraphs) {
+            if (!paragraph.trim()) {
+                wrappedParagraphs.push('');
+                continue;
+            }
+            
+            // Split paragraph into words
+            const words = paragraph.split(' ');
+            let currentLine = [];
+            let currentLength = 0;
+            
+            // Process each word
+            for (const word of words) {
+                // Calculate new length if we add this word
+                const newLength = currentLength + word.length + (currentLength > 0 ? 1 : 0);
+                
+                // If adding this word would exceed maxWidth
+                if (newLength > maxWidth) {
+                    // Add current line to wrapped paragraphs
+                    wrappedParagraphs.push(currentLine.join(' '));
+                    // Start a new line with the current word
+                    currentLine = [word];
+                    currentLength = word.length;
+                } else {
+                    // Add word to current line
+                    currentLine.push(word);
+                    // Update length (add 1 for space if not first word)
+                    currentLength = newLength;
+                }
+            }
+            
+            // Add the last line if there's anything left
+            if (currentLine.length > 0) {
+                wrappedParagraphs.push(currentLine.join(' '));
+            }
+        }
+        
+        // Join paragraphs with line breaks
+        return wrappedParagraphs.join('\n');
+    }
+
     function appendDebugLog(text) {
-        debugLog += text + '\n';
+        // Ensure text is wrapped
+        const wrappedText = wrapText(text, 120);
+        debugLog += wrappedText + '\n';
         
         // Apply some formatting to the debug output
         const formattedLog = debugLog
@@ -257,14 +318,27 @@
                     // Step header with number
                     appendDebugLog(`\n----- STEP ${state.step} -----\n`);
 
-                    // Observation text
-                    appendDebugLog(`${state.observation}\n`);
+                    // Observation text - use wrapped_observation if available
+                    // We still wrap client-side even if wrapped_observation is available (double-wrapping handled by function)
+                    const observationText = state.wrapped_observation || state.observation;
+                    appendDebugLog(`${observationText}\n`);
 
                     // Format choices as a numbered list
                     if (state.choices && state.choices.length > 0) {
                         appendDebugLog(`Available choices:`);
                         state.choices.forEach((choice, i) => {
-                            appendDebugLog(`${i+1}. ${choice.text}`);
+                            // Use wrapped_text if available
+                            const choiceText = choice.wrapped_text || choice.text;
+                            // If text contains line breaks, indent subsequent lines
+                            if (choiceText.includes('\n')) {
+                                const lines = choiceText.split('\n');
+                                appendDebugLog(`${i+1}. ${lines[0]}`);
+                                lines.slice(1).forEach(line => {
+                                    appendDebugLog(`   ${line}`);
+                                });
+                            } else {
+                                appendDebugLog(`${i+1}. ${choiceText}`);
+                            }
                         });
                         appendDebugLog(``);
                     }
@@ -273,8 +347,21 @@
                     if (state.action && state.choices && state.choices.length > 0) {
                         const choiceIndex = parseInt(state.action) - 1;
                         if (choiceIndex >= 0 && choiceIndex < state.choices.length) {
-                            const choiceText = state.choices[choiceIndex].text;
-                            appendDebugLog(`Selected option ${state.action}: ${choiceText}\n`);
+                            // Use wrapped_text if available
+                            const choice = state.choices[choiceIndex];
+                            const choiceText = choice.wrapped_text || choice.text;
+                            
+                            // If text contains line breaks, indent subsequent lines
+                            if (choiceText.includes('\n')) {
+                                const lines = choiceText.split('\n');
+                                appendDebugLog(`Selected option ${state.action}: ${lines[0]}`);
+                                lines.slice(1).forEach(line => {
+                                    appendDebugLog(`   ${line}`);
+                                });
+                                appendDebugLog(``);
+                            } else {
+                                appendDebugLog(`Selected option ${state.action}: ${choiceText}\n`);
+                            }
                         }
                     }
 
@@ -295,12 +382,16 @@
 
                         // Show reasoning if available
                         if (nextStepResponse && nextStepResponse.reasoning) {
-                            appendDebugLog(`Reasoning: ${nextStepResponse.reasoning}\n`);
+                            // Use the full string instead of embedding in template string to ensure wrapping
+                            const reasoningLine = `Reasoning: ${nextStepResponse.reasoning}`;
+                            appendDebugLog(reasoningLine + '\n');
                         }
 
                         // Show analysis if available
                         if (nextStepResponse && nextStepResponse.analysis) {
-                            appendDebugLog(`Analysis: ${nextStepResponse.analysis}\n`);
+                            // Use the full string instead of embedding in template string to ensure wrapping
+                            const analysisLine = `Analysis: ${nextStepResponse.analysis}`;
+                            appendDebugLog(analysisLine + '\n');
                         }
                     }
                 });
