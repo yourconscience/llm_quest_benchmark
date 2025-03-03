@@ -1,10 +1,53 @@
-# Example benchmark configuration
+# Default benchmark configuration
+# Includes all supported models with standardized settings
+
 quests:
-  - quests/kr1/Boat.qm
+  - quests/kr1/Boat.qm  # Single quest for quick testing
+  # Uncomment to test multiple quests:
+  # - quests/kr1/Diehard.qm
+
 agents:
+  # Random baseline agent
   - model: random_choice
+    template: reasoning.jinja
+    temperature: 0.0
+    skip_single: true
+
+  # OpenAI models
   - model: gpt-4o
     template: reasoning.jinja
+    temperature: 0.5
+    skip_single: true
+
+  - model: gpt-4o-mini
+    template: reasoning.jinja
+    temperature: 0.5
+    skip_single: true
+
+  # Anthropic models
+  - model: claude-3-7-sonnet-latest
+    template: reasoning.jinja
+    temperature: 0.5
+    skip_single: true
+
+  - model: claude-3-5-sonnet-latest
+    template: reasoning.jinja
+    temperature: 0.5
+    skip_single: true
+
+  - model: claude-3-5-haiku-latest
+    template: reasoning.jinja
+    temperature: 0.5
+    skip_single: true
+
+# Debug mode enables more detailed logging
 debug: true
+
+# Number of parallel workers (set higher for faster benchmarking)
 max_workers: 2
-output_dir: metrics/test
+
+# Output directory for benchmark results
+output_dir: metrics/benchmark
+
+# Optional name for this benchmark run
+name: Default Benchmark
