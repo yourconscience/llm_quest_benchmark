@@ -133,7 +133,7 @@ class BenchmarkThread(threading.Thread):
                             AgentConfig(
                                 model=agent['model'],
                                 temperature=agent.get('temperature', 0.0),
-                                system_template=agent.get('template', 'reasoning.jinja'),
+                                action_template=agent.get('template', 'reasoning.jinja'),
                                 skip_single=agent.get('skip_single', True)
                             )
                             for agent in self.config_dict['agents']
@@ -145,11 +145,26 @@ class BenchmarkThread(threading.Thread):
                     # Update status
                     status.update('running', 10, 'Preparing benchmark')
                     
-                    # Create benchmark record
+                    # Create benchmark record with JSON-serializable config
+                    serializable_config = self.config_dict.copy()
+                    # Convert AgentConfig objects to dictionaries
+                    if 'agents' in serializable_config:
+                        serializable_config['agents'] = [
+                            {
+                                'model': agent.model,
+                                'temperature': agent.temperature,
+                                'system_template': agent.system_template,
+                                'action_template': agent.action_template,
+                                'skip_single': agent.skip_single,
+                                'debug': agent.debug
+                            }
+                            for agent in serializable_config['agents']
+                        ]
+                    
                     benchmark_run = BenchmarkRun(
                         benchmark_id=self.benchmark_id,
                         name=self.config_dict.get('name', 'Benchmark'),
-                        config=self.config_dict,
+                        config=serializable_config,
                         status='running',
                         start_time=datetime.now()
                     )

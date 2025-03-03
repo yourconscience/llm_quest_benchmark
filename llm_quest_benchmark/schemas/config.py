@@ -123,6 +123,12 @@ class BenchmarkConfig:
 
         # Convert agent configs
         if 'agents' in data:
-            data['agents'] = [AgentConfig(**agent) for agent in data['agents']]
+            agents = []
+            for agent in data['agents']:
+                # Handle 'template' key which maps to action_template in AgentConfig
+                if 'template' in agent:
+                    agent['action_template'] = agent.pop('template')
+                agents.append(AgentConfig(**agent))
+            data['agents'] = agents
 
         return cls(**data)

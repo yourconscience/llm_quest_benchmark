@@ -103,8 +103,8 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                         'temperature': agent_config.temperature,
                         'template': agent_config.system_template,
                         'agent_id': agent_id,
-                        'outcome': outcome.outcome.name if outcome else None,
-                        'reward': outcome.reward
+                        'outcome': outcome.name if outcome else None,
+                        'reward': getattr(outcome, 'reward', 0.0)
                     }
                     results.append(result)
                     quest_metrics['runs'].append(result)
