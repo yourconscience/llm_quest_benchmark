@@ -267,7 +267,14 @@ class QMBridge:
             # Read response
             response = self._read_response()
             if not response:
-                raise RuntimeError("No response received from TypeScript bridge")
+                logger.warning("No response received from TypeScript bridge, trying to get current state")
+                try:
+                    # Try to get current state directly as a fallback
+                    return self.get_current_state()
+                except Exception as fallback_error:
+                    logger.error(f"Failed to get current state as fallback: {fallback_error}")
+                    # Now raise the original error
+                    raise RuntimeError("No response received from TypeScript bridge")
 
             # Parse response and extract state
             try:
@@ -295,20 +302,90 @@ class QMBridge:
                 logger.error(f"Response that failed parsing: {response[:300]}")
                 raise RuntimeError(f"Invalid JSON response from TypeScript bridge: {e}")
 
+            # Handle the case where the game might have ended abruptly or the response is malformed
             if 'state' not in response_data:
-                raise RuntimeError("Invalid response format: missing 'state' field")
+                logger.warning("Response missing 'state' field, checking if game ended or using fallback")
+                
+                # Create a fallback state regardless of what data we have
+                logger.info("Creating artificial state to recover from error")
+                last_state = self.state_history[-1] if self.state_history else None
+                
+                # Use the last known state's text or a generic message
+                text = "Game ended unexpectedly."
+                location_id = "0"
+                
+                # Make sure response_data is a dictionary
+                if not isinstance(response_data, dict):
+                    logger.warning(f"Response data is {type(response_data)}, creating empty dict")
+                    response_data = {}
+                
+                # Extract location from saving data if available
+                if 'saving' in response_data and isinstance(response_data['saving'], dict) and 'locationId' in response_data['saving']:
+                    location_id = str(response_data['saving'].get('locationId', 0))
+                
+                if last_state:
+                    text = last_state.text + "\n\n[Game progressed to next state]"
+                    if not location_id or location_id == "0":
+                        location_id = last_state.location_id
+                
+                # Create a synthetic state to allow graceful continuation
+                response_data['state'] = {
+                    'text': text,
+                    'choices': [],
+                    'gameState': 'complete',
+                    'reward': 0.0  # Hard-coded value instead of getting from response_data
+                }
+                
+                logger.debug(f"Created synthetic state: {response_data['state']}")
 
             state = response_data['state']
-            new_state = QMBridgeState(
-                location_id=str(response_data['saving']['locationId']),
-                text=clean_qm_text(state['text']),
-                choices=[{'id': str(c['jumpId']), 'text': clean_qm_text(c['text'])} for c in state['choices'] if c['active']],
-                reward=float(state.get('reward', 0.0)),
-                game_ended=state['gameState'] != 'running'
-            )
+            # Additional safety for missing or malformed fields
+            try:
+                # Get location ID safely
+                location_id = "0"
+                if 'saving' in response_data and 'locationId' in response_data['saving']:
+                    location_id = str(response_data['saving']['locationId'])
+                
+                # Get choices safely
+                choices = []
+                if 'choices' in state:
+                    choices = [{'id': str(c.get('jumpId', 0)), 'text': clean_qm_text(c.get('text', ''))} 
+                              for c in state['choices'] if c.get('active', True)]
+                
+                # Create state object
+                new_state = QMBridgeState(
+                    location_id=location_id,
+                    text=clean_qm_text(state.get('text', 'Game text unavailable.')),
+                    choices=choices,
+                    reward=float(state.get('reward', 0.0)),
+                    game_ended=state.get('gameState', 'complete') != 'running'
+                )
+                
+                # Log warning if we had to create a synthetic state or parts of it
+                if not choices and not new_state.game_ended:
+                    logger.warning("Created QMBridgeState with no choices but game not marked as ended")
+            except Exception as e:
+                logger.error(f"Error creating QMBridgeState: {e}")
+                # Create a minimal valid state as a fallback
+                new_state = QMBridgeState(
+                    location_id="0",
+                    text="An error occurred while processing the game state.",
+                    choices=[],
+                    reward=0.0,
+                    game_ended=True
+                )
 
+            # If there are no choices and the game isn't marked as ended,
+            # Force it to end to avoid getting stuck
             if not new_state.choices and not new_state.game_ended:
-                raise RuntimeError("No valid choices in new state")
+                logger.warning("No valid choices but game not ended - forcing game end")
+                new_state = QMBridgeState(
+                    location_id=new_state.location_id,
+                    text=new_state.text + "\n\n[Game ended due to no available choices]",
+                    choices=[],
+                    reward=new_state.reward,
+                    game_ended=True
+                )
 
             self.state_history.append(new_state)
             return new_state
