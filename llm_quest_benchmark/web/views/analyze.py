@@ -497,6 +497,83 @@ def handle_no_data_error(error):
         'error': str(error)
     }), 400
 
+@bp.route('/cleanup', methods=['POST'])
+@handle_errors
+def cleanup_data():
+    """Clean up database records based on criteria
+    
+    Parameters:
+    - older_than: ISO date string (YYYY-MM-DD) to delete records older than this date
+    - run_ids: List of run IDs to delete
+    - benchmark_ids: List of benchmark IDs to delete
+    - all_runs: Boolean, if true delete all runs
+    - all_benchmarks: Boolean, if true delete all benchmarks
+    """
+    data = request.get_json() or {}
+    deleted_runs = 0
+    deleted_benchmarks = 0
+    
+    try:
+        # Delete runs older than a specific date
+        if 'older_than' in data:
+            try:
+                cutoff_date = datetime.fromisoformat(data['older_than'])
+                runs = Run.query.filter(Run.start_time < cutoff_date).all()
+                run_ids = [run.id for run in runs]
+                
+                # Delete steps first (due to foreign key constraint)
+                Step.query.filter(Step.run_id.in_(run_ids)).delete(synchronize_session=False)
+                deleted_runs = Run.query.filter(Run.start_time < cutoff_date).delete(synchronize_session=False)
+                
+                # Delete benchmark runs
+                deleted_benchmarks = BenchmarkRun.query.filter(BenchmarkRun.start_time < cutoff_date).delete(synchronize_session=False)
+                db.session.commit()
+            except ValueError:
+                return jsonify({'success': False, 'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+        
+        # Delete specific run IDs
+        if 'run_ids' in data and isinstance(data['run_ids'], list):
+            for run_id in data['run_ids']:
+                # Delete steps first
+                Step.query.filter_by(run_id=run_id).delete()
+                if Run.query.filter_by(id=run_id).delete():
+                    deleted_runs += 1
+            db.session.commit()
+        
+        # Delete specific benchmark IDs
+        if 'benchmark_ids' in data and isinstance(data['benchmark_ids'], list):
+            for benchmark_id in data['benchmark_ids']:
+                if BenchmarkRun.query.filter_by(id=benchmark_id).delete():
+                    deleted_benchmarks += 1
+            db.session.commit()
+        
+        # Delete all runs if requested
+        if data.get('all_runs', False):
+            # Delete all steps first
+            Step.query.delete()
+            deleted_runs = Run.query.delete()
+            db.session.commit()
+        
+        # Delete all benchmarks if requested
+        if data.get('all_benchmarks', False):
+            deleted_benchmarks = BenchmarkRun.query.delete()
+            db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'deleted_runs': deleted_runs,
+            'deleted_benchmarks': deleted_benchmarks,
+            'message': f'Successfully deleted {deleted_runs} runs and {deleted_benchmarks} benchmarks'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error in cleanup_data: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @bp.errorhandler(Exception)
 def handle_error(error):
     """Handle other errors by returning 400 status code"""

@@ -44,6 +44,8 @@ class QuestLogger:
     """Logs quest runs to SQLite database and exports to JSON when complete"""
     # Thread-local storage for database connections
     _local = threading.local()
+    # Track all instances for cleanup
+    _instances = []
 
     def __init__(self, db_path: str = DEFAULT_DB_PATH, debug: bool = False, agent: Optional[str] = None):
         """Initialize the quest logger.
@@ -68,6 +70,26 @@ class QuestLogger:
 
         # Initialize connection for this thread
         self._init_connection()
+        
+        # Add this instance to the list of all instances
+        QuestLogger._instances.append(self)
+        
+        # Setup exit handler if this is the first instance
+        if len(QuestLogger._instances) == 1:
+            import atexit
+            import signal
+            
+            # Define shutdown handler
+            def _shutdown_handler(signal=None, frame=None):
+                self.logger.info("Shutting down gracefully - closing database connections")
+                for instance in QuestLogger._instances:
+                    instance.close()
+                QuestLogger._instances.clear()
+            
+            # Register shutdown handlers
+            atexit.register(_shutdown_handler)
+            signal.signal(signal.SIGINT, _shutdown_handler)
+            signal.signal(signal.SIGTERM, _shutdown_handler)
 
     def _init_connection(self):
         """Initialize a thread-local database connection"""

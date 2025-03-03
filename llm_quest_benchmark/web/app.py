@@ -42,6 +42,27 @@ def create_app():
     @app.route('/')
     def index():
         return redirect(url_for('monitor.index'))
+    
+    # Add shutdown handler to ensure database connections are properly closed
+    import atexit
+    import signal
+    
+    def shutdown_handler(signal=None, frame=None):
+        app.logger.info("Shutting down gracefully - closing database connections")
+        with app.app_context():
+            try:
+                db.session.remove()
+                db.engine.dispose()
+                app.logger.info("Database connections closed successfully")
+            except Exception as e:
+                app.logger.error(f"Error closing database connections: {e}")
+    
+    # Register shutdown handler for normal exit
+    atexit.register(shutdown_handler)
+    
+    # Register signal handlers for SIGINT and SIGTERM
+    signal.signal(signal.SIGINT, shutdown_handler)
+    signal.signal(signal.SIGTERM, shutdown_handler)
 
     return app
 
