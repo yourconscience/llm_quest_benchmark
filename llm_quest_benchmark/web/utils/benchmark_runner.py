@@ -96,89 +96,106 @@ def start_benchmark(config_dict: Dict[str, Any], app: Flask):
 class BenchmarkThread(threading.Thread):
     """Thread for running benchmarks"""
     
+    # Track all benchmark threads
+    _threads = []
+    
+    @classmethod
+    def terminate_all(cls):
+        """Terminate all running benchmark threads"""
+        logger.info(f"Terminating {len(cls._threads)} benchmark threads")
+        # Just logging, actual termination happens via daemon=True
+    
     def __init__(self, benchmark_id, config_dict, app):
         super().__init__()
         self.benchmark_id = benchmark_id
         self.config_dict = config_dict
         self.app = app
-        self.daemon = True  # Make thread a daemon so it exits when main program exits
+        # Set daemon so the thread won't block app shutdown
+        self.daemon = True  
+        # Add to thread tracking list
+        BenchmarkThread._threads.append(self)
         
     def run(self):
         """Run benchmark thread"""
-        # Get status tracker
-        status = active_benchmarks.get(self.benchmark_id)
-        if not status:
-            logger.error(f"No status tracker for benchmark {self.benchmark_id}")
-            return
-        
-        # Set up app context for this thread
-        with self.app.app_context():
-            try:
-                # Convert agent dictionaries to AgentConfig objects
-                if 'agents' in self.config_dict:
-                    self.config_dict['agents'] = [
-                        AgentConfig(
-                            model=agent['model'],
-                            temperature=agent.get('temperature', 0.0),
-                            system_template=agent.get('template', 'reasoning.jinja'),
-                            skip_single=agent.get('skip_single', True)
-                        )
-                        for agent in self.config_dict['agents']
-                    ]
-                
-                # Create benchmark config
-                benchmark_config = BenchmarkConfig(**self.config_dict)
-                
-                # Update status
-                status.update('running', 10, 'Preparing benchmark')
-                
-                # Create benchmark record
-                benchmark_run = BenchmarkRun(
-                    benchmark_id=self.benchmark_id,
-                    name=self.config_dict.get('name', 'Benchmark'),
-                    config=self.config_dict,
-                    status='running',
-                    start_time=datetime.now()
-                )
-                
-                # Save to database
-                db.session.add(benchmark_run)
-                db.session.commit()
-                logger.info(f"Created benchmark record {benchmark_run.id}")
-                
-                # Update status
-                status.update('running', 20, 'Running benchmark')
-                
-                # Run benchmark
-                results = core_run_benchmark(benchmark_config)
-                
-                # Update status
-                status.update('running', 90, 'Processing results')
-                
-                # Update database
-                benchmark_run = BenchmarkRun.query.filter_by(benchmark_id=self.benchmark_id).first()
-                if benchmark_run:
-                    benchmark_run.status = 'complete'
-                    benchmark_run.end_time = datetime.now()
-                    benchmark_run.results = results
-                    db.session.commit()
-                    logger.info(f"Updated benchmark record {benchmark_run.id}")
-                
-                # Complete status
-                status.complete(results)
-                
-            except Exception as e:
-                logger.error(f"Error running benchmark {self.benchmark_id}: {e}", exc_info=True)
-                status.failed(str(e))
-                
-                # Update database
+        try:
+            # Get status tracker
+            status = active_benchmarks.get(self.benchmark_id)
+            if not status:
+                logger.error(f"No status tracker for benchmark {self.benchmark_id}")
+                return
+            
+            # Set up app context for this thread
+            with self.app.app_context():
                 try:
+                    # Convert agent dictionaries to AgentConfig objects
+                    if 'agents' in self.config_dict:
+                        self.config_dict['agents'] = [
+                            AgentConfig(
+                                model=agent['model'],
+                                temperature=agent.get('temperature', 0.0),
+                                system_template=agent.get('template', 'reasoning.jinja'),
+                                skip_single=agent.get('skip_single', True)
+                            )
+                            for agent in self.config_dict['agents']
+                        ]
+                    
+                    # Create benchmark config
+                    benchmark_config = BenchmarkConfig(**self.config_dict)
+                    
+                    # Update status
+                    status.update('running', 10, 'Preparing benchmark')
+                    
+                    # Create benchmark record
+                    benchmark_run = BenchmarkRun(
+                        benchmark_id=self.benchmark_id,
+                        name=self.config_dict.get('name', 'Benchmark'),
+                        config=self.config_dict,
+                        status='running',
+                        start_time=datetime.now()
+                    )
+                    
+                    # Save to database
+                    db.session.add(benchmark_run)
+                    db.session.commit()
+                    logger.info(f"Created benchmark record {benchmark_run.id}")
+                    
+                    # Update status
+                    status.update('running', 20, 'Running benchmark')
+                    
+                    # Run benchmark
+                    results = core_run_benchmark(benchmark_config)
+                    
+                    # Update status
+                    status.update('running', 90, 'Processing results')
+                    
+                    # Update database
                     benchmark_run = BenchmarkRun.query.filter_by(benchmark_id=self.benchmark_id).first()
                     if benchmark_run:
-                        benchmark_run.status = 'error'
+                        benchmark_run.status = 'complete'
                         benchmark_run.end_time = datetime.now()
-                        benchmark_run.error = str(e)
+                        benchmark_run.results = results
                         db.session.commit()
-                        logger.info(f"Updated benchmark record with error {benchmark_run.id}")
-                except Exception as db_e:
-                    logger.error(f"Error updating benchmark record: {db_e}")
+                        logger.info(f"Updated benchmark record {benchmark_run.id}")
+                    
+                    # Complete status
+                    status.complete(results)
+                
+                except Exception as e:
+                    logger.error(f"Error running benchmark {self.benchmark_id}: {e}", exc_info=True)
+                    status.failed(str(e))
+                    
+                    # Update database
+                    try:
+                        benchmark_run = BenchmarkRun.query.filter_by(benchmark_id=self.benchmark_id).first()
+                        if benchmark_run:
+                            benchmark_run.status = 'error'
+                            benchmark_run.end_time = datetime.now()
+                            benchmark_run.error = str(e)
+                            db.session.commit()
+                            logger.info(f"Updated benchmark record with error {benchmark_run.id}")
+                    except Exception as db_e:
+                        logger.error(f"Error updating benchmark record: {db_e}")
+        finally:
+            # Cleanup - remove self from threads list
+            if self in BenchmarkThread._threads:
+                BenchmarkThread._threads.remove(self)
