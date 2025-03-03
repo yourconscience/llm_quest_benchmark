@@ -127,6 +127,8 @@ class QuestLogger:
                 self._local.cursor.execute("ALTER TABLE runs ADD COLUMN reward REAL")
             if 'run_duration' not in columns:
                 self._local.cursor.execute("ALTER TABLE runs ADD COLUMN run_duration REAL")
+            if 'benchmark_id' not in columns:
+                self._local.cursor.execute("ALTER TABLE runs ADD COLUMN benchmark_id TEXT")
         else:
             # Create the runs table if it doesn't exist
             self._local.cursor.execute('''
@@ -140,7 +142,8 @@ class QuestLogger:
                     agent_config TEXT,
                     outcome TEXT,
                     reward REAL,
-                    run_duration REAL
+                    run_duration REAL,
+                    benchmark_id TEXT
                 )
             ''')
 
