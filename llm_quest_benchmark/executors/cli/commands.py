@@ -682,6 +682,10 @@ def benchmark(
         log.info(f"Workers: {benchmark_config.max_workers}")
         log.info(f"Output directory: {benchmark_config.output_dir}")
 
+        # Set benchmark_id if not in config
+        if not benchmark_config.benchmark_id:
+            benchmark_config.benchmark_id = f"CLI_benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            
         # Run benchmark
         results = run_benchmark(benchmark_config)
 
