@@ -382,7 +382,8 @@ def benchmark_analysis(benchmark_id):
     quest_names = list(set(r.get('quest', '') for r in results))
     models = list(set(r.get('model', '') for r in results if r.get('model')))
     total_runs = len(results)
-    success_runs = len([r for r in results if r.get('outcome') == 'SUCCESS'])
+    # Ensure we use dict access for both benchmark.results and run objects
+    success_runs = len([r for r in results if isinstance(r, dict) and r.get('outcome') == 'SUCCESS'])
     success_rate = (success_runs / total_runs * 100) if total_runs > 0 else 0
     
     # Get stats per model

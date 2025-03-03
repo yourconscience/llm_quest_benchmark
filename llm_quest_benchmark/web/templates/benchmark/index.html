@@ -208,9 +208,14 @@
                 </td>
                 <td>
                     <div class="btn-group btn-group-sm">
-                        <a href="/analyze/benchmark/${result.id}" class="btn btn-outline-primary">
-                            <i class="fas fa-chart-bar"></i> Analyze
-                        </a>
+                        ${result.status === 'running' ? 
+                            `<button class="btn btn-outline-secondary" disabled>
+                                <i class="fas fa-spinner fa-spin"></i> Running
+                             </button>` :
+                            `<a href="/analyze/benchmark/${result.id}" class="btn btn-outline-primary">
+                                <i class="fas fa-chart-bar"></i> Analyze
+                             </a>`
+                        }
                     </div>
                 </td>
             `;
