@@ -117,12 +117,27 @@ class BenchmarkStatus:
             'error': self.error
         }
 
-def run_benchmark_thread(benchmark_id, config_dict):
-    """Run benchmark in a background thread"""
+def run_benchmark_thread(benchmark_id, config_dict, app=None):
+    """Run benchmark in a background thread
+    
+    Args:
+        benchmark_id: Unique ID for the benchmark
+        config_dict: Configuration dictionary
+        app: Flask application instance to use for context
+    """
     benchmark_status = active_benchmarks.get(benchmark_id)
     if not benchmark_status:
         logger.error(f"Benchmark {benchmark_id} not found")
         return
+    
+    # Create a new app context that will be used for all database operations
+    if app is None:
+        logger.error("No Flask app provided to thread")
+        benchmark_status.failed("No Flask app context available")
+        return
+        
+    app_context = app.app_context()
+    app_context.push()  # Push application context at thread start
     
     try:
         # Convert agent dictionaries to AgentConfig objects
@@ -152,10 +167,9 @@ def run_benchmark_thread(benchmark_id, config_dict):
             start_time=datetime.now()
         )
         
-        # Store benchmark record
-        with current_app.app_context():
-            db.session.add(benchmark_run)
-            db.session.commit()
+        # Store benchmark record - now using the thread's own app context
+        db.session.add(benchmark_run)
+        db.session.commit()
         
         # Update status
         benchmark_status.update('running', 20, 'Starting quest runs')
@@ -166,14 +180,13 @@ def run_benchmark_thread(benchmark_id, config_dict):
         # Update status
         benchmark_status.update('running', 90, 'Processing results')
         
-        # Update database record
-        with current_app.app_context():
-            benchmark_run = BenchmarkRun.query.filter_by(benchmark_id=benchmark_id).first()
-            if benchmark_run:
-                benchmark_run.status = 'complete'
-                benchmark_run.end_time = datetime.now()
-                benchmark_run.results = results
-                db.session.commit()
+        # Update database record - now using the thread's own app context
+        benchmark_run = BenchmarkRun.query.filter_by(benchmark_id=benchmark_id).first()
+        if benchmark_run:
+            benchmark_run.status = 'complete'
+            benchmark_run.end_time = datetime.now()
+            benchmark_run.results = results
+            db.session.commit()
         
         # Complete status
         benchmark_status.complete(results)
@@ -182,14 +195,20 @@ def run_benchmark_thread(benchmark_id, config_dict):
         logger.error(f"Error running benchmark {benchmark_id}: {str(e)}", exc_info=True)
         benchmark_status.failed(str(e))
         
-        # Update database record
-        with current_app.app_context():
+        # Update database record - now using the thread's own app context
+        try:
             benchmark_run = BenchmarkRun.query.filter_by(benchmark_id=benchmark_id).first()
             if benchmark_run:
                 benchmark_run.status = 'error'
                 benchmark_run.end_time = datetime.now()
                 benchmark_run.error = str(e)
                 db.session.commit()
+        except Exception as db_error:
+            logger.error(f"Error updating benchmark status in DB: {db_error}")
+    
+    finally:
+        # Always pop the app context at the end of the thread
+        app_context.pop()
 
 @bp.route('/run', methods=['POST'])
 @handle_errors
@@ -212,10 +231,13 @@ def run():
         benchmark_status = BenchmarkStatus(benchmark_id, config_dict)
         active_benchmarks[benchmark_id] = benchmark_status
         
-        # Start benchmark in background thread
+        # Get current Flask app for the thread
+        flask_app = current_app._get_current_object()  # Get the actual app instance
+        
+        # Start benchmark in background thread with app context
         thread = threading.Thread(
             target=run_benchmark_thread,
-            args=(benchmark_id, config_dict)
+            args=(benchmark_id, config_dict, flask_app)
         )
         thread.daemon = True
         thread.start()
