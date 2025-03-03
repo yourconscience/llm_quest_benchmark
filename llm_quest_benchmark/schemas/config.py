@@ -32,7 +32,6 @@ DEFAULT_BENCHMARK_CONFIG = {
     ],
     "debug": False,
     "quest_timeout": 30,
-    "max_workers": 1,
     "output_dir": "metrics/web_benchmark",
     "name": "Default Benchmark"
 }
@@ -56,7 +55,7 @@ agents:
   - model: gpt-4o
     template: reasoning.jinja
 debug: true
-max_workers: 1
+# One worker per agent will be used automatically
 output_dir: metrics/test"""
     
     # Read the file content
@@ -101,7 +100,6 @@ class BenchmarkConfig:
     debug: bool = False
     quest_timeout: int = 60  # Timeout per quest
     benchmark_timeout: Optional[int] = None  # Total timeout for all quests, defaults to quest_timeout * num_quests
-    max_workers: int = 4
     output_dir: Optional[str] = "metrics/quests"
     name: Optional[str] = "baseline"  # Name of the benchmark run
     renderer: str = "progress"  # Type of renderer to use (progress, simple, etc.)
@@ -110,6 +108,10 @@ class BenchmarkConfig:
     def __post_init__(self):
         # Validate quest paths
         for quest_path in self.quests:
+            # Skip validation for glob patterns
+            if '*' in quest_path:
+                continue
+                
             path = Path(quest_path)
             if not path.exists():
                 raise ValueError(f"Quest path does not exist: {quest_path}")

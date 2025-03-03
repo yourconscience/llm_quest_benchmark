@@ -76,22 +76,51 @@
     }
     
     function startPollingProgress(url, onComplete, onError, interval = 2000) {
+        let lastProgress = 0;
+        let stuckCounter = 0;
+        
         const pollInterval = setInterval(() => {
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Update progress
-                        updateProgress(data.progress);
-                        updateProgressTask(data.current_task || 'Running...');
+                        // Update progress with animation
+                        const currentProgress = data.progress;
                         
-                        // Update info if available
-                        if (data.status) {
-                            updateProgressInfo(`Status: ${data.status} | Progress: ${data.progress}%`);
+                        // Check if progress is stuck
+                        if (currentProgress === lastProgress) {
+                            stuckCounter++;
+                            // After 5 consecutive identical progress values, show a message
+                            if (stuckCounter > 5) {
+                                const currentTask = data.current_task || 'Processing...';
+                                updateProgressTask(`${currentTask} (processing, please wait)`);
+                            }
+                        } else {
+                            stuckCounter = 0;
+                            lastProgress = currentProgress;
+                        }
+                        
+                        // Update the progress bar
+                        updateProgress(currentProgress);
+                        
+                        // Set the current task with details
+                        if (data.current_task) {
+                            updateProgressTask(data.current_task);
+                        }
+                        
+                        // Update info with estimated time if in progress
+                        if (data.status === 'running') {
+                            const statusText = `Status: ${data.status}`;
+                            const progressText = `Progress: ${data.progress}%`;
+                            updateProgressInfo(`${statusText} | ${progressText}`);
+                        } else {
+                            updateProgressInfo(`Status: ${data.status}`);
                         }
                         
                         // If complete, stop polling and call completion handler
                         if (data.status === 'complete') {
+                            // Set to 100% when complete
+                            updateProgress(100);
                             clearInterval(pollInterval);
                             if (typeof onComplete === 'function') {
                                 onComplete(data);

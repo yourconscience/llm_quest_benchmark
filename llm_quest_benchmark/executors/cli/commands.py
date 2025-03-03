@@ -9,6 +9,10 @@ import socket
 import shutil
 from datetime import datetime
 
+# Initialize quest registry early
+from llm_quest_benchmark.core.quest_registry import get_registry
+get_registry(reset_cache=True)
+
 from llm_quest_benchmark.agents.agent_factory import create_agent
 import typer
 
@@ -679,7 +683,6 @@ def benchmark(
         log.info(f"Quests: {benchmark_config.quests}")
         log.info(f"Agents: {[a.model for a in benchmark_config.agents]}")
         log.info(f"Quest timeout: {benchmark_config.quest_timeout}s")
-        log.info(f"Workers: {benchmark_config.max_workers}")
         log.info(f"Output directory: {benchmark_config.output_dir}")
 
         # Set benchmark_id if not in config

@@ -4,6 +4,10 @@ from pathlib import Path
 import logging
 import os
 
+# Initialize quest registry early
+from llm_quest_benchmark.core.quest_registry import get_registry
+get_registry(reset_cache=True)
+
 from llm_quest_benchmark.constants import WEB_SERVER_HOST, WEB_SERVER_PORT
 # Set working directory to workspace root
 workspace_root = Path(__file__).parent.parent.parent

@@ -13,7 +13,7 @@ class WebUIError(Exception):
         self.message = message
 
 class QuestNotFoundError(WebUIError):
-    """Quest file not found"""
+    """Quest file or directory not found"""
     pass
 
 class InvalidModelError(WebUIError):
@@ -53,10 +53,43 @@ def handle_errors(f):
     return wrapped
 
 def validate_quest_file(quest_path):
-    """Validate that quest file exists"""
-    from pathlib import Path
-    if not Path(quest_path).is_file():
-        raise QuestNotFoundError(f"Quest file not found: {quest_path}")
+    """Validate that quest path can be resolved to at least one quest file"""
+    import logging
+    from llm_quest_benchmark.core.quest_registry import validate_quest_path, get_registry
+    
+    logger = logging.getLogger(__name__)
+    
+    # Skip validation for glob patterns
+    if '*' in quest_path:
+        logger.info(f"Skipping validation for glob pattern: {quest_path}")
+        return
+    
+    # Use the registry to validate the path
+    if not validate_quest_path(quest_path):
+        # Find similar paths for helpful error messages
+        registry = get_registry()
+        
+        # If it looks like a directory path, try to suggest similar directories
+        if '/' in quest_path and not quest_path.endswith('.qm'):
+            basename = quest_path.split('/')[-1]
+            similar = registry.search_quests(basename[:3])
+            
+            if similar:
+                dirs = {info.directory for info in similar}
+                if dirs:
+                    suggestion = f". Did you mean: {', '.join(dirs)}?"
+                    raise QuestNotFoundError(f"Quest directory not found: {quest_path}{suggestion}")
+        
+        # If it looks like a quest name, suggest similar quest names
+        else:
+            similar = registry.search_quests(quest_path[:3])
+            if similar:
+                names = {info.name for info in similar}
+                if names:
+                    suggestion = f". Did you mean: {', '.join(names)}?"
+                    raise QuestNotFoundError(f"Quest not found: {quest_path}{suggestion}")
+        
+        raise QuestNotFoundError(f"Quest path not found: {quest_path}")
 
 def validate_model(model):
     """Validate that model is supported"""

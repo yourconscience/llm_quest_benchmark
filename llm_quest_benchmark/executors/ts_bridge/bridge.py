@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 from llm_quest_benchmark.schemas.bridge import QMBridgeState
-from llm_quest_benchmark.utils.text_processor import clean_qm_text
+from llm_quest_benchmark.utils.text_processor import clean_qm_text, detect_quest_outcome
 
 logger = logging.getLogger(__name__)
 
@@ -283,16 +283,25 @@ class QMBridge:
                     response_data = json.loads(response)
                 except json.JSONDecodeError:
                     # If that fails, try more robust methods
-                    logger.warning(f"JSON parsing failed for response, attempting repair")
+                    if self.debug:
+                        logger.warning(f"JSON parsing failed for response, attempting repair")
+                    else:
+                        # In non-debug mode, log this just once per bridge object to avoid log spam
+                        if not hasattr(self, '_json_repair_warning_logged'):
+                            logger.warning(f"JSON parsing failed for response, attempting repair")
+                            self._json_repair_warning_logged = True
+                    
                     try:
                         # Try with json-repair library if available
                         from json_repair import repair_json
                         repaired_json = repair_json(response)
                         response_data = json.loads(repaired_json)
-                        logger.debug("JSON repaired successfully")
+                        if self.debug:
+                            logger.debug("JSON repaired successfully")
                     except ImportError:
                         # Manual JSON repair if json-repair not available
-                        logger.debug("json-repair not available, attempting manual repair")
+                        if self.debug:
+                            logger.debug("json-repair not available, attempting manual repair")
                         clean_response = response.strip()
                         if '{' in clean_response:
                             clean_response = clean_response[clean_response.find('{'):clean_response.rfind('}')+1]
@@ -304,10 +313,17 @@ class QMBridge:
 
             # Handle the case where the game might have ended abruptly or the response is malformed
             if 'state' not in response_data:
-                logger.warning("Response missing 'state' field, checking if game ended or using fallback")
+                # In non-debug mode, log this just once per bridge object to avoid log spam
+                if self.debug:
+                    logger.warning("Response missing 'state' field, checking if game ended or using fallback")
+                else:
+                    if not hasattr(self, '_missing_state_warning_logged'):
+                        logger.warning("Response missing 'state' field, checking if game ended or using fallback")
+                        self._missing_state_warning_logged = True
                 
                 # Create a fallback state regardless of what data we have
-                logger.info("Creating artificial state to recover from error")
+                if self.debug:
+                    logger.info("Creating artificial state to recover from error")
                 last_state = self.state_history[-1] if self.state_history else None
                 
                 # Use the last known state's text or a generic message
@@ -316,7 +332,8 @@ class QMBridge:
                 
                 # Make sure response_data is a dictionary
                 if not isinstance(response_data, dict):
-                    logger.warning(f"Response data is {type(response_data)}, creating empty dict")
+                    if self.debug:
+                        logger.warning(f"Response data is {type(response_data)}, creating empty dict")
                     response_data = {}
                 
                 # Extract location from saving data if available
@@ -328,12 +345,26 @@ class QMBridge:
                     if not location_id or location_id == "0":
                         location_id = last_state.location_id
                 
+                # Check for keywords in the text that might indicate success or failure
+                reward = 0.0
+                if last_state and last_state.text:
+                    # Use our centralized quest outcome detection utility
+                    success, detected_reward, reason = detect_quest_outcome(last_state.text)
+                    
+                    if success:
+                        reward = 1.0  # Use standard 1.0 for positive outcome in bridge
+                        logger.info(f"Detected success in text ({reason})")
+                        if detected_reward > 0:
+                            logger.info(f"Found reward value: {detected_reward}")
+                    elif reason != "no_indicators":
+                        logger.info(f"Detected failure in text ({reason})")
+                
                 # Create a synthetic state to allow graceful continuation
                 response_data['state'] = {
                     'text': text,
                     'choices': [],
                     'gameState': 'complete',
-                    'reward': 0.0  # Hard-coded value instead of getting from response_data
+                    'reward': reward
                 }
                 
                 logger.debug(f"Created synthetic state: {response_data['state']}")

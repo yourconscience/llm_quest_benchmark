@@ -134,7 +134,8 @@ class QuestLogger:
         """Initialize a thread-local database connection"""
         # Create a new connection for this thread if it doesn't exist
         if not hasattr(self._local, 'conn') or self._local.conn is None:
-            self.logger.debug(f"Creating new SQLite connection for thread {threading.get_ident()}")
+            # Reducing debug logging
+            pass  # Skip thread connection logging
             self._local.conn = sqlite3.connect(self.db_path)
             self._local.cursor = self._local.conn.cursor()
 
@@ -237,7 +238,8 @@ class QuestLogger:
 
         # Get the run ID
         self.current_run_id = self._local.cursor.lastrowid
-        self.logger.debug(f"Created run record with ID: {self.current_run_id}")
+        # Skip logging run record ID to reduce output
+        pass
 
     def log_step(self, agent_state: AgentState):
         """Log a step to the database.
