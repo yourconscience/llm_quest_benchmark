@@ -88,7 +88,8 @@ class AgentConfig:
         config_str = f"{self.model}_{self.temperature}_{self.system_template}_{self.action_template}"
         # Generate a short hash (first 8 characters)
         hash_val = hashlib.md5(config_str.encode()).hexdigest()[:8]
-        return f"{self.model}_{hash_val}"
+        # Include model and temperature in the ID for better readability
+        return f"{self.model}_t{self.temperature}_{hash_val}"
 
 
 @dataclass
