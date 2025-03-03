@@ -5,6 +5,11 @@
 - **Developer Experience**: Prioritize testing, logging, and debugging
 - **Minimal Dependencies**: Focus on essential tools and libraries
 
+## Git Workflow
+- Use concise, descriptive commit messages (one line preferred)
+- Include appropriate ticket/issue references when applicable
+- Group related changes into a single commit when possible
+
 ## Common Commands
 - Package management: `uv pip install [package]` (ALWAYS use uv instead of pip)
 - Install: `./install.sh` or `.\install.ps1`
