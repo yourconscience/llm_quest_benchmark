@@ -63,9 +63,6 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
     if not config.benchmark_id:
         config.benchmark_id = f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     
-    # Log benchmark ID for reference
-    logger.logger.info(f"Running benchmark with ID: {config.benchmark_id}")
-    
     benchmark_metrics = {
         'name': config.name,
         'benchmark_id': config.benchmark_id,
@@ -76,6 +73,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
 
     # Create logger for benchmark
     logger = QuestLogger(debug=config.debug)
+    logger.logger.info(f"Running benchmark with ID: {config.benchmark_id}")
 
     for quest_file in config.quests:
         quest_metrics = {'quest': quest_file, 'runs': []}
