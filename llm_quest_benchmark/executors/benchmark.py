@@ -38,17 +38,25 @@ logging.getLogger('llm_quest_benchmark.executors.ts_bridge').setLevel(logging.WA
 logger = logging.getLogger(__name__)
 
 
-def get_quest_files(quest_paths: List[str]) -> List[Path]:
+def get_quest_files(quest_paths: List[str], max_quests: Optional[int] = None) -> List[Path]:
     """Get list of quest files from paths (files or directories or glob patterns)
 
     Args:
         quest_paths (List[str]): List of quest files, directories, or glob patterns
+        max_quests (Optional[int]): Maximum number of quests to return
 
     Returns:
         List[Path]: List of quest file paths
     """
     from llm_quest_benchmark.core.quest_registry import resolve_quest_paths
-    return resolve_quest_paths(quest_paths)
+    quest_files = resolve_quest_paths(quest_paths)
+    
+    # Limit to max_quests if specified
+    if max_quests is not None and max_quests > 0:
+        quest_files = quest_files[:max_quests]
+        logger.info(f"Limiting to {len(quest_files)} quests due to max_quests setting")
+        
+    return quest_files
 
 
 def agent_worker(
@@ -96,12 +104,16 @@ def agent_worker(
             # No more quests in the queue
             break
             
-        logger.info(f"Agent {agent_id} running quest {quest_file}")
+        # Always convert Path to string for consistent handling
+        quest_str = str(quest_file)
+        quest_name = Path(quest_file).name
+            
+        logger.info(f"Agent {agent_id} running quest {quest_name}")
         
         try:
-            # Run quest with timeout - convert Path to string
+            # Run quest with timeout - always use string not Path
             outcome = run_quest_with_timeout(
-                str(quest_file),
+                quest_str,
                 agent,
                 timeout=quest_timeout,
                 agent_config=agent_config
@@ -109,11 +121,12 @@ def agent_worker(
             
             # Call progress callback if provided
             if progress_callback:
-                progress_callback(quest_file, agent_id)
+                # Always pass string paths to callback
+                progress_callback(quest_str, agent_id)
                 
             # Create result entry
             result = {
-                'quest': str(quest_file),
+                'quest': quest_str,
                 'model': agent_config.model,
                 'temperature': agent_config.temperature,
                 'template': agent_config.action_template,
@@ -169,7 +182,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
     logger.info(f"Running benchmark with ID: {config.benchmark_id}")
     
     # Expand quest paths into actual quest files
-    quest_files = get_quest_files(config.quests)
+    quest_files = get_quest_files(config.quests, config.max_quests)
     logger.info(f"Found {len(quest_files)} quests to run")
     
     # Print summary of what will be run
@@ -180,32 +193,74 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
     results = []
     results_lock = threading.Lock()
     
-    # Create a queue of quests
-    quest_queue = queue.Queue()
-    for quest_file in quest_files:
-        quest_queue.put(quest_file)
+    # Queue no longer used with sequential processing
     
-    # Create and start worker threads (one per agent)
-    threads = []
+    # Ensure each agent processes all quests
     for agent_config in config.agents:
-        thread = threading.Thread(
-            target=agent_worker,
-            args=(
-                agent_config,
-                quest_queue,
-                results,
-                results_lock,
-                config.benchmark_id,
-                config.quest_timeout,
-                progress_callback
-            )
-        )
-        thread.daemon = True  # Allow the program to exit even if threads are running
-        thread.start()
-        threads.append(thread)
-    
-    # Wait for all quests to be processed
-    quest_queue.join()
+        # Process quests directly for this agent (simpler than threads)
+        for quest_file in quest_files:
+            quest_str = str(quest_file)
+            quest_name = Path(quest_file).name
+            
+            logger.info(f"Agent {agent_config.agent_id} running quest {quest_name}")
+            
+            try:
+                # Set the benchmark_id in agent_config for database tracking
+                agent_config.benchmark_id = config.benchmark_id
+                
+                # Create agent
+                agent = create_agent(
+                    model=agent_config.model,
+                    temperature=agent_config.temperature,
+                    system_template=agent_config.system_template,
+                    action_template=agent_config.action_template,
+                    skip_single=agent_config.skip_single,
+                    debug=agent_config.debug
+                )
+                
+                # Run quest with timeout
+                outcome = run_quest_with_timeout(
+                    quest_str,
+                    agent,
+                    timeout=config.quest_timeout,
+                    agent_config=agent_config
+                )
+                
+                # Call progress callback if provided
+                if progress_callback:
+                    progress_callback(quest_str, agent_config.agent_id)
+                    
+                # Create result entry
+                result = {
+                    'quest': quest_str,
+                    'model': agent_config.model,
+                    'temperature': agent_config.temperature,
+                    'template': agent_config.action_template,
+                    'agent_id': agent_config.agent_id,
+                    'outcome': outcome.name if outcome else QuestOutcome.ERROR.name,
+                    'reward': getattr(outcome, 'reward', 0.0),
+                    'error': None
+                }
+                
+            except Exception as e:
+                # Log the error but continue with other quests
+                logger.error(f"Error running quest {quest_file} with agent {agent_config.agent_id}: {e}")
+                
+                # Create error result
+                result = {
+                    'quest': quest_str,
+                    'model': agent_config.model,
+                    'temperature': agent_config.temperature,
+                    'template': agent_config.action_template,
+                    'agent_id': agent_config.agent_id,
+                    'outcome': QuestOutcome.ERROR.name,
+                    'reward': 0.0,
+                    'error': str(e)
+                }
+            
+            # Add result to the shared results list
+            with results_lock:
+                results.append(result)
     
     # Prepare benchmark metrics
     benchmark_metrics = {

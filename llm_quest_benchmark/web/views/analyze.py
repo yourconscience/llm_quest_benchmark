@@ -43,12 +43,16 @@ def index():
     if stats and stats.total_runs > 0:
         success_rate = float(stats.successes / stats.total_runs) * 100
     
+    # Get recent benchmarks
+    recent_benchmarks = BenchmarkRun.query.order_by(BenchmarkRun.start_time.desc()).limit(5).all()
+    
     return render_template('analyze/index.html', 
                            recent_runs=recent_runs,
                            quest_names=quest_names,
                            agent_types=agent_types,
                            total_runs=stats.total_runs if stats else 0,
-                           success_rate=success_rate)
+                           success_rate=success_rate,
+                           recent_benchmarks=recent_benchmarks)
 
 @bp.route('/summary')
 @handle_errors

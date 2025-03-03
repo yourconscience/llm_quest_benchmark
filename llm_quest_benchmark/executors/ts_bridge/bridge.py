@@ -11,6 +11,12 @@ from llm_quest_benchmark.utils.text_processor import clean_qm_text, detect_quest
 
 logger = logging.getLogger(__name__)
 
+# Global flags to control log verbosity across all bridge instances
+_VERBOSE_JSON_LOGGING = False  # Set to True for debugging
+_LOG_MISSING_STATE_WARNING = True  # Will be set to False after first global warning
+_LOG_JSON_ERROR_WARNING = True  # Will be set to False after first JSON error warning
+_QUEST_JSON_FAILURES = set()  # Track quests with JSON parsing issues to prevent repeated warnings
+
 
 class QMBridge:
     """Bridge to TypeScript QM parser and executor"""
@@ -135,7 +141,21 @@ class QMBridge:
                     response = json.loads(initial_raw)
                 except json.JSONDecodeError:
                     # If that fails, try more robust methods
-                    logger.warning(f"JSON parsing failed for initial response, attempting repair")
+                    global _LOG_JSON_ERROR_WARNING, _QUEST_JSON_FAILURES
+                    
+                    quest_name = Path(self.quest_file).name
+                    
+                    # Only log if we haven't already seen a failure for this quest
+                    if quest_name not in _QUEST_JSON_FAILURES:
+                        _QUEST_JSON_FAILURES.add(quest_name)
+                        
+                        if _LOG_JSON_ERROR_WARNING:
+                            logger.warning(f"JSON parsing failed for {quest_name}, attempting repair. JSON errors for other quests will not be logged.")
+                            # Disable future warnings except for debug mode
+                            _LOG_JSON_ERROR_WARNING = False
+                        elif self.debug:
+                            logger.warning(f"JSON parsing failed for {quest_name}, attempting repair (debug mode)")
+                    
                     try:
                         # Try with json-repair library if available
                         from json_repair import repair_json
@@ -283,13 +303,20 @@ class QMBridge:
                     response_data = json.loads(response)
                 except json.JSONDecodeError:
                     # If that fails, try more robust methods
-                    if self.debug:
-                        logger.warning(f"JSON parsing failed for response, attempting repair")
-                    else:
-                        # In non-debug mode, log this just once per bridge object to avoid log spam
-                        if not hasattr(self, '_json_repair_warning_logged'):
-                            logger.warning(f"JSON parsing failed for response, attempting repair")
-                            self._json_repair_warning_logged = True
+                    global _VERBOSE_JSON_LOGGING, _LOG_JSON_ERROR_WARNING, _QUEST_JSON_FAILURES
+                    
+                    quest_name = Path(self.quest_file).name
+                    
+                    # Only log if we haven't already seen a failure for this quest
+                    if quest_name not in _QUEST_JSON_FAILURES:
+                        _QUEST_JSON_FAILURES.add(quest_name)
+                        
+                        if _LOG_JSON_ERROR_WARNING:
+                            logger.warning(f"JSON parsing failed for {quest_name}, attempting repair. JSON errors for other quests will not be logged.")
+                            # Disable future warnings except for debug mode
+                            _LOG_JSON_ERROR_WARNING = False
+                        elif self.debug or _VERBOSE_JSON_LOGGING:
+                            logger.warning(f"JSON parsing failed for response in {quest_name}, attempting repair (debug mode)")
                     
                     try:
                         # Try with json-repair library if available
@@ -313,13 +340,17 @@ class QMBridge:
 
             # Handle the case where the game might have ended abruptly or the response is malformed
             if 'state' not in response_data:
-                # In non-debug mode, log this just once per bridge object to avoid log spam
+                # Use global flag to only log this warning once across all quests
+                global _LOG_MISSING_STATE_WARNING
+                
+                # Only log warning in specific circumstances to avoid spam
                 if self.debug:
                     logger.warning("Response missing 'state' field, checking if game ended or using fallback")
-                else:
-                    if not hasattr(self, '_missing_state_warning_logged'):
-                        logger.warning("Response missing 'state' field, checking if game ended or using fallback")
-                        self._missing_state_warning_logged = True
+                elif _LOG_MISSING_STATE_WARNING:
+                    quest_name = Path(self.quest_file).name
+                    logger.warning(f"Response missing 'state' field in {quest_name}, using fallback. This is normal for completed quests and will not be logged again.")
+                    # Disable the warning for all future bridge instances
+                    _LOG_MISSING_STATE_WARNING = False
                 
                 # Create a fallback state regardless of what data we have
                 if self.debug:
@@ -332,6 +363,7 @@ class QMBridge:
                 
                 # Make sure response_data is a dictionary
                 if not isinstance(response_data, dict):
+                    # Only log in debug mode to avoid spam
                     if self.debug:
                         logger.warning(f"Response data is {type(response_data)}, creating empty dict")
                     response_data = {}

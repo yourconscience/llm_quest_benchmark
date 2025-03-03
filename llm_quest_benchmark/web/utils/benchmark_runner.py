@@ -180,12 +180,15 @@ class BenchmarkThread(threading.Thread):
                     
                     # Get list of actual quest files
                     from llm_quest_benchmark.executors.benchmark import get_quest_files
-                    quest_files = get_quest_files(benchmark_config.quests)
+                    quest_files = get_quest_files(benchmark_config.quests, benchmark_config.max_quests)
                     
                     # Calculate total runs for progress tracking
                     total_quests = len(quest_files)
                     total_agents = len(benchmark_config.agents)
                     total_runs = total_quests * total_agents
+                    
+                    # Log to aid debugging
+                    logger.info(f"Web benchmark will run {total_runs} total runs ({total_quests} quests with {total_agents} agents)")
                     completed_runs = 0
                     
                     # Update status with better starting message
@@ -198,14 +201,55 @@ class BenchmarkThread(threading.Thread):
                         # Calculate real percentage - ensure we never reach 100% until actually complete
                         # Scale from 20% to 90% to leave room for initialization and results processing
                         progress = min(89, 20 + int((completed_runs / total_runs) * 69))
+                        
+                        # Handle Path objects correctly by converting to string first
+                        quest_str = str(quest_name)
+                        
+                        # Extract filename - handle both Windows and Unix paths
+                        if '/' in quest_str:
+                            quest_filename = quest_str.split('/')[-1]
+                        elif '\\' in quest_str:
+                            quest_filename = quest_str.split('\\')[-1]
+                        else:
+                            quest_filename = quest_str
+                            
+                        # Log progress
+                        logger.info(f"Web benchmark progress: {completed_runs}/{total_runs} runs completed ({progress}%)")
+                        
+                        # Update status
                         status.update('running', progress, 
-                                      f'Completed {completed_runs}/{total_runs} runs - {quest_name.split("/")[-1]} with {agent_id}')
+                                      f'Completed {completed_runs}/{total_runs} runs - {quest_filename} with {agent_id}')
                     
                     # Override the renderer to use our progress tracking
                     benchmark_config.renderer = "null"  # Use minimal renderer since we track progress here
                     
                     # Run benchmark with progress tracking
                     results = core_run_benchmark(benchmark_config, progress_callback=progress_callback)
+                    
+                    # Verify results count matches expected total
+                    expected_runs = total_quests * total_agents
+                    actual_runs = len(results)
+                    
+                    logger.info(f"Benchmark complete: Expected {expected_runs} runs, got {actual_runs} runs")
+                    
+                    if actual_runs < expected_runs:
+                        logger.warning(f"IMPORTANT: Only {actual_runs}/{expected_runs} expected runs completed")
+                    
+                    # Export benchmark results to a JSON file for persistence
+                    try:
+                        import json, os
+                        os.makedirs('instance', exist_ok=True)
+                        benchmark_file = f'instance/benchmark_{self.benchmark_id}.json'
+                        with open(benchmark_file, 'w') as f:
+                            json.dump({
+                                'id': benchmark_run.id, 
+                                'name': benchmark_run.name, 
+                                'benchmark_id': self.benchmark_id,
+                                'results': results
+                            }, f)
+                        logger.info(f"Benchmark results saved to {benchmark_file}")
+                    except Exception as e:
+                        logger.error(f"Error saving benchmark results to file: {e}")
                     
                     # Update status - now we're really at 90%
                     status.update('running', 90, 'Processing results')

@@ -68,6 +68,68 @@
         </div>
     </div>
 
+    <!-- Recent Benchmarks -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Recent Benchmarks</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Start Time</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for benchmark in recent_benchmarks %}
+                                <tr>
+                                    <td>{{ benchmark.id }}</td>
+                                    <td>{{ benchmark.name }}</td>
+                                    <td>{{ benchmark.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>
+                                        {% if benchmark.status == 'complete' %}
+                                        <span class="badge bg-success">Complete</span>
+                                        {% elif benchmark.status == 'running' %}
+                                        <span class="badge bg-primary">Running</span>
+                                        {% elif benchmark.status == 'error' %}
+                                        <span class="badge bg-danger">Error</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ benchmark.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('analyze.benchmark_analysis', benchmark_id=benchmark.id) }}" class="btn btn-outline-primary">
+                                                <i class="fas fa-chart-bar"></i> View Results
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not recent_benchmarks %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="alert alert-info mb-0">
+                                            No benchmarks available. Try running some benchmarks first!
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Recent Runs -->
     <div class="row mb-4">
         <div class="col-12">
