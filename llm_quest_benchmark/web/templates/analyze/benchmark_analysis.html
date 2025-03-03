@@ -234,9 +234,10 @@
 <script>
     {% if results %}
     // Success Rate Chart
-    const successData = {{ model_stats.items()|map('last')|map(attribute='success')|list|tojson }};
-    const failureData = {{ model_stats.items()|map('last')|map(attribute='failure')|list|tojson }};
-    const errorData = {{ model_stats.items()|map('last')|map(attribute='error')|list|tojson }};
+    // Use simpler, safer data access pattern instead of complex map/filter operations
+    const successData = [{% for model in models %}{{ model_stats[model]['success'] }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    const failureData = [{% for model in models %}{{ model_stats[model]['failure'] }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    const errorData = [{% for model in models %}{{ model_stats[model]['error'] }}{% if not loop.last %}, {% endif %}{% endfor %}];
     const modelLabels = {{ models|tojson }};
     
     // Success vs. Failure Chart
