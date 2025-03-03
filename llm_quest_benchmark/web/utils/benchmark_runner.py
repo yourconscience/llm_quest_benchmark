@@ -177,8 +177,24 @@ class BenchmarkThread(threading.Thread):
                     # Update status
                     status.update('running', 20, 'Running benchmark')
                     
-                    # Run benchmark
-                    results = core_run_benchmark(benchmark_config)
+                    # Calculate total runs for progress tracking
+                    total_quests = len(benchmark_config.quests)
+                    total_agents = len(benchmark_config.agents)
+                    total_runs = total_quests * total_agents
+                    completed_runs = 0
+                    
+                    # Create a progress callback
+                    def progress_callback(quest_name, agent_id):
+                        nonlocal completed_runs
+                        completed_runs += 1
+                        progress = 20 + int((completed_runs / total_runs) * 70)  # Scale from 20% to 90%
+                        status.update('running', progress, f'Running {quest_name} with {agent_id} ({completed_runs}/{total_runs})')
+                    
+                    # Override the renderer to use our progress tracking
+                    benchmark_config.renderer = "null"  # Use minimal renderer since we track progress here
+                    
+                    # Run benchmark with progress tracking
+                    results = core_run_benchmark(benchmark_config, progress_callback=progress_callback)
                     
                     # Update status
                     status.update('running', 90, 'Processing results')

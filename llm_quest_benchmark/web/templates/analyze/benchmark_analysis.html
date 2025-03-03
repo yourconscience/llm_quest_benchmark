@@ -246,7 +246,7 @@
             data: [
                 {{ [r for r in results if r.outcome == 'SUCCESS']|length }},
                 {{ [r for r in results if r.outcome == 'FAILURE']|length }},
-                {{ [r for r in results if r.outcome and r.outcome not in ['SUCCESS', 'FAILURE']]|length }}
+                {{ [r for r in results if r.outcome and r.outcome not in ('SUCCESS', 'FAILURE')]|length }}
             ],
             backgroundColor: ['#28a745', '#dc3545', '#6c757d'],
             borderWidth: 0

@@ -55,7 +55,7 @@ def get_quest_files(quest_paths: List[str]) -> List[Path]:
     return sorted(quest_files)  # Sort for consistent ordering
 
 
-def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
+def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[str, Any]]:
     """Run benchmark on a set of quests with multiple agents"""
     results = []
     benchmark_metrics = {
@@ -95,6 +95,10 @@ def run_benchmark(config: BenchmarkConfig) -> List[Dict[str, Any]]:
                     timeout=config.quest_timeout,
                     agent_config=agent_config
                 )
+                
+                # Call progress callback if provided
+                if progress_callback:
+                    progress_callback(quest_file, agent_id)
 
                 if outcome:
                     result = {
