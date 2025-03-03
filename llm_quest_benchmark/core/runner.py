@@ -247,7 +247,12 @@ class QuestRunner:
                         reward = self.env.state.get('reward',
                                                     0.0) if self.env and self.env.state else 0.0
                         if self.quest_logger:
-                            self.quest_logger.set_quest_outcome(outcome.name, reward)
+                            # Get benchmark_id from agent_config if available
+                            benchmark_id = None
+                            if agent_config and hasattr(agent_config, 'benchmark_id'):
+                                benchmark_id = agent_config.benchmark_id
+                            
+                            self.quest_logger.set_quest_outcome(outcome.name, reward, benchmark_id)
 
                         return outcome
 
@@ -257,7 +262,12 @@ class QuestRunner:
 
                     # Log error outcome
                     if self.quest_logger:
-                        self.quest_logger.set_quest_outcome(QuestOutcome.ERROR.name, 0.0)
+                        # Get benchmark_id from agent_config if available
+                        benchmark_id = None
+                        if agent_config and hasattr(agent_config, 'benchmark_id'):
+                            benchmark_id = agent_config.benchmark_id
+                        
+                        self.quest_logger.set_quest_outcome(QuestOutcome.ERROR.name, 0.0, benchmark_id)
 
                     raise
 
@@ -269,7 +279,12 @@ class QuestRunner:
 
             # Log error outcome
             if self.quest_logger:
-                self.quest_logger.set_quest_outcome(QuestOutcome.ERROR.name, 0.0)
+                # Get benchmark_id from agent_config if available
+                benchmark_id = None
+                if agent_config and hasattr(agent_config, 'benchmark_id'):
+                    benchmark_id = agent_config.benchmark_id
+                
+                self.quest_logger.set_quest_outcome(QuestOutcome.ERROR.name, 0.0, benchmark_id)
 
             return QuestOutcome.ERROR
         finally:

@@ -248,12 +248,13 @@ class QuestLogger:
         except Exception as e:
             self.logger.error(f"Error logging step: {e}")
 
-    def set_quest_outcome(self, outcome: str, reward: float = 0.0):
+    def set_quest_outcome(self, outcome: str, reward: float = 0.0, benchmark_id: str = None):
         """Set the quest outcome and finalize the run.
 
         Args:
             outcome: Quest outcome (SUCCESS, FAILURE, etc.)
             reward: Final reward value
+            benchmark_id: Optional benchmark ID to associate with this run
         """
         if not self.current_run_id:
             self.logger.warning("Cannot set outcome, no active run")
@@ -265,11 +266,19 @@ class QuestLogger:
 
         try:
             # Update the run record with outcome and end time
-            self._local.cursor.execute('''
-                UPDATE runs 
-                SET outcome = ?, end_time = ?, reward = ?, run_duration = ?
-                WHERE id = ?
-            ''', (outcome, self.end_time, reward, run_duration, self.current_run_id))
+            if benchmark_id:
+                self.logger.debug(f"Setting quest outcome with benchmark_id: {benchmark_id}")
+                self._local.cursor.execute('''
+                    UPDATE runs 
+                    SET outcome = ?, end_time = ?, reward = ?, run_duration = ?, benchmark_id = ?
+                    WHERE id = ?
+                ''', (outcome, self.end_time, reward, run_duration, benchmark_id, self.current_run_id))
+            else:
+                self._local.cursor.execute('''
+                    UPDATE runs 
+                    SET outcome = ?, end_time = ?, reward = ?, run_duration = ?
+                    WHERE id = ?
+                ''', (outcome, self.end_time, reward, run_duration, self.current_run_id))
             self._local.conn.commit()
 
             # Export the run to JSON
@@ -330,7 +339,7 @@ class QuestLogger:
         # Get run data
         self._local.cursor.execute('''
             SELECT quest_file, quest_name, start_time, end_time, agent_id, 
-                   agent_config, outcome, reward, run_duration
+                   agent_config, outcome, reward, run_duration, benchmark_id
             FROM runs
             WHERE id = ?
         ''', (self.current_run_id,))
@@ -339,7 +348,7 @@ class QuestLogger:
         if not run:
             return {"error": f"Run with ID {self.current_run_id} not found"}
             
-        quest_file, quest_name, start_time, end_time, agent_id, agent_config, outcome, reward, run_duration = run
+        quest_file, quest_name, start_time, end_time, agent_id, agent_config, outcome, reward, run_duration, benchmark_id = run
         
         # Get steps for this run
         self._local.cursor.execute('''
@@ -372,6 +381,7 @@ class QuestLogger:
             "outcome": outcome,
             "reward": reward,
             "run_duration": run_duration,
+            "benchmark_id": benchmark_id,
             "steps": steps
         }
 
