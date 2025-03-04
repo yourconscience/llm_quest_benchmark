@@ -1,5 +1,5 @@
 # LLM Quest Benchmark
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Observe and analyze LLM agents decision-making through Space Rangers text adventures! 👾🚀📊
@@ -19,30 +19,29 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 - Python 3.11 or higher
 - Node.js 18 or higher (Note: For Node.js 23+ you'll need to set `NODE_OPTIONS=--openssl-legacy-provider`)
 - npm 9 or higher
-- uv (modern Python package manager)
 
 ### Installation
 
-1. Install uv:
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-2. Clone the repository with submodules:
+1. Clone the repository with submodules:
 ```bash
 git clone --recursive https://github.com/your-username/llm_quest_benchmark.git
 cd llm_quest_benchmark
 ```
 
-3. Run the installation script:
+2. Run the installation script:
 ```bash
+# On Linux/macOS
 chmod +x install.sh
 ./install.sh
+
+# On Windows
+.\install.ps1
 ```
 
 The script will:
-- Set up a virtual environment using uv
-- Install Python dependencies using uv
+- Install uv (modern Python package manager)
+- Set up a virtual environment
+- Install Python dependencies
 - Set up the Space Rangers Quest TypeScript bridge
 - Create a default .env file
 
@@ -73,10 +72,10 @@ llm-quest benchmark --config configs/test_benchmark.yaml
 ### Web Interface
 ```bash
 # Start the web server
-llm-quest web
+llm-quest server
 
-# Or with gunicorn (production)
-gunicorn -w 4 -b 0.0.0.0:8000 'llm_quest_benchmark.web.app:create_app()'
+# For debug mode
+llm-quest server --debug
 ```
 
 Then open http://localhost:8000 in your browser.

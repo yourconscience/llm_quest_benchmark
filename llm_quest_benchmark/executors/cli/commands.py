@@ -34,7 +34,9 @@ from llm_quest_benchmark.constants import (
     WEB_SERVER_PORT,
 )
 from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
+from llm_quest_benchmark.schemas.agent import AgentConfig as AgentSchema
 from llm_quest_benchmark.agents.human_player import HumanPlayer
+from llm_quest_benchmark.agents.agent_manager import AgentManager
 from llm_quest_benchmark.web.app import create_app
 
 # Initialize logging
@@ -45,6 +47,13 @@ app = typer.Typer(
     help="llm-quest: Command-line tools for LLM Quest Benchmark.",
     rich_markup_mode="rich",
 )
+
+# Create subcommand for agent management
+agents_app = typer.Typer(
+    help="Manage agent configurations",
+    rich_markup_mode="rich",
+)
+app.add_typer(agents_app, name="agents")
 
 def version_callback(value: bool):
     if value:
@@ -88,10 +97,11 @@ def main(
 @app.command()
 def run(
     quest: Path = typer.Option(DEFAULT_QUEST, help="Path to the QM quest file."),
-    model: str = typer.Option(DEFAULT_MODEL, help=f"Model for the LLM agent (choices: {', '.join(MODEL_CHOICES)})."),
-    temperature: float = typer.Option(DEFAULT_TEMPERATURE, help="Temperature for LLM sampling"),
-    system_template: str = typer.Option(SYSTEM_ROLE_TEMPLATE, help="Template to use for system instructions."),
-    action_template: str = typer.Option(DEFAULT_TEMPLATE, help="Template to use for action prompts."),
+    agent_id: Optional[str] = typer.Option(None, "--agent", "-a", help="Agent ID to use from saved agents"),
+    model: Optional[str] = typer.Option(None, help=f"Model for the LLM agent (choices: {', '.join(MODEL_CHOICES)})."),
+    temperature: Optional[float] = typer.Option(None, help="Temperature for LLM sampling"),
+    system_template: Optional[str] = typer.Option(None, help="Template to use for system instructions."),
+    action_template: Optional[str] = typer.Option(None, help="Template to use for action prompts."),
     timeout: int = typer.Option(60, help="Timeout in seconds for run (0 for no timeout)."),
     skip: bool = typer.Option(True, help="Auto-select single choices without asking agent."),
     debug: bool = typer.Option(False, help="Enable debug logging and output, remove terminal UI."),
@@ -101,21 +111,64 @@ def run(
     This command runs a Space Rangers quest using an LLM agent. The agent will attempt to complete
     the quest by making decisions based on the quest text and available choices.
 
+    You can use a saved agent configuration with --agent or specify parameters directly.
+
     Example:
-        llm-quest run --quest quests/boat.qm --model sonnet --debug
+        llm-quest run --quest quests/boat.qm --model gpt-4o-mini --debug
+        llm-quest run --quest quests/boat.qm --agent my-custom-agent
     """
     try:
         log_manager.setup(debug)
 
         # Create agent config
-        agent_config = AgentConfig(
-            model=model,
-            system_template=system_template,
-            action_template=action_template,
-            temperature=temperature,
-            skip_single=skip,
-            debug=debug
-        )
+        if agent_id:
+            # Use saved agent configuration
+            agent_manager = AgentManager()
+            saved_agent = agent_manager.get_agent(agent_id)
+            
+            if not saved_agent:
+                typer.echo(f"Agent {agent_id} not found", err=True)
+                raise typer.Exit(code=1)
+            
+            log.info(f"Using saved agent: {agent_id}")
+            
+            # Set up model parameters from saved agent
+            model = saved_agent.model
+            system_template = saved_agent.system_template or SYSTEM_ROLE_TEMPLATE
+            action_template = saved_agent.action_template or DEFAULT_TEMPLATE
+            temperature = saved_agent.temperature
+            
+            agent_config = AgentConfig(
+                model=model,
+                system_template=system_template,
+                action_template=action_template,
+                temperature=temperature,
+                skip_single=skip,
+                debug=debug
+            )
+        else:
+            # Use parameters from command line
+            if not model:
+                model = DEFAULT_MODEL
+                log.info(f"No model specified, using default: {model}")
+            
+            if not system_template:
+                system_template = SYSTEM_ROLE_TEMPLATE
+            
+            if not action_template:
+                action_template = DEFAULT_TEMPLATE
+            
+            if temperature is None:
+                temperature = DEFAULT_TEMPERATURE
+            
+            agent_config = AgentConfig(
+                model=model,
+                system_template=system_template,
+                action_template=action_template,
+                temperature=temperature,
+                skip_single=skip,
+                debug=debug
+            )
 
         # Create agent
         agent = create_agent(
@@ -746,6 +799,270 @@ def server(
 
     except Exception as e:
         log.exception(f"Error starting server: {e}")
+        raise typer.Exit(code=1)
+
+# Agent management commands
+@agents_app.command(name="list")
+def list_agents():
+    """List all available agents"""
+    try:
+        agent_manager = AgentManager()
+        agents = agent_manager.list_agents()
+        
+        if not agents:
+            typer.echo("No agents found")
+            return
+        
+        typer.echo("Available agents:")
+        for agent_id in agents:
+            agent = agent_manager.get_agent(agent_id)
+            if agent:
+                # Format temperature with 1 decimal place
+                temp = f"{agent.temperature:.1f}"
+                typer.echo(f"  {agent_id} - {agent.model} (temp: {temp})")
+            else:
+                typer.echo(f"  {agent_id} - Error loading agent config")
+    except Exception as e:
+        log.exception(f"Error listing agents: {e}")
+        raise typer.Exit(code=1)
+
+@agents_app.command(name="show")
+def show_agent(
+    agent_id: str = typer.Argument(..., help="Agent ID to display"),
+    template: bool = typer.Option(False, "--template", "-t", help="Show templates")
+):
+    """Show details for a specific agent"""
+    try:
+        agent_manager = AgentManager()
+        agent = agent_manager.get_agent(agent_id)
+        
+        if not agent:
+            typer.echo(f"Agent {agent_id} not found")
+            return
+        
+        typer.echo(f"Agent ID: {agent.agent_id}")
+        typer.echo(f"Model: {agent.model}")
+        typer.echo(f"Temperature: {agent.temperature}")
+        
+        if agent.description:
+            typer.echo(f"Description: {agent.description}")
+        
+        if agent.max_tokens:
+            typer.echo(f"Max Tokens: {agent.max_tokens}")
+        
+        if agent.top_p:
+            typer.echo(f"Top P: {agent.top_p}")
+        
+        if agent.additional_params:
+            typer.echo(f"Additional Parameters: {agent.additional_params}")
+        
+        if template:
+            typer.echo("\nSystem Template:")
+            typer.echo("---------------------")
+            typer.echo(agent.system_template or "[Not set]")
+            
+            typer.echo("\nAction Template:")
+            typer.echo("---------------------")
+            typer.echo(agent.action_template or "[Not set]")
+    except Exception as e:
+        log.exception(f"Error showing agent: {e}")
+        raise typer.Exit(code=1)
+
+@agents_app.command(name="new")
+def new_agent(
+    agent_id: str = typer.Option(..., "--id", help="Unique ID for the agent"),
+    model: str = typer.Option(..., "--model", "-m", help="Model to use"),
+    temperature: float = typer.Option(0.7, "--temperature", "-t", help="Temperature for the model"),
+    system_template: Optional[str] = typer.Option(None, "--system-template", "-s", help="Path to system prompt template file"),
+    action_template: Optional[str] = typer.Option(None, "--action-template", "-a", help="Path to action prompt template file"),
+    description: Optional[str] = typer.Option(None, "--description", "-d", help="Description of the agent"),
+    from_yaml: Optional[str] = typer.Option(None, "--yaml", help="Create from YAML config file")
+):
+    """Create a new agent configuration"""
+    try:
+        agent_manager = AgentManager()
+        
+        if from_yaml:
+            # Create agent from YAML config
+            if not os.path.exists(from_yaml):
+                typer.echo(f"Config file not found: {from_yaml}")
+                return
+            
+            try:
+                import yaml
+                with open(from_yaml, "r") as f:
+                    config = yaml.safe_load(f)
+                
+                if not isinstance(config, dict):
+                    typer.echo("Invalid YAML format, expected a dictionary")
+                    return
+                
+                # Create agent from config
+                agent_config = AgentSchema(**config)
+                success = agent_manager.create_agent(agent_config)
+                
+                if success:
+                    typer.echo(f"Created agent {agent_config.agent_id} from YAML config")
+                else:
+                    typer.echo(f"Failed to create agent from YAML config")
+                
+                return
+            except Exception as e:
+                typer.echo(f"Error loading YAML config: {e}")
+                return
+        
+        # Read templates if provided
+        system_template_content = None
+        if system_template:
+            if os.path.exists(system_template):
+                try:
+                    with open(system_template, "r", encoding="utf-8") as f:
+                        system_template_content = f.read()
+                except Exception as e:
+                    typer.echo(f"Error reading system template: {e}")
+                    return
+            else:
+                typer.echo(f"System template file not found: {system_template}")
+                return
+        
+        action_template_content = None
+        if action_template:
+            if os.path.exists(action_template):
+                try:
+                    with open(action_template, "r", encoding="utf-8") as f:
+                        action_template_content = f.read()
+                except Exception as e:
+                    typer.echo(f"Error reading action template: {e}")
+                    return
+            else:
+                typer.echo(f"Action template file not found: {action_template}")
+                return
+        
+        # Create the agent config
+        agent_config = AgentSchema(
+            agent_id=agent_id,
+            model=model,
+            temperature=temperature,
+            system_template=system_template_content,
+            action_template=action_template_content,
+            description=description
+        )
+        
+        # Create the agent
+        success = agent_manager.create_agent(agent_config)
+        
+        if success:
+            typer.echo(f"Created agent {agent_id}")
+        else:
+            typer.echo(f"Failed to create agent {agent_id}")
+    except Exception as e:
+        log.exception(f"Error creating agent: {e}")
+        raise typer.Exit(code=1)
+
+@agents_app.command(name="edit")
+def edit_agent(
+    agent_id: str = typer.Argument(..., help="Agent ID to edit"),
+    model: Optional[str] = typer.Option(None, "--model", "-m", help="New model to use"),
+    temperature: Optional[float] = typer.Option(None, "--temperature", "-t", help="New temperature for the model"),
+    system_template: Optional[str] = typer.Option(None, "--system-template", "-s", help="Path to new system prompt template file"),
+    action_template: Optional[str] = typer.Option(None, "--action-template", "-a", help="Path to new action prompt template file"),
+    description: Optional[str] = typer.Option(None, "--description", "-d", help="New description of the agent")
+):
+    """Edit an existing agent configuration"""
+    try:
+        agent_manager = AgentManager()
+        agent = agent_manager.get_agent(agent_id)
+        
+        if not agent:
+            typer.echo(f"Agent {agent_id} not found")
+            return
+        
+        # Update agent fields if provided
+        if model:
+            agent.model = model
+        
+        if temperature is not None:
+            agent.temperature = temperature
+        
+        if description is not None:
+            agent.description = description
+        
+        # Update templates if provided
+        if system_template:
+            if os.path.exists(system_template):
+                try:
+                    with open(system_template, "r", encoding="utf-8") as f:
+                        agent.system_template = f.read()
+                except Exception as e:
+                    typer.echo(f"Error reading system template: {e}")
+                    return
+            else:
+                typer.echo(f"System template file not found: {system_template}")
+                return
+        
+        if action_template:
+            if os.path.exists(action_template):
+                try:
+                    with open(action_template, "r", encoding="utf-8") as f:
+                        agent.action_template = f.read()
+                except Exception as e:
+                    typer.echo(f"Error reading action template: {e}")
+                    return
+            else:
+                typer.echo(f"Action template file not found: {action_template}")
+                return
+        
+        # Update the agent
+        success = agent_manager.update_agent(agent)
+        
+        if success:
+            typer.echo(f"Updated agent {agent_id}")
+        else:
+            typer.echo(f"Failed to update agent {agent_id}")
+    except Exception as e:
+        log.exception(f"Error editing agent: {e}")
+        raise typer.Exit(code=1)
+
+@agents_app.command(name="delete")
+def delete_agent(
+    agent_id: str = typer.Argument(..., help="Agent ID to delete"),
+    force: bool = typer.Option(False, "--force", "-f", help="Force deletion without confirmation")
+):
+    """Delete an agent configuration"""
+    try:
+        agent_manager = AgentManager()
+        agent = agent_manager.get_agent(agent_id)
+        
+        if not agent:
+            typer.echo(f"Agent {agent_id} not found")
+            return
+        
+        # Confirm deletion
+        if not force and not typer.confirm(f"Are you sure you want to delete agent {agent_id}?"):
+            typer.echo("Deletion cancelled")
+            return
+        
+        # Delete the agent
+        success = agent_manager.delete_agent(agent_id)
+        
+        if success:
+            typer.echo(f"Deleted agent {agent_id}")
+        else:
+            typer.echo(f"Failed to delete agent {agent_id}")
+    except Exception as e:
+        log.exception(f"Error deleting agent: {e}")
+        raise typer.Exit(code=1)
+
+@agents_app.command(name="create-defaults")
+def create_default_agents():
+    """Create default agent configurations"""
+    try:
+        agent_manager = AgentManager()
+        agent_manager.create_default_agents()
+        typer.echo("Created default agents")
+        list_agents()
+    except Exception as e:
+        log.exception(f"Error creating default agents: {e}")
         raise typer.Exit(code=1)
 
 if __name__ == "__main__":
