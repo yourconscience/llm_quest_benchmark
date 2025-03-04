@@ -40,55 +40,79 @@
     {% if results %}
     <!-- Summary Stats -->
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Overall Stats</h5>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <div class="text-center p-3">
-                            <h3 class="mb-0">{{ total_runs }}</h3>
-                            <p class="text-muted mb-0">Total Runs</p>
+                    <h5 class="card-title">Overall Stats & Outcomes</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-center p-3">
+                                    <h3 class="mb-0">{{ total_runs }}</h3>
+                                    <p class="text-muted mb-0">Total Runs</p>
+                                </div>
+                                <div class="text-center p-3">
+                                    <h3 class="mb-0">{{ "%.1f"|format(success_rate) }}%</h3>
+                                    <p class="text-muted mb-0">Success Rate</p>
+                                </div>
+                                <div class="text-center p-3">
+                                    <h3 class="mb-0">{{ models|length }}</h3>
+                                    <p class="text-muted mb-0">Models</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-center p-3">
-                            <h3 class="mb-0">{{ "%.1f"|format(success_rate) }}%</h3>
-                            <p class="text-muted mb-0">Success Rate</p>
-                        </div>
-                        <div class="text-center p-3">
-                            <h3 class="mb-0">{{ models|length }}</h3>
-                            <p class="text-muted mb-0">Models</p>
+                        <div class="col-md-6">
+                            <div class="position-relative" style="height: 150px">
+                                <canvas id="successRateChart"></canvas>
+                            </div>
+                            <div class="mt-2">
+                                <div class="d-flex justify-content-between">
+                                    <div class="text-center">
+                                        <h5 class="mb-0 text-success">{{ success_runs }}</h5>
+                                        <p class="text-muted mb-0">Success</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <h5 class="mb-0 text-danger">{{ failure_runs }}</h5>
+                                        <p class="text-muted mb-0">Failure</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <h5 class="mb-0 text-secondary">{{ error_runs }}</h5>
+                                        <p class="text-muted mb-0">Error</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Success vs. Failure</h5>
-                    <div class="position-relative" style="height: 150px">
-                        <canvas id="successRateChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Quests Tested</h5>
-                    <div class="list-group list-group-flush">
-                        {% for quest in quest_names[:5] %}
-                        <a href="{{ url_for('analyze.quest_analysis', quest_name=quest) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            {{ quest }}
-                            <span class="badge bg-primary rounded-pill">View</span>
-                        </a>
-                        {% endfor %}
-                        {% if quest_names|length > 5 %}
-                        <div class="text-center mt-2">
-                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#questListModal">
-                                View All ({{ quest_names|length }})
-                            </button>
-                        </div>
-                        {% endif %}
+                    <h5 class="card-title">Agents Overview</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Agent ID</th>
+                                    <th>Model</th>
+                                    <th>Temperature</th>
+                                    <th>Template</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                {% if loop.index0 == 0 or results[loop.index0-1].agent_id != result.agent_id %}
+                                <tr>
+                                    <td>{{ result.agent_id }}</td>
+                                    <td>{{ result.model }}</td>
+                                    <td>{{ result.temperature }}</td>
+                                    <td>{{ result.template }}</td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -156,8 +180,7 @@
                                     <th>Model</th>
                                     <th>Agent ID</th>
                                     <th>Outcome</th>
-                                    <th>Reward</th>
-                                    <th>Actions</th>
+                                    <th>View Run</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -175,12 +198,16 @@
                                         <span class="badge bg-secondary">{{ result.outcome }}</span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ result.reward }}</td>
                                     <td>
                                         {% if result.run_id %}
-                                        <a href="{{ url_for('analyze.run_details', run_id=result.run_id) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i> View Details
-                                        </a>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('analyze.run_details', run_id=result.run_id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> Details
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-success view-readable" data-run-id="{{ result.run_id }}">
+                                                <i class="fas fa-file-alt"></i> Step by Step
+                                            </button>
+                                        </div>
                                         {% else %}
                                         <span class="text-muted">No details available</span>
                                         {% endif %}
@@ -207,23 +234,22 @@
     {% endif %}
 </div>
 
-<!-- Quest List Modal -->
-<div class="modal fade" id="questListModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<!-- Readable Output Modal -->
+<div class="modal fade" id="readableOutputModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">All Tested Quests</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Quest Playthrough</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="list-group">
-                    {% for quest in quest_names %}
-                    <a href="{{ url_for('analyze.quest_analysis', quest_name=quest) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                        {{ quest }}
-                        <span class="badge bg-primary rounded-pill">View</span>
-                    </a>
-                    {% endfor %}
-                </div>
+            <div class="modal-body p-0">
+                <pre id="readableOutput" class="bg-dark text-light p-4" style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.6;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="copyReadableBtn">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
             </div>
         </div>
     </div>
@@ -268,6 +294,46 @@
             },
             cutout: '70%'
         }
+    });
+    
+    // Readable Output Handlers
+    const viewReadableButtons = document.querySelectorAll('.view-readable');
+    const readableOutput = document.getElementById('readableOutput');
+    const copyReadableBtn = document.getElementById('copyReadableBtn');
+    
+    viewReadableButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const runId = this.dataset.runId;
+            fetchReadableOutput(runId);
+        });
+    });
+    
+    function fetchReadableOutput(runId) {
+        fetch(`/analyze/run/${runId}/readable`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    readableOutput.textContent = data.readable_output;
+                    new bootstrap.Modal(document.getElementById('readableOutputModal')).show();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+    
+    copyReadableBtn.addEventListener('click', function() {
+        navigator.clipboard.writeText(readableOutput.textContent)
+            .then(() => {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Failed to copy: ', err);
+            });
     });
     {% endif %}
 </script>
