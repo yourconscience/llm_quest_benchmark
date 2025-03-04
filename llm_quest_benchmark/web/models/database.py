@@ -123,6 +123,92 @@ class BenchmarkRun(db.Model):
             'error': self.error
         }
 
+def import_benchmarks_from_file(app):
+    """Import benchmarks from backup file"""
+    import os
+    import json
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    backup_file = os.path.join(app.instance_path, 'benchmark_backup.json')
+    
+    if not os.path.exists(backup_file):
+        logger.info(f"No benchmark backup file found at {backup_file}")
+        return
+    
+    try:
+        with open(backup_file, 'r') as f:
+            benchmarks = json.load(f)
+        
+        with app.app_context():
+            count = 0
+            for benchmark_data in benchmarks:
+                # Check if benchmark already exists
+                existing = BenchmarkRun.query.filter_by(benchmark_id=benchmark_data['benchmark_id']).first()
+                if not existing:
+                    benchmark = BenchmarkRun(
+                        benchmark_id=benchmark_data['benchmark_id'],
+                        name=benchmark_data['name'],
+                        config=benchmark_data['config'],
+                        status=benchmark_data['status'],
+                        start_time=datetime.fromisoformat(benchmark_data['start_time']) if benchmark_data['start_time'] else None,
+                        end_time=datetime.fromisoformat(benchmark_data['end_time']) if benchmark_data['end_time'] else None,
+                        results=benchmark_data['results'],
+                        error=benchmark_data['error']
+                    )
+                    db.session.add(benchmark)
+                    count += 1
+            
+            if count > 0:
+                db.session.commit()
+                logger.info(f"Imported {count} benchmarks from backup file")
+    except Exception as e:
+        logger.error(f"Error importing benchmarks from backup: {e}")
+
+
+def export_benchmarks_to_file(app):
+    """Export all benchmarks to backup file"""
+    import os
+    import json
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        with app.app_context():
+            benchmarks = BenchmarkRun.query.all()
+            if not benchmarks:
+                logger.info("No benchmarks to export")
+                return
+            
+            # Convert to JSON serializable format
+            benchmark_data = []
+            for benchmark in benchmarks:
+                data = {
+                    'id': benchmark.id,
+                    'benchmark_id': benchmark.benchmark_id,
+                    'name': benchmark.name,
+                    'config': benchmark.config,
+                    'status': benchmark.status,
+                    'start_time': benchmark.start_time.isoformat() if benchmark.start_time else None,
+                    'end_time': benchmark.end_time.isoformat() if benchmark.end_time else None,
+                    'results': benchmark.results,
+                    'error': benchmark.error
+                }
+                benchmark_data.append(data)
+            
+            # Ensure instance directory exists
+            os.makedirs(app.instance_path, exist_ok=True)
+            backup_file = os.path.join(app.instance_path, 'benchmark_backup.json')
+            
+            with open(backup_file, 'w') as f:
+                json.dump(benchmark_data, f, indent=2)
+            
+            logger.info(f"Exported {len(benchmark_data)} benchmarks to {backup_file}")
+    except Exception as e:
+        logger.error(f"Error exporting benchmarks to backup: {e}")
+
+
 def init_db(app):
     """Initialize database with application"""
     if 'SQLALCHEMY_DATABASE_URI' not in app.config:
@@ -133,3 +219,6 @@ def init_db(app):
 
     with app.app_context():
         db.create_all()
+        
+    # Import benchmarks from backup file if it exists
+    import_benchmarks_from_file(app)

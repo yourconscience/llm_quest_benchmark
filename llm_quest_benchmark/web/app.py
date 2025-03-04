@@ -30,6 +30,9 @@ def create_app():
 
     # Initialize database
     from .models.database import db
+    app.config['DATABASE'] = f'{workspace_root}/instance/llm_quest.sqlite'
+    
+    # Initialize database
     db.init_app(app)
     with app.app_context():
         db.create_all()

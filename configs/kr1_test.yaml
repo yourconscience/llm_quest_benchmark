@@ -1,0 +1,29 @@
+# Test benchmark configuration for kr1 quests
+# A smaller subset to validate benchmarking works correctly
+
+quests:
+  - quests/kr1
+
+agents:
+  # Just 2 agents to validate the process
+  - model: gpt-4o-mini
+    template: reasoning.jinja
+    temperature: 0.7
+    skip_single: true
+    
+  - model: claude-3-5-haiku-latest
+    template: reasoning.jinja
+    temperature: 0.6
+    skip_single: true
+
+# Limit the quests to just a few to speed up testing
+max_quests: 4
+
+# Debug mode enables more detailed logging
+debug: true
+
+# Output directory for benchmark results
+output_dir: metrics/kr1_test
+
+# Optional name for this benchmark run
+name: kr1_test

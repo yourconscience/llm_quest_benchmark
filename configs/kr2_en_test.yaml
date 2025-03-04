@@ -1,0 +1,11 @@
+# Test benchmark for kr2_en directory
+name: KR2 English Test
+quests:
+  - quests/kr2_en
+agents:
+  - model: random_choice  # Use random agent for speed and reliability
+    temperature: 0.5
+    template: reasoning.jinja
+quest_timeout: 10  # short timeout for testing
+debug: true
+output_dir: metrics/kr2_en_test
