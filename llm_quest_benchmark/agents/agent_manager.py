@@ -99,42 +99,22 @@ class AgentManager:
         if not self.list_agents():
             logger.info("Creating default agents")
             
-            # Read default system template
-            system_template = None
-            template_path = os.path.join(os.getcwd(), "llm_quest_benchmark", "prompt_templates", "system_role.jinja")
-            if os.path.exists(template_path):
-                try:
-                    with open(template_path, "r", encoding="utf-8") as f:
-                        system_template = f.read()
-                except Exception as e:
-                    logger.error(f"Error reading system template: {e}")
-            
-            # Read default action template
-            action_template = None
-            action_path = os.path.join(os.getcwd(), "llm_quest_benchmark", "prompt_templates", "reasoning.jinja")
-            if os.path.exists(action_path):
-                try:
-                    with open(action_path, "r", encoding="utf-8") as f:
-                        action_template = f.read()
-                except Exception as e:
-                    logger.error(f"Error reading action template: {e}")
-            
-            # Create default agents
+            # Create default agents with template names (not full template content)
             default_agents = [
                 AgentConfig(
                     agent_id="gpt-4o-default",
                     model="gpt-4o",
                     temperature=0.7,
-                    system_template=system_template,
-                    action_template=action_template,
+                    system_template="system_role.jinja",
+                    action_template="reasoning.jinja",
                     description="Default GPT-4o agent with standard prompt templates"
                 ),
                 AgentConfig(
                     agent_id="claude-3-haiku-default",
                     model="claude-3-haiku-20240307",
                     temperature=0.7,
-                    system_template=system_template,
-                    action_template=action_template,
+                    system_template="system_role.jinja", 
+                    action_template="reasoning.jinja",
                     description="Default Claude 3 Haiku agent with standard prompt templates"
                 )
             ]
