@@ -1,17 +1,21 @@
 """Main entry point for the web application"""
-from flask import Flask, render_template, request, jsonify, redirect, url_for
-from pathlib import Path
 import logging
 import os
+from pathlib import Path
+
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 
 # Initialize quest registry early
 from llm_quest_benchmark.core.quest_registry import get_registry
+
 get_registry(reset_cache=True)
 
 from llm_quest_benchmark.constants import WEB_SERVER_HOST, WEB_SERVER_PORT
+
 # Set working directory to workspace root
 workspace_root = Path(__file__).parent.parent.parent
 os.chdir(str(workspace_root))
+
 
 def create_app():
     """Create and configure the Flask application"""
@@ -31,16 +35,16 @@ def create_app():
     # Initialize database
     from .models.database import db
     app.config['DATABASE'] = f'{workspace_root}/instance/llm_quest.sqlite'
-    
+
     # Initialize database
     db.init_app(app)
     with app.app_context():
         db.create_all()
 
     # Register blueprints
-    from .views.monitor import bp as monitor_bp
-    from .views.benchmark import bp as benchmark_bp
     from .views.analyze import bp as analyze_bp
+    from .views.benchmark import bp as benchmark_bp
+    from .views.monitor import bp as monitor_bp
 
     app.register_blueprint(monitor_bp)
     app.register_blueprint(benchmark_bp)
@@ -49,16 +53,16 @@ def create_app():
     @app.route('/')
     def index():
         return redirect(url_for('monitor.index'))
-    
+
     # Add shutdown handler to ensure database connections are properly closed
     import atexit
     import signal
     import sys
     import threading
-    
+
     def shutdown_handler(sig=None, frame=None):
         app.logger.info("Shutting down gracefully - closing database connections")
-        
+
         # Import here to avoid circular imports
         try:
             from .utils.benchmark_runner import BenchmarkThread
@@ -67,7 +71,7 @@ def create_app():
             app.logger.warning("Could not import BenchmarkThread for cleanup")
         except Exception as e:
             app.logger.error(f"Error terminating benchmark threads: {e}")
-        
+
         with app.app_context():
             try:
                 db.session.remove()
@@ -75,27 +79,28 @@ def create_app():
                 app.logger.info("Database connections closed successfully")
             except Exception as e:
                 app.logger.error(f"Error closing database connections: {e}")
-                
+
         # Forceful exit to ensure all threads are terminated
         if sig is not None:  # Only if called as signal handler
             app.logger.info("Forcefully exiting to terminate all threads")
             sys.exit(0)
-    
+
     # Custom handler for clean SIGINT handling (Ctrl+C)
     def sigint_handler(sig, frame):
         app.logger.info("Received SIGINT (Ctrl+C), shutting down...")
         shutdown_handler()
         # Forcefully exit
         sys.exit(0)
-    
+
     # Register shutdown handler for normal exit
     atexit.register(shutdown_handler)
-    
+
     # Register signal handlers for SIGINT (Ctrl+C) and SIGTERM
     signal.signal(signal.SIGINT, sigint_handler)
     signal.signal(signal.SIGTERM, shutdown_handler)
 
     return app
+
 
 def main():
     """Run the Flask application"""
@@ -153,6 +158,7 @@ def main():
     app.logger.info(f'Starting server at http://{WEB_SERVER_HOST}:{port}')
     # Run with use_reloader=False to allow our signal handlers to work properly
     app.run(host=WEB_SERVER_HOST, port=port, use_reloader=False, threaded=True)
+
 
 if __name__ == '__main__':
     main()

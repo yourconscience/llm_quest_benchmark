@@ -10,7 +10,7 @@
 {% block content %}
 <div class="container-fluid py-4">
     <h1 class="display-5 mb-4">Benchmark Analysis: {{ benchmark.name }}</h1>
-    
+
     <!-- Benchmark Info -->
     <div class="alert alert-info mb-4">
         <div class="row">
@@ -18,7 +18,7 @@
                 <strong>Benchmark ID:</strong> {{ benchmark.id }}
             </div>
             <div class="col-md-3">
-                <strong>Status:</strong> 
+                <strong>Status:</strong>
                 <span class="badge bg-{{ 'success' if benchmark.status == 'complete' else 'primary' if benchmark.status == 'running' else 'danger' }}">
                     {{ benchmark.status }}
                 </span>
@@ -27,7 +27,7 @@
                 <strong>Start Time:</strong> {{ benchmark.start_time.strftime('%Y-%m-%d %H:%M:%S') }}
             </div>
             <div class="col-md-3">
-                <strong>End Time:</strong> 
+                <strong>End Time:</strong>
                 {% if benchmark.end_time %}
                     {{ benchmark.end_time.strftime('%Y-%m-%d %H:%M:%S') }}
                 {% else %}
@@ -36,7 +36,7 @@
             </div>
         </div>
     </div>
-    
+
     {% if results %}
     <!-- Summary Stats -->
     <div class="row mb-4">
@@ -118,7 +118,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Model Comparison -->
     <div class="row mb-4">
         <div class="col-12">
@@ -163,7 +163,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Detailed Results -->
     <div class="row">
         <div class="col-12">
@@ -265,7 +265,7 @@
     const failureData = [{% for model in models %}{{ model_stats[model]['failure'] }}{% if not loop.last %}, {% endif %}{% endfor %}];
     const errorData = [{% for model in models %}{{ model_stats[model]['error'] }}{% if not loop.last %}, {% endif %}{% endfor %}];
     const modelLabels = {{ models|tojson }};
-    
+
     // Success vs. Failure Chart
     const successRateData = {
         labels: ['Success', 'Failure', 'Error'],
@@ -295,19 +295,19 @@
             cutout: '70%'
         }
     });
-    
+
     // Readable Output Handlers
     const viewReadableButtons = document.querySelectorAll('.view-readable');
     const readableOutput = document.getElementById('readableOutput');
     const copyReadableBtn = document.getElementById('copyReadableBtn');
-    
+
     viewReadableButtons.forEach(button => {
         button.addEventListener('click', function() {
             const runId = this.dataset.runId;
             fetchReadableOutput(runId);
         });
     });
-    
+
     function fetchReadableOutput(runId) {
         fetch(`/analyze/run/${runId}/readable`)
             .then(response => response.json())
@@ -321,7 +321,7 @@
             })
             .catch(error => console.error('Error:', error));
     }
-    
+
     copyReadableBtn.addEventListener('click', function() {
         navigator.clipboard.writeText(readableOutput.textContent)
             .then(() => {

@@ -130,7 +130,7 @@
                 <div class="card-body">
                     <h6>Observation:</h6>
                     <div class="bg-light p-3 rounded observation-text">{{ step.observation }}</div>
-                    
+
                     {% if step.choices and step.choices|length > 0 %}
                     <h6>Available Choices:</h6>
                     <div class="list-group mb-3">
@@ -146,7 +146,7 @@
                         {% endfor %}
                     </div>
                     {% endif %}
-                    
+
                     {% if step.llm_response %}
                     <div class="accordion" id="accordionStep{{ step.step }}">
                         <div class="accordion-item">
@@ -161,7 +161,7 @@
                                     <h6>Reasoning:</h6>
                                     <p class="bg-light p-3 rounded">{{ step.llm_response.reasoning }}</p>
                                     {% endif %}
-                                    
+
                                     {% if step.llm_response.analysis %}
                                     <h6>Analysis:</h6>
                                     <p class="bg-light p-3 rounded">{{ step.llm_response.analysis }}</p>
@@ -228,11 +228,11 @@
             }
         </style>
     `);
-    
+
     // Step Choices Chart
     const stepLabels = [{% for step in steps %}'Step {{ step.step }}'{% if not loop.last %}, {% endif %}{% endfor %}];
     const choiceData = [{% for step in steps %}{{ step.choices|length if step.choices else 0 }}{% if not loop.last %}, {% endif %}{% endfor %}];
-    
+
     const ctxStepChoices = document.getElementById('stepChoicesChart').getContext('2d');
     new Chart(ctxStepChoices, {
         type: 'line',
@@ -262,19 +262,19 @@
             }
         }
     });
-    
+
     // Readable Output Handlers
     const viewReadableButtons = document.querySelectorAll('.view-readable');
     const readableOutput = document.getElementById('readableOutput');
     const copyReadableBtn = document.getElementById('copyReadableBtn');
-    
+
     viewReadableButtons.forEach(button => {
         button.addEventListener('click', function() {
             const runId = this.dataset.runId;
             fetchReadableOutput(runId);
         });
     });
-    
+
     function fetchReadableOutput(runId) {
         fetch(`/analyze/run/${runId}/readable`)
             .then(response => response.json())
@@ -288,7 +288,7 @@
             })
             .catch(error => console.error('Error:', error));
     }
-    
+
     copyReadableBtn.addEventListener('click', function() {
         navigator.clipboard.writeText(readableOutput.textContent)
             .then(() => {

@@ -1,16 +1,19 @@
 """Database initialization script for the web interface"""
+import logging
 import os
 from pathlib import Path
+
 from flask import Flask
-import logging
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Set working directory to workspace root
 workspace_root = Path(__file__).parent.parent.parent
 os.chdir(str(workspace_root))
+
 
 def init_database():
     """Initialize the database with all required tables"""
@@ -57,6 +60,7 @@ def init_database():
         else:
             logger.error("Database initialization failed - required tables not created")
             return False
+
 
 if __name__ == "__main__":
     success = init_database()

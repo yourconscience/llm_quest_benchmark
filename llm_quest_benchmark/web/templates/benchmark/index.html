@@ -20,7 +20,7 @@
 {% block content %}
 <div class="container py-4">
     <h1 class="display-5 mb-4">Quest Benchmark</h1>
-    
+
     <div class="row">
         <!-- Configuration Form -->
         <div class="col-lg-6">
@@ -41,11 +41,11 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-6">
             <!-- Progress Tracker Component -->
             {% include "components/progress_tracker.html" %}
-            
+
             <!-- Recent Benchmark Results -->
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white">
@@ -91,17 +91,17 @@
         lineWrapping: true,
         theme: 'default'
     });
-    
+
     // Form submission
     document.getElementById('benchmarkForm').addEventListener('submit', function(e) {
         e.preventDefault();
         runBenchmark();
     });
-    
+
     function runBenchmark() {
         // Get configuration from CodeMirror
         const config = editor.getValue();
-        
+
         // Initialize progress tracker
         initProgressTracker({
             title: 'Benchmark Progress',
@@ -109,10 +109,10 @@
             initialInfo: 'Preparing benchmark run',
             showCard: true
         });
-        
+
         // Disable run button during execution
         document.getElementById('runBenchmarkBtn').disabled = true;
-        
+
         // Send config to server
         fetch('/benchmark/run', {
             method: 'POST',
@@ -150,20 +150,20 @@
             document.getElementById('runBenchmarkBtn').disabled = false;
         });
     }
-    
+
     function showError(message) {
         const errorElement = document.getElementById('configError');
         errorElement.innerText = message;
         errorElement.style.display = 'block';
         document.querySelector('.CodeMirror').classList.add('is-invalid');
-        
+
         // Hide error after 5 seconds
         setTimeout(() => {
             errorElement.style.display = 'none';
             document.querySelector('.CodeMirror').classList.remove('is-invalid');
         }, 5000);
     }
-    
+
     function loadBenchmarkResults() {
         // Load recent benchmark results
         fetch('/benchmark/results')
@@ -177,11 +177,11 @@
                 console.error('Error loading benchmark results:', error);
             });
     }
-    
+
     function updateResultsTable(results) {
         const tbody = document.querySelector('#benchmarkResultsTable tbody');
         tbody.innerHTML = '';
-        
+
         if (results.length === 0) {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -194,7 +194,7 @@
             tbody.appendChild(row);
             return;
         }
-        
+
         results.forEach(result => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -208,7 +208,7 @@
                 </td>
                 <td>
                     <div class="btn-group btn-group-sm">
-                        ${result.status === 'running' ? 
+                        ${result.status === 'running' ?
                             `<button class="btn btn-outline-secondary" disabled>
                                 <i class="fas fa-spinner fa-spin"></i> Running
                              </button>` :
@@ -222,7 +222,7 @@
             tbody.appendChild(row);
         });
     }
-    
+
     function getStatusBadgeClass(status) {
         switch (status.toLowerCase()) {
             case 'complete': return 'bg-success';
@@ -231,7 +231,7 @@
             default: return 'bg-secondary';
         }
     }
-    
+
     // Initial load of benchmark results
     loadBenchmarkResults();
 </script>

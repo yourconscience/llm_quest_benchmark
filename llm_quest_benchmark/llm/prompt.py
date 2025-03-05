@@ -1,20 +1,21 @@
 """Prompt renderer and history tracker for LLM agents"""
-from typing import Dict, List, Optional, Any, Union
-from pathlib import Path
-import os
-import logging
 import json
+import logging
+import os
 import re
-from jinja2 import Environment, FileSystemLoader, Template, ChoiceLoader
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
-from llm_quest_benchmark.schemas.state import QMState
+from jinja2 import ChoiceLoader, Environment, FileSystemLoader, Template
+
 from llm_quest_benchmark.constants import (
-    PROMPT_TEMPLATES_DIR,
-    SYSTEM_TEMPLATES_DIR,
     ACTION_TEMPLATES_DIR,
     DEFAULT_TEMPLATE,
-    SYSTEM_ROLE_TEMPLATE
+    PROMPT_TEMPLATES_DIR,
+    SYSTEM_ROLE_TEMPLATE,
+    SYSTEM_TEMPLATES_DIR,
 )
+from llm_quest_benchmark.schemas.state import QMState
 
 logger = logging.getLogger(__name__)
 
@@ -22,14 +23,12 @@ logger = logging.getLogger(__name__)
 class PromptRenderer:
     """Handles prompt rendering and history tracking for LLM agents"""
 
-    def __init__(
-        self,
-        env,
-        templates_dir: Optional[Path] = None,
-        system_template: str = SYSTEM_ROLE_TEMPLATE,
-        action_template: str = DEFAULT_TEMPLATE,
-        memory_config: Optional[Dict[str, Any]] = None
-    ):
+    def __init__(self,
+                 env,
+                 templates_dir: Optional[Path] = None,
+                 system_template: str = SYSTEM_ROLE_TEMPLATE,
+                 action_template: str = DEFAULT_TEMPLATE,
+                 memory_config: Optional[Dict[str, Any]] = None):
         """Initialize renderer with environment and templates
 
         Args:
@@ -42,28 +41,23 @@ class PromptRenderer:
         self.env = env
         self.history: List[Dict[str, Any]] = []
         self.templates_dir = templates_dir or PROMPT_TEMPLATES_DIR
-        
+
         # Set memory configuration
-        self.memory_config = memory_config or {
-            "type": "message_history",
-            "max_history": 10
-        }
-        
+        self.memory_config = memory_config or {"type": "message_history", "max_history": 10}
+
         # Handle template paths with or without directory prefixes
         self.system_template_name = self._normalize_template_path(system_template, "system")
         self.action_template_name = self._normalize_template_path(action_template, "action")
-        
+
         # Create a loader that checks both the main templates directory and the subdirectories
-        self.jinja_env = Environment(
-            loader=ChoiceLoader([
-                FileSystemLoader(self.templates_dir),
-                FileSystemLoader(SYSTEM_TEMPLATES_DIR.parent),
-                FileSystemLoader(ACTION_TEMPLATES_DIR.parent)
-            ]),
-            trim_blocks=True,
-            lstrip_blocks=True
-        )
-        
+        self.jinja_env = Environment(loader=ChoiceLoader([
+            FileSystemLoader(self.templates_dir),
+            FileSystemLoader(SYSTEM_TEMPLATES_DIR.parent),
+            FileSystemLoader(ACTION_TEMPLATES_DIR.parent)
+        ]),
+                                     trim_blocks=True,
+                                     lstrip_blocks=True)
+
         self._load_templates()
         self._load_template_contents()
 
@@ -80,7 +74,7 @@ class PromptRenderer:
         # If template already includes directory part, return as is
         if "/" in template_path or "\\" in template_path:
             return template_path
-        
+
         # Otherwise, add proper directory prefix
         if default_type == "system":
             return f"system/{template_path}"
@@ -109,13 +103,13 @@ class PromptRenderer:
                 # If not found, try with action templates directory
                 action_name = os.path.basename(self.action_template_name)
                 full_action_path = ACTION_TEMPLATES_DIR / action_name
-            
+
             full_system_path = self.templates_dir / self.system_template_name
             if not full_system_path.exists():
                 # If not found, try with system templates directory
                 system_name = os.path.basename(self.system_template_name)
                 full_system_path = SYSTEM_TEMPLATES_DIR / system_name
-            
+
             self.action_template_content = full_action_path.read_text(encoding="utf-8")
             self.system_template_content = full_system_path.read_text(encoding="utf-8")
         except Exception as e:
@@ -131,42 +125,36 @@ class PromptRenderer:
         """
         memory_type = self.memory_config.get("type", "message_history")
         max_history = self.memory_config.get("max_history", 10)
-        
+
         # Get most recent history based on max_history
         recent_history = self.get_history(max_history)
-        
+
         # Empty history case
         if not recent_history:
             return {"memory": []}
-        
+
         # For "message_history" type, just return the raw history
         if memory_type == "message_history":
-            return {
-                "memory": recent_history
-            }
+            return {"memory": recent_history}
         # For "summary" type, generate a summary of the history using LLM
         elif memory_type == "summary":
             try:
                 summary = self._generate_history_summary(recent_history)
-                return {
-                    "memory": summary
-                }
+                return {"memory": summary}
             except Exception as e:
                 logger.error(f"Error generating history summary: {e}")
                 # Fallback to simple summary if LLM summarization fails
                 return self._generate_simple_summary(recent_history)
         else:
             logger.warning(f"Unknown memory type: {memory_type}")
-            return {
-                "memory": []
-            }
-            
+            return {"memory": []}
+
     def _generate_simple_summary(self, history: List[Dict[str, Any]]) -> str:
         """Generate a simple summary of history without using LLM
-        
+
         Args:
             history (List[Dict[str, Any]]): History entries
-            
+
         Returns:
             str: Simple summary of history
         """
@@ -175,32 +163,32 @@ class PromptRenderer:
             state_summary = f"State {i+1}: {entry.get('text', '')[:100]}..."
             action_summary = f"Action {i+1}: {entry.get('action', '')}"
             summary.append(f"{state_summary}\n{action_summary}")
-        
+
         return "\n\n".join(summary)
-        
+
     def _generate_history_summary(self, history: List[Dict[str, Any]]) -> str:
         """Generate a summary of history using LLM
-        
+
         Args:
             history (List[Dict[str, Any]]): History entries
-            
+
         Returns:
             str: LLM-generated summary of history
         """
         # Import here to avoid circular imports
         from llm_quest_benchmark.llm.client import get_llm_client
-        
+
         # Format history for summarization
         history_text = []
         for i, entry in enumerate(history):
             state_text = entry.get('text', '')
             action = entry.get('action', 'No action')
             history_text.append(f"STATE {i+1}:\n{state_text}\n\nACTION {i+1}:\n{action}")
-        
+
         history_prompt = "\n\n".join(history_text)
-        
+
         # Create prompt for summarization
-        prompt = f"""Below is a history of states and actions from an interactive text adventure. 
+        prompt = f"""Below is a history of states and actions from an interactive text adventure.
 Please provide a concise summary (200-300 words) that captures:
 1. Key plot developments
 2. Important decisions made by the player
@@ -225,7 +213,7 @@ SUMMARY:"""
             except Exception as e2:
                 logger.error(f"Failed to generate summary with GPT-4o: {e2}")
                 raise
-                
+
         return summary
 
     def render_action_prompt(self, observation: str, choices: list) -> str:
@@ -240,12 +228,12 @@ SUMMARY:"""
         """
         # Get memory context
         memory_context = self._get_memory_context()
-        
-        return self.action_template.render(
-            observation=observation,
-            choices=[{"text": c["text"]} for c in choices],
-            **memory_context
-        )
+
+        return self.action_template.render(observation=observation,
+                                           choices=[{
+                                               "text": c["text"]
+                                           } for c in choices],
+                                           **memory_context)
 
     def render_system_prompt(self, **kwargs) -> str:
         """Render the system role prompt
@@ -258,10 +246,10 @@ SUMMARY:"""
         """
         # Get memory context
         memory_context = self._get_memory_context()
-        
+
         # Merge kwargs with memory context
         context = {**kwargs, **memory_context}
-        
+
         return self.system_template.render(**context)
 
     def add_to_history(self, state: Union[Dict[str, Any], QMState]) -> None:
@@ -314,7 +302,7 @@ SUMMARY:"""
     def get_action_template_content(self) -> str:
         """Get raw action template content"""
         return self.action_template_content
-        
+
     def set_memory_config(self, memory_config: Dict[str, Any]) -> None:
         """Set memory configuration
 
@@ -339,7 +327,7 @@ SUMMARY:"""
             clean_request = re.sub(r'calculate\s+', '', clean_request)
             clean_request = re.sub(r'what\s+is\s+', '', clean_request)
             clean_request = re.sub(r'compute\s+', '', clean_request)
-            
+
             # Evaluate the expression
             result = eval(clean_request)
             return f"Calculator result: {result}"

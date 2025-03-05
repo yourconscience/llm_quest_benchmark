@@ -7,10 +7,7 @@ import pytest
 
 from llm_quest_benchmark.executors.benchmark import run_benchmark
 from llm_quest_benchmark.schemas.config import BenchmarkConfig, AgentConfig
-from llm_quest_benchmark.constants import (
-    SYSTEM_ROLE_TEMPLATE,
-    DEFAULT_TEMPLATE
-)
+from llm_quest_benchmark.constants import (SYSTEM_ROLE_TEMPLATE, DEFAULT_TEMPLATE)
 
 
 @pytest.mark.timeout(20)  # 20 seconds timeout for benchmark test
@@ -44,14 +41,12 @@ def test_benchmark_e2e(caplog, tmp_path):
                 system_template=SYSTEM_ROLE_TEMPLATE,
                 action_template=DEFAULT_TEMPLATE,
                 temperature=0.0,
-                skip_single=True
-            )
+                skip_single=True)
         ],
         quest_timeout=5,
         max_workers=1,
         debug=True,
-        output_dir=str(tmp_path)
-    )
+        output_dir=str(tmp_path))
 
     try:
         # Run benchmark
@@ -59,14 +54,17 @@ def test_benchmark_e2e(caplog, tmp_path):
 
         # Verify results
         assert len(results) > 0, "No results returned"
-        assert len(results) == len(config.agents), f"Expected {len(config.agents)} results, got {len(results)}"
+        assert len(results) == len(
+            config.agents), f"Expected {len(config.agents)} results, got {len(results)}"
 
         # Check first result
         result = results[0]
         assert result['quest'] == str(quest_path)
         assert result['model'] == "random_choice"
         assert result['temperature'] == 0.0
-        assert result['template'] in [SYSTEM_ROLE_TEMPLATE, DEFAULT_TEMPLATE, 'action/reasoning.jinja']
+        assert result['template'] in [
+            SYSTEM_ROLE_TEMPLATE, DEFAULT_TEMPLATE, 'action/reasoning.jinja'
+        ]
         assert 'agent_id' in result
         assert 'outcome' in result
 

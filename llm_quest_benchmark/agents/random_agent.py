@@ -1,6 +1,6 @@
 """Random agent for testing quests"""
-import random
 import logging
+import random
 from typing import Dict, List
 
 from llm_quest_benchmark.agents.base import QuestPlayer

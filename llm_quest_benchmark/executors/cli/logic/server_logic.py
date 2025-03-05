@@ -6,7 +6,12 @@ from typing import Tuple
 
 log = logging.getLogger(__name__)
 
-def start_server(host: str, port: int, debug: bool, workers: int = None, production: bool = None) -> Tuple[bool, str]:
+
+def start_server(host: str,
+                 port: int,
+                 debug: bool,
+                 workers: int = None,
+                 production: bool = None) -> Tuple[bool, str]:
     """Start the web interface server.
 
     Args:

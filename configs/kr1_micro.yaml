@@ -11,7 +11,7 @@ agents:
     template: reasoning.jinja
     temperature: 0.7
     skip_single: true
-    
+
   - model: claude-3-5-haiku-latest
     template: reasoning.jinja
     temperature: 0.6

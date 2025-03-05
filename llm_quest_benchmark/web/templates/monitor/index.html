@@ -123,37 +123,37 @@
     // Client-side text wrapping function
     function wrapText(text, maxWidth = 120) {
         if (!text) return '';
-        
+
         // Check if text already appears to be wrapped (most lines shorter than maxWidth)
         const lines = text.split('\n');
         const longLines = lines.filter(line => line.length > maxWidth);
-        
+
         // If less than 15% of lines are long, consider it pre-wrapped
         if (lines.length > 5 && longLines.length / lines.length < 0.15) {
             console.log("Text appears to be pre-wrapped, skipping rewrap");
             return text;
         }
-        
+
         // Split text into paragraphs
         const paragraphs = text.split('\n');
         const wrappedParagraphs = [];
-        
+
         for (const paragraph of paragraphs) {
             if (!paragraph.trim()) {
                 wrappedParagraphs.push('');
                 continue;
             }
-            
+
             // Split paragraph into words
             const words = paragraph.split(' ');
             let currentLine = [];
             let currentLength = 0;
-            
+
             // Process each word
             for (const word of words) {
                 // Calculate new length if we add this word
                 const newLength = currentLength + word.length + (currentLength > 0 ? 1 : 0);
-                
+
                 // If adding this word would exceed maxWidth
                 if (newLength > maxWidth) {
                     // Add current line to wrapped paragraphs
@@ -168,13 +168,13 @@
                     currentLength = newLength;
                 }
             }
-            
+
             // Add the last line if there's anything left
             if (currentLine.length > 0) {
                 wrappedParagraphs.push(currentLine.join(' '));
             }
         }
-        
+
         // Join paragraphs with line breaks
         return wrappedParagraphs.join('\n');
     }
@@ -183,35 +183,35 @@
         // Ensure text is wrapped
         const wrappedText = wrapText(text, 120);
         debugLog += wrappedText + '\n';
-        
+
         // Apply some formatting to the debug output
         const formattedLog = debugLog
             // Highlight step headers
-            .replace(/-----\s+STEP\s+\d+\s+-----/g, match => 
+            .replace(/-----\s+STEP\s+\d+\s+-----/g, match =>
                 `<span style="color: #5bc0de; font-weight: bold;">${match}</span>`)
             // Highlight section headers with outcome-specific colors
-            .replace(/==========\s+QUEST OUTCOME:\s+(SUCCESS)\s+==========+/g, 
+            .replace(/==========\s+QUEST OUTCOME:\s+(SUCCESS)\s+==========+/g,
                 '<span style="color: #5cb85c; font-weight: bold;">========== QUEST OUTCOME: $1 ==========</span>')
-            .replace(/==========\s+QUEST OUTCOME:\s+(FAILURE|ERROR|TIMEOUT)\s+==========+/g, 
+            .replace(/==========\s+QUEST OUTCOME:\s+(FAILURE|ERROR|TIMEOUT)\s+==========+/g,
                 '<span style="color: #d9534f; font-weight: bold;">========== QUEST OUTCOME: $1 ==========</span>')
-            .replace(/==========\s+QUEST PLAYTHROUGH\s+==========+/g, 
+            .replace(/==========\s+QUEST PLAYTHROUGH\s+==========+/g,
                 '<span style="color: #428bca; font-weight: bold;">========== QUEST PLAYTHROUGH ==========</span>')
             // Highlight quest info
-            .replace(/(QUEST|AGENT|STEPS|END TIME):\s+([^\n]+)/g, 
+            .replace(/(QUEST|AGENT|STEPS|END TIME):\s+([^\n]+)/g,
                 '<span style="color: #428bca; font-weight: bold;">$1:</span> <span style="color: #d9d9d9;">$2</span>')
             .replace(/OUTCOME:\s+(SUCCESS)/g,
                 '<span style="color: #5cb85c; font-weight: bold;">OUTCOME:</span> <span style="color: #5cb85c;">$1</span>')
             .replace(/OUTCOME:\s+(FAILURE|ERROR|TIMEOUT)/g,
                 '<span style="color: #d9534f; font-weight: bold;">OUTCOME:</span> <span style="color: #d9534f;">$1</span>')
             // Highlight selected option
-            .replace(/(Selected option \d+):\s+([^\n]+)/g, 
+            .replace(/(Selected option \d+):\s+([^\n]+)/g,
                 '<span style="color: #5bc0de;">$1:</span> <span style="color: #ffffff; font-style: italic;">$2</span>')
             // Highlight reasoning and analysis
-            .replace(/(Reasoning|Analysis):\s+([^\n]+)/g, 
+            .replace(/(Reasoning|Analysis):\s+([^\n]+)/g,
                 '<span style="color: #f0ad4e; font-weight: bold;">$1:</span> <span style="color: #d9d9d9; font-style: italic;">$2</span>');
-        
+
         document.getElementById('debugOutput').innerHTML = formattedLog;
-        
+
         // Auto-scroll to bottom
         const debugOutput = document.getElementById('debugOutput');
         debugOutput.scrollTop = debugOutput.scrollHeight;
@@ -350,7 +350,7 @@
                             // Use wrapped_text if available
                             const choice = state.choices[choiceIndex];
                             const choiceText = choice.wrapped_text || choice.text;
-                            
+
                             // If text contains line breaks, indent subsequent lines
                             if (choiceText.includes('\n')) {
                                 const lines = choiceText.split('\n');

@@ -8,7 +8,7 @@ from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.environments.state import QuestOutcome
 
-TIMEOUT = 20 # 20s should be enough for test quests to complete
+TIMEOUT = 20  # 20s should be enough for test quests to complete
 
 
 @pytest.mark.e2e
@@ -24,8 +24,7 @@ def test_quest_run_with_llm(caplog):
         action_template=DEFAULT_TEMPLATE,
         temperature=0.0,
         skip_single=False,
-        debug=True
-    )
+        debug=True)
     assert agent is not None, "Failed to create agent"
 
     # Mock callback for testing
@@ -44,8 +43,7 @@ def test_quest_run_with_llm(caplog):
             agent=agent,
             timeout=TIMEOUT,  # Match the test timeout
             debug=True,  # Enable debug logging
-            callbacks=[mock_callback]
-        )
+            callbacks=[mock_callback])
 
         # Check that we got a valid outcome
         assert outcome is not None, "Quest returned no outcome"
@@ -84,8 +82,7 @@ def test_random_agent_on_test_quest(caplog):
             agent=agent,
             debug=True,  # Enable debug logging
             timeout=TIMEOUT,  # Match the test timeout
-            callbacks=[mock_callback]
-        )
+            callbacks=[mock_callback])
 
         # Check that we got a valid outcome
         assert outcome is not None, "Quest returned no outcome"

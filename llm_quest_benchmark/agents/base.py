@@ -1,6 +1,6 @@
 """Base classes for quest players (both human and LLM)"""
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Any, Dict
 
 from llm_quest_benchmark.schemas.response import LLMResponse
 

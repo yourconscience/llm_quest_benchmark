@@ -4,6 +4,7 @@ from pathlib import Path
 from llm_quest_benchmark.executors.ts_bridge.bridge import QMBridge
 from llm_quest_benchmark.constants import DEFAULT_QUEST
 
+
 def test_bridge_initialization():
     """Test bridge initialization"""
     bridge = QMBridge(str(DEFAULT_QUEST))
@@ -13,6 +14,7 @@ def test_bridge_initialization():
         assert bridge.process is None
     finally:
         bridge.close()
+
 
 def test_bridge_parse_quest():
     """Test quest parsing"""
@@ -24,13 +26,16 @@ def test_bridge_parse_quest():
     assert isinstance(metadata['start_location_id'], int)
     assert metadata['start_location_id'] > 0
 
+
 def test_bridge_invalid_quest():
     """Test bridge with invalid quest file"""
     with pytest.raises(FileNotFoundError):
         QMBridge('nonexistent.qm')
 
+
 def test_bridge_game_flow(monkeypatch):
     """Test complete game flow"""
+
     def mock_read_response(*args, **kwargs):
         return '''{
             "state": {
@@ -72,8 +77,10 @@ def test_bridge_game_flow(monkeypatch):
     finally:
         bridge.close()
 
+
 def test_bridge_error_handling(monkeypatch):
     """Test error handling"""
+
     def mock_read_response(*args, **kwargs):
         return 'invalid json'
 
@@ -85,8 +92,10 @@ def test_bridge_error_handling(monkeypatch):
     finally:
         bridge.close()
 
+
 def test_bridge_missing_state(monkeypatch):
     """Test missing state handling"""
+
     def mock_read_response(*args, **kwargs):
         return '''{
             "state": {},
@@ -100,6 +109,7 @@ def test_bridge_missing_state(monkeypatch):
             bridge.start_game()
     finally:
         bridge.close()
+
 
 def test_bridge_process_cleanup():
     """Test process cleanup"""

@@ -86,16 +86,15 @@ def parse_llm_response(response: str,
         if 'tool' in response_json:
             tool_type = response_json.get('tool')
             query = response_json.get('query')
-            
+
             if tool_type and query:
                 # Return a special response indicating tool use
                 return LLMResponse(
                     action=-1,  # -1 action indicates tool use
                     tool_type=tool_type,
                     tool_query=query,
-                    is_default=False
-                )
-            
+                    is_default=False)
+
         # Check for either 'action' or 'result' field
         action_value = response_json.get('action') or response_json.get('result')
         if action_value is not None:
@@ -166,12 +165,10 @@ class LLMAgent(QuestPlayer):
             self.logger.addHandler(handler)
 
         # Initialize prompt renderer with memory configuration
-        self.prompt_renderer = PromptRenderer(
-            None,
-            system_template=system_template,
-            action_template=action_template,
-            memory_config=self.memory_config
-        )
+        self.prompt_renderer = PromptRenderer(None,
+                                              system_template=system_template,
+                                              action_template=action_template,
+                                              memory_config=self.memory_config)
 
         # Initialize LLM client with system prompt and temperature
         self.llm = get_llm_client(model_name,
@@ -219,29 +216,30 @@ class LLMAgent(QuestPlayer):
 
                 # Parse response
                 parsed_response = parse_llm_response(llm_response, len(choices), self.debug,
-                                                    self.logger)
-                
+                                                     self.logger)
+
                 # Check if this is a tool use request
                 if parsed_response.is_tool_use:
                     if self.debug:
-                        self.logger.debug(f"Tool use requested: {parsed_response.tool_type} - {parsed_response.tool_query}")
-                    
+                        self.logger.debug(
+                            f"Tool use requested: {parsed_response.tool_type} - {parsed_response.tool_query}"
+                        )
+
                     # Check if we have the tool available
                     if parsed_response.tool_type in self.tools:
                         # Process the tool request
                         tool_result = self.handle_tool_request(
-                            f"{parsed_response.tool_type}: {parsed_response.tool_query}"
-                        )
-                        
+                            f"{parsed_response.tool_type}: {parsed_response.tool_query}")
+
                         # Update the response with the tool result
                         parsed_response.tool_result = tool_result
-                        
+
                         # Modify the prompt to include the tool result
                         prompt += f"\n\nTool result: {tool_result}\n\nNow, please decide which action to take:"
-                        
+
                         # Store the tool usage in history
                         self.history.append(parsed_response)
-                        
+
                         # Continue to next iteration to get the final decision
                         continue
                     else:
@@ -249,7 +247,7 @@ class LLMAgent(QuestPlayer):
                         if self.debug:
                             self.logger.warning(f"Tool {parsed_response.tool_type} not available")
                         parsed_response = LLMResponse(action=1, is_default=True)
-                
+
                 # We have a final decision
                 if self.debug:
                     self.logger.debug(f"Parsed LLM response: {parsed_response}")
@@ -271,7 +269,9 @@ class LLMAgent(QuestPlayer):
                 return parsed_response.action
 
             # If we get here, we've hit the max tool iterations without a final decision
-            self.logger.warning(f"Hit maximum tool iterations ({max_tool_iterations}) without a final decision. Using default action.")
+            self.logger.warning(
+                f"Hit maximum tool iterations ({max_tool_iterations}) without a final decision. Using default action."
+            )
             default_response = LLMResponse(action=1, is_default=True)
             self.history.append(default_response)
             self._last_response = default_response
@@ -308,16 +308,16 @@ class LLMAgent(QuestPlayer):
         # Use the prompt renderer to generate formatted prompt
         # Add the state to the history for memory tracking
         self.prompt_renderer.add_to_history({'text': state, 'choices': choices})
-        
+
         # Use the template renderer
         return self.prompt_renderer.render_action_prompt(state, choices)
-    
+
     def handle_tool_request(self, request: str) -> str:
         """Handle tool requests
-        
+
         Args:
             request (str): Tool request string
-            
+
         Returns:
             str: Tool response
         """

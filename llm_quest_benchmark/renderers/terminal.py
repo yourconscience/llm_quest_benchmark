@@ -1,13 +1,17 @@
 """Terminal renderer for Space Rangers quests using rich"""
 from typing import Any, Dict, Optional
+
 from rich.console import Console
-from llm_quest_benchmark.renderers.base import BaseRenderer
-from llm_quest_benchmark.utils import choice_mapper, text_processor
+
 from llm_quest_benchmark.constants import READABILITY_DELAY
-from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.renderers.base import BaseRenderer
 from llm_quest_benchmark.schemas.response import LLMResponse
+from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.utils import choice_mapper, text_processor
+
 
 class NoRenderer:
+
     def render_game_state(self, state: AgentState):
         """Render complete game state with RPG elements"""
         pass
@@ -92,7 +96,8 @@ class RichRenderer(BaseRenderer):
 
         while True:
             try:
-                choice = self.console.input("\n[bold yellow]Enter choice number (or 'q' to quit): [/]")
+                choice = self.console.input(
+                    "\n[bold yellow]Enter choice number (or 'q' to quit): [/]")
                 if choice.lower() == 'q':
                     raise KeyboardInterrupt
                 if not choice.isdigit():
@@ -100,7 +105,8 @@ class RichRenderer(BaseRenderer):
                     continue
                 choice_num = int(choice)
                 if choice_num not in choice_mapper:
-                    self.render_error(f"Invalid choice. Valid choices: {choice_mapper.get_valid_choices()}")
+                    self.render_error(
+                        f"Invalid choice. Valid choices: {choice_mapper.get_valid_choices()}")
                     continue
                 return choice_mapper.get_jump_id(choice_num)
             except KeyboardInterrupt:

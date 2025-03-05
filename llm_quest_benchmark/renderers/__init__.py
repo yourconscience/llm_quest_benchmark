@@ -5,10 +5,4 @@ from .progress import ProgressRenderer
 from .null import NoRenderer
 from .factory import create_renderer
 
-__all__ = [
-    'BaseRenderer',
-    'RichRenderer',
-    'ProgressRenderer',
-    'NoRenderer',
-    'create_renderer'
-]
+__all__ = ['BaseRenderer', 'RichRenderer', 'ProgressRenderer', 'NoRenderer', 'create_renderer']

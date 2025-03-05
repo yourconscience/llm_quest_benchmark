@@ -26,7 +26,7 @@ The following tasks outline specific steps for a software engineer (SWE) to enha
 
 1. **Single-Step vs. Multi-Step**
    - In `strategic_agent.py` or a new class:
-     - Provide a toggled path for "one-turn immediate action" vs. "two-phase think-then-decide."  
+     - Provide a toggled path for "one-turn immediate action" vs. "two-phase think-then-decide."
    - Expose a parameter `use_advanced_reasoning` (boolean) that the user can set.
 
 2. **Adaptive Approach**

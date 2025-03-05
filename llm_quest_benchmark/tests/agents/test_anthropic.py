@@ -2,6 +2,7 @@ import pytest
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.constants import MODEL_CHOICES
 
+
 def test_anthropic_integration(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
 

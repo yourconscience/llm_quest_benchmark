@@ -1,15 +1,15 @@
 """Time utilities for handling timeouts"""
+import math
 import signal
 import sys
-import math
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from contextlib import contextmanager
 from typing import Any, Callable
 
 from llm_quest_benchmark.constants import (
-    DEFAULT_QUEST_TIMEOUT,
     DEFAULT_BENCHMARK_TIMEOUT_FACTOR,
-    MAX_BENCHMARK_TIMEOUT
+    DEFAULT_QUEST_TIMEOUT,
+    MAX_BENCHMARK_TIMEOUT,
 )
 
 
@@ -18,13 +18,11 @@ class CommandTimeout(Exception):
     pass
 
 
-def calculate_benchmark_timeout(
-    num_quests: int,
-    num_agents: int,
-    num_workers: int,
-    quest_timeout: int = DEFAULT_QUEST_TIMEOUT,
-    safety_factor: float = DEFAULT_BENCHMARK_TIMEOUT_FACTOR
-) -> int:
+def calculate_benchmark_timeout(num_quests: int,
+                                num_agents: int,
+                                num_workers: int,
+                                quest_timeout: int = DEFAULT_QUEST_TIMEOUT,
+                                safety_factor: float = DEFAULT_BENCHMARK_TIMEOUT_FACTOR) -> int:
     """Calculate appropriate timeout for a benchmark run
 
     The formula accounts for:

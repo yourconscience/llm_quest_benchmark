@@ -1,9 +1,11 @@
 """Progress bar renderer for benchmark runs using tqdm"""
-from typing import Dict, List, Optional, Any
-from tqdm import tqdm
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
+from tqdm import tqdm
+
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.renderers.base import BaseRenderer
 
@@ -35,8 +37,8 @@ class ProgressRenderer(BaseRenderer):
             desc="Running benchmark",
             unit="quest",
             ncols=120,
-            bar_format="{desc:<50} {percentage:3.0f}%|{bar:30}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]"
-        )
+            bar_format=
+            "{desc:<50} {percentage:3.0f}%|{bar:30}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]")
 
         # Print initial header
         self.console.print("\n[bold cyan]Benchmark Progress[/]")
@@ -65,7 +67,12 @@ class ProgressRenderer(BaseRenderer):
         """Render error in progress output"""
         self.console.print(f"[red]Error: {message}[/]")
 
-    def update(self, quest_name: str, agent: str, outcome: QuestOutcome, error: Optional[str] = None, llm_error: bool = False) -> None:
+    def update(self,
+               quest_name: str,
+               agent: str,
+               outcome: QuestOutcome,
+               error: Optional[str] = None,
+               llm_error: bool = False) -> None:
         """Update progress with latest quest run result
 
         Args:
@@ -107,10 +114,8 @@ class ProgressRenderer(BaseRenderer):
         if llm_error and not error:
             error = "LLM parsing error - defaulted to first choice"
 
-        self.console.print(
-            f"[{status_color}]{quest_name} - {agent}: {outcome.name}[/]" +
-            (f" ({error})" if error else "")
-        )
+        self.console.print(f"[{status_color}]{quest_name} - {agent}: {outcome.name}[/]" +
+                           (f" ({error})" if error else ""))
 
     def close(self) -> None:
         """Close progress bars and display final summary"""
@@ -123,36 +128,13 @@ class ProgressRenderer(BaseRenderer):
         table.add_column("Percentage", justify="right", style="blue")
 
         total = self.total_runs
-        table.add_row(
-            "Success",
-            str(self.success_count),
-            f"{(self.success_count/total)*100:.1f}%"
-        )
-        table.add_row(
-            "Failure",
-            str(self.failure_count),
-            f"{(self.failure_count/total)*100:.1f}%"
-        )
-        table.add_row(
-            "Error",
-            str(self.error_count),
-            f"{(self.error_count/total)*100:.1f}%"
-        )
-        table.add_row(
-            "Timeout",
-            str(self.timeout_count),
-            f"{(self.timeout_count/total)*100:.1f}%"
-        )
-        table.add_row(
-            "LLM Errors",
-            str(self.llm_error_count),
-            f"{(self.llm_error_count/total)*100:.1f}%"
-        )
-        table.add_row(
-            "Total",
-            str(total),
-            "100%"
-        )
+        table.add_row("Success", str(self.success_count), f"{(self.success_count/total)*100:.1f}%")
+        table.add_row("Failure", str(self.failure_count), f"{(self.failure_count/total)*100:.1f}%")
+        table.add_row("Error", str(self.error_count), f"{(self.error_count/total)*100:.1f}%")
+        table.add_row("Timeout", str(self.timeout_count), f"{(self.timeout_count/total)*100:.1f}%")
+        table.add_row("LLM Errors", str(self.llm_error_count),
+                      f"{(self.llm_error_count/total)*100:.1f}%")
+        table.add_row("Total", str(total), "100%")
 
         self.console.print("\n")
         self.console.print(Panel(table, expand=False, title="[bold cyan]Final Results[/]"))

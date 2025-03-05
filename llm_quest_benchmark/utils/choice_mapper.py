@@ -1,7 +1,9 @@
 """Choice mapping utilities"""
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from llm_quest_benchmark.schemas.response import LLMResponse
 from llm_quest_benchmark.utils.text_processor import clean_qm_text
+
 
 class ChoiceMapper:
     """Maps between sequential choice numbers and choice IDs"""
@@ -12,7 +14,7 @@ class ChoiceMapper:
             choices: List of choices with 'id' fields
         """
         self.choices = choices
-        self.mapping = {i+1: choice['id'] for i, choice in enumerate(choices)}
+        self.mapping = {i + 1: choice['id'] for i, choice in enumerate(choices)}
         self.reverse_mapping = {v: k for k, v in self.mapping.items()}
 
     def get_choice_number(self, choice_id: str) -> int:
@@ -40,8 +42,10 @@ class ChoiceMapper:
         formatted_choices = []
         for i, choice in enumerate(self.choices, 1):
             formatted_choices.append({
-                'id': str(i),
-                'text': clean_qm_text(choice['text']) if choice.get('text') else choice.get('text', '')
+                'id':
+                    str(i),
+                'text':
+                    clean_qm_text(choice['text']) if choice.get('text') else choice.get('text', '')
             })
         return formatted_choices
 
@@ -58,12 +62,10 @@ class ChoiceMapper:
         """
         # For single choice, always use action 1
         if len(choices) == 1:
-            return LLMResponse(
-                action=1,
-                analysis=response.analysis,
-                reasoning=response.reasoning,
-                is_default=response.is_default
-            )
+            return LLMResponse(action=1,
+                               analysis=response.analysis,
+                               reasoning=response.reasoning,
+                               is_default=response.is_default)
 
         # Validate action is in range
         if not (1 <= response.action <= len(choices)):

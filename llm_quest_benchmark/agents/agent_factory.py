@@ -1,15 +1,21 @@
 """Factory for creating quest agents"""
 import logging
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
 
+from llm_quest_benchmark.agents.agent_manager import AgentManager
 from llm_quest_benchmark.agents.base import QuestPlayer
+from llm_quest_benchmark.agents.human_player import HumanPlayer
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
 from llm_quest_benchmark.agents.random_agent import RandomAgent
-from llm_quest_benchmark.agents.human_player import HumanPlayer
-from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_TEMPLATE, DEFAULT_TEMPERATURE, SYSTEM_ROLE_TEMPLATE
-from llm_quest_benchmark.agents.agent_manager import AgentManager
+from llm_quest_benchmark.constants import (
+    DEFAULT_MODEL,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_TEMPLATE,
+    SYSTEM_ROLE_TEMPLATE,
+)
 
 logger = logging.getLogger(__name__)
+
 
 def create_agent(
     model: str = DEFAULT_MODEL,
@@ -71,45 +77,44 @@ def create_agent(
         tools = agent_config.get("tools")
 
     # Default to LLM agent
-    return LLMAgent(
-        debug=debug,
-        model_name=model,
-        system_template=system_template,
-        action_template=action_template,
-        temperature=temperature,
-        skip_single=skip_single,
-        memory_config=memory_config,
-        tools=tools
-    )
-    
-def create_agent_from_id(agent_id: str, skip_single: bool = False, debug: bool = False) -> Optional[QuestPlayer]:
+    return LLMAgent(debug=debug,
+                    model_name=model,
+                    system_template=system_template,
+                    action_template=action_template,
+                    temperature=temperature,
+                    skip_single=skip_single,
+                    memory_config=memory_config,
+                    tools=tools)
+
+
+def create_agent_from_id(agent_id: str,
+                         skip_single: bool = False,
+                         debug: bool = False) -> Optional[QuestPlayer]:
     """Create an agent from a saved agent ID
-    
+
     Args:
         agent_id (str): Agent ID to load
         skip_single (bool): Auto-select single choices
         debug (bool): Enable debug logging
-        
+
     Returns:
         Optional[QuestPlayer]: Agent instance or None if not found
     """
     # Get agent configuration from agent manager
     agent_manager = AgentManager()
     agent_config = agent_manager.get_agent(agent_id)
-    
+
     if not agent_config:
         logger.error(f"Agent ID not found: {agent_id}")
         return None
-    
+
     # Create agent from config
-    return create_agent(
-        model=agent_config.model,
-        system_template=agent_config.system_template,
-        action_template=agent_config.action_template,
-        temperature=agent_config.temperature,
-        skip_single=skip_single,
-        debug=debug,
-        memory_config=agent_config.memory.dict() if agent_config.memory else None,
-        tools=agent_config.tools,
-        agent_config=agent_config.dict()
-    )
+    return create_agent(model=agent_config.model,
+                        system_template=agent_config.system_template,
+                        action_template=agent_config.action_template,
+                        temperature=agent_config.temperature,
+                        skip_single=skip_single,
+                        debug=debug,
+                        memory_config=agent_config.memory.dict() if agent_config.memory else None,
+                        tools=agent_config.tools,
+                        agent_config=agent_config.dict())

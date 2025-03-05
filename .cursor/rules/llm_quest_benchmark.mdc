@@ -1,6 +1,6 @@
 ---
 description: LLM Quest Benchmark Project
-globs: 
+globs:
 alwaysApply: false
 ---
 ################################################################################
@@ -32,7 +32,7 @@ TOOLS:
   - uv: Modern Python package manager (Required)
     - Usage: uv pip install [package]
     - Priority: 0 (Always use instead of pip)
-    - Notes: 
+    - Notes:
       - Use for all Python package operations
       - Keep uv.lock in version control
       - Use virtual environments managed by uv
@@ -46,7 +46,7 @@ TOOLS:
       - Debug output: Add debug context to task description
     - Priority: 2 (Use for complex analysis and debugging)
   - llm-quest: CLI tool for running and playing quests
-    - Usage: 
+    - Usage:
       - Run with LLM: `llm-quest run --quest <quest_path> --log-level <level>`
       - Play interactive: `llm-quest play --quest <quest_path> --log-level <level>`
       - Analyze results: `llm-quest analyze --metrics-file <metrics_file>`
