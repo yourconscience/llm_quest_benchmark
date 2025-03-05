@@ -47,6 +47,9 @@ dev = [
     "types-python-dateutil",
     "types-PyYAML",
     "pytest-flask>=1.3.0",
+    "pre-commit>=3.0.0",
+    "yapf>=0.40.0",
+    "isort>=5.12.0",
 ]
 
 [project.scripts]
@@ -63,3 +66,10 @@ packages = ["llm_quest_benchmark"]
     "web/templates/**/*.html",
     "web/static/**/*"
 ]
+
+[tool.yapf]
+based_on_style = "google"
+column_limit = 100
+indent_width = 4
+split_before_named_assigns = true
+split_complex_comprehension = true
