@@ -73,9 +73,9 @@ Enhance **LLM Quest Benchmark** to support advanced agents with memory and a bas
    - Update README with new features
 
 ## Next Steps
-- **Start Phase 1**: Add memory to schema and runner (raw history, max 10). Claude generates code; you review/test.
-- **Test Memory**: Run a sample quest needing history (e.g., recall a clue). Adjust based on results.
-- **Add Summarizer**: Implement Phase 2 with Claude summarizing 10+ states/actions. Test both history and summary modes.
-- **Integrate Tool**: Add calculator in Phase 3. Test with a quest requiring a calculation (e.g., "Add 5 and 3").
-- **Log Metrics**: Implement Phase 4 logging. Compare runs with/without memory/tools.
+- ✅ **Start Phase 1**: Add memory to schema and runner (raw history, max 10). Claude generates code; you review/test.
+- ✅ **Test Memory**: Run a sample quest needing history (e.g., recall a clue). Adjust based on results.
+- ✅ **Add Summarizer**: Implement Phase 2 with Claude summarizing 10+ states/actions. Test both history and summary modes.
+- ✅ **Integrate Tool**: Add calculator in Phase 3. Test with a quest requiring a calculation (e.g., "Add 5 and 3").
+- ✅ **Log Metrics**: Implement Phase 4 logging. Compare runs with/without memory/tools.
 - **Finalize**: Test all features in Phase 5, update README, and refine as needed.
