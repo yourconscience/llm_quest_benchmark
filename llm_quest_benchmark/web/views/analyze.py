@@ -24,19 +24,124 @@ class NoDataError(WebUIError):
 @bp.route('/')
 @handle_errors
 def index():
-    """Analysis page"""
-    # Get recent runs for display
-    recent_runs = Run.query.order_by(Run.start_time.desc()).limit(10).all()
+    """Analysis page with comprehensive filtering"""
+    # Get filter parameters
+    agent_id = request.args.get('agent_id', None)
+    quest_name = request.args.get('quest_name', None)
+    benchmark_id = request.args.get('benchmark_id', None)
+    outcome = request.args.get('outcome', None)
+    date_range = request.args.get('date_range', None)
+    memory_type = request.args.get('memory_type', None)
+    has_tools = request.args.get('has_tools', None)
+    sort_by = request.args.get('sort_by', 'start_time')
+    sort_dir = request.args.get('sort_dir', 'desc')
 
-    # Get available quest names
+    # Build query with filters
+    query = Run.query
+
+    if agent_id:
+        query = query.filter(Run.agent_id == agent_id)
+
+    if quest_name:
+        query = query.filter(Run.quest_name == quest_name)
+
+    if benchmark_id:
+        query = query.filter(Run.benchmark_id == benchmark_id)
+
+    if outcome:
+        query = query.filter(Run.outcome == outcome)
+
+    # Date range filtering
+    if date_range:
+        import datetime
+        today = datetime.datetime.now()
+        if date_range == 'today':
+            start_date = datetime.datetime(today.year, today.month, today.day)
+            query = query.filter(Run.start_time >= start_date)
+        elif date_range == 'week':
+            start_date = today - datetime.timedelta(days=7)
+            query = query.filter(Run.start_time >= start_date)
+        elif date_range == 'month':
+            start_date = today - datetime.timedelta(days=30)
+            query = query.filter(Run.start_time >= start_date)
+
+    # Memory type filtering
+    if memory_type:
+        if memory_type == 'message_history':
+            query = query.filter(
+                Run.agent_config.contains('{"memory": {"type": "message_history"}}'))
+        elif memory_type == 'summary':
+            query = query.filter(Run.agent_config.contains('{"memory": {"type": "summary"}}'))
+        elif memory_type == 'none':
+            # This is more complex - either memory doesn't exist or is null
+            # For SQLite this might be challenging with JSON, so we'll handle in Python
+            pass
+
+    # Tools filtering
+    if has_tools:
+        if has_tools == 'yes':
+            query = query.filter(Run.agent_config.contains('"tools":'))
+        elif has_tools == 'no':
+            # This is complex for SQLite with JSON, handle in Python
+            pass
+
+    # Apply sorting
+    if sort_by == 'start_time':
+        if sort_dir == 'asc':
+            query = query.order_by(Run.start_time.asc())
+        else:
+            query = query.order_by(Run.start_time.desc())
+    elif sort_by == 'agent_id':
+        if sort_dir == 'asc':
+            query = query.order_by(Run.agent_id.asc())
+        else:
+            query = query.order_by(Run.agent_id.desc())
+    elif sort_by == 'quest_name':
+        if sort_dir == 'asc':
+            query = query.order_by(Run.quest_name.asc())
+        else:
+            query = query.order_by(Run.quest_name.desc())
+
+    # Get the filtered runs (with pagination)
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    runs_pagination = query.paginate(page=page, per_page=per_page)
+    runs = runs_pagination.items
+
+    # Post-filter for complex conditions that SQLite can't handle with JSON
+    if memory_type == 'none' or has_tools == 'no':
+        filtered_runs = []
+        for run in runs:
+            include = True
+            config = run.agent_config or {}
+
+            if memory_type == 'none' and include:
+                # Check if run has no memory
+                memory = config.get('memory', None)
+                if memory is not None:
+                    include = False
+
+            if has_tools == 'no' and include:
+                # Check if run has no tools
+                tools = config.get('tools', [])
+                if tools and len(tools) > 0:
+                    include = False
+
+            if include:
+                filtered_runs.append(run)
+
+        runs = filtered_runs
+
+    # Get available filter options
     quest_names = db.session.query(Run.quest_name).distinct().all()
     quest_names = [q[0] for q in quest_names]
 
-    # Get agent types
     agent_types = db.session.query(Run.agent_id).distinct().all()
     agent_types = [a[0] for a in agent_types]
 
-    # Get success rates
+    benchmarks = BenchmarkRun.query.all()
+
+    # Get overall statistics
     stats = db.session.query(
         func.count(Run.id).label('total_runs'),
         func.sum(case((Run.outcome == 'SUCCESS', 1), else_=0)).label('successes')).first()
@@ -45,16 +150,27 @@ def index():
     if stats and stats.total_runs > 0:
         success_rate = float(stats.successes / stats.total_runs) * 100
 
-    # Get recent benchmarks
-    recent_benchmarks = BenchmarkRun.query.order_by(BenchmarkRun.start_time.desc()).limit(5).all()
-
-    return render_template('analyze/index.html',
-                           recent_runs=recent_runs,
-                           quest_names=quest_names,
-                           agent_types=agent_types,
-                           total_runs=stats.total_runs if stats else 0,
-                           success_rate=success_rate,
-                           recent_benchmarks=recent_benchmarks)
+    return render_template(
+        'analyze/index.html',
+        runs=runs,
+        pagination=runs_pagination,
+        quest_names=quest_names,
+        agent_types=agent_types,
+        benchmarks=benchmarks,
+        total_runs=stats.total_runs if stats else 0,
+        success_rate=success_rate,
+        # Current filter state
+        filters={
+            'agent_id': agent_id,
+            'quest_name': quest_name,
+            'benchmark_id': benchmark_id,
+            'outcome': outcome,
+            'date_range': date_range,
+            'memory_type': memory_type,
+            'has_tools': has_tools,
+            'sort_by': sort_by,
+            'sort_dir': sort_dir
+        })
 
 
 @bp.route('/summary')
@@ -137,7 +253,7 @@ def step_analysis():
 @bp.route('/run/<int:run_id>')
 @handle_errors
 def run_details(run_id):
-    """Show detailed analysis for a specific run"""
+    """Show detailed analysis for a specific run with memory and tool usage"""
     run = Run.query.get_or_404(run_id)
     steps = Step.query.filter_by(run_id=run_id).order_by(Step.step).all()
 
@@ -156,12 +272,65 @@ def run_details(run_id):
         if step.choices and len(step.choices) > 1:
             decision_points += 1
 
+    # Extract memory configuration
+    memory_info = None
+    if run.agent_config and 'memory' in run.agent_config:
+        memory_info = run.agent_config['memory']
+
+    # Extract tools configuration
+    tools_info = None
+    if run.agent_config and 'tools' in run.agent_config:
+        tools_info = run.agent_config['tools']
+
+    # Calculate average response time if not already stored
+    avg_response_time = run.response_time
+    if not avg_response_time and steps:
+        # We don't have direct timing for each step, so we estimate from the overall time
+        if total_time and total_steps > 0:
+            avg_response_time = total_time / total_steps
+
+    # Calculate efficiency score if not already stored
+    efficiency_score = run.efficiency_score
+    if not efficiency_score:
+        if run.reward is not None and total_steps > 0:
+            # Higher reward with fewer steps = more efficient
+            efficiency_score = (run.reward / total_steps) * 100
+
+    # Extract tool usage from LLM responses
+    tool_usage_count = run.tool_usage_count
+    if not tool_usage_count:
+        tool_usage_count = 0
+        for step in steps:
+            if step.llm_response and isinstance(step.llm_response, dict):
+                if 'tool_calls' in step.llm_response and step.llm_response['tool_calls']:
+                    tool_usage_count += len(step.llm_response['tool_calls'])
+
+    # Update run record with calculated metrics if they weren't already set
+    if (not run.response_time and avg_response_time) or \
+       (not run.efficiency_score and efficiency_score) or \
+       (not run.tool_usage_count and tool_usage_count):
+        try:
+            if not run.response_time and avg_response_time:
+                run.response_time = avg_response_time
+            if not run.efficiency_score and efficiency_score:
+                run.efficiency_score = efficiency_score
+            if not run.tool_usage_count and tool_usage_count:
+                run.tool_usage_count = tool_usage_count
+            db.session.commit()
+        except Exception as e:
+            logger.warning(f"Could not update run metrics: {e}")
+
     return render_template('analyze/run_details.html',
                            run=run,
                            steps=steps,
                            total_steps=total_steps,
                            total_time=total_time,
-                           decision_points=decision_points)
+                           decision_points=decision_points,
+                           memory_info=memory_info,
+                           tools_info=tools_info,
+                           avg_response_time=avg_response_time,
+                           efficiency_score=efficiency_score,
+                           tool_usage_count=tool_usage_count)
 
 
 @bp.route('/quest/<path:quest_name>')

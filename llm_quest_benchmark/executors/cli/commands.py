@@ -43,6 +43,7 @@ from llm_quest_benchmark.core.logging import LogManager
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.benchmark import print_summary, run_benchmark
+from llm_quest_benchmark.executors.cli.leaderboard import display_agent_details, display_leaderboard
 from llm_quest_benchmark.renderers.terminal import RichRenderer
 from llm_quest_benchmark.schemas.agent import AgentConfig as AgentSchema
 from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
@@ -1595,6 +1596,13 @@ metrics_app = typer.Typer(
 )
 app.add_typer(metrics_app, name="metrics")
 
+# Create leaderboard command group
+leaderboard_app = typer.Typer(
+    help="Leaderboard and agent performance comparison",
+    rich_markup_mode="rich",
+)
+app.add_typer(leaderboard_app, name="leaderboard")
+
 
 @metrics_app.command(name="report")
 def generate_metrics_report(export: Optional[Path] = typer.Option(
@@ -1672,6 +1680,99 @@ def generate_metrics_report(export: Optional[Path] = typer.Option(
     except Exception as e:
         log.exception(f"Error generating metrics report: {e}")
         typer.echo(f"Error generating metrics report: {str(e)}", err=True)
+        raise typer.Exit(code=1)
+
+
+# Leaderboard commands
+@leaderboard_app.command(name="show")
+def show_leaderboard(
+        db: Path = typer.Option("metrics.db", help="Path to SQLite database."),
+        benchmark: Optional[str] = typer.Option(None, help="Filter by benchmark ID"),
+        quest: Optional[str] = typer.Option(None, help="Filter by quest type/name"),
+        date: Optional[str] = typer.Option(None, help="Filter by date range (today, week, month)"),
+        agent: Optional[str] = typer.Option(None, help="Filter by agent ID"),
+        memory: Optional[str] = typer.Option(
+            None, help="Filter by memory type (message_history, summary)"),
+        tool: Optional[List[str]] = typer.Option(None, help="Filter by tools used"),
+        sort: str = typer.Option(
+            "success_rate",
+            help="Sort by field (success_rate, avg_reward, avg_steps, efficiency_score)"),
+        order: str = typer.Option("desc", help="Sort order (asc, desc)"),
+        export: Optional[Path] = typer.Option(None, help="Export results to JSON file"),
+        format: str = typer.Option("table", help="Output format (table, json, compact)"),
+):
+    """Display agent leaderboard with filtering and sorting options.
+
+    This command shows agent performance stats across all runs, with options to filter by
+    benchmark, quest, date range, agent, memory type, and tools used.
+
+    Example:
+        llm-quest leaderboard show                      # Show all agents
+        llm-quest leaderboard show --benchmark first    # Filter by benchmark ID
+        llm-quest leaderboard show --date week          # Show only runs from this week
+        llm-quest leaderboard show --memory summary     # Show only agents using summary memory
+        llm-quest leaderboard show --sort avg_steps --order asc  # Sort by fewest steps
+    """
+    try:
+        # Validate database exists
+        if not db.exists():
+            typer.echo(f"Database not found: {db}", err=True)
+            raise typer.Exit(code=1)
+
+        # Display leaderboard
+        display_leaderboard(
+            db_path=db,
+            benchmark_id=benchmark,
+            quest_type=quest,
+            date_range=date,
+            agent_id=agent,
+            memory_type=memory,
+            tools=tool,
+            sort_by=sort,
+            sort_order=order,
+            export=export,
+            format=format,
+        )
+
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.exception(f"Error displaying leaderboard: {e}")
+        typer.echo(f"Error: {str(e)}", err=True)
+        raise typer.Exit(code=1)
+
+
+@leaderboard_app.command(name="agent")
+def show_agent_leaderboard(
+        agent_id: str = typer.Argument(..., help="Agent ID to analyze"),
+        db: Path = typer.Option("metrics.db", help="Path to SQLite database."),
+        export: Optional[Path] = typer.Option(None, help="Export results to JSON file"),
+):
+    """Display detailed performance statistics for a specific agent.
+
+    This command provides in-depth analysis of an agent's performance across
+    all quests, with per-quest statistics and recent run history.
+
+    Example:
+        llm-quest leaderboard agent gpt-4o-agent
+        llm-quest leaderboard agent summary-agent --export summary-agent-stats.json
+    """
+    try:
+        # Validate database exists
+        if not db.exists():
+            typer.echo(f"Database not found: {db}", err=True)
+            raise typer.Exit(code=1)
+
+        # Display agent details
+        display_agent_details(
+            db_path=db,
+            agent_id=agent_id,
+            export=export,
+        )
+
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.exception(f"Error displaying agent details: {e}")
+        typer.echo(f"Error: {str(e)}", err=True)
         raise typer.Exit(code=1)
 
 

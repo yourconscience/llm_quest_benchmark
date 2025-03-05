@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}Agent Details: {{ agent_id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1>Agent Details: {{ agent_id }}</h1>
+
+  <div class="mb-3">
+    <a href="{{ url_for('leaderboard.index') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Leaderboard
+    </a>
+    <a href="{{ url_for('leaderboard.agent_api', agent_id=agent_id) }}" class="btn btn-outline-secondary">
+      <i class="fas fa-download"></i> Export JSON
+    </a>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Agent Configuration</h5>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-4">Model</dt>
+            <dd class="col-sm-8">{{ agent_config.model }}</dd>
+
+            <dt class="col-sm-4">Temperature</dt>
+            <dd class="col-sm-8">{{ agent_config.temperature }}</dd>
+
+            <dt class="col-sm-4">Memory Type</dt>
+            <dd class="col-sm-8">
+              {% if agent_config.memory %}
+              {{ agent_config.memory.type }}
+              <small class="text-muted">({{ agent_config.memory.max_history }} entries)</small>
+              {% else %}
+              None
+              {% endif %}
+            </dd>
+
+            <dt class="col-sm-4">Tools</dt>
+            <dd class="col-sm-8">
+              {% for tool in agent_config.tools %}
+              <span class="badge bg-dark">{{ tool }}</span>
+              {% else %}
+              None
+              {% endfor %}
+            </dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Performance Summary</h5>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-6">Success Rate</dt>
+            <dd class="col-sm-6">{{ (stats.success_rate * 100)|round(1) }}%</dd>
+
+            <dt class="col-sm-6">Average Reward</dt>
+            <dd class="col-sm-6">{{ stats.avg_reward|round(1) }}</dd>
+
+            <dt class="col-sm-6">Average Steps</dt>
+            <dd class="col-sm-6">{{ stats.avg_steps|round(1) }}</dd>
+
+            <dt class="col-sm-6">Efficiency Score</dt>
+            <dd class="col-sm-6">{{ stats.efficiency_score|round(1) }}</dd>
+
+            <dt class="col-sm-6">Total Runs</dt>
+            <dd class="col-sm-6">{{ stats.total_runs }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Performance by Quest</h5>
+        </div>
+        <div class="card-body">
+          {% if quest_stats %}
+          <canvas id="questPerformanceChart"></canvas>
+          <div class="table-responsive mt-4">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Quest</th>
+                  <th>Runs</th>
+                  <th>Success Rate</th>
+                  <th>Avg Reward</th>
+                  <th>Avg Steps</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for quest in quest_stats %}
+                <tr>
+                  <td>{{ quest.quest }}</td>
+                  <td>{{ quest.runs }}</td>
+                  <td>{{ (quest.success_rate * 100)|round(1) }}%</td>
+                  <td>{{ quest.avg_reward|round(1) }}</td>
+                  <td>{{ quest.avg_steps|round(1) }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="alert alert-info">No quest data available for this agent.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Recent Runs</h5>
+        </div>
+        <div class="card-body">
+          {% if recent_runs %}
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Quest</th>
+                  <th>Date</th>
+                  <th>Outcome</th>
+                  <th>Reward</th>
+                  <th>Steps</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for run in recent_runs %}
+                <tr>
+                  <td>{{ run.quest_name }}</td>
+                  <td>{{ run.start_time[:16] if run.start_time else 'Unknown' }}</td>
+                  <td>
+                    {% if run.outcome == 'SUCCESS' %}
+                    <span class="badge bg-success">Success</span>
+                    {% elif run.outcome == 'FAILURE' %}
+                    <span class="badge bg-danger">Failure</span>
+                    {% elif run.outcome == 'ERROR' %}
+                    <span class="badge bg-warning text-dark">Error</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ run.outcome }}</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ run.reward|round(1) if run.reward else 0 }}</td>
+                  <td>{{ run.step_count if run.step_count else (run.steps|length if run.steps else 0) }}</td>
+                  <td>
+                    <a href="{{ url_for('analyze.run_details', run_id=run.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="text-center mt-3">
+            <a href="{{ url_for('analyze.index', agent_id=agent_id) }}" class="btn btn-primary">View All Runs</a>
+          </div>
+          {% else %}
+          <div class="alert alert-info">No recent runs available for this agent.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  {% if quest_stats %}
+  // Quest performance chart
+  const quests = {{ quest_stats|map(attribute='quest')|list|tojson }};
+  const successRates = {{ quest_stats|map(attribute='success_rate')|list|tojson }};
+  const successPercents = successRates.map(rate => rate * 100);
+
+  const ctx = document.getElementById('questPerformanceChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: quests,
+      datasets: [{
+        label: 'Success Rate (%)',
+        data: successPercents,
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Success Rate (%)'
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Quest'
+          }
+        }
+      }
+    }
+  });
+  {% endif %}
+</script>
+{% endblock %}

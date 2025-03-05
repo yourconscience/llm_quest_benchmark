@@ -33,6 +33,7 @@ def create_app():
         pass
 
     # Initialize database
+    from .migrations import run_migrations
     from .models.database import (
         db,
         export_benchmarks_to_file,
@@ -41,12 +42,16 @@ def create_app():
         import_runs_from_file,
         init_db,
     )
+
     app.config['DATABASE'] = f'{workspace_root}/instance/llm_quest.sqlite'
 
     # Initialize database with proper schema
     db.init_app(app)
     with app.app_context():
         db.create_all()
+
+    # Run migrations to upgrade existing databases
+    run_migrations(app)
 
     # Register database backup on app shutdown
     @app.teardown_appcontext
@@ -78,11 +83,13 @@ def create_app():
     # Register blueprints
     from .views.analyze import bp as analyze_bp
     from .views.benchmark import bp as benchmark_bp
+    from .views.leaderboard import bp as leaderboard_bp
     from .views.monitor import bp as monitor_bp
 
     app.register_blueprint(monitor_bp)
     app.register_blueprint(benchmark_bp)
     app.register_blueprint(analyze_bp)
+    app.register_blueprint(leaderboard_bp)
 
     @app.route('/')
     def index():

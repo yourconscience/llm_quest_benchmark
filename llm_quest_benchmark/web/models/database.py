@@ -52,6 +52,14 @@ class Run(db.Model):
     outcome = db.Column(db.String(50))
     reward = db.Column(db.Float, nullable=True)
     benchmark_id = db.Column(db.String(64), nullable=True)  # Link to benchmark run if part of one
+
+    # New fields for leaderboard functionality
+    response_time = db.Column(db.Float, nullable=True)  # Average response time in seconds
+    token_usage = db.Column(db.Integer, nullable=True)  # Token count for the run
+    tool_usage_count = db.Column(db.Integer, nullable=True)  # Number of tool usages
+    efficiency_score = db.Column(db.Float,
+                                 nullable=True)  # Custom score based on steps/reward ratio
+
     steps = db.relationship('Step', backref='run', lazy=True)
 
     def to_dict(self):
@@ -66,7 +74,11 @@ class Run(db.Model):
             'agent_config': self.agent_config,
             'outcome': self.outcome,
             'reward': self.reward,
-            'benchmark_id': self.benchmark_id
+            'benchmark_id': self.benchmark_id,
+            'response_time': self.response_time,
+            'token_usage': self.token_usage,
+            'tool_usage_count': self.tool_usage_count,
+            'efficiency_score': self.efficiency_score
         }
 
 
@@ -169,7 +181,11 @@ def import_runs_from_file(app):
                               if run_data.get('end_time') else None,
                               outcome=run_data.get('outcome'),
                               reward=run_data.get('reward'),
-                              benchmark_id=run_data.get('benchmark_id'))
+                              benchmark_id=run_data.get('benchmark_id'),
+                              response_time=run_data.get('response_time'),
+                              token_usage=run_data.get('token_usage'),
+                              tool_usage_count=run_data.get('tool_usage_count'),
+                              efficiency_score=run_data.get('efficiency_score'))
                     db.session.add(run)
                     db.session.flush()  # Get ID without committing
                     run_id_map[run_data['id']] = run.id
@@ -232,7 +248,11 @@ def export_runs_to_file(app):
                     'end_time': run.end_time.isoformat() if run.end_time else None,
                     'outcome': run.outcome,
                     'reward': run.reward,
-                    'benchmark_id': run.benchmark_id
+                    'benchmark_id': run.benchmark_id,
+                    'response_time': run.response_time,
+                    'token_usage': run.token_usage,
+                    'tool_usage_count': run.tool_usage_count,
+                    'efficiency_score': run.efficiency_score
                 }
                 run_data.append(run_dict)
 

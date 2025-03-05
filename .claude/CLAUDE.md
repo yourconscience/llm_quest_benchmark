@@ -27,7 +27,7 @@ This repository is organized with clear documentation in the `.claude` directory
 - Run with LLM: `llm-quest run --quest quests/Boat.qm --model gpt-4o --debug`
 - Run benchmark: `llm-quest benchmark --config configs/test_benchmark.yaml`
 - Play interactive: `llm-quest play --quest quests/boat.qm --skip`
-- Start web interface: `llm-quest web`
+- Start web interface: `llm-quest server`
 - Analyze results: `llm-quest analyze`
 - Check code quality: `pre-commit run --all-files`
 
@@ -100,3 +100,57 @@ This repository is organized with clear documentation in the `.claude` directory
 - Thread-safe database connections for metrics recording
 - Schema migration support for database upgrades
 - JSON export functionality for completed runs
+
+## Current Development Tasks
+- **Leaderboard Implementation (Phase 1 - Done)**:
+  - ✅ Added database schema fields (response_time, token_usage, tool_usage_count, efficiency_score)
+  - ✅ Created shared leaderboard service layer
+  - ✅ Implemented CLI interface with new 'leaderboard' command
+  - ✅ Added web interface with filtering and sorting
+  - ✅ Added agent detail views for both CLI and web
+
+## Shared Implementation Architecture
+Implemented a shared service layer pattern using:
+
+1. Core service: `LeaderboardService` class in `services/leaderboard.py`
+   - Contains business logic for both CLI and web
+   - Implemented interface-agnostic data processing and analysis
+
+2. Database abstraction: `DBConnector` abstract class
+   - `SQLiteConnector`: Used by CLI commands
+   - `SQLAlchemyConnector`: Used by web interface
+   - Allows sharing business logic while using the appropriate DB access
+
+3. Interface implementations:
+   - CLI: `executors/cli/leaderboard.py` with typer commands
+   - Web: `web/views/leaderboard.py` with Flask routes
+
+4. Visuals:
+   - CLI: Rich tables for console display
+   - Web: Bootstrap + Chart.js for browser display
+
+### Key Files Added/Modified
+- `/llm_quest_benchmark/services/leaderboard.py`: Core business logic
+- `/llm_quest_benchmark/services/db_connectors.py`: Database abstraction
+- `/llm_quest_benchmark/executors/cli/leaderboard.py`: CLI integration
+- `/llm_quest_benchmark/web/views/leaderboard.py`: Web routes
+- `/llm_quest_benchmark/web/templates/leaderboard/`: Web templates
+
+### CLI Leaderboard Usage
+```
+# Show agent leaderboard with default sorting
+llm-quest leaderboard show
+
+# Filter by benchmark and sort by efficiency
+llm-quest leaderboard show --benchmark first --sort efficiency_score
+
+# Show details for a specific agent
+llm-quest leaderboard agent my-agent-id
+```
+
+### Next Steps
+- **Leaderboard Phase 2**:
+  - Add more visualizations for comparative analysis
+  - Implement A/B testing view
+  - Add statistical significance indicators
+  - Create automated leaderboard reports

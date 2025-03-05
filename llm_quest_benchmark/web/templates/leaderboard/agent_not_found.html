@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Agent Not Found{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header bg-warning">
+      <h3>Agent Not Found</h3>
+    </div>
+    <div class="card-body">
+      <p>The agent "{{ agent_id }}" was not found in the database.</p>
+      <p>This could be because:</p>
+      <ul>
+        <li>The agent ID is incorrect</li>
+        <li>The agent has not been used in any runs</li>
+        <li>The database does not contain any runs for this agent</li>
+      </ul>
+
+      <a href="{{ url_for('leaderboard.index') }}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Return to Leaderboard
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

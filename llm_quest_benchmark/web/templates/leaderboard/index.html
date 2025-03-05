@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+
+{% block title %}Agent Leaderboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1>Agent Leaderboard</h1>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Filters</h5>
+    </div>
+    <div class="card-body">
+      <form id="filter-form" method="get" action="{{ url_for('leaderboard.index') }}">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="benchmark">Benchmark</label>
+              <select class="form-control" id="benchmark" name="benchmark">
+                <option value="">All Benchmarks</option>
+                {% for benchmark in benchmarks %}
+                <option value="{{ benchmark.benchmark_id }}" {% if current_filters.benchmark == benchmark.benchmark_id %}selected{% endif %}>
+                  {{ benchmark.name or benchmark.benchmark_id }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="quest_type">Quest</label>
+              <select class="form-control" id="quest_type" name="quest_type">
+                <option value="">All Quests</option>
+                {% for quest in quest_names %}
+                <option value="{{ quest }}" {% if current_filters.quest_type == quest %}selected{% endif %}>
+                  {{ quest }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="date_range">Date Range</label>
+              <select class="form-control" id="date_range" name="date_range">
+                <option value="">All Time</option>
+                <option value="today" {% if current_filters.date_range == 'today' %}selected{% endif %}>Today</option>
+                <option value="week" {% if current_filters.date_range == 'week' %}selected{% endif %}>This Week</option>
+                <option value="month" {% if current_filters.date_range == 'month' %}selected{% endif %}>This Month</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="agent_id">Agent</label>
+              <select class="form-control" id="agent_id" name="agent_id">
+                <option value="">All Agents</option>
+                {% for agent in agent_ids %}
+                <option value="{{ agent }}" {% if current_filters.agent_id == agent %}selected{% endif %}>
+                  {{ agent }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="memory_type">Memory Type</label>
+              <select class="form-control" id="memory_type" name="memory_type">
+                <option value="">All Memory Types</option>
+                <option value="message_history" {% if current_filters.memory_type == 'message_history' %}selected{% endif %}>Message History</option>
+                <option value="summary" {% if current_filters.memory_type == 'summary' %}selected{% endif %}>Summary</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="tool">Tools</label>
+              <select class="form-control" id="tool" name="tool">
+                <option value="">All Tools</option>
+                <option value="calculator" {% if current_filters.tool == 'calculator' %}selected{% endif %}>Calculator</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="sort">Sort By</label>
+              <select class="form-control" id="sort" name="sort">
+                <option value="success_rate" {% if current_filters.sort == 'success_rate' %}selected{% endif %}>Success Rate</option>
+                <option value="avg_reward" {% if current_filters.sort == 'avg_reward' %}selected{% endif %}>Average Reward</option>
+                <option value="avg_steps" {% if current_filters.sort == 'avg_steps' %}selected{% endif %}>Average Steps</option>
+                <option value="efficiency_score" {% if current_filters.sort == 'efficiency_score' %}selected{% endif %}>Efficiency Score</option>
+                <option value="runs_count" {% if current_filters.sort == 'runs_count' %}selected{% endif %}>Number of Runs</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="order">Order</label>
+              <select class="form-control" id="order" name="order">
+                <option value="desc" {% if current_filters.order == 'desc' %}selected{% endif %}>Descending</option>
+                <option value="asc" {% if current_filters.order == 'asc' %}selected{% endif %}>Ascending</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <div class="col-md-12 d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+            <a href="{{ url_for('leaderboard.index') }}" class="btn btn-secondary">Reset Filters</a>
+            <div>
+              <a href="{{ url_for('leaderboard.leaderboard_api', format='csv') }}" class="btn btn-outline-secondary">Export CSV</a>
+              <a href="{{ url_for('leaderboard.leaderboard_api') }}" class="btn btn-outline-secondary">Export JSON</a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Leaderboard Table -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Leaderboard Results</h5>
+      <span class="text-muted">{{ entries|length }} agents found</span>
+    </div>
+    <div class="card-body">
+      {% if entries %}
+      <div class="table-responsive">
+        <table class="table table-striped table-hover" id="leaderboard-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>
+                <a href="{{ url_for('leaderboard.index', sort='agent_id', order='asc' if current_filters.sort == 'agent_id' and current_filters.order == 'desc' else 'desc') }}">
+                  Agent
+                  {% if current_filters.sort == 'agent_id' %}
+                    <i class="fas fa-sort-{{ 'down' if current_filters.order == 'desc' else 'up' }}"></i>
+                  {% endif %}
+                </a>
+              </th>
+              <th>
+                <a href="{{ url_for('leaderboard.index', sort='model', order='asc' if current_filters.sort == 'model' and current_filters.order == 'desc' else 'desc') }}">
+                  Model
+                  {% if current_filters.sort == 'model' %}
+                    <i class="fas fa-sort-{{ 'down' if current_filters.order == 'desc' else 'up' }}"></i>
+                  {% endif %}
+                </a>
+              </th>
+              <th>
+                <a href="{{ url_for('leaderboard.index', sort='success_rate', order='asc' if current_filters.sort == 'success_rate' and current_filters.order == 'desc' else 'desc') }}">
+                  Success Rate
+                  {% if current_filters.sort == 'success_rate' %}
+                    <i class="fas fa-sort-{{ 'down' if current_filters.order == 'desc' else 'up' }}"></i>
+                  {% endif %}
+                </a>
+              </th>
+              <th>
+                <a href="{{ url_for('leaderboard.index', sort='avg_reward', order='asc' if current_filters.sort == 'avg_reward' and current_filters.order == 'desc' else 'desc') }}">
+                  Avg Reward
+                  {% if current_filters.sort == 'avg_reward' %}
+                    <i class="fas fa-sort-{{ 'down' if current_filters.order == 'desc' else 'up' }}"></i>
+                  {% endif %}
+                </a>
+              </th>
+              <th>
+                <a href="{{ url_for('leaderboard.index', sort='avg_steps', order='asc' if current_filters.sort == 'avg_steps' and current_filters.order == 'desc' else 'desc') }}">
+                  Avg Steps
+                  {% if current_filters.sort == 'avg_steps' %}
+                    <i class="fas fa-sort-{{ 'down' if current_filters.order == 'desc' else 'up' }}"></i>
+                  {% endif %}
+                </a>
+              </th>
+              <th>
+                <a href="{{ url_for('leaderboard.index', sort='efficiency_score', order='asc' if current_filters.sort == 'efficiency_score' and current_filters.order == 'desc' else 'desc') }}">
+                  Efficiency Score
+                  {% if current_filters.sort == 'efficiency_score' %}
+                    <i class="fas fa-sort-{{ 'down' if current_filters.order == 'desc' else 'up' }}"></i>
+                  {% endif %}
+                </a>
+              </th>
+              <th>Memory</th>
+              <th>Tools</th>
+              <th>
+                <a href="{{ url_for('leaderboard.index', sort='runs_count', order='asc' if current_filters.sort == 'runs_count' and current_filters.order == 'desc' else 'desc') }}">
+                  Runs
+                  {% if current_filters.sort == 'runs_count' %}
+                    <i class="fas fa-sort-{{ 'down' if current_filters.order == 'desc' else 'up' }}"></i>
+                  {% endif %}
+                </a>
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in entries %}
+            <tr {% if loop.index <= 3 %}class="table-success"{% endif %}>
+              <td>{{ loop.index }}</td>
+              <td>{{ entry.agent_id }}</td>
+              <td>{{ entry.model }}</td>
+              <td>
+                <div class="progress" style="height: 20px;">
+                  <div class="progress-bar bg-success" role="progressbar"
+                       style="width: {{ (entry.success_rate * 100)|round }}%;"
+                       aria-valuenow="{{ (entry.success_rate * 100)|round }}"
+                       aria-valuemin="0" aria-valuemax="100">
+                    {{ (entry.success_rate * 100)|round }}%
+                  </div>
+                </div>
+              </td>
+              <td>{{ entry.avg_reward|round(1) }}</td>
+              <td>{{ entry.avg_steps|round(1) }}</td>
+              <td>{{ entry.efficiency_score|round(1) }}</td>
+              <td>
+                {% if entry.memory_type == 'message_history' %}
+                <span class="badge bg-primary">History</span>
+                {% elif entry.memory_type == 'summary' %}
+                <span class="badge bg-info">Summary</span>
+                {% else %}
+                <span class="badge bg-secondary">None</span>
+                {% endif %}
+              </td>
+              <td>
+                {% for tool in entry.tools_used %}
+                <span class="badge bg-dark">{{ tool }}</span>
+                {% else %}
+                <span class="badge bg-light text-dark">None</span>
+                {% endfor %}
+              </td>
+              <td>{{ entry.runs_count }}</td>
+              <td>
+                <a href="{{ url_for('leaderboard.agent_detail', agent_id=entry.agent_id) }}" class="btn btn-sm btn-outline-primary">Details</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-info">
+        No results found for the current filters. Try adjusting your filter criteria.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if entries|length >= 2 %}
+  <!-- Charts Section -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Success Rate by Model</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="modelSuccessChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Memory Type Comparison</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="memoryComparisonChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  {% if entries|length >= 2 %}
+  // Chart data preparation
+  const modelData = {};
+  const memoryData = {
+    'message_history': {count: 0, success_sum: 0},
+    'summary': {count: 0, success_sum: 0},
+    'none': {count: 0, success_sum: 0}
+  };
+
+  // Process entries for charts
+  {% for entry in entries %}
+    // Process model data
+    const model = "{{ entry.model }}";
+    if (!modelData[model]) {
+      modelData[model] = {count: 0, success_sum: 0};
+    }
+    modelData[model].count += 1;
+    modelData[model].success_sum += {{ entry.success_rate }};
+
+    // Process memory data
+    const memory = "{{ entry.memory_type or 'none' }}";
+    if (!memoryData[memory]) {
+      memoryData[memory] = {count: 0, success_sum: 0};
+    }
+    memoryData[memory].count += 1;
+    memoryData[memory].success_sum += {{ entry.success_rate }};
+  {% endfor %}
+
+  // Calculate averages for models
+  const modelLabels = Object.keys(modelData);
+  const modelSuccessRates = modelLabels.map(model =>
+    (modelData[model].success_sum / modelData[model].count) * 100
+  );
+
+  // Calculate averages for memory types
+  const memoryLabels = Object.keys(memoryData).filter(m => memoryData[m].count > 0);
+  const memorySuccessRates = memoryLabels.map(memory =>
+    (memoryData[memory].success_sum / memoryData[memory].count) * 100
+  );
+
+  // Model Success Chart
+  const modelCtx = document.getElementById('modelSuccessChart').getContext('2d');
+  new Chart(modelCtx, {
+    type: 'bar',
+    data: {
+      labels: modelLabels,
+      datasets: [{
+        label: 'Success Rate (%)',
+        data: modelSuccessRates,
+        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Success Rate (%)'
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Model'
+          }
+        }
+      }
+    }
+  });
+
+  // Memory comparison chart
+  const memoryCtx = document.getElementById('memoryComparisonChart').getContext('2d');
+  new Chart(memoryCtx, {
+    type: 'bar',
+    data: {
+      labels: memoryLabels.map(m => m === 'message_history' ? 'History' : (m === 'summary' ? 'Summary' : 'None')),
+      datasets: [{
+        label: 'Success Rate (%)',
+        data: memorySuccessRates,
+        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Success Rate (%)'
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Memory Type'
+          }
+        }
+      }
+    }
+  });
+  {% endif %}
+</script>
+{% endblock %}
