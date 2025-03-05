@@ -12,6 +12,7 @@ This repository is organized with clear documentation in the `.claude` directory
 - **QM First**: Focus on Space Rangers quest experience
 - **Developer Experience**: Prioritize testing, logging, and debugging
 - **Minimal Dependencies**: Focus on essential tools and libraries
+- **Data-Driven Analysis**: Prioritize metrics collection and visualization
 
 ## Git Workflow
 - Use concise, descriptive commit messages (one line preferred)

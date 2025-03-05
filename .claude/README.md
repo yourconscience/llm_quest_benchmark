@@ -9,6 +9,7 @@ This directory contains structured documentation to help Claude Code effectively
   - `repo_structure.md`: Repository structure and organization
   - `code_patterns.md`: Common code patterns and examples
   - `cli_commands.md`: Command-line interface reference
+  - `leaderboard_implementation.md`: Detailed implementation plan for the leaderboard feature
 
 ## Using with Claude Code
 
@@ -32,3 +33,13 @@ When making significant changes to the codebase:
 - Easily searchable with `rg` (ripgrep)
 - Separate guides for different aspects of the codebase
 - Loadable via a simple shell script
+
+## Current Project Focus
+
+We are implementing a comprehensive leaderboard feature to:
+1. Create a unified view for analyzing all runs (benchmark and individual runs)
+2. Add a dedicated leaderboard for agent performance comparison
+3. Enhance metrics collection and visualization
+4. Add filtering and sorting capabilities
+
+The implementation details can be found in `guides/leaderboard_implementation.md`.

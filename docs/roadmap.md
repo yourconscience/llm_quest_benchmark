@@ -1,81 +1,120 @@
 # LLM Quest Benchmark Roadmap
 
 ## Core Concept
-Enhance **LLM Quest Benchmark** to support advanced agents with memory and a basic tool, using cloud LLMs (Claude, OpenAI, Google), keeping it simple for solo architect (me) and Claude (Sonnet 3.7) as programmer.
+Enhance **LLM Quest Benchmark** to support advanced agents with memory and tools, using cloud LLMs (Claude, OpenAI, Google), keeping it simple for solo architect (me) and Claude (Sonnet 3.7) as programmer.
 
-## Implementation Details
+## Current Progress
 
-### Agent Storage
-- **Format**: JSON files in `agents/` (e.g., `agents/agent_id.json`)
-- **Schema**:
-  - `agent_id`: "advanced-agent"
-  - `model`: "claude-3-sonnet" (supports Claude/OpenAI/Google)
-  - `temperature`: 0.7
-  - `system_template`: "You are an adventurer in a text-based quest."
-  - `action_template`: "Based on state: {{state}}, I will {{action}}"
-  - `memory`:
-    - `type`: "message_history" | "summary" (raw history or summarized)
-    - `max_history`: 10 (adjustable, 10+)
-  - `tools`: ["calculator"] (single tool for simplicity)
+### Completed Features
+- ✅ **Agent Configuration Storage**: JSON files in `agents/` directory with standardized schema
+- ✅ **Memory System**: Support for both raw message history and summarized history
+- ✅ **Tool Integration**: Basic calculator tool implementation
+- ✅ **Agent Management Commands**: CLI for managing agent configurations
+- ✅ **Web Interface Updates**: Support for memory and tool configuration
+- ✅ **Metrics Logging**: Recording completion rates, steps taken, and other metrics
+- ✅ **Database Persistence**: Backup/restore system for metrics database
 
-### CLI Commands
-- **Existing**:
-  - `llm-quest agents list`
-  - `llm-quest agents show <agent_id>`
-  - `llm-quest agents new [--yaml config.yaml]`
-  - `llm-quest agents edit <agent_id>`
-  - `llm-quest agents delete <agent_id>`
-- **New**:
-  - `llm-quest agents set-memory <agent_id> <type> <max_history>`: Set memory type and size (e.g., "summary 10")
-  - `llm-quest agents add-tool <agent_id> calculator`: Add calculator tool
-  - `llm-quest agents remove-tool <agent_id> calculator`: Remove calculator tool
+## Next Steps: Leaderboard & Analytics Enhancement
 
-### Web Interface
-- **Updates**:
-  - Add memory type dropdown ("message_history", "summary") and `max_history` field (default: 10)
-  - Add calculator tool checkbox
+### Phase 1: Unified Run Analytics
 
-### Code Refactoring
-- **Runner**:
-  - Pass memory (raw history or summary) to agent input
-  - Handle calculator tool with mock response (e.g., "Result: 42")
-- **Summarizer**:
-  - If `memory.type = "summary"`, use a cloud LLM to generate a concise summary of last 10+ states/actions
+1. **Refactor Run Analysis View**
+   - Update `/analyze` view to show ALL runs regardless of source (benchmark or manual)
+   - Add filtering options by agent, quest, date range, and success status
+   - Improve sorting capabilities (by date, steps, reward, etc.)
+   - Enhance search functionality to find specific runs
 
-### Quest Environment
-- Include memory (history or summary) in agent input
-- Support calculator tool call with predefined response
+2. **Improve Run Details Display**
+   - Add memory usage information to run details
+   - Show tool usage statistics when applicable
+   - Display timing information for each step
+   - Add visual indicators for critical decision points
 
-### Evaluation Metrics
-- Log to text file: Quest Completion Rate (Yes/No), Steps Taken
+### Phase 2: Leaderboard Implementation
 
-## Phases
-1. **Phase 1: Memory Support**
-   - Add `memory` to schema (`type`, `max_history`)
-   - Update runner to pass raw history (default: `message_history`, 10 entries)
-   - Add CLI/UI options for memory settings
+1. **Create Leaderboard Data Model**
+   - Design database tables or views for leaderboard statistics
+   - Implement aggregation functions for key metrics:
+     - Success rate by agent/model
+     - Average reward attained
+     - Average steps taken
+     - Efficiency metrics (success/step ratio)
 
-2. **Phase 2: Summarizer**
-   - Implement summarizer option using a cloud LLM (e.g., Claude)
-   - Update runner to use summary if `type = "summary"`
+2. **Develop Leaderboard UI**
+   - Create new `/leaderboard` route and template
+   - Implement tabular view with sortable columns
+   - Add filtering by benchmark, quest type, date range
+   - Include visual elements (charts, badges) for top performers
+   - Design responsive layout for mobile/desktop viewing
 
-3. **Phase 3: Tool Integration**
-   - Add `tools` field with calculator
-   - Implement basic calculator handling in environment
-   - Update CLI/UI to toggle calculator
+3. **Add Comparison Features**
+   - Enable side-by-side agent comparison
+   - Implement statistical significance indicators
+   - Add historical trend visualization
+   - Create exportable reports for benchmark results
 
-4. **Phase 4: Metrics**
-   - Log completion rate and steps taken
-   - Write script to summarize results
+### Phase 3: Enhanced Metrics
 
-5. **Phase 5: Testing & Docs**
-   - Test with a quest using memory and calculator
-   - Update README with new features
+1. **Expand Metrics Collection**
+   - Track token usage for cost estimation
+   - Measure response time for each agent decision
+   - Record memory and tool utilization patterns
+   - Implement "difficulty rating" for quests based on success rates
 
-## Next Steps
-- ✅ **Start Phase 1**: Add memory to schema and runner (raw history, max 10). Claude generates code; you review/test.
-- ✅ **Test Memory**: Run a sample quest needing history (e.g., recall a clue). Adjust based on results.
-- ✅ **Add Summarizer**: Implement Phase 2 with Claude summarizing 10+ states/actions. Test both history and summary modes.
-- ✅ **Integrate Tool**: Add calculator in Phase 3. Test with a quest requiring a calculation (e.g., "Add 5 and 3").
-- ✅ **Log Metrics**: Implement Phase 4 logging. Compare runs with/without memory/tools.
-- **Finalize**: Test all features in Phase 5, update README, and refine as needed.
+2. **Performance Over Time**
+   - Track agent improvement across benchmark runs
+   - Visualize learning curves for agents with memory
+   - Compare performance between agent versions
+   - Identify performance patterns and anomalies
+
+3. **Export and Sharing**
+   - Add CSV/JSON export for leaderboard data
+   - Implement PDF report generation
+   - Create shareable links for benchmark results
+   - Build public leaderboard option for community benchmarks
+
+### Phase 4: Testing and Documentation
+
+1. **Integration Testing**
+   - Test leaderboard with various data sets
+   - Verify metrics accuracy across different benchmarks
+   - Ensure UI responsiveness with large datasets
+   - Validate export functionality
+
+2. **Documentation**
+   - Update user documentation with leaderboard features
+   - Create example reports and usage patterns
+   - Document new database schema elements
+   - Add API documentation for metrics access
+
+3. **Final Refinements**
+   - Optimize database queries for performance
+   - Add caching for frequently accessed leaderboard data
+   - Implement user preferences for default views
+   - Fine-tune UI based on user feedback
+
+## Implementation Plan
+
+1. **First Milestone: Unified Run Analytics**
+   - Update database queries to include all runs
+   - Modify templates to display combined run data
+   - Add filtering and sorting capabilities
+   - Deploy and test with various run types
+
+2. **Second Milestone: Basic Leaderboard**
+   - Implement core leaderboard functionality
+   - Create routes and templates for leaderboard view
+   - Add top-level metrics (success rate, reward, steps)
+   - Deploy for initial user testing
+
+3. **Third Milestone: Comparison and Advanced Features**
+   - Add agent comparison capabilities
+   - Implement trend visualization
+   - Add extended metrics
+   - Finalize UI and export options
+
+4. **Final Milestone: Testing and Release**
+   - Complete integration testing
+   - Update documentation
+   - Optimize performance
+   - Release final version
