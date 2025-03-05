@@ -33,13 +33,47 @@ def create_app():
         pass
 
     # Initialize database
-    from .models.database import db
+    from .models.database import (
+        db,
+        export_benchmarks_to_file,
+        export_runs_to_file,
+        import_benchmarks_from_file,
+        import_runs_from_file,
+        init_db,
+    )
     app.config['DATABASE'] = f'{workspace_root}/instance/llm_quest.sqlite'
 
-    # Initialize database
+    # Initialize database with proper schema
     db.init_app(app)
     with app.app_context():
         db.create_all()
+
+    # Register database backup on app shutdown
+    @app.teardown_appcontext
+    def backup_on_shutdown(exception=None):
+        # Export both benchmarks and runs to JSON files for persistence
+        export_benchmarks_to_file(app)
+        export_runs_to_file(app)
+
+    # Set up periodic backups (every 5 minutes)
+    import threading
+    import time
+
+    def backup_thread():
+        """Run periodic backups in background"""
+        with app.app_context():
+            while True:
+                time.sleep(300)  # 5 minutes
+                export_benchmarks_to_file(app)
+                export_runs_to_file(app)
+
+    thread = threading.Thread(target=backup_thread)
+    thread.daemon = True  # Thread will exit when main thread exits
+    thread.start()
+
+    # Import benchmark and run data if it exists
+    import_benchmarks_from_file(app)
+    import_runs_from_file(app)
 
     # Register blueprints
     from .views.analyze import bp as analyze_bp

@@ -131,6 +131,141 @@ class BenchmarkRun(db.Model):
         }
 
 
+def import_runs_from_file(app):
+    """Import runs and steps from backup file"""
+    import json
+    import logging
+    import os
+
+    logger = logging.getLogger(__name__)
+    backup_file = os.path.join(app.instance_path, 'runs_backup.json')
+
+    if not os.path.exists(backup_file):
+        logger.info(f"No runs backup file found at {backup_file}")
+        return
+
+    try:
+        with open(backup_file, 'r') as f:
+            data = json.load(f)
+            runs = data.get('runs', [])
+            steps = data.get('steps', [])
+
+        with app.app_context():
+            run_count = 0
+            run_id_map = {}  # Map old run IDs to new run IDs
+
+            # First import runs
+            for run_data in runs:
+                # Check if run already exists
+                existing = Run.query.filter_by(id=run_data['id']).first()
+                if not existing:
+                    run = Run(quest_name=run_data['quest_name'],
+                              quest_file=run_data.get('quest_file'),
+                              agent_id=run_data.get('agent_id', 'unknown'),
+                              agent_config=run_data.get('agent_config'),
+                              start_time=datetime.fromisoformat(run_data['start_time'])
+                              if run_data.get('start_time') else datetime.utcnow(),
+                              end_time=datetime.fromisoformat(run_data['end_time'])
+                              if run_data.get('end_time') else None,
+                              outcome=run_data.get('outcome'),
+                              reward=run_data.get('reward'),
+                              benchmark_id=run_data.get('benchmark_id'))
+                    db.session.add(run)
+                    db.session.flush()  # Get ID without committing
+                    run_id_map[run_data['id']] = run.id
+                    run_count += 1
+
+            # Then import steps (after runs are created)
+            step_count = 0
+            for step_data in steps:
+                # Map to new run ID if available
+                run_id = run_id_map.get(step_data['run_id'], step_data['run_id'])
+
+                # Check if step already exists
+                existing = Step.query.filter_by(run_id=run_id, step=step_data['step']).first()
+                if not existing:
+                    step = Step(run_id=run_id,
+                                step=step_data['step'],
+                                location_id=step_data.get('location_id', '0'),
+                                observation=step_data['observation'],
+                                choices=step_data.get('choices'),
+                                action=step_data.get('action'),
+                                llm_response=step_data.get('llm_response'))
+                    db.session.add(step)
+                    step_count += 1
+
+            if run_count > 0 or step_count > 0:
+                db.session.commit()
+                logger.info(f"Imported {run_count} runs and {step_count} steps from backup file")
+
+    except Exception as e:
+        logger.error(f"Error importing runs from backup: {e}")
+
+
+def export_runs_to_file(app):
+    """Export all runs and steps to backup file"""
+    import json
+    import logging
+    import os
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        with app.app_context():
+            runs = Run.query.all()
+            if not runs:
+                logger.info("No runs to export")
+                return
+
+            # Convert runs to JSON serializable format
+            run_data = []
+            step_data = []
+
+            for run in runs:
+                run_dict = {
+                    'id': run.id,
+                    'quest_name': run.quest_name,
+                    'quest_file': run.quest_file,
+                    'agent_id': run.agent_id,
+                    'agent_config': run.agent_config,
+                    'start_time': run.start_time.isoformat() if run.start_time else None,
+                    'end_time': run.end_time.isoformat() if run.end_time else None,
+                    'outcome': run.outcome,
+                    'reward': run.reward,
+                    'benchmark_id': run.benchmark_id
+                }
+                run_data.append(run_dict)
+
+                # Add steps for this run
+                for step in run.steps:
+                    step_dict = {
+                        'id': step.id,
+                        'run_id': step.run_id,
+                        'step': step.step,
+                        'location_id': step.location_id,
+                        'observation': step.observation,
+                        'choices': step.choices,
+                        'action': step.action,
+                        'llm_response': step.llm_response
+                    }
+                    step_data.append(step_dict)
+
+            # Create combined data structure
+            data = {'runs': run_data, 'steps': step_data}
+
+            # Ensure instance directory exists
+            os.makedirs(app.instance_path, exist_ok=True)
+            backup_file = os.path.join(app.instance_path, 'runs_backup.json')
+
+            with open(backup_file, 'w') as f:
+                json.dump(data, f, indent=2)
+
+            logger.info(
+                f"Exported {len(run_data)} runs and {len(step_data)} steps to {backup_file}")
+    except Exception as e:
+        logger.error(f"Error exporting runs to backup: {e}")
+
+
 def import_benchmarks_from_file(app):
     """Import benchmarks from backup file"""
     import json
