@@ -1,5 +1,4 @@
-{# Tier 2: Structured reasoning with concise output #}
-{# Enhanced template for interactive fiction reasoning #}
+{# Template for interactive fiction reasoning with calculator tool #}
 Current story state:
 {{ observation }}
 
@@ -26,7 +25,20 @@ Analyze briefly:
 2. Goal: What's the current objective?
 3. Impact: What could each choice lead to?
 
-Your response should be exactly in this JSON format:
+You have access to a calculator tool. If you need to perform calculations to make a decision, 
+you can use the calculator by including "tool": "calculator" with a "query" in your response.
+
+Your response should be in one of these JSON formats:
+
+If you need to use the calculator:
+```json
+{
+    "tool": "calculator",
+    "query": "<math expression>"
+}
+```
+
+If you're ready to make a decision:
 ```json
 {
     "analysis": "<25 words on key situation elements>",

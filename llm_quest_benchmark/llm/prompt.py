@@ -135,29 +135,98 @@ class PromptRenderer:
         # Get most recent history based on max_history
         recent_history = self.get_history(max_history)
         
+        # Empty history case
+        if not recent_history:
+            return {"memory": []}
+        
         # For "message_history" type, just return the raw history
         if memory_type == "message_history":
             return {
                 "memory": recent_history
             }
-        # For "summary" type, generate a summary of the history
+        # For "summary" type, generate a summary of the history using LLM
         elif memory_type == "summary":
-            # TODO: Implement real summarization using LLM
-            # For now, just create a simple summary of states and actions
-            summary = []
-            for i, entry in enumerate(recent_history):
-                state_summary = f"State {i+1}: {entry.get('text', '')[:100]}..."
-                action_summary = f"Action {i+1}: {entry.get('action', '')}"
-                summary.append(f"{state_summary}\n{action_summary}")
-            
-            return {
-                "memory": "\n\n".join(summary)
-            }
+            try:
+                summary = self._generate_history_summary(recent_history)
+                return {
+                    "memory": summary
+                }
+            except Exception as e:
+                logger.error(f"Error generating history summary: {e}")
+                # Fallback to simple summary if LLM summarization fails
+                return self._generate_simple_summary(recent_history)
         else:
             logger.warning(f"Unknown memory type: {memory_type}")
             return {
                 "memory": []
             }
+            
+    def _generate_simple_summary(self, history: List[Dict[str, Any]]) -> str:
+        """Generate a simple summary of history without using LLM
+        
+        Args:
+            history (List[Dict[str, Any]]): History entries
+            
+        Returns:
+            str: Simple summary of history
+        """
+        summary = []
+        for i, entry in enumerate(history):
+            state_summary = f"State {i+1}: {entry.get('text', '')[:100]}..."
+            action_summary = f"Action {i+1}: {entry.get('action', '')}"
+            summary.append(f"{state_summary}\n{action_summary}")
+        
+        return "\n\n".join(summary)
+        
+    def _generate_history_summary(self, history: List[Dict[str, Any]]) -> str:
+        """Generate a summary of history using LLM
+        
+        Args:
+            history (List[Dict[str, Any]]): History entries
+            
+        Returns:
+            str: LLM-generated summary of history
+        """
+        # Import here to avoid circular imports
+        from llm_quest_benchmark.llm.client import get_llm_client
+        
+        # Format history for summarization
+        history_text = []
+        for i, entry in enumerate(history):
+            state_text = entry.get('text', '')
+            action = entry.get('action', 'No action')
+            history_text.append(f"STATE {i+1}:\n{state_text}\n\nACTION {i+1}:\n{action}")
+        
+        history_prompt = "\n\n".join(history_text)
+        
+        # Create prompt for summarization
+        prompt = f"""Below is a history of states and actions from an interactive text adventure. 
+Please provide a concise summary (200-300 words) that captures:
+1. Key plot developments
+2. Important decisions made by the player
+3. Current situation and objectives
+
+HISTORY:
+{history_prompt}
+
+SUMMARY:"""
+
+        # Use Claude-3.5-Sonnet or GPT-4o for summarization
+        try:
+            # Try Claude first
+            llm = get_llm_client("claude-3-5-sonnet-latest", temperature=0.2)
+            summary = llm.get_completion(prompt)
+        except Exception as e:
+            logger.warning(f"Failed to use Claude for summarization: {e}, falling back to GPT-4o")
+            try:
+                # Fall back to GPT-4o
+                llm = get_llm_client("gpt-4o", temperature=0.2)
+                summary = llm.get_completion(prompt)
+            except Exception as e2:
+                logger.error(f"Failed to generate summary with GPT-4o: {e2}")
+                raise
+                
+        return summary
 
     def render_action_prompt(self, observation: str, choices: list) -> str:
         """Render the action choice prompt

@@ -1,0 +1,16 @@
+{
+  "agent_id": "memory-agent",
+  "model": "claude-3-5-sonnet-latest",
+  "temperature": 0.7,
+  "system_template": "system_role.jinja",
+  "action_template": "action/reasoning.jinja",
+  "max_tokens": null,
+  "top_p": null,
+  "additional_params": null,
+  "description": "Claude 3.5 Sonnet agent with summary memory",
+  "memory": {
+    "type": "summary",
+    "max_history": 15
+  },
+  "tools": null
+}
