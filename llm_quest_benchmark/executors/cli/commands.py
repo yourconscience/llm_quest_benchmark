@@ -18,7 +18,7 @@ import typer
 
 from llm_quest_benchmark.core.logging import LogManager
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
-from llm_quest_benchmark.core.analyzer import analyze_quest_run, analyze_benchmark
+from llm_quest_benchmark.core.analyzer import analyze_quest_run, analyze_benchmark, generate_memory_tool_report
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.benchmark import run_benchmark, print_summary
 from llm_quest_benchmark.renderers.terminal import RichRenderer
@@ -1508,6 +1508,91 @@ def delete_template(
                 
     except Exception as e:
         log.exception(f"Error deleting template: {e}")
+        raise typer.Exit(code=1)
+
+
+# Create metrics command group
+metrics_app = typer.Typer(
+    help="Analyze and report on memory and tools metrics",
+    rich_markup_mode="rich",
+)
+app.add_typer(metrics_app, name="metrics")
+
+
+@metrics_app.command(name="report")
+def generate_metrics_report(
+    export: Optional[Path] = typer.Option(None, help="Export report to specified JSON file"),
+    debug: bool = typer.Option(False, help="Enable debug logging and output")
+):
+    """Generate a metrics report comparing agent memory and tool usage
+    
+    This command analyzes all available metrics data and generates a report
+    showing the impact of memory and tool usage on quest performance.
+    """
+    try:
+        log_manager.setup(debug)
+        log.info("Generating memory and tools metrics report")
+        
+        # Generate the report
+        report = generate_memory_tool_report()
+        
+        # Export if requested
+        if export:
+            import json
+            with open(export, 'w') as f:
+                json.dump(report, f, indent=2)
+            log.info(f"Report exported to {export}")
+            typer.echo(f"Report exported to {export}")
+        
+        # Display summary
+        typer.echo("\n📊 Memory and Tools Impact Report")
+        typer.echo("==============================")
+        
+        # Memory analysis
+        typer.echo("\nMemory Impact:")
+        typer.echo("--------------")
+        for memory_type in ["none", "message_history", "summary"]:
+            stats = report["memory_analysis"][memory_type]
+            if stats["total_runs"] > 0:
+                typer.echo(f"  {memory_type}: {stats['total_runs']} runs, " + 
+                          f"{stats['success_rate']:.1f}% success rate, " +
+                          f"{stats['avg_steps']:.1f} avg steps")
+        
+        # Memory improvement
+        if "memory_improvements" in report:
+            typer.echo("\nMemory Improvements:")
+            typer.echo("-------------------")
+            for key, value in report["memory_improvements"].items():
+                if "message_history" in key:
+                    typer.echo(f"  Message History: {value:.1f}% success rate improvement")
+                elif "summary" in key:
+                    typer.echo(f"  Summary: {value:.1f}% success rate improvement")
+        
+        # Tools analysis
+        typer.echo("\nTools Impact:")
+        typer.echo("------------")
+        for tool_category in ["with_tools", "without_tools"]:
+            stats = report["tools_analysis"][tool_category]
+            if stats["total_runs"] > 0:
+                typer.echo(f"  {tool_category}: {stats['total_runs']} runs, " + 
+                          f"{stats['success_rate']:.1f}% success rate, " + 
+                          f"{stats['avg_steps']:.1f} avg steps")
+        
+        # Tools improvement
+        if "tools_improvements" in report:
+            typer.echo("\nTools Improvements:")
+            typer.echo("-----------------")
+            typer.echo(f"  Tools Success Improvement: {report['tools_improvements']['tools_success_improvement']:.1f}%")
+        
+        # Quest breakdown
+        typer.echo("\nQuests Analyzed:")
+        typer.echo("---------------")
+        for quest_name, quest_data in report["quests"].items():
+            typer.echo(f"  {quest_name}: {quest_data['runs']} total runs")
+            
+    except Exception as e:
+        log.exception(f"Error generating metrics report: {e}")
+        typer.echo(f"Error generating metrics report: {str(e)}", err=True)
         raise typer.Exit(code=1)
 
 if __name__ == "__main__":
