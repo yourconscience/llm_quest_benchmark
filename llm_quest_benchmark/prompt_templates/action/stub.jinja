@@ -1,0 +1,12 @@
+{# Tier 1: Minimal prompt for baseline testing #}
+{# Template for processing quest observations and choices - default version #}
+Current situation:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+IMPORTANT: Please respond with ONLY a single number between 1 and {{ choices|length }}.
+Do not include any additional text, explanations, or formatting.

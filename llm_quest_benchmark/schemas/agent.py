@@ -1,6 +1,18 @@
 """Schema definitions for agent configuration"""
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Literal
 from pydantic import BaseModel, Field
+
+class MemoryConfig(BaseModel):
+    """Schema for agent memory configuration"""
+    type: Literal["message_history", "summary"] = Field(
+        "message_history", 
+        description="Type of memory (message_history or summary)"
+    )
+    max_history: int = Field(10, description="Maximum number of history entries to keep", ge=1)
+    
+    class Config:
+        """Config for the memory schema"""
+        title = "Memory Configuration"
 
 class AgentConfig(BaseModel):
     """Schema for agent configuration"""
@@ -13,6 +25,8 @@ class AgentConfig(BaseModel):
     top_p: Optional[float] = Field(None, description="Top P parameter for the model", ge=0.0, le=1.0)
     additional_params: Optional[Dict[str, Any]] = Field(None, description="Additional parameters for the model")
     description: Optional[str] = Field(None, description="Description of the agent")
+    memory: Optional[MemoryConfig] = Field(None, description="Memory configuration for the agent")
+    tools: Optional[List[str]] = Field(None, description="List of tools available to the agent")
     
     class Config:
         """Config for the agent schema"""
@@ -24,7 +38,12 @@ class AgentConfig(BaseModel):
                     "model": "gpt-4o",
                     "temperature": 0.7,
                     "system_template": "You are a player in a text adventure game...",
-                    "action_template": "You are presented with the following situation..."
+                    "action_template": "You are presented with the following situation...",
+                    "memory": {
+                        "type": "message_history",
+                        "max_history": 10
+                    },
+                    "tools": ["calculator"]
                 }
             ]
         }

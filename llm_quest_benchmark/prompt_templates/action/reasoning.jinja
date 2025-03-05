@@ -1,0 +1,23 @@
+{# Tier 2: Structured reasoning with concise output #}
+{# Enhanced template for interactive fiction reasoning #}
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Analyze briefly:
+1. Context: What's happening now?
+2. Goal: What's the current objective?
+3. Impact: What could each choice lead to?
+
+Your response should be exactly in this JSON format:
+```json
+{
+    "analysis": "<25 words on key situation elements>",
+    "reasoning": "<25 words on why this choice>",
+    "result": <action_number>
+}
+```

@@ -126,6 +126,8 @@ class LLMAgent(QuestPlayer):
         temperature: float = DEFAULT_TEMPERATURE,
         skip_single: bool = False,
         debug: bool = False,
+        memory_config: Optional[Dict[str, Any]] = None,
+        tools: Optional[List[str]] = None,
     ):
         super().__init__(skip_single=skip_single)
         self.debug = debug
@@ -133,6 +135,8 @@ class LLMAgent(QuestPlayer):
         self.system_template = system_template
         self.action_template = action_template
         self.temperature = temperature
+        self.memory_config = memory_config or {"type": "message_history", "max_history": 10}
+        self.tools = tools or []
         # Set agent_id for database records
         self.agent_id = f"llm_{self.model_name}"
 
@@ -147,10 +151,13 @@ class LLMAgent(QuestPlayer):
             handler.setFormatter(logging.Formatter('%(name)s - %(message)s'))
             self.logger.addHandler(handler)
 
-        # Initialize prompt renderer
-        self.prompt_renderer = PromptRenderer(None,
-                                              system_template=system_template,
-                                              action_template=action_template)
+        # Initialize prompt renderer with memory configuration
+        self.prompt_renderer = PromptRenderer(
+            None,
+            system_template=system_template,
+            action_template=action_template,
+            memory_config=self.memory_config
+        )
 
         # Initialize LLM client with system prompt and temperature
         self.llm = get_llm_client(model_name,
@@ -242,26 +249,24 @@ class LLMAgent(QuestPlayer):
         return f"LLMAgent(model={self.model_name}, system_template={self.system_template}, action_template={self.action_template}, temperature={self.temperature})"
 
     def _format_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
-        """Format the prompt for the LLM"""
-        # Format choices as numbered list
-        choices_text = "\n".join([f"{i+1}. {c['text']}" for i, c in enumerate(choices)])
-
-        return f"""Current story state:
-{state}
-
-Available actions:
-{choices_text}
-
-Analyze briefly:
-1. Context: What's happening now?
-2. Goal: What's the current objective?
-3. Impact: What could each choice lead to?
-
-Your response should be exactly in this JSON format:
-```json
-{{
-    "analysis": "<25 words on key situation elements>",
-    "reasoning": "<25 words on why this choice>",
-    "result": <action_number>
-}}
-```"""
+        """Format the prompt for the LLM using the template renderer"""
+        # Use the prompt renderer to generate formatted prompt
+        # Add the state to the history for memory tracking
+        self.prompt_renderer.add_to_history({'text': state, 'choices': choices})
+        
+        # Use the template renderer
+        return self.prompt_renderer.render_action_prompt(state, choices)
+    
+    def handle_tool_request(self, request: str) -> str:
+        """Handle tool requests
+        
+        Args:
+            request (str): Tool request string
+            
+        Returns:
+            str: Tool response
+        """
+        if "calculator" in self.tools and "calculate" in request.lower():
+            return self.prompt_renderer.handle_calculator_tool(request)
+        else:
+            return "No tool available for this request."

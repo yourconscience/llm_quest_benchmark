@@ -32,6 +32,9 @@ from llm_quest_benchmark.constants import (
     SYSTEM_ROLE_TEMPLATE,
     WEB_SERVER_HOST,
     WEB_SERVER_PORT,
+    PROMPT_TEMPLATES_DIR,
+    SYSTEM_TEMPLATES_DIR,
+    ACTION_TEMPLATES_DIR,
 )
 from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.schemas.agent import AgentConfig as AgentSchema
@@ -54,6 +57,13 @@ agents_app = typer.Typer(
     rich_markup_mode="rich",
 )
 app.add_typer(agents_app, name="agents")
+
+# Create subcommand for template management
+templates_app = typer.Typer(
+    help="Manage prompt templates",
+    rich_markup_mode="rich",
+)
+app.add_typer(templates_app, name="templates")
 
 def version_callback(value: bool):
     if value:
@@ -120,7 +130,7 @@ def run(
     try:
         log_manager.setup(debug)
 
-        # Create agent config
+        # Create agent
         if agent_id:
             # Use saved agent configuration
             agent_manager = AgentManager()
@@ -132,7 +142,17 @@ def run(
             
             log.info(f"Using saved agent: {agent_id}")
             
-            # Set up model parameters from saved agent
+            # Import create_agent_from_id
+            from llm_quest_benchmark.agents.agent_factory import create_agent_from_id
+            
+            # Create agent from saved configuration
+            agent = create_agent_from_id(agent_id, skip_single=skip, debug=debug)
+            
+            if not agent:
+                typer.echo(f"Failed to create agent from {agent_id}", err=True)
+                raise typer.Exit(code=1)
+            
+            # Set up model parameters from saved agent for agent_config
             model = saved_agent.model
             system_template = saved_agent.system_template or SYSTEM_ROLE_TEMPLATE
             action_template = saved_agent.action_template or DEFAULT_TEMPLATE
@@ -170,15 +190,16 @@ def run(
                 debug=debug
             )
 
-        # Create agent
-        agent = create_agent(
-            model=model,
-            system_template=system_template,
-            action_template=action_template,
-            temperature=temperature,
-            skip_single=skip,
-            debug=debug
-        )
+            # Create agent from parameters
+            from llm_quest_benchmark.agents.agent_factory import create_agent
+            agent = create_agent(
+                model=model,
+                system_template=system_template,
+                action_template=action_template,
+                temperature=temperature,
+                skip_single=skip,
+                debug=debug
+            )
 
         log.warning(f"Starting quest run with agent {str(agent)}")
         log.debug(f"Quest file: {quest}")
@@ -1063,6 +1084,430 @@ def create_default_agents():
         list_agents()
     except Exception as e:
         log.exception(f"Error creating default agents: {e}")
+        raise typer.Exit(code=1)
+
+@agents_app.command(name="set-memory")
+def set_agent_memory(
+    agent_id: str = typer.Argument(..., help="Agent ID to modify"),
+    memory_type: str = typer.Argument(..., help="Memory type (message_history or summary)"),
+    max_history: int = typer.Argument(10, help="Maximum number of history entries")
+):
+    """Set memory configuration for an agent"""
+    try:
+        if memory_type not in ["message_history", "summary"]:
+            typer.echo(f"Invalid memory type: {memory_type}. Must be 'message_history' or 'summary'.", err=True)
+            raise typer.Exit(code=1)
+            
+        if max_history < 1:
+            typer.echo(f"Invalid max_history: {max_history}. Must be greater than 0.", err=True)
+            raise typer.Exit(code=1)
+            
+        agent_manager = AgentManager()
+        agent = agent_manager.get_agent(agent_id)
+        
+        if not agent:
+            typer.echo(f"Agent {agent_id} not found", err=True)
+            raise typer.Exit(code=1)
+        
+        # Create memory config
+        from llm_quest_benchmark.schemas.agent import MemoryConfig
+        memory_config = MemoryConfig(
+            type=memory_type,
+            max_history=max_history
+        )
+        
+        # Update agent memory
+        agent.memory = memory_config
+        success = agent_manager.update_agent(agent)
+        
+        if success:
+            typer.echo(f"Updated memory configuration for agent {agent_id}")
+            typer.echo(f"Memory type: {memory_type}")
+            typer.echo(f"Max history: {max_history}")
+        else:
+            typer.echo(f"Failed to update memory configuration for agent {agent_id}", err=True)
+            
+    except Exception as e:
+        log.exception(f"Error setting agent memory: {e}")
+        raise typer.Exit(code=1)
+
+@agents_app.command(name="add-tool")
+def add_agent_tool(
+    agent_id: str = typer.Argument(..., help="Agent ID to modify"),
+    tool: str = typer.Argument(..., help="Tool to add (e.g., calculator)")
+):
+    """Add a tool to an agent"""
+    try:
+        # Currently only support 'calculator' tool
+        if tool != "calculator":
+            typer.echo(f"Invalid tool: {tool}. Currently only 'calculator' is supported.", err=True)
+            raise typer.Exit(code=1)
+            
+        agent_manager = AgentManager()
+        agent = agent_manager.get_agent(agent_id)
+        
+        if not agent:
+            typer.echo(f"Agent {agent_id} not found", err=True)
+            raise typer.Exit(code=1)
+        
+        # Initialize tools list if not exists
+        if agent.tools is None:
+            agent.tools = []
+            
+        # Check if tool already exists
+        if tool in agent.tools:
+            typer.echo(f"Tool {tool} already added to agent {agent_id}")
+            return
+            
+        # Add tool
+        agent.tools.append(tool)
+        success = agent_manager.update_agent(agent)
+        
+        if success:
+            typer.echo(f"Added tool {tool} to agent {agent_id}")
+        else:
+            typer.echo(f"Failed to add tool {tool} to agent {agent_id}", err=True)
+            
+    except Exception as e:
+        log.exception(f"Error adding tool to agent: {e}")
+        raise typer.Exit(code=1)
+
+@agents_app.command(name="remove-tool")
+def remove_agent_tool(
+    agent_id: str = typer.Argument(..., help="Agent ID to modify"),
+    tool: str = typer.Argument(..., help="Tool to remove (e.g., calculator)")
+):
+    """Remove a tool from an agent"""
+    try:
+        agent_manager = AgentManager()
+        agent = agent_manager.get_agent(agent_id)
+        
+        if not agent:
+            typer.echo(f"Agent {agent_id} not found", err=True)
+            raise typer.Exit(code=1)
+        
+        # Check if agent has tools
+        if not agent.tools:
+            typer.echo(f"Agent {agent_id} has no tools")
+            return
+            
+        # Check if agent has the tool
+        if tool not in agent.tools:
+            typer.echo(f"Agent {agent_id} does not have tool {tool}")
+            return
+            
+        # Remove tool
+        agent.tools.remove(tool)
+        success = agent_manager.update_agent(agent)
+        
+        if success:
+            typer.echo(f"Removed tool {tool} from agent {agent_id}")
+        else:
+            typer.echo(f"Failed to remove tool {tool} from agent {agent_id}", err=True)
+            
+    except Exception as e:
+        log.exception(f"Error removing tool from agent: {e}")
+        raise typer.Exit(code=1)
+
+# Template management commands
+@templates_app.command(name="list")
+def list_templates(
+    template_type: str = typer.Option("all", "--type", "-t", help="Template type (all, system, action)")
+):
+    """List available templates"""
+    try:
+        if template_type not in ["all", "system", "action"]:
+            typer.echo(f"Invalid template type: {template_type}. Must be 'all', 'system', or 'action'.", err=True)
+            raise typer.Exit(code=1)
+        
+        system_dir = SYSTEM_TEMPLATES_DIR
+        action_dir = ACTION_TEMPLATES_DIR
+        
+        # Ensure directories exist
+        system_dir.mkdir(parents=True, exist_ok=True)
+        action_dir.mkdir(parents=True, exist_ok=True)
+        
+        # List system templates if requested
+        if template_type in ["all", "system"]:
+            typer.echo("System Templates:")
+            system_templates = list(system_dir.glob("*.jinja"))
+            if system_templates:
+                for template in sorted(system_templates):
+                    typer.echo(f"  {template.name}")
+            else:
+                typer.echo("  No system templates found")
+        
+        # List action templates if requested
+        if template_type in ["all", "action"]:
+            typer.echo("\nAction Templates:")
+            action_templates = list(action_dir.glob("*.jinja"))
+            if action_templates:
+                for template in sorted(action_templates):
+                    typer.echo(f"  {template.name}")
+            else:
+                typer.echo("  No action templates found")
+                
+    except Exception as e:
+        log.exception(f"Error listing templates: {e}")
+        raise typer.Exit(code=1)
+
+@templates_app.command(name="show")
+def show_template(
+    template_name: str = typer.Argument(..., help="Template name"),
+    template_type: str = typer.Option(None, "--type", "-t", help="Template type (system or action)")
+):
+    """Show the contents of a template"""
+    try:
+        # If template type not specified, try to infer it
+        if not template_type:
+            if not "/" in template_name and not "\\" in template_name:
+                # Try both directories
+                system_path = SYSTEM_TEMPLATES_DIR / template_name
+                action_path = ACTION_TEMPLATES_DIR / template_name
+                
+                if system_path.exists():
+                    template_type = "system"
+                    template_path = system_path
+                elif action_path.exists():
+                    template_type = "action"
+                    template_path = action_path
+                else:
+                    typer.echo(f"Template {template_name} not found in system or action directories.", err=True)
+                    typer.echo("Specify the template type with --type or use the format 'system/template.jinja'", err=True)
+                    raise typer.Exit(code=1)
+            else:
+                # Template includes path information
+                full_path = PROMPT_TEMPLATES_DIR / template_name
+                if not full_path.exists():
+                    typer.echo(f"Template {template_name} not found.", err=True)
+                    raise typer.Exit(code=1)
+                template_path = full_path
+        else:
+            # Template type specified
+            if template_type == "system":
+                template_path = SYSTEM_TEMPLATES_DIR / template_name
+            elif template_type == "action":
+                template_path = ACTION_TEMPLATES_DIR / template_name
+            else:
+                typer.echo(f"Invalid template type: {template_type}. Must be 'system' or 'action'.", err=True)
+                raise typer.Exit(code=1)
+        
+        # Check if template exists
+        if not template_path.exists():
+            typer.echo(f"Template {template_path} not found.", err=True)
+            raise typer.Exit(code=1)
+        
+        # Show template content
+        template_content = template_path.read_text(encoding="utf-8")
+        typer.echo(f"Template: {template_path.relative_to(PROMPT_TEMPLATES_DIR.parent)}")
+        typer.echo("-" * 40)
+        typer.echo(template_content)
+                
+    except Exception as e:
+        log.exception(f"Error showing template: {e}")
+        raise typer.Exit(code=1)
+
+@templates_app.command(name="new")
+def new_template(
+    template_name: str = typer.Argument(..., help="Template name (without .jinja extension)"),
+    template_type: str = typer.Option("action", "--type", "-t", help="Template type (system or action)"),
+    editor: bool = typer.Option(False, "--editor", "-e", help="Open in default editor after creation"),
+    based_on: Optional[str] = typer.Option(None, "--based-on", "-b", help="Base on existing template")
+):
+    """Create a new template"""
+    try:
+        # Ensure template has .jinja extension
+        if not template_name.endswith(".jinja"):
+            template_name = f"{template_name}.jinja"
+        
+        # Determine target directory
+        if template_type == "system":
+            target_dir = SYSTEM_TEMPLATES_DIR
+        elif template_type == "action":
+            target_dir = ACTION_TEMPLATES_DIR
+        else:
+            typer.echo(f"Invalid template type: {template_type}. Must be 'system' or 'action'.", err=True)
+            raise typer.Exit(code=1)
+        
+        # Ensure directory exists
+        target_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Check if template already exists
+        target_path = target_dir / template_name
+        if target_path.exists():
+            if not typer.confirm(f"Template {target_path} already exists. Overwrite?"):
+                typer.echo("Template creation cancelled.")
+                return
+        
+        # Determine initial content
+        if based_on:
+            # Try to load base template
+            base_template_path = None
+            
+            # Check if base template includes path
+            if "/" in based_on or "\\" in based_on:
+                base_template_path = PROMPT_TEMPLATES_DIR / based_on
+                if not base_template_path.exists():
+                    typer.echo(f"Base template {based_on} not found.", err=True)
+                    raise typer.Exit(code=1)
+            else:
+                # Try both directories
+                system_path = SYSTEM_TEMPLATES_DIR / based_on
+                action_path = ACTION_TEMPLATES_DIR / based_on
+                
+                if system_path.exists():
+                    base_template_path = system_path
+                elif action_path.exists():
+                    base_template_path = action_path
+                else:
+                    typer.echo(f"Base template {based_on} not found in system or action directories.", err=True)
+                    raise typer.Exit(code=1)
+            
+            # Load base template content
+            initial_content = base_template_path.read_text(encoding="utf-8")
+        else:
+            # Create template with helpful comments based on type
+            if template_type == "system":
+                initial_content = """{# System prompt template for LLM agent #}
+{# This template is used to generate the system prompt for the LLM agent #}
+{# Available variables: None #}
+
+You are an experienced interactive fiction player. Your capabilities include:
+
+1. Dynamic Goal Recognition: Infer objectives from narrative context
+2. Clue Chaining: Connect information across scenes
+3. Consequence Forecasting: Predict 2-3 steps ahead for each action
+4. Narrative Consistency: Maintain character/story logic
+
+Follow these principles:
+- Treat each choice as part of an unfolding mystery
+- Track objects/characters/relationships as state components
+- Consider both practical and thematic implications
+- Admit uncertainty when clues are ambiguous
+"""
+            else:  # action template
+                initial_content = """{# Action prompt template for LLM agent #}
+{# This template is used to generate the action prompt for each step #}
+{# Available variables:
+   - observation: The text description of the current state
+   - choices: List of available choices as dicts with 'text' key
+#}
+
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Analyze briefly:
+1. Context: What's happening now?
+2. Goal: What's the current objective?
+3. Options: What could each choice lead to?
+
+Your response should be exactly in this JSON format:
+```json
+{
+    "analysis": "<brief analysis of the situation>",
+    "reasoning": "<explanation of your choice>",
+    "result": <action_number>
+}
+```
+"""
+        
+        # Write template to file
+        target_path.write_text(initial_content, encoding="utf-8")
+        typer.echo(f"Template {target_path} created successfully.")
+        
+        # Open in editor if requested
+        if editor:
+            import subprocess
+            import os
+            import platform
+            
+            try:
+                if platform.system() == 'Windows':
+                    os.startfile(target_path)
+                elif platform.system() == 'Darwin':  # macOS
+                    subprocess.run(['open', target_path])
+                else:  # Linux and other Unix-like systems
+                    subprocess.run(['xdg-open', target_path])
+            except Exception as e:
+                typer.echo(f"Error opening editor: {e}", err=True)
+                
+    except Exception as e:
+        log.exception(f"Error creating template: {e}")
+        raise typer.Exit(code=1)
+
+@templates_app.command(name="delete")
+def delete_template(
+    template_name: str = typer.Argument(..., help="Template name"),
+    template_type: str = typer.Option(None, "--type", "-t", help="Template type (system or action)"),
+    force: bool = typer.Option(False, "--force", "-f", help="Force deletion without confirmation")
+):
+    """Delete a template"""
+    try:
+        # Normalize template name
+        if not template_name.endswith(".jinja"):
+            template_name = f"{template_name}.jinja"
+        
+        # If template type not specified, try to infer it
+        if not template_type:
+            if not "/" in template_name and not "\\" in template_name:
+                # Try both directories
+                system_path = SYSTEM_TEMPLATES_DIR / template_name
+                action_path = ACTION_TEMPLATES_DIR / template_name
+                
+                if system_path.exists():
+                    template_type = "system"
+                    template_path = system_path
+                elif action_path.exists():
+                    template_type = "action"
+                    template_path = action_path
+                else:
+                    typer.echo(f"Template {template_name} not found in system or action directories.", err=True)
+                    typer.echo("Specify the template type with --type or use the format 'system/template.jinja'", err=True)
+                    raise typer.Exit(code=1)
+            else:
+                # Template includes path information
+                full_path = PROMPT_TEMPLATES_DIR / template_name
+                if not full_path.exists():
+                    typer.echo(f"Template {template_name} not found.", err=True)
+                    raise typer.Exit(code=1)
+                template_path = full_path
+        else:
+            # Template type specified
+            if template_type == "system":
+                template_path = SYSTEM_TEMPLATES_DIR / template_name
+            elif template_type == "action":
+                template_path = ACTION_TEMPLATES_DIR / template_name
+            else:
+                typer.echo(f"Invalid template type: {template_type}. Must be 'system' or 'action'.", err=True)
+                raise typer.Exit(code=1)
+        
+        # Check if template exists
+        if not template_path.exists():
+            typer.echo(f"Template {template_path} not found.", err=True)
+            raise typer.Exit(code=1)
+        
+        # Check for default templates
+        if template_path.name in ["system_role.jinja", "reasoning.jinja", "stub.jinja", "strategic.jinja"]:
+            typer.echo(f"Cannot delete default template: {template_path.name}", err=True)
+            typer.echo("You can create a new template to override it instead.", err=True)
+            raise typer.Exit(code=1)
+        
+        # Confirm deletion
+        if not force and not typer.confirm(f"Are you sure you want to delete template {template_path}?"):
+            typer.echo("Template deletion cancelled.")
+            return
+        
+        # Delete template
+        template_path.unlink()
+        typer.echo(f"Template {template_path} deleted successfully.")
+                
+    except Exception as e:
+        log.exception(f"Error deleting template: {e}")
         raise typer.Exit(code=1)
 
 if __name__ == "__main__":

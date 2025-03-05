@@ -1,0 +1,32 @@
+{# Tier 3: Strategic agent prompt #}
+{# Contextual State Tracker #}
+{% if state_tracker %}
+Historical context:
+{% for entry in state_tracker %}
+- {{ entry }}
+{% endfor %}
+{% endif %}
+
+Current Situation:
+{{ observation }}
+
+Available Actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Analysis Framework:
+1. Immediate Context [<50 words]
+2. Plausible Hypotheses [2-3 possibilities]
+3. Action Impact Forecast [short/long-term]
+4. Confidence Estimate [High/Medium/Low]
+
+Response format:
+```json
+{
+    "hypotheses": ["...", "..."],
+    "reasoning": "<chain-of-thought analysis>",
+    "choice": <number>,
+    "confidence": "<level>"
+}
+```

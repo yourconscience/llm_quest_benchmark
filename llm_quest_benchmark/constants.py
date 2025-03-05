@@ -22,11 +22,17 @@ RECURSIVE_QUEST_SEARCH = True  # When True, will search all subdirectories under
 
 # Paths
 PROMPT_TEMPLATES_DIR = Path(__file__).parent / "prompt_templates"
+SYSTEM_TEMPLATES_DIR = PROMPT_TEMPLATES_DIR / "system"
+ACTION_TEMPLATES_DIR = PROMPT_TEMPLATES_DIR / "action"
 
 # Templates
-STUB_TEMPLATE = "stub.jinja"
-DEFAULT_TEMPLATE = "reasoning.jinja"
-SYSTEM_ROLE_TEMPLATE = "system_role.jinja"
+STUB_TEMPLATE = "action/stub.jinja"
+DEFAULT_TEMPLATE = "action/reasoning.jinja"
+SYSTEM_ROLE_TEMPLATE = "system/system_role.jinja"
+
+# Create template directories if they don't exist
+SYSTEM_TEMPLATES_DIR.mkdir(exist_ok=True, parents=True)
+ACTION_TEMPLATES_DIR.mkdir(exist_ok=True, parents=True)
 
 # Default temperature
 DEFAULT_TEMPERATURE = 0.7  # Balance between focused results and exploration
