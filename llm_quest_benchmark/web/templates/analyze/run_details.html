@@ -37,6 +37,31 @@
                             <th>Agent:</th>
                             <td>{{ run.agent_id }}</td>
                         </tr>
+                        {% if run.agent_config %}
+                        <tr>
+                            <th>Memory:</th>
+                            <td>
+                                {% if run.agent_config.memory %}
+                                <span class="badge bg-info">{{ run.agent_config.memory.type }}</span>
+                                <small class="text-muted ms-2">(history: {{ run.agent_config.memory.max_history }})</small>
+                                {% else %}
+                                <span class="badge bg-secondary">None</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Tools:</th>
+                            <td>
+                                {% if run.agent_config.tools and run.agent_config.tools|length > 0 %}
+                                {% for tool in run.agent_config.tools %}
+                                <span class="badge bg-success">{{ tool }}</span>
+                                {% endfor %}
+                                {% else %}
+                                <span class="badge bg-secondary">None</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
                         <tr>
                             <th>Start Time:</th>
                             <td>{{ run.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
