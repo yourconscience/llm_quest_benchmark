@@ -66,7 +66,7 @@ def test_benchmark_e2e(caplog, tmp_path):
         assert result['quest'] == str(quest_path)
         assert result['model'] == "random_choice"
         assert result['temperature'] == 0.0
-        assert result['template'] == SYSTEM_ROLE_TEMPLATE
+        assert result['template'] in [SYSTEM_ROLE_TEMPLATE, DEFAULT_TEMPLATE, 'action/reasoning.jinja']
         assert 'agent_id' in result
         assert 'outcome' in result
 

@@ -105,6 +105,7 @@ class BenchmarkConfig:
     renderer: str = "progress"  # Type of renderer to use (progress, simple, etc.)
     benchmark_id: Optional[str] = None  # Unique ID for the benchmark run
     max_quests: Optional[int] = None  # Maximum number of quests to run (useful for testing)
+    max_workers: Optional[int] = None  # Maximum number of parallel workers
 
     def __post_init__(self):
         # Validate quest paths

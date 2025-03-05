@@ -111,11 +111,11 @@ class AgentManager:
                 ),
                 AgentConfig(
                     agent_id="claude-3-haiku-default",
-                    model="claude-3-haiku-20240307",
+                    model="claude-3-5-haiku-latest",
                     temperature=0.7,
                     system_template="system_role.jinja", 
                     action_template="reasoning.jinja",
-                    description="Default Claude 3 Haiku agent with standard prompt templates"
+                    description="Default Claude 3.5 Haiku agent with standard prompt templates"
                 )
             ]
             

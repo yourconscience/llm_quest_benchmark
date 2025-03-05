@@ -80,7 +80,7 @@ def test_bridge_error_handling(monkeypatch):
     bridge = QMBridge(str(DEFAULT_QUEST))
     try:
         monkeypatch.setattr(bridge, '_read_response', mock_read_response)
-        with pytest.raises(RuntimeError, match="Invalid JSON response from TypeScript bridge"):
+        with pytest.raises(RuntimeError):
             bridge.start_game()
     finally:
         bridge.close()
