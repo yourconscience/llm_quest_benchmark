@@ -59,37 +59,48 @@ def get_quest_files(quest_paths: List[str], max_quests: Optional[int] = None) ->
     return quest_files
 
 
-def agent_worker(agent_config: AgentConfig,
+def agent_worker(agent_id: str,
                  quest_queue: queue.Queue,
                  results: List[Dict[str, Any]],
                  results_lock: threading.Lock,
                  benchmark_id: str,
                  quest_timeout: int,
+                 debug: bool = False,
                  progress_callback=None) -> None:
     """Worker function to process quests for a specific agent
 
     Args:
-        agent_config: Configuration for the agent
+        agent_id: ID of the agent to use
         quest_queue: Queue of quests to process
         results: Shared list to store results
         results_lock: Lock for thread-safe access to results
         benchmark_id: ID for the benchmark run
         quest_timeout: Timeout for each quest
+        debug: Whether to enable debug logging
         progress_callback: Optional callback to report progress
     """
+    # Import here to avoid circular imports
+    from llm_quest_benchmark.agents.agent_manager import AgentManager
+    from llm_quest_benchmark.agents.agent_factory import create_agent_from_id
+    
+    # Get agent configuration from manager
+    agent_manager = AgentManager()
+    agent_config = agent_manager.get_agent(agent_id)
+    
+    if not agent_config:
+        logger.error(f"Agent {agent_id} not found, worker exiting")
+        return
+    
     # Set benchmark_id in agent_config for database tracking
     agent_config.benchmark_id = benchmark_id
 
-    # Create agent
-    agent = create_agent(model=agent_config.model,
-                         temperature=agent_config.temperature,
-                         system_template=agent_config.system_template,
-                         action_template=agent_config.action_template,
-                         skip_single=agent_config.skip_single,
-                         debug=agent_config.debug)
-
-    # Get agent_id from agent_config
-    agent_id = agent_config.agent_id
+    # Create agent from agent_id
+    agent = create_agent_from_id(agent_id, 
+                               skip_single=getattr(agent_config, 'skip_single', True),
+                               debug=debug)
+    if not agent:
+        logger.error(f"Failed to create agent {agent_id}, worker exiting")
+        return
 
     # Process quests from the queue
     while True:
@@ -137,9 +148,9 @@ def agent_worker(agent_config: AgentConfig,
             # Create error result
             result = {
                 'quest': str(quest_file),
-                'model': agent_config.model,
-                'temperature': agent_config.temperature,
-                'template': agent_config.action_template,
+                'model': agent_config.model if agent_config else "unknown",
+                'temperature': agent_config.temperature if agent_config else 0.0,
+                'template': agent_config.action_template if agent_config else "unknown",
                 'agent_id': agent_id,
                 'outcome': QuestOutcome.ERROR.name,
                 'reward': 0.0,
@@ -181,44 +192,52 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
 
     # Print summary of what will be run
     logger.info(f"Running {len(quest_files)} quests with {len(config.agents)} agents")
-    logger.info(f"Agents: {', '.join(a.agent_id for a in config.agents)}")
+    logger.info(f"Agent IDs: {', '.join(config.agents)}")
+
+    # Import here to avoid circular imports
+    from llm_quest_benchmark.agents.agent_manager import AgentManager
+    agent_manager = AgentManager()
 
     # Shared results list and lock
     results = []
     results_lock = threading.Lock()
 
-    # Queue no longer used with sequential processing
+    # Process each agent_id
+    for agent_id in config.agents:
+        # Get agent configuration from manager
+        agent_config = agent_manager.get_agent(agent_id)
+        if not agent_config:
+            logger.error(f"Agent {agent_id} not found, skipping")
+            continue
 
-    # Ensure each agent processes all quests
-    for agent_config in config.agents:
-        # Process quests directly for this agent (simpler than threads)
+        # Set the benchmark_id in agent_config for database tracking
+        agent_config.benchmark_id = config.benchmark_id
+            
+        # Process quests directly for this agent
         for quest_file in quest_files:
             quest_str = str(quest_file)
             quest_name = Path(quest_file).name
 
-            logger.info(f"Agent {agent_config.agent_id} running quest {quest_name}")
+            logger.info(f"Agent {agent_id} running quest {quest_name}")
 
             try:
-                # Set the benchmark_id in agent_config for database tracking
-                agent_config.benchmark_id = config.benchmark_id
-
-                # Create agent
-                agent = create_agent(model=agent_config.model,
-                                     temperature=agent_config.temperature,
-                                     system_template=agent_config.system_template,
-                                     action_template=agent_config.action_template,
-                                     skip_single=agent_config.skip_single,
-                                     debug=agent_config.debug)
+                # Create agent from agent_id
+                from llm_quest_benchmark.agents.agent_factory import create_agent_from_id
+                agent = create_agent_from_id(agent_id, 
+                                            skip_single=getattr(agent_config, 'skip_single', True),
+                                            debug=config.debug)
+                if not agent:
+                    raise ValueError(f"Failed to create agent {agent_id}")
 
                 # Run quest with timeout
                 outcome = run_quest_with_timeout(quest_str,
-                                                 agent,
-                                                 timeout=config.quest_timeout,
-                                                 agent_config=agent_config)
+                                                agent,
+                                                timeout=config.quest_timeout,
+                                                agent_config=agent_config)
 
                 # Call progress callback if provided
                 if progress_callback:
-                    progress_callback(quest_str, agent_config.agent_id)
+                    progress_callback(quest_str, agent_id)
 
                 # Create result entry
                 result = {
@@ -226,7 +245,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
                     'model': agent_config.model,
                     'temperature': agent_config.temperature,
                     'template': agent_config.action_template,
-                    'agent_id': agent_config.agent_id,
+                    'agent_id': agent_id,
                     'outcome': outcome.name if outcome else QuestOutcome.ERROR.name,
                     'reward': getattr(outcome, 'reward', 0.0),
                     'error': None
@@ -234,20 +253,29 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
 
             except Exception as e:
                 # Log the error but continue with other quests
-                logger.error(
-                    f"Error running quest {quest_file} with agent {agent_config.agent_id}: {e}")
+                logger.error(f"Error running quest {quest_file} with agent {agent_id}: {e}")
 
-                # Create error result
-                result = {
-                    'quest': quest_str,
-                    'model': agent_config.model,
-                    'temperature': agent_config.temperature,
-                    'template': agent_config.action_template,
-                    'agent_id': agent_config.agent_id,
-                    'outcome': QuestOutcome.ERROR.name,
-                    'reward': 0.0,
-                    'error': str(e)
-                }
+                # Create error result with agent config details if available
+                if agent_config:
+                    result = {
+                        'quest': quest_str,
+                        'model': agent_config.model,
+                        'temperature': agent_config.temperature,
+                        'template': agent_config.action_template,
+                        'agent_id': agent_id,
+                        'outcome': QuestOutcome.ERROR.name,
+                        'reward': 0.0,
+                        'error': str(e)
+                    }
+                else:
+                    # Minimal result if agent_config not available
+                    result = {
+                        'quest': quest_str,
+                        'agent_id': agent_id,
+                        'outcome': QuestOutcome.ERROR.name,
+                        'reward': 0.0,
+                        'error': str(e)
+                    }
 
             # Add result to the shared results list
             with results_lock:
@@ -259,7 +287,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
         'benchmark_id': config.benchmark_id,
         'timestamp': datetime.now().isoformat(),
         'quests': [],
-        'agents': [agent.agent_id for agent in config.agents],
+        'agents': config.agents,  # Now just a list of agent IDs
         'results': results
     }
 
