@@ -777,7 +777,7 @@ def benchmark(
         # Log configuration
         log.info(f"Running benchmark with:")
         log.info(f"Quests: {benchmark_config.quests}")
-        log.info(f"Agents: {[a.model for a in benchmark_config.agents]}")
+        log.info(f"Agents: {benchmark_config.agents}")  # Now a list of agent IDs
         log.info(f"Quest timeout: {benchmark_config.quest_timeout}s")
         log.info(f"Output directory: {benchmark_config.output_dir}")
 
