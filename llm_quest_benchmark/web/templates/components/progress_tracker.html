@@ -7,7 +7,7 @@
         <div class="mb-3">
             <p id="progressInfo">Running...</p>
             <div class="progress mb-3">
-                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
                      role="progressbar" style="width: 0%"></div>
             </div>
             <div id="currentTask">Initializing...</div>
@@ -23,31 +23,31 @@
         const info = document.getElementById('progressInfo');
         const task = document.getElementById('currentTask');
         const bar = document.getElementById('progressBar');
-        
+
         // Set title if provided
         if (options.title) {
             title.textContent = options.title;
         }
-        
+
         // Set initial task if provided
         if (options.initialTask) {
             task.textContent = options.initialTask;
         }
-        
+
         // Set initial info if provided
         if (options.initialInfo) {
             info.textContent = options.initialInfo;
         }
-        
+
         // Reset progress bar
         bar.style.width = '0%';
         bar.setAttribute('aria-valuenow', 0);
-        
+
         // Show card if requested
         if (options.showCard) {
             card.style.display = 'block';
         }
-        
+
         return {
             card,
             title,
@@ -56,29 +56,29 @@
             bar
         };
     }
-    
+
     function updateProgress(progress) {
         const bar = document.getElementById('progressBar');
         bar.style.width = `${progress}%`;
         bar.setAttribute('aria-valuenow', progress);
     }
-    
+
     function updateProgressTask(taskText) {
         document.getElementById('currentTask').textContent = taskText;
     }
-    
+
     function updateProgressInfo(infoText) {
         document.getElementById('progressInfo').textContent = infoText;
     }
-    
+
     function hideProgressTracker() {
         document.getElementById('progressTrackerCard').style.display = 'none';
     }
-    
+
     function startPollingProgress(url, onComplete, onError, interval = 2000) {
         let lastProgress = 0;
         let stuckCounter = 0;
-        
+
         const pollInterval = setInterval(() => {
             fetch(url)
                 .then(response => response.json())
@@ -86,7 +86,7 @@
                     if (data.success) {
                         // Update progress with animation
                         const currentProgress = data.progress;
-                        
+
                         // Check if progress is stuck
                         if (currentProgress === lastProgress) {
                             stuckCounter++;
@@ -99,15 +99,15 @@
                             stuckCounter = 0;
                             lastProgress = currentProgress;
                         }
-                        
+
                         // Update the progress bar
                         updateProgress(currentProgress);
-                        
+
                         // Set the current task with details
                         if (data.current_task) {
                             updateProgressTask(data.current_task);
                         }
-                        
+
                         // Update info with estimated time if in progress
                         if (data.status === 'running') {
                             const statusText = `Status: ${data.status}`;
@@ -116,7 +116,7 @@
                         } else {
                             updateProgressInfo(`Status: ${data.status}`);
                         }
-                        
+
                         // If complete, stop polling and call completion handler
                         if (data.status === 'complete') {
                             // Set to 100% when complete
@@ -125,7 +125,7 @@
                             if (typeof onComplete === 'function') {
                                 onComplete(data);
                             }
-                        } 
+                        }
                         // If error, stop polling and call error handler
                         else if (data.status === 'error') {
                             clearInterval(pollInterval);
@@ -147,7 +147,7 @@
                     // Don't stop polling on network errors, might be temporary
                 });
         }, interval);
-        
+
         // Return a function to stop polling if needed
         return function stopPolling() {
             clearInterval(pollInterval);

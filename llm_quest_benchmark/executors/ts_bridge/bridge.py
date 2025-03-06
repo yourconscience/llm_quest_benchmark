@@ -1,10 +1,10 @@
 """TypeScript bridge for QM file parsing and execution"""
-import logging
 import json
+import logging
 import subprocess
 from copy import deepcopy
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 from llm_quest_benchmark.schemas.bridge import QMBridgeState
 from llm_quest_benchmark.utils.text_processor import clean_qm_text, detect_quest_outcome
@@ -47,7 +47,7 @@ class QMBridge:
             response = self.process.stdout.readline()
             if self.debug:
                 logger.debug(f"Raw response: {response[:500]}...")
-                
+
             # Check for empty response, which can happen with some quests
             if not response or response.strip() == '':
                 logger.warning("Empty response received from TypeScript bridge")
@@ -58,14 +58,18 @@ class QMBridge:
                         logger.debug(f"Second attempt raw response: {response[:500]}...")
                 else:
                     raise TimeoutError("Timeout waiting for response after empty line")
-                    
+
             return response
         else:
             raise TimeoutError("Timeout waiting for response from TypeScript bridge")
 
     def parse_quest_locations(self) -> Dict[str, Any]:
         """Parse quest file and return metadata including locations and start location"""
-        cmd = ["node", "-r", "ts-node/register", str(self.parser_script), str(self.quest_file), "--parse"]
+        cmd = [
+            "node", "-r", "ts-node/register",
+            str(self.parser_script),
+            str(self.quest_file), "--parse"
+        ]
 
         if self.debug:
             logger.debug(f"Running parser command: {' '.join(cmd)}")
@@ -77,10 +81,11 @@ class QMBridge:
 
             try:
                 from json_repair import repair_json
+
                 # Clean the output - remove any non-JSON text before/after
                 output = proc.stdout.strip()
                 if '{' in output:
-                    output = output[output.find('{'):output.rfind('}')+1]
+                    output = output[output.find('{'):output.rfind('}') + 1]
                 repaired_json = repair_json(output)
                 qm_data = json.loads(repaired_json)
             except ImportError:
@@ -92,12 +97,15 @@ class QMBridge:
             start_location = metadata.get('startLocationId', 0)
 
             if self.debug:
-                logger.debug(f"Parsed metadata: start location {start_location}, total locations: {total_locations}")
+                logger.debug(
+                    f"Parsed metadata: start location {start_location}, total locations: {total_locations}"
+                )
 
             return {
                 'start_location_id': start_location,
                 'locations': metadata.get('locations', []),
-                'total_locations': total_locations if total_locations > 0 else 20  # Default fallback for progress bar
+                'total_locations': total_locations if total_locations > 0 else
+                                   20  # Default fallback for progress bar
             }
 
         except subprocess.CalledProcessError as e:
@@ -142,20 +150,24 @@ class QMBridge:
                 except json.JSONDecodeError:
                     # If that fails, try more robust methods
                     global _LOG_JSON_ERROR_WARNING, _QUEST_JSON_FAILURES
-                    
+
                     quest_name = Path(self.quest_file).name
-                    
+
                     # Only log if we haven't already seen a failure for this quest
                     if quest_name not in _QUEST_JSON_FAILURES:
                         _QUEST_JSON_FAILURES.add(quest_name)
-                        
+
                         if _LOG_JSON_ERROR_WARNING:
-                            logger.warning(f"JSON parsing failed for {quest_name}, attempting repair. JSON errors for other quests will not be logged.")
+                            logger.warning(
+                                f"JSON parsing failed for {quest_name}, attempting repair. JSON errors for other quests will not be logged."
+                            )
                             # Disable future warnings except for debug mode
                             _LOG_JSON_ERROR_WARNING = False
                         elif self.debug:
-                            logger.warning(f"JSON parsing failed for {quest_name}, attempting repair (debug mode)")
-                    
+                            logger.warning(
+                                f"JSON parsing failed for {quest_name}, attempting repair (debug mode)"
+                            )
+
                     try:
                         # Try with json-repair library if available
                         from json_repair import repair_json
@@ -167,9 +179,10 @@ class QMBridge:
                         logger.debug("json-repair not available, attempting manual repair")
                         clean_response = initial_raw.strip()
                         if '{' in clean_response:
-                            clean_response = clean_response[clean_response.find('{'):clean_response.rfind('}')+1]
+                            clean_response = clean_response[clean_response.
+                                                            find('{'):clean_response.rfind('}') + 1]
                         response = json.loads(clean_response)
-                
+
                 if 'state' not in response:
                     raise RuntimeError("Invalid response format: missing 'state' field")
 
@@ -177,10 +190,12 @@ class QMBridge:
                 initial_state = QMBridgeState(
                     location_id=str(response['saving']['locationId']),
                     text=clean_qm_text(state['text']),
-                    choices=[{'id': str(c['jumpId']), 'text': clean_qm_text(c['text'])} for c in state['choices'] if c['active']],
+                    choices=[{
+                        'id': str(c['jumpId']),
+                        'text': clean_qm_text(c['text'])
+                    } for c in state['choices'] if c['active']],
                     reward=0.0,  # Initial state has no reward
-                    game_ended=state['gameState'] != 'running'
-                )
+                    game_ended=state['gameState'] != 'running')
 
                 if not initial_state.choices:
                     raise RuntimeError("No valid choices in initial state")
@@ -227,10 +242,12 @@ class QMBridge:
             current_state = QMBridgeState(
                 location_id=str(response_data['saving']['locationId']),
                 text=clean_qm_text(state['text']),
-                choices=[{'id': str(c['jumpId']), 'text': clean_qm_text(c['text'])} for c in state['choices'] if c['active']],
+                choices=[{
+                    'id': str(c['jumpId']),
+                    'text': clean_qm_text(c['text'])
+                } for c in state['choices'] if c['active']],
                 reward=0.0,  # Get reward from game state if available
-                game_ended=state['gameState'] != 'running'
-            )
+                game_ended=state['gameState'] != 'running')
 
             if not current_state.choices and not current_state.game_ended:
                 raise RuntimeError("No valid choices in current state")
@@ -255,10 +272,8 @@ class QMBridge:
         num_choices = len(current_state.choices)
         if not (1 <= choice_num <= num_choices):
             valid_choices = list(range(1, num_choices + 1))
-            raise ValueError(
-                f"Invalid choice {choice_num}. Valid choices: {valid_choices}\n"
-                f"Current state: {json.dumps(current_state.__dict__, indent=2)}"
-            )
+            raise ValueError(f"Invalid choice {choice_num}. Valid choices: {valid_choices}\n"
+                             f"Current state: {json.dumps(current_state.__dict__, indent=2)}")
 
         return current_state.choices[choice_num - 1]['id']
 
@@ -272,7 +287,8 @@ class QMBridge:
             jump_id = self.validate_choice(choice_num)
 
             if self.debug:
-                current_state = self.state_history[-1] if self.state_history else self.get_current_state()
+                current_state = self.state_history[
+                    -1] if self.state_history else self.get_current_state()
                 logger.debug(f"Step with choice_num: {choice_num}, jump_id: {jump_id}")
                 choices_debug = []
                 for i, c in enumerate(current_state.choices):
@@ -287,7 +303,8 @@ class QMBridge:
             # Read response
             response = self._read_response()
             if not response:
-                logger.warning("No response received from TypeScript bridge, trying to get current state")
+                logger.warning(
+                    "No response received from TypeScript bridge, trying to get current state")
                 try:
                     # Try to get current state directly as a fallback
                     return self.get_current_state()
@@ -304,20 +321,24 @@ class QMBridge:
                 except json.JSONDecodeError:
                     # If that fails, try more robust methods
                     global _VERBOSE_JSON_LOGGING, _LOG_JSON_ERROR_WARNING, _QUEST_JSON_FAILURES
-                    
+
                     quest_name = Path(self.quest_file).name
-                    
+
                     # Only log if we haven't already seen a failure for this quest
                     if quest_name not in _QUEST_JSON_FAILURES:
                         _QUEST_JSON_FAILURES.add(quest_name)
-                        
+
                         if _LOG_JSON_ERROR_WARNING:
-                            logger.warning(f"JSON parsing failed for {quest_name}, attempting repair. JSON errors for other quests will not be logged.")
+                            logger.warning(
+                                f"JSON parsing failed for {quest_name}, attempting repair. JSON errors for other quests will not be logged."
+                            )
                             # Disable future warnings except for debug mode
                             _LOG_JSON_ERROR_WARNING = False
                         elif self.debug or _VERBOSE_JSON_LOGGING:
-                            logger.warning(f"JSON parsing failed for response in {quest_name}, attempting repair (debug mode)")
-                    
+                            logger.warning(
+                                f"JSON parsing failed for response in {quest_name}, attempting repair (debug mode)"
+                            )
+
                     try:
                         # Try with json-repair library if available
                         from json_repair import repair_json
@@ -331,7 +352,8 @@ class QMBridge:
                             logger.debug("json-repair not available, attempting manual repair")
                         clean_response = response.strip()
                         if '{' in clean_response:
-                            clean_response = clean_response[clean_response.find('{'):clean_response.rfind('}')+1]
+                            clean_response = clean_response[clean_response.
+                                                            find('{'):clean_response.rfind('}') + 1]
                         response_data = json.loads(clean_response)
             except json.JSONDecodeError as e:
                 logger.error(f"JSON decode error: {e}")
@@ -342,47 +364,52 @@ class QMBridge:
             if 'state' not in response_data:
                 # Use global flag to only log this warning once across all quests
                 global _LOG_MISSING_STATE_WARNING
-                
+
                 # Only log warning in specific circumstances to avoid spam
                 if self.debug:
-                    logger.warning("Response missing 'state' field, checking if game ended or using fallback")
+                    logger.warning(
+                        "Response missing 'state' field, checking if game ended or using fallback")
                 elif _LOG_MISSING_STATE_WARNING:
                     quest_name = Path(self.quest_file).name
-                    logger.warning(f"Response missing 'state' field in {quest_name}, using fallback. This is normal for completed quests and will not be logged again.")
+                    logger.warning(
+                        f"Response missing 'state' field in {quest_name}, using fallback. This is normal for completed quests and will not be logged again."
+                    )
                     # Disable the warning for all future bridge instances
                     _LOG_MISSING_STATE_WARNING = False
-                
+
                 # Create a fallback state regardless of what data we have
                 if self.debug:
                     logger.info("Creating artificial state to recover from error")
                 last_state = self.state_history[-1] if self.state_history else None
-                
+
                 # Use the last known state's text or a generic message
                 text = "Game ended unexpectedly."
                 location_id = "0"
-                
+
                 # Make sure response_data is a dictionary
                 if not isinstance(response_data, dict):
                     # Only log in debug mode to avoid spam
                     if self.debug:
-                        logger.warning(f"Response data is {type(response_data)}, creating empty dict")
+                        logger.warning(
+                            f"Response data is {type(response_data)}, creating empty dict")
                     response_data = {}
-                
+
                 # Extract location from saving data if available
-                if 'saving' in response_data and isinstance(response_data['saving'], dict) and 'locationId' in response_data['saving']:
+                if 'saving' in response_data and isinstance(
+                        response_data['saving'], dict) and 'locationId' in response_data['saving']:
                     location_id = str(response_data['saving'].get('locationId', 0))
-                
+
                 if last_state:
                     text = last_state.text + "\n\n[Game progressed to next state]"
                     if not location_id or location_id == "0":
                         location_id = last_state.location_id
-                
+
                 # Check for keywords in the text that might indicate success or failure
                 reward = 0.0
                 if last_state and last_state.text:
                     # Use our centralized quest outcome detection utility
                     success, detected_reward, reason = detect_quest_outcome(last_state.text)
-                    
+
                     if success:
                         reward = 1.0  # Use standard 1.0 for positive outcome in bridge
                         logger.info(f"Detected success in text ({reason})")
@@ -390,7 +417,7 @@ class QMBridge:
                             logger.info(f"Found reward value: {detected_reward}")
                     elif reason != "no_indicators":
                         logger.info(f"Detected failure in text ({reason})")
-                
+
                 # Create a synthetic state to allow graceful continuation
                 response_data['state'] = {
                     'text': text,
@@ -398,7 +425,7 @@ class QMBridge:
                     'gameState': 'complete',
                     'reward': reward
                 }
-                
+
                 logger.debug(f"Created synthetic state: {response_data['state']}")
 
             state = response_data['state']
@@ -408,47 +435,47 @@ class QMBridge:
                 location_id = "0"
                 if 'saving' in response_data and 'locationId' in response_data['saving']:
                     location_id = str(response_data['saving']['locationId'])
-                
+
                 # Get choices safely
                 choices = []
                 if 'choices' in state:
-                    choices = [{'id': str(c.get('jumpId', 0)), 'text': clean_qm_text(c.get('text', ''))} 
-                              for c in state['choices'] if c.get('active', True)]
-                
+                    choices = [{
+                        'id': str(c.get('jumpId', 0)),
+                        'text': clean_qm_text(c.get('text', ''))
+                    } for c in state['choices'] if c.get('active', True)]
+
                 # Create state object
-                new_state = QMBridgeState(
-                    location_id=location_id,
-                    text=clean_qm_text(state.get('text', 'Game text unavailable.')),
-                    choices=choices,
-                    reward=float(state.get('reward', 0.0)),
-                    game_ended=state.get('gameState', 'complete') != 'running'
-                )
-                
+                new_state = QMBridgeState(location_id=location_id,
+                                          text=clean_qm_text(
+                                              state.get('text', 'Game text unavailable.')),
+                                          choices=choices,
+                                          reward=float(state.get('reward', 0.0)),
+                                          game_ended=state.get('gameState', 'complete')
+                                          != 'running')
+
                 # Log warning if we had to create a synthetic state or parts of it
                 if not choices and not new_state.game_ended:
-                    logger.warning("Created QMBridgeState with no choices but game not marked as ended")
+                    logger.warning(
+                        "Created QMBridgeState with no choices but game not marked as ended")
             except Exception as e:
                 logger.error(f"Error creating QMBridgeState: {e}")
                 # Create a minimal valid state as a fallback
-                new_state = QMBridgeState(
-                    location_id="0",
-                    text="An error occurred while processing the game state.",
-                    choices=[],
-                    reward=0.0,
-                    game_ended=True
-                )
+                new_state = QMBridgeState(location_id="0",
+                                          text="An error occurred while processing the game state.",
+                                          choices=[],
+                                          reward=0.0,
+                                          game_ended=True)
 
             # If there are no choices and the game isn't marked as ended,
             # Force it to end to avoid getting stuck
             if not new_state.choices and not new_state.game_ended:
                 logger.warning("No valid choices but game not ended - forcing game end")
-                new_state = QMBridgeState(
-                    location_id=new_state.location_id,
-                    text=new_state.text + "\n\n[Game ended due to no available choices]",
-                    choices=[],
-                    reward=new_state.reward,
-                    game_ended=True
-                )
+                new_state = QMBridgeState(location_id=new_state.location_id,
+                                          text=new_state.text +
+                                          "\n\n[Game ended due to no available choices]",
+                                          choices=[],
+                                          reward=new_state.reward,
+                                          game_ended=True)
 
             self.state_history.append(new_state)
             return new_state
@@ -461,14 +488,11 @@ class QMBridge:
     def get_debug_state(self) -> str:
         """Get formatted debug state"""
         current_state = self.state_history[-1] if self.state_history else self.get_current_state()
-        return (
-            f"Location: {current_state.location_id}\n"
-            f"Game ended: {current_state.game_ended}\n"
-            f"Reward: {current_state.reward}\n"
-            f"Choices:\n" +
-            "\n".join(f"{i+1}. {c['text']} (id: {c['id']})"
-                     for i, c in enumerate(current_state.choices))
-        )
+        return (f"Location: {current_state.location_id}\n"
+                f"Game ended: {current_state.game_ended}\n"
+                f"Reward: {current_state.reward}\n"
+                f"Choices:\n" + "\n".join(f"{i+1}. {c['text']} (id: {c['id']})"
+                                          for i, c in enumerate(current_state.choices)))
 
     def close(self):
         """Clean up resources"""

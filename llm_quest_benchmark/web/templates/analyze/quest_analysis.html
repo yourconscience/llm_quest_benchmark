@@ -187,10 +187,10 @@
                 <div id="reportContent" class="p-3">
                     <h2>{{ quest_name }} - Performance Report</h2>
                     <p>Generated on {{ now.strftime('%Y-%m-%d %H:%M:%S') if now else datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') }}</p>
-                    
+
                     <h3>Summary</h3>
                     <p>The quest "{{ quest_name }}" has been run {{ total_runs }} times with a success rate of {{ "%.1f"|format(success_rate) }}%.</p>
-                    
+
                     <h3>Agent Performance</h3>
                     <table class="table table-bordered">
                         <thead>
@@ -212,7 +212,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    
+
                     <h3>Best Performing Runs</h3>
                     <table class="table table-bordered">
                         <thead>
@@ -271,7 +271,7 @@
     const successRuns = {{ runs|selectattr('outcome', 'equalto', 'SUCCESS')|list|length }};
     const failureRuns = {{ runs|selectattr('outcome', 'equalto', 'FAILURE')|list|length }};
     const otherRuns = {{ total_runs - runs|selectattr('outcome', 'equalto', 'SUCCESS')|list|length - runs|selectattr('outcome', 'equalto', 'FAILURE')|list|length }};
-    
+
     const ctxOutcome = document.getElementById('outcomeChart').getContext('2d');
     new Chart(ctxOutcome, {
         type: 'doughnut',
@@ -294,11 +294,11 @@
             cutout: '70%'
         }
     });
-    
+
     // Agent Performance Chart
     const agentLabels = [{% for agent_id, stats in agent_stats.items() %}'{{ agent_id }}'{% if not loop.last %}, {% endif %}{% endfor %}];
     const agentSuccessRates = [{% for agent_id, stats in agent_stats.items() %}{{ stats.success_rate }}{% if not loop.last %}, {% endif %}{% endfor %}];
-    
+
     const ctxAgentPerformance = document.getElementById('agentPerformanceChart').getContext('2d');
     new Chart(ctxAgentPerformance, {
         type: 'bar',
@@ -327,19 +327,19 @@
             }
         }
     });
-    
+
     // Readable Output Handlers
     const viewReadableButtons = document.querySelectorAll('.view-readable');
     const readableOutput = document.getElementById('readableOutput');
     const copyReadableBtn = document.getElementById('copyReadableBtn');
-    
+
     viewReadableButtons.forEach(button => {
         button.addEventListener('click', function() {
             const runId = this.dataset.runId;
             fetchReadableOutput(runId);
         });
     });
-    
+
     function fetchReadableOutput(runId) {
         fetch(`/analyze/run/${runId}/readable`)
             .then(response => response.json())
@@ -353,7 +353,7 @@
             })
             .catch(error => console.error('Error:', error));
     }
-    
+
     copyReadableBtn.addEventListener('click', function() {
         navigator.clipboard.writeText(readableOutput.textContent)
             .then(() => {
@@ -367,15 +367,15 @@
                 console.error('Failed to copy: ', err);
             });
     });
-    
+
     // Report Modal
     const generateReportBtn = document.getElementById('generateReportBtn');
     const copyReportBtn = document.getElementById('copyReportBtn');
-    
+
     generateReportBtn.addEventListener('click', function() {
         new bootstrap.Modal(document.getElementById('reportModal')).show();
     });
-    
+
     copyReportBtn.addEventListener('click', function() {
         const reportContent = document.getElementById('reportContent').innerText;
         navigator.clipboard.writeText(reportContent)

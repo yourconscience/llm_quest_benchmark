@@ -1,0 +1,16 @@
+{
+  "agent_id": "calculator-agent",
+  "model": "gpt-4o",
+  "temperature": 0.7,
+  "system_template": "system_role.jinja",
+  "action_template": "action/calculator.jinja",
+  "max_tokens": null,
+  "top_p": null,
+  "additional_params": null,
+  "description": "GPT-4o agent with calculator tool",
+  "memory": {
+    "type": "message_history",
+    "max_history": 10
+  },
+  "tools": ["calculator"]
+}

@@ -1,12 +1,13 @@
 """Interactive console player for Space Rangers quests"""
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from llm_quest_benchmark.agents.base import QuestPlayer
 
 
 class HumanPlayer(QuestPlayer):
     """Interactive console player that takes input from user"""
+
     def __init__(self, skip_single: bool = False, debug: bool = False):
         super().__init__(skip_single=skip_single)
         self.debug = debug

@@ -1,38 +1,38 @@
 """Web-specific quest runner utilities"""
-import logging
-from typing import Any, Dict, List, Optional, Callable
-from datetime import datetime
-import os
 import json
+import logging
+import os
 import traceback
 import uuid
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
-from flask import current_app, request, Flask
 import sqlalchemy
+from flask import Flask, current_app, request
 from sqlalchemy.exc import SQLAlchemyError
 
-from llm_quest_benchmark.core.runner import QuestRunner, run_quest_with_timeout
 from llm_quest_benchmark.agents.base import QuestPlayer
-from llm_quest_benchmark.environments.state import QuestOutcome
-from llm_quest_benchmark.schemas.state import AgentState
-from llm_quest_benchmark.schemas.config import AgentConfig
-from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
-from llm_quest_benchmark.environments.qm import QMPlayerEnv
-from ..models.database import db, Run, Step
-from .errors import validate_run, validate_choice, RunNotFoundError, RunCompletedError
 from llm_quest_benchmark.constants import DEFAULT_QUEST_TIMEOUT
+from llm_quest_benchmark.core.runner import QuestRunner, run_quest_with_timeout
+from llm_quest_benchmark.environments.qm import QMPlayerEnv
+from llm_quest_benchmark.environments.state import QuestOutcome
+from llm_quest_benchmark.schemas.config import AgentConfig
+from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
+
+from ..models.database import Run, Step, db
+from .errors import RunCompletedError, RunNotFoundError, validate_choice, validate_run
 
 logger = logging.getLogger(__name__)
 
-def run_quest_with_db_logging(
-    quest_path: str,
-    agent: QuestPlayer,
-    run_record: Run,
-    timeout: int = DEFAULT_QUEST_TIMEOUT,
-    debug: bool = False,
-    request = None
-) -> Dict[str, Any]:
+
+def run_quest_with_db_logging(quest_path: str,
+                              agent: QuestPlayer,
+                              run_record: Run,
+                              timeout: int = DEFAULT_QUEST_TIMEOUT,
+                              debug: bool = False,
+                              request=None) -> Dict[str, Any]:
     """Run a quest and log results to database.
 
     Args:
@@ -74,8 +74,7 @@ def run_quest_with_db_logging(
                         observation=data.observation,
                         choices=data.choices,
                         action=data.action,
-                        llm_response=data.llm_response.to_dict() if data.llm_response else None
-                    )
+                        llm_response=data.llm_response.to_dict() if data.llm_response else None)
                     db.session.add(step)
                     db.session.commit()
                 except Exception as e:
@@ -88,21 +87,19 @@ def run_quest_with_db_logging(
         # Update the agent_id in the run record
         run_record.agent_id = agent_id
         db.session.commit()
-        
+
     # Create AgentConfig from run_record.agent_config
     agent_config = None
     if run_record.agent_config:
         agent_config = AgentConfig(**run_record.agent_config)
 
     # Run quest using the runner
-    outcome = run_quest_with_timeout(
-        quest_path=quest_path,
-        agent=agent,
-        timeout=timeout,
-        agent_config=agent_config,
-        debug=debug,
-        callbacks=[step_callback]
-    )
+    outcome = run_quest_with_timeout(quest_path=quest_path,
+                                     agent=agent,
+                                     timeout=timeout,
+                                     agent_config=agent_config,
+                                     debug=debug,
+                                     callbacks=[step_callback])
 
     # Check if this is just initialization (only getting the first step)
     # This is determined by checking if we're using the 'init_quest_route' endpoint
@@ -150,12 +147,10 @@ class ManualChoiceAgent(QuestPlayer):
     def get_action(self, observation: str, choices: List[Dict[str, Any]]) -> int:
         from llm_quest_benchmark.schemas.response import LLMResponse
 
-        self.last_response = LLMResponse(
-            action=self.choice,
-            is_default=False,
-            reasoning='Manual user selection',
-            analysis=None
-        )
+        self.last_response = LLMResponse(action=self.choice,
+                                         is_default=False,
+                                         reasoning='Manual user selection',
+                                         analysis=None)
         return self.choice
 
     def get_last_response(self):
@@ -211,14 +206,12 @@ class ReplayQuestRunner(QuestRunner):
             observation, done, success, info = self.env.step(action)
 
             # Create agent state for callback
-            agent_state = AgentState(
-                step=self.step_count + 1,
-                location_id=self.env.state['location_id'],
-                observation=observation,
-                choices=self.env.state['choices'],
-                action=str(action),
-                llm_response=self.agent.get_last_response()
-            )
+            agent_state = AgentState(step=self.step_count + 1,
+                                     location_id=self.env.state['location_id'],
+                                     observation=observation,
+                                     choices=self.env.state['choices'],
+                                     action=str(action),
+                                     llm_response=self.agent.get_last_response())
             self._notify_callbacks("game_state", agent_state)
 
             return QuestOutcome.SUCCESS if done and success else QuestOutcome.FAILURE if done else None
@@ -231,11 +224,7 @@ class ReplayQuestRunner(QuestRunner):
                 self.env.close()
 
 
-def take_manual_step(
-    run_id: int,
-    choice_num: int,
-    debug: bool = False
-) -> Dict[str, Any]:
+def take_manual_step(run_id: int, choice_num: int, debug: bool = False) -> Dict[str, Any]:
     """Take a manual step in an existing quest run."""
     logger.info(f"Taking manual step for run {run_id} with choice {choice_num}")
 
@@ -290,15 +279,13 @@ def take_manual_step(
         logger.debug(f"Next location: {next_location}, Outcome: {outcome}")
 
         # Create a new step record
-        new_step = Step(
-            run_id=run_id,
-            step=latest_step.step + 1,
-            location_id=next_location,
-            observation=observation,
-            choices=next_choices,
-            action=None,
-            llm_response=None
-        )
+        new_step = Step(run_id=run_id,
+                        step=latest_step.step + 1,
+                        location_id=next_location,
+                        observation=observation,
+                        choices=next_choices,
+                        action=None,
+                        llm_response=None)
         db.session.add(new_step)
 
         # Update run record if game ended

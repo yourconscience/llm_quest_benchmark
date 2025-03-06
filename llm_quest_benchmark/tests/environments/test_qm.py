@@ -3,6 +3,7 @@ import pytest
 from llm_quest_benchmark.environments.qm import QMPlayerEnv
 from llm_quest_benchmark.constants import DEFAULT_QUEST
 
+
 def test_qm_env_lifecycle():
     """Test QM environment lifecycle - initialization, reset, step, close"""
     env = QMPlayerEnv(str(DEFAULT_QUEST))
@@ -28,6 +29,7 @@ def test_qm_env_lifecycle():
 
     finally:
         env.close()
+
 
 def test_qm_env_error_handling():
     """Test QM environment error handling"""

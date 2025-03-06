@@ -1,119 +1,120 @@
 # LLM Quest Benchmark Roadmap
 
-## Web UI for Benchmark Implementation Plan
+## Core Concept
+Enhance **LLM Quest Benchmark** to support advanced agents with memory and tools, using cloud LLMs (Claude, OpenAI, Google), keeping it simple for solo architect (me) and Claude (Sonnet 3.7) as programmer.
 
-This plan outlines the steps to implement a web UI for benchmark functionality, adding to the existing web interface.
+## Current Progress
 
-### Core Components
+### Completed Features
+- ✅ **Agent Configuration Storage**: JSON files in `agents/` directory with standardized schema
+- ✅ **Memory System**: Support for both raw message history and summarized history
+- ✅ **Tool Integration**: Basic calculator tool implementation
+- ✅ **Agent Management Commands**: CLI for managing agent configurations
+- ✅ **Web Interface Updates**: Support for memory and tool configuration
+- ✅ **Metrics Logging**: Recording completion rates, steps taken, and other metrics
+- ✅ **Database Persistence**: Backup/restore system for metrics database
 
-#### 1. Benchmark Configuration
-- Use a shared default configuration source for both CLI and web UI
-- Simple YAML editor with validation feedback
-- "Run Benchmark" button to start benchmarks
-- Support for basic configuration options
+## Next Steps: Leaderboard & Analytics Enhancement
 
-#### 2. Progress Tracking Component
-- Create a reusable component for progress tracking
-- Implement in both benchmark view and quest monitor view
-- Show progress bar, current task, and status
-- Support real-time updates
+### Phase 1: Unified Run Analytics
 
-#### 3. Benchmark Results View
-- Integrate with existing analysis tools
-- Show summary statistics (success rate, model comparison)
-- Display detailed quest outcomes
-- Link to full run details in the analysis section
+1. **Refactor Run Analysis View**
+   - Update `/analyze` view to show ALL runs regardless of source (benchmark or manual)
+   - Add filtering options by agent, quest, date range, and success status
+   - Improve sorting capabilities (by date, steps, reward, etc.)
+   - Enhance search functionality to find specific runs
 
-### Implementation Plan
+2. **Improve Run Details Display**
+   - Add memory usage information to run details
+   - Show tool usage statistics when applicable
+   - Display timing information for each step
+   - Add visual indicators for critical decision points
 
-#### Step 1: Update Configuration Handling
-1. Create a central source for default benchmark configuration
-2. Use this configuration in both CLI and web UI
-3. Implement simple validation with helpful error messages
+### Phase 2: Leaderboard Implementation
 
-#### Step 2: Create Reusable Progress Tracker
-1. Develop a progress tracking component
-2. Implement backend API for status updates
-3. Create frontend component for displaying progress
-4. Integrate with both benchmark and quest runner views
+1. **Create Leaderboard Data Model**
+   - Design database tables or views for leaderboard statistics
+   - Implement aggregation functions for key metrics:
+     - Success rate by agent/model
+     - Average reward attained
+     - Average steps taken
+     - Efficiency metrics (success/step ratio)
 
-#### Step 3: Update Benchmark Controller
-1. Add endpoints for starting and monitoring benchmarks
-2. Implement background processing for benchmark runs
-3. Store benchmark results in the database
-4. Create API for retrieving benchmark status and results
+2. **Develop Leaderboard UI**
+   - Create new `/leaderboard` route and template
+   - Implement tabular view with sortable columns
+   - Add filtering by benchmark, quest type, date range
+   - Include visual elements (charts, badges) for top performers
+   - Design responsive layout for mobile/desktop viewing
 
-#### Step 4: Enhance Analysis Views
-1. Update analyze views to better support benchmark results
-2. Create a dedicated benchmark analysis view
-3. Implement visualization of benchmark results
-4. Provide links between benchmark and detailed run analysis
+3. **Add Comparison Features**
+   - Enable side-by-side agent comparison
+   - Implement statistical significance indicators
+   - Add historical trend visualization
+   - Create exportable reports for benchmark results
 
-#### Step 5: Database Updates
-1. Add benchmark run table to store benchmark metadata
-2. Track benchmark progress and results
-3. Link benchmark runs to individual quest runs
+### Phase 3: Enhanced Metrics
 
-### Technical Details
+1. **Expand Metrics Collection**
+   - Track token usage for cost estimation
+   - Measure response time for each agent decision
+   - Record memory and tool utilization patterns
+   - Implement "difficulty rating" for quests based on success rates
 
-#### Database Schema
-```python
-class BenchmarkRun(db.Model):
-    """Benchmark run record"""
-    id = db.Column(db.Integer, primary_key=True)
-    benchmark_id = db.Column(db.String(64), unique=True, nullable=False)
-    name = db.Column(db.String(128))
-    config = db.Column(db.Text)  # JSON string of benchmark config
-    status = db.Column(db.String(32), default='running')  # running, complete, error
-    start_time = db.Column(db.DateTime, default=datetime.utcnow)
-    end_time = db.Column(db.DateTime, nullable=True)
-    results = db.Column(db.Text, nullable=True)  # JSON string of results
-    error = db.Column(db.Text, nullable=True)
-```
+2. **Performance Over Time**
+   - Track agent improvement across benchmark runs
+   - Visualize learning curves for agents with memory
+   - Compare performance between agent versions
+   - Identify performance patterns and anomalies
 
-#### Benchmark Status Tracking
-```python
-class BenchmarkStatus:
-    """Benchmark status tracker"""
-    def __init__(self, benchmark_id, config_dict):
-        self.benchmark_id = benchmark_id
-        self.config_dict = config_dict
-        self.status = 'initializing'
-        self.progress = 0
-        self.current_task = 'Starting benchmark'
-        self.start_time = datetime.now()
-        self.end_time = None
-        self.result = None
-        self.error = None
-```
+3. **Export and Sharing**
+   - Add CSV/JSON export for leaderboard data
+   - Implement PDF report generation
+   - Create shareable links for benchmark results
+   - Build public leaderboard option for community benchmarks
 
-#### Progress Tracker Component
-The progress tracker will be a reusable component that can be included in any page that needs to show progress:
+### Phase 4: Testing and Documentation
 
-```html
-<!-- Progress Tracker Component -->
-<div class="card border-0 shadow-sm mb-4" id="progressTrackerCard" style="display: none;">
-    <div class="card-header bg-white">
-        <h5 class="card-title mb-0" id="progressTrackerTitle">Progress</h5>
-    </div>
-    <div class="card-body">
-        <div class="mb-3">
-            <p id="progressInfo">Running...</p>
-            <div class="progress mb-3">
-                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
-                     role="progressbar" style="width: 0%"></div>
-            </div>
-            <div id="currentTask">Initializing...</div>
-        </div>
-    </div>
-</div>
-```
+1. **Integration Testing**
+   - Test leaderboard with various data sets
+   - Verify metrics accuracy across different benchmarks
+   - Ensure UI responsiveness with large datasets
+   - Validate export functionality
 
-### Next Steps
+2. **Documentation**
+   - Update user documentation with leaderboard features
+   - Create example reports and usage patterns
+   - Document new database schema elements
+   - Add API documentation for metrics access
 
-Once the basic implementation is complete, potential enhancements include:
+3. **Final Refinements**
+   - Optimize database queries for performance
+   - Add caching for frequently accessed leaderboard data
+   - Implement user preferences for default views
+   - Fine-tune UI based on user feedback
 
-1. Add support for cancelling running benchmarks
-2. Implement comparison between different benchmark runs
-3. Add export functionality for benchmark results
-4. Create visualizations for tracking performance over time
+## Implementation Plan
+
+1. **First Milestone: Unified Run Analytics**
+   - Update database queries to include all runs
+   - Modify templates to display combined run data
+   - Add filtering and sorting capabilities
+   - Deploy and test with various run types
+
+2. **Second Milestone: Basic Leaderboard**
+   - Implement core leaderboard functionality
+   - Create routes and templates for leaderboard view
+   - Add top-level metrics (success rate, reward, steps)
+   - Deploy for initial user testing
+
+3. **Third Milestone: Comparison and Advanced Features**
+   - Add agent comparison capabilities
+   - Implement trend visualization
+   - Add extended metrics
+   - Finalize UI and export options
+
+4. **Final Milestone: Testing and Release**
+   - Complete integration testing
+   - Update documentation
+   - Optimize performance
+   - Release final version

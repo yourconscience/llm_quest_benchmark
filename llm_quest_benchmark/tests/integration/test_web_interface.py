@@ -5,6 +5,7 @@ from llm_quest_benchmark.web.models.database import db, Run, Step
 from llm_quest_benchmark.constants import DEFAULT_QUEST
 import json
 
+
 @pytest.fixture
 def app():
     """Create test Flask app"""
@@ -22,6 +23,7 @@ def app():
         yield app
         db.drop_all()
 
+
 @pytest.fixture
 def client(app):
     """Create test client"""
@@ -31,6 +33,7 @@ def client(app):
     with app.test_client() as client:
         client.testing = True
         yield client
+
 
 @pytest.fixture
 def init_quest(client, app):
@@ -48,11 +51,13 @@ def init_quest(client, app):
         assert response.json['success']
         return response.json
 
+
 def test_index_redirect(client):
     """Test index redirects to monitor page"""
     response = client.get('/')
     assert response.status_code == 302
     assert response.location == '/monitor'
+
 
 def test_monitor_page(client):
     """Test monitor page loads"""
@@ -60,17 +65,20 @@ def test_monitor_page(client):
     assert response.status_code == 200
     assert b'Quest Runner' in response.data
 
+
 def test_benchmark_page(client):
     """Test benchmark page loads"""
     response = client.get('/benchmark/')
     assert response.status_code == 200
     assert b'Quest Benchmark' in response.data
 
+
 def test_analyze_page(client):
     """Test analyze page loads"""
     response = client.get('/analyze/')
     assert response.status_code == 200
     assert b'Quest Analysis' in response.data
+
 
 def test_quest_initialization(client, app):
     """Test quest initialization"""
@@ -131,6 +139,7 @@ def test_quest_initialization(client, app):
         db.session.commit()
 
         assert not run.end_time
+
 
 def test_quest_step(client, app):
     """Test taking a step in a quest"""
@@ -210,16 +219,17 @@ def test_quest_step(client, app):
         steps = Step.query.filter_by(run_id=run_id).all()
         assert len(steps) == 2
 
+
 def test_quest_invalid_step(client, app):
     """Test invalid step handling"""
     with app.app_context():
         # Initialize quest
         init_data = {
             'quest': 'kr1/Boat.qm',
-        'model': 'random_choice',
+            'model': 'random_choice',
             'temperature': 0.7,
             'template': 'reasoning'
-    }
+        }
         init_response = client.post('/monitor/run', json=init_data)
         assert init_response.status_code == 200
         run_id = init_response.json['run_id']
@@ -236,33 +246,36 @@ def test_quest_invalid_step(client, app):
         assert 'error' in step_response.json
         assert 'No choice provided' in step_response.json['error']
 
+
 def test_database_operations(app):
     """Test database operations"""
     with app.app_context():
         # Create a test run
-        run = Run(
-            quest_name='test_quest',
-            agent_id='test_agent',
-            agent_config={'model': 'random_choice'}
-        )
+        run = Run(quest_name='test_quest',
+                  agent_id='test_agent',
+                  agent_config={'model': 'random_choice'})
         db.session.add(run)
         db.session.commit()
 
         # Add a step
-        step = Step(
-            run_id=run.id,
-            step=1,
-            location_id='start',
-            observation='Test observation',
-            choices=json.dumps([{'id': '1', 'text': 'choice1'}, {'id': '2', 'text': 'choice2'}]),
-            action='1',
-            llm_response=json.dumps({
-                'action': 1,
-                'is_default': False,
-                'reasoning': 'Test reasoning',
-                'analysis': None
-            })
-        )
+        step = Step(run_id=run.id,
+                    step=1,
+                    location_id='start',
+                    observation='Test observation',
+                    choices=json.dumps([{
+                        'id': '1',
+                        'text': 'choice1'
+                    }, {
+                        'id': '2',
+                        'text': 'choice2'
+                    }]),
+                    action='1',
+                    llm_response=json.dumps({
+                        'action': 1,
+                        'is_default': False,
+                        'reasoning': 'Test reasoning',
+                        'analysis': None
+                    }))
         db.session.add(step)
         db.session.commit()
 
@@ -279,6 +292,7 @@ def test_database_operations(app):
         assert len(json.loads(saved_step.choices)) == 2
         assert saved_step.action == '1'
         assert json.loads(saved_step.llm_response)['reasoning'] == 'Test reasoning'
+
 
 def test_readable_run_endpoint(client, init_quest):
     """Test the human-readable run endpoint"""
@@ -308,6 +322,7 @@ def test_readable_run_endpoint(client, init_quest):
     assert "AGENT:" in readable_output
     assert "STEPS:" in readable_output
     assert "QUEST PLAYTHROUGH" in readable_output
+
 
 def test_readable_endpoint(client, init_quest):
     """Test that the readable endpoint returns a 200 status code"""

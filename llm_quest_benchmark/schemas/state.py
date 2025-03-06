@@ -1,6 +1,6 @@
 """State dataclasses for quest environments"""
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from .response import LLMResponse
 
@@ -27,20 +27,20 @@ class AgentState:
     llm_response: LLMResponse  # Agent's response (LLM or not)
 
     @classmethod
-    def from_qm_state(cls, qm_state: QMState, step: int, action: str, llm_response: LLMResponse) -> 'AgentState':
+    def from_qm_state(cls, qm_state: QMState, step: int, action: str,
+                      llm_response: LLMResponse) -> 'AgentState':
         """Create AgentState from QMState and agent response"""
-        return cls(
-            step=step,
-            location_id=qm_state.location_id,
-            observation=qm_state.text,
-            choices=qm_state.choices,
-            action=action,
-            llm_response=llm_response
-        )
+        return cls(step=step,
+                   location_id=qm_state.location_id,
+                   observation=qm_state.text,
+                   choices=qm_state.choices,
+                   action=action,
+                   llm_response=llm_response)
 
     def __str__(self) -> str:
         """String representation of AgentState"""
-        choices_str = "\n".join([f"{i+1}. {choice['text']}" for i, choice in enumerate(self.choices)])
+        choices_str = "\n".join(
+            [f"{i+1}. {choice['text']}" for i, choice in enumerate(self.choices)])
         return f"Step {self.step}.\nObservation: {self.observation}.\nChoices:\n{choices_str}\nLLM Response:\n{str(self.llm_response)}"
 
     def to_dict(self) -> Dict[str, Any]:

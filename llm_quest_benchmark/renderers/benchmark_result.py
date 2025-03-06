@@ -1,12 +1,14 @@
 """Renderer for benchmark results analysis"""
-from typing import Dict, Any, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
+from typing import Any, Dict, Optional
+
 from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
 
 from llm_quest_benchmark.renderers.base import BaseRenderer
+
 
 class BenchmarkResultRenderer(BaseRenderer):
     """Renders benchmark results analysis with rich formatting"""
@@ -83,11 +85,7 @@ class BenchmarkResultRenderer(BaseRenderer):
 
         total = summary['total_runs']
         for outcome, count in summary['outcomes'].items():
-            outcome_table.add_row(
-                outcome,
-                str(count),
-                f"{count/total*100:.1f}%" if total else "0%"
-            )
+            outcome_table.add_row(outcome, str(count), f"{count/total*100:.1f}%" if total else "0%")
 
         # Step table
         step_table = Table(title="Step Statistics", box=box.ROUNDED)
@@ -97,19 +95,12 @@ class BenchmarkResultRenderer(BaseRenderer):
 
         # Global stats
         if 'steps' in summary:
-            step_table.add_row(
-                "[bold]All Models[/]",
-                str(summary['steps']['total']),
-                f"{summary['steps']['average']:.1f}"
-            )
+            step_table.add_row("[bold]All Models[/]", str(summary['steps']['total']),
+                               f"{summary['steps']['average']:.1f}")
 
             # Per-model stats
             for model, stats in summary['steps']['by_model'].items():
-                step_table.add_row(
-                    model,
-                    str(stats['total']),
-                    f"{stats['average']:.1f}"
-                )
+                step_table.add_row(model, str(stats['total']), f"{stats['average']:.1f}")
 
         # Render both panels
         self.console.print(Panel(outcome_table, title="Benchmark Outcomes", expand=False))
@@ -133,18 +124,15 @@ class BenchmarkResultRenderer(BaseRenderer):
 
         for outcome, count in quest['outcomes'].items():
             percentage = (count / quest['total_runs']) * 100
-            table.add_row(
-                outcome,
-                str(count),
-                f"{percentage:.1f}%"
-            )
+            table.add_row(outcome, str(count), f"{percentage:.1f}%")
 
         self.console.print(table)
 
         if debug:
             # Detailed run information
             for result in quest['results']:
-                self.console.print(f"\n[dim]Run with {result['model']} (temp={result['temperature']})[/]")
+                self.console.print(
+                    f"\n[dim]Run with {result['model']} (temp={result['temperature']})[/]")
                 self.console.print(f"Outcome: {result['outcome']}")
 
                 if result.get('error'):
@@ -154,7 +142,10 @@ class BenchmarkResultRenderer(BaseRenderer):
                 for step in result.get('steps', []):
                     self.console.print(f"\n[bold]Step {step.get('step', '?')}:[/]")
                     if step.get('state'):
-                        self.console.print(Text(step['state'][:200] + "..." if len(step['state']) > 200 else step['state'], style="blue"))
+                        self.console.print(
+                            Text(step['state'][:200] +
+                                 "..." if len(step['state']) > 200 else step['state'],
+                                 style="blue"))
 
                     if step.get('choices'):
                         self.console.print("\nChoices:")
@@ -165,7 +156,8 @@ class BenchmarkResultRenderer(BaseRenderer):
                         self.console.print(f"\nSelected: {step['response']}")
 
                     if step.get('reasoning'):
-                        self.console.print(Text(f"\nReasoning: {step['reasoning']}", style="yellow"))
+                        self.console.print(Text(f"\nReasoning: {step['reasoning']}",
+                                                style="yellow"))
 
     def render_benchmark_results(self, data: Dict[str, Any], debug: bool = False) -> None:
         """Render complete benchmark results
@@ -196,11 +188,7 @@ class BenchmarkResultRenderer(BaseRenderer):
 
         total = summary['total_runs']
         for outcome, count in summary['outcomes'].items():
-            outcome_table.add_row(
-                outcome,
-                str(count),
-                f"{count/total*100:.1f}%" if total else "0%"
-            )
+            outcome_table.add_row(outcome, str(count), f"{count/total*100:.1f}%" if total else "0%")
 
         self.console.print(Panel(outcome_table, title="Outcomes", expand=False))
 
@@ -212,12 +200,8 @@ class BenchmarkResultRenderer(BaseRenderer):
         model_table.add_column("Avg Reward", style="blue")
 
         for model in data['models']:
-            model_table.add_row(
-                model['name'],
-                str(model['runs']),
-                f"{model['success_rate']:.1f}%",
-                f"{model['avg_reward']:.2f}"
-            )
+            model_table.add_row(model['name'], str(model['runs']), f"{model['success_rate']:.1f}%",
+                                f"{model['avg_reward']:.2f}")
 
         self.console.print(Panel(model_table, title="Model Statistics", expand=False))
 
@@ -228,10 +212,6 @@ class BenchmarkResultRenderer(BaseRenderer):
         quest_table.add_column("Success Rate", style="green")
 
         for quest in data['quests']:
-            quest_table.add_row(
-                quest['name'],
-                str(quest['runs']),
-                f"{quest['success_rate']:.1f}%"
-            )
+            quest_table.add_row(quest['name'], str(quest['runs']), f"{quest['success_rate']:.1f}%")
 
         self.console.print(Panel(quest_table, title="Quest Statistics", expand=False))

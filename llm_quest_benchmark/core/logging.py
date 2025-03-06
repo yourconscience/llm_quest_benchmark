@@ -1,28 +1,29 @@
 """Unified logging module for LLM Quest Benchmark"""
 import json
 import logging
-import sqlite3
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, Any, Optional, List, Tuple
 import os
+import sqlite3
 import threading
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from rich.logging import RichHandler
+
 from llm_quest_benchmark.schemas import AgentState
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # Constants
 DEFAULT_DB_PATH = "metrics.db"
 RESULTS_DIR = Path("results")
 
+
 class LogManager:
     """Manages logging configuration"""
+
     def __init__(self):
         self.logger = logging.getLogger('llm_quest')
 
@@ -42,13 +43,13 @@ class LogManager:
 
 class QuestLogger:
     """Logs quest runs to SQLite database and exports to JSON when complete"""
-    
+
     @staticmethod
     def _safe_json_load(json_str, default=None):
         """Safely load JSON with error handling and repair attempts"""
         if not json_str:
             return default
-            
+
         try:
             return json.loads(json_str)
         except json.JSONDecodeError:
@@ -60,26 +61,31 @@ class QuestLogger:
             except ImportError:
                 # Log warning about missing json-repair
                 import logging
-                logging.getLogger('quest_logger').warning("json-repair module not available - some JSON may not parse correctly")
-                
+                logging.getLogger('quest_logger').warning(
+                    "json-repair module not available - some JSON may not parse correctly")
+
                 # Manual repair attempt
                 try:
                     # If it starts with a string that looks like a dict
                     if json_str.strip().startswith('{'):
                         # Extract everything between the first { and the last }
-                        clean_str = json_str[json_str.find('{'):json_str.rfind('}')+1]
+                        clean_str = json_str[json_str.find('{'):json_str.rfind('}') + 1]
                         return json.loads(clean_str)
                 except:
                     pass
-            
+
             # Return default if all repair attempts failed
             return default
+
     # Thread-local storage for database connections
     _local = threading.local()
     # Track all instances for cleanup
     _instances = []
 
-    def __init__(self, db_path: str = DEFAULT_DB_PATH, debug: bool = False, agent: Optional[str] = None):
+    def __init__(self,
+                 db_path: str = DEFAULT_DB_PATH,
+                 debug: bool = False,
+                 agent: Optional[str] = None):
         """Initialize the quest logger.
 
         Args:
@@ -102,25 +108,25 @@ class QuestLogger:
 
         # Initialize connection for this thread
         self._init_connection()
-        
+
         # Add this instance to the list of all instances
         QuestLogger._instances.append(self)
-        
+
         # Setup exit handler if this is the first instance
         if len(QuestLogger._instances) == 1:
             import atexit
             import signal
-            
+
             # Define shutdown handler
             def _shutdown_handler(signal=None, frame=None):
                 self.logger.info("Shutting down gracefully - closing database connections")
                 for instance in QuestLogger._instances:
                     instance.close()
                 QuestLogger._instances.clear()
-            
+
             # Register shutdown handlers
             atexit.register(_shutdown_handler)
-            
+
             # Only register signal handlers in the main thread
             if threading.current_thread() is threading.main_thread():
                 try:
@@ -145,14 +151,15 @@ class QuestLogger:
     def _create_tables(self):
         """Create database tables if they don't exist"""
         # Check if the runs table already exists
-        self._local.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='runs'")
+        self._local.cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='runs'")
         table_exists = self._local.cursor.fetchone() is not None
-        
+
         if table_exists:
             # Check if we need to add columns to existing table
             self._local.cursor.execute("PRAGMA table_info(runs)")
             columns = [column[1] for column in self._local.cursor.fetchall()]
-            
+
             # Add missing columns
             if 'outcome' not in columns:
                 self._local.cursor.execute("ALTER TABLE runs ADD COLUMN outcome TEXT")
@@ -215,7 +222,8 @@ class QuestLogger:
             quest_name = Path(quest_file).stem
 
             # Create run record with both quest_file and quest_name
-            self._local.cursor.execute('''
+            self._local.cursor.execute(
+                '''
                 INSERT INTO runs (quest_file, quest_name, start_time, agent_id)
                 VALUES (?, ?, ?, ?)
             ''', (quest_file, quest_name, self.start_time, self.agent))
@@ -223,12 +231,14 @@ class QuestLogger:
         except sqlite3.OperationalError as e:
             if "no such column: quest_file" in str(e):
                 # Fallback for older schema without quest_file column
-                self.logger.warning("quest_file column not found in database, using quest_name instead")
+                self.logger.warning(
+                    "quest_file column not found in database, using quest_name instead")
 
                 # Extract quest name from path (filename without extension)
                 quest_name = Path(quest_file).stem
 
-                self._local.cursor.execute('''
+                self._local.cursor.execute(
+                    '''
                     INSERT INTO runs (quest_name, start_time, agent_id)
                     VALUES (?, ?, ?)
                 ''', (quest_name, self.start_time, self.agent))
@@ -265,18 +275,12 @@ class QuestLogger:
                 if agent_state.llm_response is not None:
                     llm_response_json = json.dumps(agent_state.llm_response.to_dict())
 
-                self._local.cursor.execute('''
+                self._local.cursor.execute(
+                    '''
                     INSERT INTO steps (run_id, step, location_id, observation, choices, action, llm_response)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    self.current_run_id,
-                    agent_state.step,
-                    agent_state.location_id,
-                    agent_state.observation,
-                    choices_json,
-                    agent_state.action,
-                    llm_response_json
-                ))
+                ''', (self.current_run_id, agent_state.step, agent_state.location_id,
+                      agent_state.observation, choices_json, agent_state.action, llm_response_json))
                 self._local.conn.commit()
 
         except Exception as e:
@@ -302,14 +306,17 @@ class QuestLogger:
             # Update the run record with outcome and end time
             if benchmark_id:
                 self.logger.debug(f"Setting quest outcome with benchmark_id: {benchmark_id}")
-                self._local.cursor.execute('''
-                    UPDATE runs 
+                self._local.cursor.execute(
+                    '''
+                    UPDATE runs
                     SET outcome = ?, end_time = ?, reward = ?, run_duration = ?, benchmark_id = ?
                     WHERE id = ?
-                ''', (outcome, self.end_time, reward, run_duration, benchmark_id, self.current_run_id))
+                ''', (outcome, self.end_time, reward, run_duration, benchmark_id,
+                      self.current_run_id))
             else:
-                self._local.cursor.execute('''
-                    UPDATE runs 
+                self._local.cursor.execute(
+                    '''
+                    UPDATE runs
                     SET outcome = ?, end_time = ?, reward = ?, run_duration = ?
                     WHERE id = ?
                 ''', (outcome, self.end_time, reward, run_duration, self.current_run_id))
@@ -344,7 +351,7 @@ class QuestLogger:
 
             # Fetch complete run data from database
             run_data = self._get_run_data()
-            
+
             # Save individual step files
             for step in run_data["steps"]:
                 step_file = run_dir / f"step_{step['step']}.json"
@@ -363,35 +370,37 @@ class QuestLogger:
 
     def _get_run_data(self) -> Dict[str, Any]:
         """Get complete run data from the database for the current run.
-        
+
         Returns:
             Dict containing run and step data
         """
         # Ensure we have a connection for this thread
         self._init_connection()
-        
+
         # Get run data
-        self._local.cursor.execute('''
-            SELECT quest_file, quest_name, start_time, end_time, agent_id, 
+        self._local.cursor.execute(
+            '''
+            SELECT quest_file, quest_name, start_time, end_time, agent_id,
                    agent_config, outcome, reward, run_duration, benchmark_id
             FROM runs
             WHERE id = ?
         ''', (self.current_run_id,))
-        
+
         run = self._local.cursor.fetchone()
         if not run:
             return {"error": f"Run with ID {self.current_run_id} not found"}
-            
+
         quest_file, quest_name, start_time, end_time, agent_id, agent_config, outcome, reward, run_duration, benchmark_id = run
-        
+
         # Get steps for this run
-        self._local.cursor.execute('''
+        self._local.cursor.execute(
+            '''
             SELECT step, location_id, observation, choices, action, llm_response
             FROM steps
             WHERE run_id = ?
             ORDER BY step
         ''', (self.current_run_id,))
-        
+
         steps = []
         for step_data in self._local.cursor.fetchall():
             step_num, location_id, obs, choices_json, action, llm_response = step_data
@@ -403,7 +412,7 @@ class QuestLogger:
                 "action": action,
                 "llm_response": self._safe_json_load(llm_response)
             })
-        
+
         return {
             "run_id": self.current_run_id,
             "quest_file": quest_file,
@@ -428,7 +437,8 @@ class QuestLogger:
         Returns:
             Formatted step string
         """
-        choices_str = "\n".join([f"{i+1}. {choice['text']}" for i, choice in enumerate(agent_state.choices)])
+        choices_str = "\n".join(
+            [f"{i+1}. {choice['text']}" for i, choice in enumerate(agent_state.choices)])
         return f"Step {agent_state.step}:\nObservation: {agent_state.observation}\nChoices:\n{choices_str}\nAction: {agent_state.action}"
 
     def close(self):

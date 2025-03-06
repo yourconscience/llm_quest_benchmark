@@ -1,5 +1,6 @@
 """Null renderer that does nothing - used for debug mode and when no rendering is needed"""
-from typing import Dict, Any
+from typing import Any, Dict
+
 from llm_quest_benchmark.renderers.base import BaseRenderer
 
 

@@ -1,0 +1,18 @@
+{
+  "agent_id": "gpt-4o-default",
+  "model": "gpt-4o",
+  "temperature": 0.7,
+  "system_template": "system_role.jinja",
+  "action_template": "reasoning.jinja",
+  "max_tokens": null,
+  "top_p": null,
+  "additional_params": null,
+  "description": "Default GPT-4o agent with standard prompt templates",
+  "memory": {
+    "type": "message_history",
+    "max_history": 15
+  },
+  "tools": [
+    "calculator"
+  ]
+}

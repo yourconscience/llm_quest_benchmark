@@ -326,11 +326,11 @@
     // Quest Selector
     const questSelector = document.getElementById('questSelector');
     const analyzeQuestBtn = document.getElementById('analyzeQuestBtn');
-    
+
     questSelector.addEventListener('change', function() {
         analyzeQuestBtn.disabled = !this.value;
     });
-    
+
     analyzeQuestBtn.addEventListener('click', function() {
         const selectedQuest = questSelector.value;
         if (selectedQuest) {
@@ -341,28 +341,28 @@
     // Agent Comparison
     const agentCheckboxes = document.querySelectorAll('.agent-checkbox');
     const compareAgentsBtn = document.getElementById('compareAgentsBtn');
-    
+
     agentCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', updateCompareButtonState);
     });
-    
+
     function updateCompareButtonState() {
         const checked = Array.from(agentCheckboxes).filter(cb => cb.checked);
         compareAgentsBtn.disabled = checked.length < 2;
     }
-    
+
     // Readable Output Handlers
     const viewReadableButtons = document.querySelectorAll('.view-readable');
     const readableOutput = document.getElementById('readableOutput');
     const copyReadableBtn = document.getElementById('copyReadableBtn');
-    
+
     viewReadableButtons.forEach(button => {
         button.addEventListener('click', function() {
             const runId = this.dataset.runId;
             fetchReadableOutput(runId);
         });
     });
-    
+
     function fetchReadableOutput(runId) {
         fetch(`/analyze/run/${runId}/readable`)
             .then(response => response.json())
@@ -376,7 +376,7 @@
             })
             .catch(error => console.error('Error:', error));
     }
-    
+
     copyReadableBtn.addEventListener('click', function() {
         navigator.clipboard.writeText(readableOutput.textContent)
             .then(() => {

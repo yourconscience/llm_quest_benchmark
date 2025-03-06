@@ -82,6 +82,19 @@ def parse_llm_response(response: str,
     # Try parsing as JSON first
     response_json = _parse_json_response(response, debug, logger)
     if response_json and isinstance(response_json, dict):
+        # Check if it's a tool request
+        if 'tool' in response_json:
+            tool_type = response_json.get('tool')
+            query = response_json.get('query')
+
+            if tool_type and query:
+                # Return a special response indicating tool use
+                return LLMResponse(
+                    action=-1,  # -1 action indicates tool use
+                    tool_type=tool_type,
+                    tool_query=query,
+                    is_default=False)
+
         # Check for either 'action' or 'result' field
         action_value = response_json.get('action') or response_json.get('result')
         if action_value is not None:
@@ -126,6 +139,8 @@ class LLMAgent(QuestPlayer):
         temperature: float = DEFAULT_TEMPERATURE,
         skip_single: bool = False,
         debug: bool = False,
+        memory_config: Optional[Dict[str, Any]] = None,
+        tools: Optional[List[str]] = None,
     ):
         super().__init__(skip_single=skip_single)
         self.debug = debug
@@ -133,6 +148,8 @@ class LLMAgent(QuestPlayer):
         self.system_template = system_template
         self.action_template = action_template
         self.temperature = temperature
+        self.memory_config = memory_config or {"type": "message_history", "max_history": 10}
+        self.tools = tools or []
         # Set agent_id for database records
         self.agent_id = f"llm_{self.model_name}"
 
@@ -147,10 +164,11 @@ class LLMAgent(QuestPlayer):
             handler.setFormatter(logging.Formatter('%(name)s - %(message)s'))
             self.logger.addHandler(handler)
 
-        # Initialize prompt renderer
+        # Initialize prompt renderer with memory configuration
         self.prompt_renderer = PromptRenderer(None,
                                               system_template=system_template,
-                                              action_template=action_template)
+                                              action_template=action_template,
+                                              memory_config=self.memory_config)
 
         # Initialize LLM client with system prompt and temperature
         self.llm = get_llm_client(model_name,
@@ -184,36 +202,80 @@ class LLMAgent(QuestPlayer):
             if self.debug:
                 self.logger.debug(f"\nPrompt:\n{prompt}")
 
-            # Get LLM response
-            llm_response = self.llm.get_completion(prompt)
-            if self.debug:
-                self.logger.debug(f"LLM response: {llm_response}")
-                choices_debug = []
-                for i, c in enumerate(choices):
-                    choices_debug.append(f"{i+1}: {c['text']}")
-                self.logger.debug(f"Available choices: {choices_debug}")
+            # Handle tool use - we may need multiple iterations if tools are used
+            max_tool_iterations = 3  # Prevent infinite loops
+            for iteration in range(max_tool_iterations):
+                # Get LLM response
+                llm_response = self.llm.get_completion(prompt)
+                if self.debug:
+                    self.logger.debug(f"LLM response (iteration {iteration+1}): {llm_response}")
+                    choices_debug = []
+                    for i, c in enumerate(choices):
+                        choices_debug.append(f"{i+1}: {c['text']}")
+                    self.logger.debug(f"Available choices: {choices_debug}")
 
-            # Parse response
-            parsed_response = parse_llm_response(llm_response, len(choices), self.debug,
-                                                 self.logger)
-            if self.debug:
-                self.logger.debug(f"Parsed LLM response: {parsed_response}")
-                self.logger.debug(f"Final action to be returned: {parsed_response.action}")
+                # Parse response
+                parsed_response = parse_llm_response(llm_response, len(choices), self.debug,
+                                                     self.logger)
 
-            # Store response in history
-            self.history.append(parsed_response)
-            self._last_response = parsed_response
+                # Check if this is a tool use request
+                if parsed_response.is_tool_use:
+                    if self.debug:
+                        self.logger.debug(
+                            f"Tool use requested: {parsed_response.tool_type} - {parsed_response.tool_query}"
+                        )
 
-            # Check that action is within valid range before returning
-            if parsed_response.action < 1 or parsed_response.action > len(choices):
-                self.logger.error(
-                    f"INVALID ACTION DETECTED: {parsed_response.action} not in range 1-{len(choices)}"
-                )
-                # Use default first action instead
-                parsed_response.action = 1
-                self.logger.warning(f"Defaulting to action 1 instead")
+                    # Check if we have the tool available
+                    if parsed_response.tool_type in self.tools:
+                        # Process the tool request
+                        tool_result = self.handle_tool_request(
+                            f"{parsed_response.tool_type}: {parsed_response.tool_query}")
 
-            return parsed_response.action
+                        # Update the response with the tool result
+                        parsed_response.tool_result = tool_result
+
+                        # Modify the prompt to include the tool result
+                        prompt += f"\n\nTool result: {tool_result}\n\nNow, please decide which action to take:"
+
+                        # Store the tool usage in history
+                        self.history.append(parsed_response)
+
+                        # Continue to next iteration to get the final decision
+                        continue
+                    else:
+                        # Tool not available, use the default response
+                        if self.debug:
+                            self.logger.warning(f"Tool {parsed_response.tool_type} not available")
+                        parsed_response = LLMResponse(action=1, is_default=True)
+
+                # We have a final decision
+                if self.debug:
+                    self.logger.debug(f"Parsed LLM response: {parsed_response}")
+                    self.logger.debug(f"Final action to be returned: {parsed_response.action}")
+
+                # Store response in history
+                self.history.append(parsed_response)
+                self._last_response = parsed_response
+
+                # Check that action is within valid range before returning
+                if parsed_response.action < 1 or parsed_response.action > len(choices):
+                    self.logger.error(
+                        f"INVALID ACTION DETECTED: {parsed_response.action} not in range 1-{len(choices)}"
+                    )
+                    # Use default first action instead
+                    parsed_response.action = 1
+                    self.logger.warning(f"Defaulting to action 1 instead")
+
+                return parsed_response.action
+
+            # If we get here, we've hit the max tool iterations without a final decision
+            self.logger.warning(
+                f"Hit maximum tool iterations ({max_tool_iterations}) without a final decision. Using default action."
+            )
+            default_response = LLMResponse(action=1, is_default=True)
+            self.history.append(default_response)
+            self._last_response = default_response
+            return 1
 
         except Exception as e:
             self.logger.error(f"Error during LLM call: {e}")
@@ -242,26 +304,24 @@ class LLMAgent(QuestPlayer):
         return f"LLMAgent(model={self.model_name}, system_template={self.system_template}, action_template={self.action_template}, temperature={self.temperature})"
 
     def _format_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
-        """Format the prompt for the LLM"""
-        # Format choices as numbered list
-        choices_text = "\n".join([f"{i+1}. {c['text']}" for i, c in enumerate(choices)])
+        """Format the prompt for the LLM using the template renderer"""
+        # Use the prompt renderer to generate formatted prompt
+        # Add the state to the history for memory tracking
+        self.prompt_renderer.add_to_history({'text': state, 'choices': choices})
 
-        return f"""Current story state:
-{state}
+        # Use the template renderer
+        return self.prompt_renderer.render_action_prompt(state, choices)
 
-Available actions:
-{choices_text}
+    def handle_tool_request(self, request: str) -> str:
+        """Handle tool requests
 
-Analyze briefly:
-1. Context: What's happening now?
-2. Goal: What's the current objective?
-3. Impact: What could each choice lead to?
+        Args:
+            request (str): Tool request string
 
-Your response should be exactly in this JSON format:
-```json
-{{
-    "analysis": "<25 words on key situation elements>",
-    "reasoning": "<25 words on why this choice>",
-    "result": <action_number>
-}}
-```"""
+        Returns:
+            str: Tool response
+        """
+        if "calculator" in self.tools and "calculate" in request.lower():
+            return self.prompt_renderer.handle_calculator_tool(request)
+        else:
+            return "No tool available for this request."

@@ -1,19 +1,18 @@
 """Factory for creating appropriate renderers based on agent type and mode"""
 from typing import Optional, Type
+
 from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.agents.human_player import HumanPlayer
 from llm_quest_benchmark.renderers.base import BaseRenderer
-from llm_quest_benchmark.renderers.terminal import RichRenderer
-from llm_quest_benchmark.renderers.progress import ProgressRenderer
 from llm_quest_benchmark.renderers.null import NoRenderer
+from llm_quest_benchmark.renderers.progress import ProgressRenderer
+from llm_quest_benchmark.renderers.terminal import RichRenderer
 
 
-def create_renderer(
-    agent: QuestPlayer,
-    debug: bool = False,
-    total_quests: Optional[int] = None,
-    total_runs: Optional[int] = None
-) -> BaseRenderer:
+def create_renderer(agent: QuestPlayer,
+                    debug: bool = False,
+                    total_quests: Optional[int] = None,
+                    total_runs: Optional[int] = None) -> BaseRenderer:
     """Create appropriate renderer based on agent type and mode
 
     Args:

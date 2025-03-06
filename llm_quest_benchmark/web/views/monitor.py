@@ -1,61 +1,81 @@
 """Quest runner and monitor blueprint"""
-from flask import Blueprint, render_template, request, jsonify
-from pathlib import Path
 import glob
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional
 import traceback
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from flask import Blueprint, jsonify, render_template, request
 
 logger = logging.getLogger(__name__)
 
+from llm_quest_benchmark.agents.agent_factory import create_agent, create_agent_from_id
+from llm_quest_benchmark.agents.agent_manager import AgentManager
 from llm_quest_benchmark.constants import (
-    MODEL_CHOICES,
     DEFAULT_MODEL,
-    DEFAULT_TEMPLATE,
-    DEFAULT_TEMPERATURE,
     DEFAULT_QUEST_TIMEOUT,
-    SYSTEM_ROLE_TEMPLATE,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_TEMPLATE,
+    MODEL_CHOICES,
     PROMPT_TEMPLATES_DIR,
+    SYSTEM_ROLE_TEMPLATE,
 )
-
-from llm_quest_benchmark.agents.agent_factory import create_agent
-from llm_quest_benchmark.utils.text_processor import clean_qm_text, wrap_text
-from ..models.database import db, Run, Step
-from ..utils.errors import handle_errors, validate_quest_file, validate_model, validate_choice
-from ..utils.web_runner import run_quest_with_db_logging, take_manual_step
 from llm_quest_benchmark.schemas.config import AgentConfig
+from llm_quest_benchmark.utils.text_processor import clean_qm_text, wrap_text
+
+from ..models.database import Run, Step, db
+from ..utils.errors import handle_errors, validate_choice, validate_model, validate_quest_file
+from ..utils.web_runner import run_quest_with_db_logging, take_manual_step
 
 # Initialize TypeScript bridge
 os.environ['NODE_OPTIONS'] = '--openssl-legacy-provider'
 
 bp = Blueprint('monitor', __name__, url_prefix='/monitor')
 
+
 def get_available_quests():
     """Get list of available quests using the registry"""
-    from llm_quest_benchmark.core.quest_registry import get_registry
     from llm_quest_benchmark.constants import QUEST_ROOT_DIRECTORY
-    
+    from llm_quest_benchmark.core.quest_registry import get_registry
+
     registry = get_registry()
-    
+
     # Get unique quests only (filter out duplicates)
     quest_infos = registry.get_unique_quests()
-    
+
     # Return paths relative to QUEST_ROOT_DIRECTORY
     quest_files = [info.relative_path for info in quest_infos]
-    
+
     logger.debug(f"Found {len(quest_files)} unique quest files")
     return sorted(quest_files)
 
-def get_available_templates():
-    """Get list of available templates"""
-    template_files = glob.glob(str(PROMPT_TEMPLATES_DIR / "*.jinja"))
-    logger.debug(f"Found template files: {template_files}")
-    # Return template names without .jinja extension for display
-    templates = [Path(f).stem for f in template_files]
-    logger.debug(f"Available templates: {templates}")
-    return sorted(templates)  # Sort for consistent display
+
+# We no longer need this function since we only use predefined agents
+# def get_available_templates():
+#    """Get list of available templates"""
+#    pass
+
+
+def get_available_agents():
+    """Get list of available saved agents"""
+    agent_manager = AgentManager()
+    agents = agent_manager.get_all_agents()
+
+    # Convert to list of dicts for template
+    agent_list = []
+    for agent_id, agent in agents.items():
+        agent_dict = {
+            'id': agent_id,
+            'name': agent_id,
+            'description': agent.description or f"{agent.model} agent",
+            'model': agent.model
+        }
+        agent_list.append(agent_dict)
+
+    return sorted(agent_list, key=lambda x: x['name'])
+
 
 @bp.route('')
 @handle_errors
@@ -63,20 +83,32 @@ def index():
     """Quest runner and monitor page"""
     logger.debug("Loading quest runner page")
     quests = get_available_quests()
-    templates = get_available_templates()
+    agents = get_available_agents()
+
     logger.debug(f"Available quests: {quests}")
-    logger.debug(f"Available templates: {templates}")
+    logger.debug(f"Available agents: {[a['id'] for a in agents]}")
+
     # Find the Diehard.qm quest in the list of quests (default to first in the list if not found)
     default_quest = next((q for q in quests if "Diehard.qm" in q), quests[0] if quests else "")
-    
+
+    # Create default agents if none exist
+    if not agents:
+        logger.info("No agents found, creating defaults")
+        agent_manager = AgentManager()
+        agent_manager.create_default_agents()
+        agents = get_available_agents()
+
+    # If we have multiple agents, set the default to GPT-4o
+    default_agent = next((a for a in agents if "gpt-4o" in a['id'].lower()),
+                         agents[0] if agents else None)
+    default_agent_id = default_agent['id'] if default_agent else ""
+
     return render_template('monitor/index.html',
-                         quests=quests,
-                         templates=templates,
-                         models=MODEL_CHOICES,
-                         default_model=DEFAULT_MODEL,
-                         default_template=DEFAULT_TEMPLATE.replace('.jinja', ''),
-                         default_quest=default_quest,
-                         default_temperature=DEFAULT_TEMPERATURE)
+                           quests=quests,
+                           saved_agents=agents,
+                           default_quest=default_quest,
+                           default_agent_id=default_agent_id)
+
 
 @bp.route('/run', methods=['POST'])
 @handle_errors
@@ -92,68 +124,62 @@ def run_quest():
 
     # Extract quest configuration
     quest_name = data.get('quest')
-    
+
     # If quest_name already starts with "quests/", use it as is, otherwise prepend
     if quest_name.startswith("quests/"):
         quest_path = quest_name
     else:
         quest_path = f"quests/{quest_name}"
-    model = data.get('model', DEFAULT_MODEL)
-    timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
-    template = data.get('template', DEFAULT_TEMPLATE)
-    temperature = float(data.get('temperature', DEFAULT_TEMPERATURE))
 
-    # Validate inputs
+    # Get timeout
+    timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
+
+    # Validate quest file
     validate_quest_file(quest_path)
-    validate_model(model)
 
     logger.debug(f"Quest path: {quest_path}")
 
-    # Create agent config
-    agent_config = AgentConfig(
-        model=model,
-        system_template=SYSTEM_ROLE_TEMPLATE,
-        action_template=template + '.jinja',
-        temperature=temperature,
-        skip_single=True,
-        debug=True
-    )
+    # Get the agent ID
+    agent_id = data.get('agent_id')
+    if not agent_id:
+        return jsonify({'success': False, 'error': 'No agent ID provided'}), 400
 
-    # Get agent_id from agent_config
-    agent_id = agent_config.agent_id
+    # Create agent from the agent ID
+    logger.debug(f"Using agent: {agent_id}")
+
+    # Create agent from saved ID
+    agent = create_agent_from_id(agent_id, skip_single=True, debug=True)
+    if not agent:
+        return jsonify({'success': False, 'error': f'Agent {agent_id} not found'}), 404
+
+    # Get agent configuration from agent manager
+    agent_manager = AgentManager()
+    agent_config = agent_manager.get_agent(agent_id)
+    if not agent_config:
+        return jsonify({
+            'success': False,
+            'error': f'Agent configuration for {agent_id} not found'
+        }), 404
 
     # Create run record with agent_config
-    run = Run(
-        quest_file=quest_path,
-        quest_name=Path(quest_name).stem,
-        agent_id=agent_id,
-        agent_config=agent_config.__dict__
-    )
+    run = Run(quest_file=quest_path,
+              quest_name=Path(quest_name).stem,
+              agent_id=agent_id,
+              agent_config=agent_config.model_dump() if agent_config else {})
     db.session.add(run)
     db.session.commit()
     logger.debug(f"Run record created with ID: {run.id}")
 
-    # Create agent
-    agent = create_agent(
-        model=model,
-        system_template=SYSTEM_ROLE_TEMPLATE,
-        action_template=template + '.jinja',
-        temperature=temperature,
-        skip_single=True,
-        debug=True
-    )
-
     # Run quest and log to database
-    result = run_quest_with_db_logging(
-        quest_path=quest_path,
-        agent=agent,
-        run_record=run,
-        timeout=timeout,
-        debug=True,
-        request=request
-    )
+    result = run_quest_with_db_logging(quest_path=quest_path,
+                                       agent=agent,
+                                       run_record=run,
+                                       timeout=timeout,
+                                       debug=True,
+                                       request=request)
 
     return jsonify(result)
+
 
 @bp.route('/init', methods=['POST'])
 @handle_errors
@@ -170,61 +196,58 @@ def init_quest_route():
     try:
         # Extract quest configuration
         quest_name = data.get('quest')
-        quest_path = f"quests/{quest_name}"
-        model = data.get('model', DEFAULT_MODEL)
-        timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
-        template = data.get('template', DEFAULT_TEMPLATE)
-        temperature = float(data.get('temperature', DEFAULT_TEMPERATURE))
 
-        # Validate inputs
+        # If quest_name already starts with "quests/", use it as is, otherwise prepend
+        if quest_name.startswith("quests/"):
+            quest_path = quest_name
+        else:
+            quest_path = f"quests/{quest_name}"
+
+        timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
+
+        # Validate quest file
         validate_quest_file(quest_path)
-        validate_model(model)
 
         logger.debug(f"Quest path: {quest_path}")
 
-        # Create agent config
-        agent_config = AgentConfig(
-            model=model,
-            system_template=SYSTEM_ROLE_TEMPLATE,
-            action_template=template + '.jinja',
-            temperature=temperature,
-            skip_single=True,
-            debug=True
-        )
+        # Get the agent ID
+        agent_id = data.get('agent_id')
+        if not agent_id:
+            return jsonify({'success': False, 'error': 'No agent ID provided'}), 400
 
-        # Get agent_id from agent_config
-        agent_id = agent_config.agent_id
+        # Create agent from the agent ID
+        logger.debug(f"Using agent: {agent_id}")
+
+        # Create agent from saved ID
+        agent = create_agent_from_id(agent_id, skip_single=True, debug=True)
+        if not agent:
+            return jsonify({'success': False, 'error': f'Agent {agent_id} not found'}), 404
+
+        # Get agent configuration from agent manager
+        agent_manager = AgentManager()
+        agent_config = agent_manager.get_agent(agent_id)
+        if not agent_config:
+            return jsonify({
+                'success': False,
+                'error': f'Agent configuration for {agent_id} not found'
+            }), 404
 
         # Create run record with agent_config
-        run = Run(
-            quest_file=quest_path,
-            quest_name=Path(quest_name).stem,
-            agent_id=agent_id,
-            agent_config=agent_config.__dict__
-        )
+        run = Run(quest_file=quest_path,
+                  quest_name=Path(quest_name).stem,
+                  agent_id=agent_id,
+                  agent_config=agent_config.model_dump() if agent_config else {})
         db.session.add(run)
         db.session.commit()
         logger.debug(f"Run record created with ID: {run.id}")
 
-        # Create agent
-        agent = create_agent(
-            model=model,
-            system_template=SYSTEM_ROLE_TEMPLATE,
-            action_template=template + '.jinja',
-            temperature=temperature,
-            skip_single=True,
-            debug=True
-        )
-
         # Run quest and log to database
-        result = run_quest_with_db_logging(
-            quest_path=quest_path,
-            agent=agent,
-            run_record=run,
-            timeout=timeout,
-            debug=True,
-            request=request
-        )
+        result = run_quest_with_db_logging(quest_path=quest_path,
+                                           agent=agent,
+                                           run_record=run,
+                                           timeout=timeout,
+                                           debug=True,
+                                           request=request)
 
         # Explicitly ensure end_time is None for initialization
         run.end_time = None
@@ -235,6 +258,7 @@ def init_quest_route():
         logger.error(f"Error in init_quest_route: {str(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @bp.route('/step/<int:run_id>', methods=['POST'])
 @handle_errors
@@ -259,6 +283,7 @@ def take_step_route(run_id):
     else:
         return jsonify(result), 400
 
+
 @bp.route('/runs')
 @handle_errors
 def list_runs():
@@ -266,10 +291,8 @@ def list_runs():
     logger.debug("Fetching all runs")
     runs = Run.query.order_by(Run.start_time.desc()).all()
     logger.debug(f"Found {len(runs)} runs")
-    return jsonify({
-        'success': True,
-        'runs': [run.to_dict() for run in runs]
-    })
+    return jsonify({'success': True, 'runs': [run.to_dict() for run in runs]})
+
 
 @bp.route('/runs/<int:run_id>')
 @handle_errors
@@ -294,18 +317,14 @@ def get_run(run_id):
     for step in step_dicts:
         if 'observation' in step and step['observation']:
             step['wrapped_observation'] = wrap_text(step['observation'], width=150)
-        
+
         if 'choices' in step and step['choices']:
             for choice in step['choices']:
                 if 'text' in choice and choice['text']:
                     choice['wrapped_text'] = wrap_text(choice['text'], width=120)
 
-    return jsonify({
-        'success': True,
-        'run': run_dict,
-        'steps': step_dicts,
-        'outcome': run.outcome
-    })
+    return jsonify({'success': True, 'run': run_dict, 'steps': step_dicts, 'outcome': run.outcome})
+
 
 @bp.route('/runs/<int:run_id>/readable')
 @handle_errors
@@ -329,7 +348,7 @@ def get_run_readable(run_id):
     agent_name = run.agent_id if run.agent_id else "Unknown"
     if run.agent_config and isinstance(run.agent_config, dict) and 'model' in run.agent_config:
         agent_name = f"{agent_name} ({run.agent_config['model']})"
-    
+
     readable_output.append(f"AGENT: {agent_name}")
 
     # Show number of steps instead of start time
@@ -358,11 +377,13 @@ def get_run_readable(run_id):
         if step.choices and len(step.choices) > 0:
             readable_output.append("Available choices:")
             for i, choice in enumerate(step.choices):
-                wrapped_choice = wrap_text(choice['text'], width=120)  # Slightly narrower for choices
+                wrapped_choice = wrap_text(choice['text'],
+                                           width=120)  # Slightly narrower for choices
                 # Indent all lines after the first one for better readability
                 lines = wrapped_choice.split('\n')
                 if len(lines) > 1:
-                    indented_text = lines[0] + '\n' + '\n'.join(['   ' + line for line in lines[1:]])
+                    indented_text = lines[0] + '\n' + '\n'.join(
+                        ['   ' + line for line in lines[1:]])
                     readable_output.append(f"{i+1}. {indented_text}")
                 else:
                     readable_output.append(f"{i+1}. {wrapped_choice}")
@@ -377,7 +398,8 @@ def get_run_readable(run_id):
                 # Indent all lines after the first one for better readability
                 lines = wrapped_choice.split('\n')
                 if len(lines) > 1:
-                    indented_text = lines[0] + '\n' + '\n'.join(['   ' + line for line in lines[1:]])
+                    indented_text = lines[0] + '\n' + '\n'.join(
+                        ['   ' + line for line in lines[1:]])
                     readable_output.append(f"Selected option {step.action}: {indented_text}")
                 else:
                     readable_output.append(f"Selected option {step.action}: {wrapped_choice}")
@@ -413,7 +435,8 @@ def get_run_readable(run_id):
                         # Indent all lines after the first one for better readability
                         lines = wrapped_reasoning.split('\n')
                         if len(lines) > 1:
-                            indented_text = lines[0] + '\n' + '\n'.join(['   ' + line for line in lines[1:]])
+                            indented_text = lines[0] + '\n' + '\n'.join(
+                                ['   ' + line for line in lines[1:]])
                             readable_output.append(f"Reasoning: {indented_text}")
                         else:
                             readable_output.append(f"Reasoning: {wrapped_reasoning}")
@@ -431,7 +454,8 @@ def get_run_readable(run_id):
                         # Indent all lines after the first one for better readability
                         lines = wrapped_analysis.split('\n')
                         if len(lines) > 1:
-                            indented_text = lines[0] + '\n' + '\n'.join(['   ' + line for line in lines[1:]])
+                            indented_text = lines[0] + '\n' + '\n'.join(
+                                ['   ' + line for line in lines[1:]])
                             readable_output.append(f"Analysis: {indented_text}")
                         else:
                             readable_output.append(f"Analysis: {wrapped_analysis}")
@@ -446,23 +470,8 @@ def get_run_readable(run_id):
         readable_output.append("")
         readable_output.append(f"========== QUEST OUTCOME: {run.outcome} ==========")
 
-    return jsonify({
-        'success': True,
-        'readable_output': '\n'.join(readable_output)
-    })
+    return jsonify({'success': True, 'readable_output': '\n'.join(readable_output)})
 
-@bp.route('/template/<template_name>')
-@handle_errors
-def get_template_content(template_name):
-    """Get content of a template file"""
-    template_path = PROMPT_TEMPLATES_DIR / f"{template_name}.jinja"
-    if not template_path.exists():
-        return jsonify({'success': False, 'error': 'Template not found'}), 404
 
-    with open(template_path, 'r') as f:
-        content = f.read()
-
-    return jsonify({
-        'success': True,
-        'content': content
-    })
+# We no longer need this endpoint since we only use predefined agents
+# and don't show template content in the UI anymore

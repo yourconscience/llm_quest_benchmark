@@ -1,16 +1,19 @@
 """Strategic agent decorator that adds analysis capabilities"""
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 from llm_quest_benchmark.agents.base import QuestPlayer
-from llm_quest_benchmark.llm.prompt import PromptRenderer
 from llm_quest_benchmark.constants import DEFAULT_TEMPLATE
+from llm_quest_benchmark.llm.prompt import PromptRenderer
 
 
 class StrategicAgent(QuestPlayer):
     """Decorator that adds strategic thinking to any quest player"""
 
-    def __init__(self, base_agent: QuestPlayer, debug: bool = False, template: str = "advanced.jinja"):
+    def __init__(self,
+                 base_agent: QuestPlayer,
+                 debug: bool = False,
+                 template: str = "advanced.jinja"):
         """Initialize strategic agent wrapper
 
         Args:
@@ -49,10 +52,7 @@ class StrategicAgent(QuestPlayer):
                 self.logger.debug(f"\nAnalysis:\n{analysis}")
 
             # Store analysis in history
-            self.history.append({
-                'observation': observation,
-                'analysis': analysis
-            })
+            self.history.append({'observation': observation, 'analysis': analysis})
 
             # Get enhanced context with history
             enhanced_context = self.get_enhanced_context(observation, choices)
@@ -71,11 +71,9 @@ class StrategicAgent(QuestPlayer):
             f"Turn {len(self.history)+1}: {entry['analysis']}"
             for entry in self.history[-3:]  # Last 3 analyses
         ]
-        return self.prompt_renderer.render_action_prompt(
-            observation=observation,
-            choices=choices,
-            state_tracker=context
-        )
+        return self.prompt_renderer.render_action_prompt(observation=observation,
+                                                         choices=choices,
+                                                         state_tracker=context)
 
     def reset(self) -> None:
         """Reset both strategic and base agent state"""

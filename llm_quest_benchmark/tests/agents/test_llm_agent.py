@@ -12,10 +12,7 @@ def example_observation():
 
 @pytest.fixture
 def example_choices():
-    return [
-        {"id": "1", "text": "Talk to merchant"},
-        {"id": "2", "text": "Leave station"}
-    ]
+    return [{"id": "1", "text": "Talk to merchant"}, {"id": "2", "text": "Leave station"}]
 
 
 @pytest.fixture
@@ -42,10 +39,7 @@ def test_agent_basic_flow(mock_openai):
 
     # Test data
     observation = "You are at a trading station."
-    choices = [
-        {"id": "1", "text": "Talk to merchant"},
-        {"id": "2", "text": "Leave station"}
-    ]
+    choices = [{"id": "1", "text": "Talk to merchant"}, {"id": "2", "text": "Leave station"}]
 
     # Create agent and test
     agent = LLMAgent(model_name="gpt-4o")

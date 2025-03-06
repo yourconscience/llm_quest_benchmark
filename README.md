@@ -1,5 +1,5 @@
 # LLM Quest Benchmark
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Observe and analyze LLM agents decision-making through Space Rangers text adventures! 👾🚀📊
@@ -9,9 +9,11 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 - 🔥 **Modern Web UI**: Check out the demo [here](https://cf82-94-43-167-97.ngrok-free.app)
 - 👾 **Quest Environment**: Classic Space Rangers text quests act as single-agent environments
 - 🤖 **LLM Agents**: Simple yet customizable via prompt templates and optional thinking
+- 🧠 **Memory Systems**: Support for message history and summarization to improve agent performance
+- 🧮 **Tool Support**: Calculator tool integration for agents to perform mathematical operations
 - ⭐️ **Latest LLM Providers**: OpenAI, Anthropic, Deepseek, OpenRouter models are supported
 - 🎮 **Interactive Mode**: Play quests as Human Agent in Rich terminal UI
-- 📊 **Metrics Collection**: Track success rates, decision patterns, and performance metrics
+- 📊 **Metrics Collection**: Track success rates, decision patterns, memory usage, and tool performance
 
 ## Setup
 
@@ -19,30 +21,29 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 - Python 3.11 or higher
 - Node.js 18 or higher (Note: For Node.js 23+ you'll need to set `NODE_OPTIONS=--openssl-legacy-provider`)
 - npm 9 or higher
-- uv (modern Python package manager)
 
 ### Installation
 
-1. Install uv:
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-2. Clone the repository with submodules:
+1. Clone the repository with submodules:
 ```bash
 git clone --recursive https://github.com/your-username/llm_quest_benchmark.git
 cd llm_quest_benchmark
 ```
 
-3. Run the installation script:
+2. Run the installation script:
 ```bash
+# On Linux/macOS
 chmod +x install.sh
 ./install.sh
+
+# On Windows
+.\install.ps1
 ```
 
 The script will:
-- Set up a virtual environment using uv
-- Install Python dependencies using uv
+- Install uv (modern Python package manager)
+- Set up a virtual environment
+- Install Python dependencies
 - Set up the Space Rangers Quest TypeScript bridge
 - Create a default .env file
 
@@ -68,15 +69,33 @@ llm-quest analyze  # Uses most recent run
 
 # Run benchmark
 llm-quest benchmark --config configs/test_benchmark.yaml
+
+# List available agents
+llm-quest agents list
+
+# Show agent details
+llm-quest agents show calculator-agent
+
+# Create a new agent
+llm-quest agents new [--yaml config.yaml]
+
+# Configure agent memory
+llm-quest agents set-memory calculator-agent summary 15
+
+# Add calculator tool to agent
+llm-quest agents add-tool memory-agent calculator
+
+# Generate metrics report
+llm-quest metrics report
 ```
 
 ### Web Interface
 ```bash
 # Start the web server
-llm-quest web
+llm-quest server
 
-# Or with gunicorn (production)
-gunicorn -w 4 -b 0.0.0.0:8000 'llm_quest_benchmark.web.app:create_app()'
+# For debug mode
+llm-quest server --debug
 ```
 
 Then open http://localhost:8000 in your browser.
@@ -93,6 +112,46 @@ Then open http://localhost:8000 in your browser.
   - `utils/` - Shared utilities
   - `tests/` - Test suite
 - `quests/` - Example quests
+- `agents/` - Agent configuration files
+
+## Memory and Tool System
+
+### Memory Types
+- **Message History**: Maintains a history of recent steps (default max: 10)
+- **Summary**: Uses LLM to create concise summaries of past interactions
+
+### Tools
+- **Calculator**: Allows agents to perform mathematical operations
+
+## Development
+
+### Setting Up Pre-Commit Hooks
+
+Run these commands to set up the pre-commit hooks for code formatting:
+
+```bash
+# Install pre-commit and hooks
+uv pip install pre-commit
+pre-commit install
+
+# Run hooks manually on all files
+pre-commit run --all-files
+```
+
+The pre-commit setup includes:
+- yapf for Python code formatting
+- isort for import sorting
+- Various file checks (YAML validation, whitespace trimming, etc.)
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run specific tests
+pytest llm_quest_benchmark/tests/path/to/test.py::TestClass::test_method
+```
 
 ## License
 MIT License - See LICENSE for details.

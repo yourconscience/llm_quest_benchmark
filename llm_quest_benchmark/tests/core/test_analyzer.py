@@ -15,7 +15,7 @@ def setup_test_db(db_path: Path):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # Create tables
+    # Create tables with updated schema including agent_id and agent_config
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS runs (
             id INTEGER PRIMARY KEY,
@@ -26,7 +26,9 @@ def setup_test_db(db_path: Path):
             template TEXT,
             outcome TEXT,
             reward REAL,
-            benchmark_name TEXT
+            benchmark_name TEXT,
+            agent_id TEXT,
+            agent_config TEXT
         )''')
 
     cursor.execute('''
@@ -41,31 +43,43 @@ def setup_test_db(db_path: Path):
             FOREIGN KEY(run_id) REFERENCES runs(id)
         )''')
 
-    # Insert test data
+    # Create agent config JSON
+    agent_config = json.dumps({
+        "agent_id": "test-agent",
+        "model": "test-model",
+        "temperature": 0.7,
+        "memory": {
+            "type": "message_history",
+            "max_history": 10
+        },
+        "tools": ["calculator"]
+    })
+
+    # Insert test data with agent_id and agent_config
     now = datetime.now()
     cursor.execute(
         '''
-        INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name, agent_id, agent_config)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', ('test1.qm', now - timedelta(hours=1), now, 'test-model', 'test-template', 'SUCCESS', 1.0,
-          'baseline'))
+          'baseline', 'test-agent', agent_config))
     run1_id = cursor.lastrowid
 
     cursor.execute(
         '''
-        INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name, agent_id, agent_config)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', ('test1.qm', now - timedelta(minutes=30), now, 'test-model', 'test-template', 'FAILURE',
-          0.0, 'baseline'))
+          0.0, 'baseline', 'test-agent', agent_config))
     run2_id = cursor.lastrowid
 
     # Insert another run with different benchmark
     cursor.execute(
         '''
-        INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name, agent_id, agent_config)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', ('test2.qm', now, now + timedelta(minutes=30), 'test-model', 'test-template', 'SUCCESS',
-          0.8, 'experimental'))
+          0.8, 'experimental', 'test-agent', agent_config))
     run3_id = cursor.lastrowid
 
     # Insert steps for first run
@@ -230,7 +244,7 @@ def test_analyze_no_metrics_dir(tmp_path):
 
 def test_analyze_empty_metrics_dir(tmp_path):
     """Test analyze command with empty metrics directory"""
-    # Create empty database
+    # Create empty database with updated schema
     db_path = tmp_path / "metrics.db"
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -244,7 +258,9 @@ def test_analyze_empty_metrics_dir(tmp_path):
             template TEXT,
             outcome TEXT,
             reward REAL,
-            benchmark_name TEXT
+            benchmark_name TEXT,
+            agent_id TEXT,
+            agent_config TEXT
         )''')
     conn.commit()
     conn.close()
@@ -290,7 +306,7 @@ def test_analyze_benchmark_directory(tmp_path):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # Create tables
+    # Create tables with updated schema
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS runs (
             id INTEGER PRIMARY KEY,
@@ -301,21 +317,63 @@ def test_analyze_benchmark_directory(tmp_path):
             template TEXT,
             outcome TEXT,
             reward REAL,
-            benchmark_name TEXT
+            benchmark_name TEXT,
+            agent_id TEXT,
+            agent_config TEXT
         )''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS steps (
+            run_id INTEGER,
+            step INTEGER,
+            observation TEXT,
+            choices TEXT,
+            action INTEGER,
+            reward REAL,
+            llm_response TEXT,
+            FOREIGN KEY(run_id) REFERENCES runs(id)
+        )''')
+
+    # Create agent config JSON
+    agent_config = json.dumps({
+        "agent_id": "test-agent",
+        "model": "test-model",
+        "temperature": 0.7,
+        "memory": {
+            "type": "message_history",
+            "max_history": 10
+        },
+        "tools": ["calculator"]
+    })
 
     # Insert test data for multiple benchmarks
     now = datetime.now()
-    test_data = [('test1.qm', now, 'test-model', 'test-template', 'SUCCESS', 1.0, 'benchmark1'),
-                 ('test2.qm', now, 'test-model', 'test-template', 'FAILURE', 0.0, 'benchmark1'),
-                 ('test3.qm', now, 'test-model', 'test-template', 'SUCCESS', 0.5, 'benchmark2')]
+    test_data = [('test1.qm', now, 'test-model', 'test-template', 'SUCCESS', 1.0, 'benchmark1',
+                  'test-agent', agent_config),
+                 ('test2.qm', now, 'test-model', 'test-template', 'FAILURE', 0.0, 'benchmark1',
+                  'test-agent', agent_config),
+                 ('test3.qm', now, 'test-model', 'test-template', 'SUCCESS', 0.5, 'benchmark2',
+                  'test-agent', agent_config)]
 
-    for quest, time, model, template, outcome, reward, benchmark in test_data:
+    for quest, time, model, template, outcome, reward, benchmark, agent_id, config in test_data:
         cursor.execute(
             '''
-            INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (quest, time, time, model, template, outcome, reward, benchmark))
+            INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name, agent_id, agent_config)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (quest, time, time, model, template, outcome, reward, benchmark, agent_id, config))
+
+        # Get the run ID
+        run_id = cursor.lastrowid
+
+        # Add some sample steps
+        cursor.execute(
+            '''
+            INSERT INTO steps (run_id, step, observation, choices, action, reward, llm_response)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (run_id, 1, "Test observation", json.dumps([{
+                "id": "1",
+                "text": "Test choice"
+            }]), 1, 0.0, '{"action": 1}'))
 
     conn.commit()
     conn.close()

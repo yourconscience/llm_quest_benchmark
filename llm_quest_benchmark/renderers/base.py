@@ -1,7 +1,7 @@
 """Base interface for all renderers"""
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List
 import time
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
 
 from llm_quest_benchmark.schemas.state import AgentState
 
