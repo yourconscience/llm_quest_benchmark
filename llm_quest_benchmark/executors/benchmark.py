@@ -91,8 +91,9 @@ def agent_worker(agent_id: str,
         logger.error(f"Agent {agent_id} not found, worker exiting")
         return
     
-    # Set benchmark_id in agent_config for database tracking
-    agent_config.benchmark_id = benchmark_id
+    # Set benchmark_id in agent_config for database tracking if the field exists
+    if hasattr(agent_config, 'benchmark_id'):
+        agent_config.benchmark_id = benchmark_id
 
     # Create agent from agent_id
     agent = create_agent_from_id(agent_id, 
@@ -211,7 +212,8 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
             continue
 
         # Set the benchmark_id in agent_config for database tracking
-        agent_config.benchmark_id = config.benchmark_id
+        if hasattr(agent_config, 'benchmark_id'):
+            agent_config.benchmark_id = config.benchmark_id
             
         # Process quests directly for this agent
         for quest_file in quest_files:
