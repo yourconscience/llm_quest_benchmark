@@ -31,42 +31,31 @@
                         </select>
                     </div>
 
-                    <!-- Model Selection -->
+                    <!-- Agent Selection -->
                     <div class="mb-3">
-                        <label for="modelSelect" class="form-label">Model</label>
-                        <select class="form-select" id="modelSelect" required>
-                            {% for model in models %}
-                            <option value="{{ model }}" {% if model == default_model %}selected{% endif %}>
-                                {{ model }}
+                        <label for="agentSelect" class="form-label">Agent</label>
+                        <select class="form-select" id="agentSelect" required>
+                            {% for agent in saved_agents %}
+                            <option value="{{ agent.id }}" data-model="{{ agent.model }}" {% if agent.id == default_agent_id %}selected{% endif %}>
+                                {{ agent.id }} - {{ agent.model }}
                             </option>
                             {% endfor %}
                         </select>
+                        <div class="form-text">
+                            <span class="text-info"><i class="fas fa-info-circle"></i> All agents must be configured in the Agents section.</span>
+                            <a href="/agents/" class="btn btn-outline-secondary btn-sm mt-2">
+                                <i class="fas fa-cog"></i> Manage Agents
+                            </a>
+                        </div>
                     </div>
 
-                    <!-- Template Selection -->
+                    <!-- Agent Info -->
                     <div class="mb-3">
-                        <label for="templateSelect" class="form-label">Prompt Template</label>
-                        <select class="form-select" id="templateSelect" required>
-                            {% for template in templates %}
-                            {% if template != 'system_role' %}
-                            <option value="{{ template }}" {% if template == default_template %}selected{% endif %}>
-                                {{ template }}
-                            </option>
-                            {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <!-- Template Content -->
-                    <div class="mb-3">
-                        <label class="form-label">Template Content</label>
-                        <pre id="templateContent" class="bg-light p-2 rounded" style="max-height: 200px; overflow-y: auto; font-size: 12px;"></pre>
-                    </div>
-
-                    <!-- Temperature -->
-                    <div class="mb-3">
-                        <label for="temperature" class="form-label">Temperature</label>
-                        <input type="number" class="form-control" id="temperature" value="{{ default_temperature }}" min="0" max="2" step="0.1" required>
+                        <label class="form-label">Agent Information</label>
+                        <div id="agentInfo" class="alert alert-light border">
+                            <div><strong>Model:</strong> <span id="agentModel"></span></div>
+                            <div><strong>ID:</strong> <span id="agentId"></span></div>
+                        </div>
                     </div>
 
                     <!-- Timeout -->
@@ -217,31 +206,21 @@
         debugOutput.scrollTop = debugOutput.scrollHeight;
     }
 
-    // Load template content
-    async function loadTemplateContent() {
-        const templateSelect = document.getElementById('templateSelect');
-        const templateContent = document.getElementById('templateContent');
+    // No longer need template content loading since we only use predefined agents
 
-        try {
-            const response = await fetch(`/monitor/template/${templateSelect.value}`);
-            const data = await response.json();
+    // Update agent info when selection changes
+    document.getElementById('agentSelect').addEventListener('change', function() {
+        const agentId = this.value;
+        const selectedOption = this.options[this.selectedIndex];
+        const model = selectedOption.dataset.model;
 
-            if (data.success) {
-                templateContent.textContent = data.content;
-            } else {
-                templateContent.textContent = 'Error loading template content';
-            }
-        } catch (error) {
-            console.error('Error loading template:', error);
-            templateContent.textContent = 'Error loading template content';
-        }
-    }
+        // Update agent info display
+        document.getElementById('agentId').textContent = agentId;
+        document.getElementById('agentModel').textContent = model;
+    });
 
-    // Load initial template content
-    loadTemplateContent();
-
-    // Update template content when selection changes
-    document.getElementById('templateSelect').addEventListener('change', loadTemplateContent);
+    // Trigger the change event to set initial visibility
+    document.getElementById('agentSelect').dispatchEvent(new Event('change'));
 
     // Handle form submission
     document.getElementById('questForm').addEventListener('submit', async function(e) {
@@ -249,12 +228,11 @@
         debugLog = ''; // Clear debug log
         console.log('Form submitted');
 
+        // Prepare form data
         const formData = {
             quest: document.getElementById('questSelect').value,
-            model: document.getElementById('modelSelect').value,
-            template: document.getElementById('templateSelect').value,
             timeout: parseInt(document.getElementById('timeout').value),
-            temperature: parseFloat(document.getElementById('temperature').value)
+            agent_id: document.getElementById('agentSelect').value
         };
         appendDebugLog(`Starting quest: ${formData.quest}`);
         appendDebugLog(`Configuration: ${JSON.stringify(formData, null, 2)}`);
@@ -264,7 +242,15 @@
             const questProgress = document.getElementById('questProgress');
             const questInfo = document.getElementById('currentQuestInfo');
             questProgress.classList.remove('d-none');
-            questInfo.textContent = `${formData.quest} with ${formData.model} agent (${formData.template} template)`;
+
+            // Display different info depending on whether we're using a saved agent or custom agent
+            if (formData.agent_id) {
+                const agentSelect = document.getElementById('agentSelect');
+                const agentOption = agentSelect.options[agentSelect.selectedIndex];
+                questInfo.textContent = `${formData.quest} with ${agentOption.text}`;
+            } else {
+                questInfo.textContent = `${formData.quest} with ${formData.model} agent (${formData.template} template)`;
+            }
 
             // Run quest
             appendDebugLog('Sending request to run quest...');

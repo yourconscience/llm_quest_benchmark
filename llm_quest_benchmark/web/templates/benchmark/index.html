@@ -7,12 +7,30 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/yaml/yaml.min.js"></script>
+<!-- Add Select2 for multi-select dropdown -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <style>
     .CodeMirror {
         height: auto;
-        min-height: 300px;
+        min-height: 250px;
         border: 1px solid #ddd;
         border-radius: 4px;
+    }
+    .select2-container {
+        width: 100% !important;
+    }
+    .select2-selection--multiple {
+        border-radius: 4px !important;
+        border: 1px solid #ddd !important;
+    }
+    .agent-badge {
+        display: inline-block;
+        margin-right: 5px;
+        padding: 2px 5px;
+        border-radius: 3px;
+        background-color: #f8f9fa;
+        font-size: 0.8rem;
     }
 </style>
 {% endblock %}
@@ -30,10 +48,38 @@
                 </div>
                 <div class="card-body">
                     <form id="benchmarkForm">
+                        <!-- Quest Selection -->
                         <div class="mb-3">
-                            <textarea id="configEditor" class="form-control font-monospace" rows="15">{{ default_config }}</textarea>
+                            <label for="questSelect" class="form-label">Quests to Test</label>
+                            <input type="text" id="questInput" class="form-control" value="quests/boat.qm" />
+                            <div class="form-text">Enter one or more quest paths, separated by commas. Use glob patterns like "quests/*.qm" to select multiple files.</div>
+                        </div>
+
+                        <!-- Agent Selection -->
+                        <div class="mb-3">
+                            <label for="agentSelect" class="form-label">Select Agents</label>
+                            <select id="agentSelect" class="form-select" multiple="multiple">
+                                {% for agent in saved_agents %}
+                                <option value="{{ agent.id }}" data-model="{{ agent.model }}">
+                                    {{ agent.id }} ({{ agent.model }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Select one or more agents to use in the benchmark.</div>
+                            <div class="mt-2">
+                                <a href="/agents/" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-plus"></i> Manage Agents
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Options -->
+                        <div class="mb-3">
+                            <label for="configEditor" class="form-label">Advanced Configuration</label>
+                            <textarea id="configEditor" class="form-control font-monospace" rows="10">{{ default_config }}</textarea>
                             <div id="configError" class="invalid-feedback"></div>
                         </div>
+
                         <button type="submit" id="runBenchmarkBtn" class="btn btn-primary">
                             <i class="fas fa-play"></i> Run Benchmark
                         </button>
@@ -92,9 +138,86 @@
         theme: 'default'
     });
 
+    // Initialize Select2 for multi-select dropdown
+    $(document).ready(function() {
+        $('#agentSelect').select2({
+            placeholder: 'Select agents',
+            allowClear: true,
+            templateResult: formatAgent,
+            templateSelection: formatAgentSelection
+        });
+
+        // Set default agents
+        $('#agentSelect').val(['gpt-4o-default', 'claude-3-haiku-default']).trigger('change');
+
+        // Update code editor when agents change
+        $('#agentSelect').on('change', updateCodeFromForm);
+
+        // Update code editor when quest input changes
+        $('#questInput').on('input', updateCodeFromForm);
+
+        // Initial update
+        updateCodeFromForm();
+    });
+
+    // Format agent option in dropdown
+    function formatAgent(agent) {
+        if (!agent.id) return agent.text;
+        const model = $(agent.element).data('model');
+        return $(`
+            <div>
+                <strong>${agent.id}</strong>
+                <div><small class="text-muted">${model}</small></div>
+            </div>
+        `);
+    }
+
+    // Format selected agent in dropdown
+    function formatAgentSelection(agent) {
+        if (!agent.id) return agent.text;
+        return agent.id;
+    }
+
+    // Generate YAML config from form inputs
+    function updateCodeFromForm() {
+        // Get quests
+        const questInput = document.getElementById('questInput').value.trim();
+        const quests = questInput.split(',').map(q => q.trim()).filter(q => q);
+
+        // Get agents
+        const agents = $('#agentSelect').val() || [];
+
+        // Parse current YAML to preserve other settings
+        let config;
+        try {
+            config = jsyaml.load(editor.getValue());
+            if (!config) config = {};
+        } catch (e) {
+            config = {};
+        }
+
+        // Update with new values
+        config.quests = quests;
+        config.agents = agents;
+
+        // Ensure required fields are set
+        if (!config.debug) config.debug = true;
+        if (!config.output_dir) config.output_dir = "metrics/test";
+        if (!config.name) config.name = "Benchmark " + new Date().toLocaleDateString();
+
+        // Convert back to YAML
+        const newYaml = jsyaml.dump(config);
+        editor.setValue(newYaml);
+    }
+
     // Form submission
     document.getElementById('benchmarkForm').addEventListener('submit', function(e) {
         e.preventDefault();
+
+        // Update YAML one last time before submission
+        updateCodeFromForm();
+
+        // Run the benchmark
         runBenchmark();
     });
 

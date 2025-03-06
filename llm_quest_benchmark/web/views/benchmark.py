@@ -9,6 +9,7 @@ from flask import Blueprint, current_app, jsonify, render_template, request
 
 logger = logging.getLogger(__name__)
 
+from llm_quest_benchmark.agents.agent_manager import AgentManager
 from llm_quest_benchmark.schemas.config import (
     AgentConfig,
     BenchmarkConfig,
@@ -18,6 +19,8 @@ from llm_quest_benchmark.schemas.config import (
 from ..models.database import BenchmarkRun, Run, db
 from ..utils.benchmark_runner import get_benchmark_status, list_active_benchmarks, start_benchmark
 from ..utils.errors import WebUIError, handle_errors, validate_model, validate_quest_file
+# Import the agent management code from monitor
+from .monitor import get_available_agents
 
 bp = Blueprint('benchmark', __name__, url_prefix='/benchmark')
 
@@ -54,12 +57,71 @@ def validate_benchmark_config(config):
             if not isinstance(config_dict['agents'], list):
                 raise InvalidConfigError("'agents' must be a list")
 
-            for agent in config_dict['agents']:
-                if not isinstance(agent, dict):
-                    raise InvalidConfigError("Each agent must be a dictionary")
-                if 'model' not in agent:
-                    raise InvalidConfigError("Each agent must specify a 'model'")
-                validate_model(agent['model'])
+            # Get list of valid agent IDs
+            agent_manager = AgentManager()
+            valid_agent_ids = set(agent_manager.list_agents())
+
+            # Check if we have a mixture of strings and dictionaries (old format)
+            has_dict_agents = any(isinstance(a, dict) for a in config_dict['agents'])
+            has_string_agents = any(isinstance(a, str) for a in config_dict['agents'])
+
+            if has_dict_agents:
+                # For backward compatibility, we'll process the old format
+                # but warn it's deprecated
+                if has_string_agents:
+                    raise InvalidConfigError(
+                        "Mixed agent types: configuration cannot contain both agent IDs and dictionaries. "
+                        "Use only agent IDs (strings).")
+
+                # Convert the old format to agent IDs on the fly
+                new_agent_ids = []
+                for agent in config_dict['agents']:
+                    if not isinstance(agent, dict):
+                        raise InvalidConfigError(
+                            "Each agent must be a string (agent ID) or dictionary (old format)")
+
+                    # Handle saved agents vs. direct model specification
+                    if 'agent_id' in agent:
+                        # Use the specified agent ID
+                        agent_id = agent['agent_id']
+                        if agent_id not in valid_agent_ids:
+                            raise InvalidConfigError(f"Unknown agent ID: {agent_id}")
+                        new_agent_ids.append(agent_id)
+                    elif 'model' in agent:
+                        # Create a temporary agent from model specification
+                        validate_model(agent['model'])
+
+                        # Handle 'template' key which maps to action_template in AgentConfig
+                        if 'template' in agent:
+                            agent['action_template'] = agent.pop('template')
+
+                        # Create a temporary agent config
+                        agent_config = AgentConfig(**agent)
+                        agent_id = agent_config.generated_agent_id
+
+                        # Create the agent if it doesn't exist
+                        if agent_id not in valid_agent_ids:
+                            agent_config.agent_id = agent_id  # Set the ID explicitly
+                            agent_manager.create_agent(agent_config)
+
+                        new_agent_ids.append(agent_id)
+                    else:
+                        raise InvalidConfigError(
+                            "Each agent must specify either 'agent_id' or 'model'")
+
+                # Replace the agents list with the new agent IDs
+                config_dict['agents'] = new_agent_ids
+            else:
+                # Validate all agent IDs exist
+                for agent_id in config_dict['agents']:
+                    if not isinstance(agent_id, str):
+                        raise InvalidConfigError(
+                            f"Agent must be a string (agent ID), got {type(agent_id)}")
+
+                    if agent_id not in valid_agent_ids:
+                        raise InvalidConfigError(
+                            f"Unknown agent ID: {agent_id}. Available agents: {', '.join(valid_agent_ids)}"
+                        )
 
         return config_dict
 
@@ -75,7 +137,34 @@ DEFAULT_CONFIG = get_default_benchmark_yaml()
 @handle_errors
 def index():
     """Benchmark configuration page"""
-    return render_template('benchmark/index.html', default_config=DEFAULT_CONFIG)
+    # Get saved agents
+    agents = get_available_agents()
+
+    # Create default agents if none exist
+    if not agents:
+        agent_manager = AgentManager()
+        agent_manager.create_default_agents()
+        agents = get_available_agents()
+
+    # Add agent IDs to the default YAML config to show in the example
+    agent_ids = [agent['id'] for agent in agents[:2]] if agents else []
+
+    # Modify the config to include agent_id examples
+    config = DEFAULT_CONFIG
+    if agent_ids:
+        # Add comment about using saved agents
+        config_lines = config.split('\n')
+        for i, line in enumerate(config_lines):
+            if line.strip().startswith('# Agent configurations'):
+                config_lines.insert(i + 1, '#')
+                config_lines.insert(i + 2, '# You can use saved agents by agent_id:')
+                config_lines.insert(i + 3, f'# - agent_id: {agent_ids[0]}')
+                if len(agent_ids) > 1:
+                    config_lines.insert(i + 4, f'# - agent_id: {agent_ids[1]}')
+                break
+        config = '\n'.join(config_lines)
+
+    return render_template('benchmark/index.html', default_config=config, saved_agents=agents)
 
 
 @bp.route('/run', methods=['POST'])
