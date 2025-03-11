@@ -6,7 +6,7 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 
 ## Features
 
-- 🔥 **Modern Web UI**: Check out the demo [here](https://cf82-94-43-167-97.ngrok-free.app)
+- 🔥 **Modern Web UI**: Check out the [demo](https://95d1-94-43-167-97.ngrok-free.app)
 - 👾 **Quest Environment**: Classic Space Rangers text quests act as single-agent environments
 - 🤖 **LLM Agents**: Simple yet customizable via prompt templates and optional thinking
 - ⭐️ **Latest LLM Providers**: OpenAI, Anthropic, Deepseek, OpenRouter models are supported
