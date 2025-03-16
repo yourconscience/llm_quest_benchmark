@@ -1,0 +1,40 @@
+# Benchmark configuration for Kr2 English quests
+# Using recommended models with optimized temperature settings
+
+quests:
+  - quests/kr2_en
+
+agents:
+  # OpenAI models
+  - model: gpt-4o
+    template: reasoning.jinja
+    temperature: 0.5
+    skip_single: true
+
+  - model: gpt-4o-mini
+    template: reasoning.jinja
+    temperature: 0.7
+    skip_single: true
+
+  # Anthropic models
+  - model: claude-3-7-sonnet-latest
+    template: reasoning.jinja
+    temperature: 0.5
+    skip_single: true
+
+  - model: claude-3-5-sonnet-latest
+    template: reasoning.jinja
+    temperature: 0.6
+    skip_single: true
+
+# Debug mode enables more detailed logging
+debug: true
+
+# Quest timeout in seconds
+quest_timeout: 120
+
+# Output directory for benchmark results
+output_dir: metrics/kr2_en
+
+# Optional name for this benchmark run
+name: kr2_en_benchmark
