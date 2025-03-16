@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  llm-quest:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount these directories for persistent storage
+      - ./metrics:/app/metrics
+      - ./instance:/app/instance
+      - ./logs:/app/logs
+      - ./results:/app/results
+    env_file:
+      - .env
+    environment:
+      - NODE_OPTIONS=--openssl-legacy-provider
+    # Override the CMD in Dockerfile to run web interface
+    command: web --host 0.0.0.0

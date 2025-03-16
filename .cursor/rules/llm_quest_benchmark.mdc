@@ -1,61 +1,85 @@
 ---
-description: LLM Quest Benchmark Project
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
-################################################################################
-#  Rules for llm-quest-benchmark project     #
-################################################################################
+# LLM Quest Benchmark Development Guide
 
-PROJECT_NAME: llm-quest-benchmark
-GOAL: Benchmark LLM performance on Space Rangers text quests; build a robust evaluation framework. Target: Next Week.
-VERSION: 0.2.0
+## Core Principles
+- **QM First**: Focus on Space Rangers quest experience
+- **Developer Experience**: Prioritize testing, logging, and debugging
+- **Minimal Dependencies**: Focus on essential tools and libraries
 
-# Core Principles (Specific to this project)
-PROJECT_PRINCIPLES:
-  - QM_FIRST: Focus on Space Rangers quests, use space-rangers-quest submodule for parsing as is
-  - DEVELOPER_HAPPINESS: Prioritize interesting tech and rapid iteration.
-  - MINIMAL_TEXTARENA: Use TextArena for infrastructure, but keep custom components focused.
+## Git Workflow
+- Use concise, descriptive commit messages (one line preferred)
+- Include appropriate ticket/issue references when applicable
+- Group related changes into a single commit when possible
 
-# Key Files/Directories (Update this as your project evolves)
-# This section provides a high-level overview, not an exhaustive list.
-CONTEXT_FILES:
-  - README.md: Project overview and setup.
-  - roadmap.md: Project roadmap.
-  - llm_quest_benchmark/scripts/run_quest.py: Main benchmarking script.
-  - space-rangers-quest/src/lib/qmreader.ts: QM parser (TypeScript).
-  - llm_quest_benchmark/agents/llm_agent.py: Example LLM agent.
+## Common Commands
+- Package management: `uv pip install [package]` (ALWAYS use uv instead of pip)
+- Install: `./install.sh` 
+- Run tests: `pytest` or specific test: `pytest llm_quest_benchmark/tests/test_file.py::TestClass::test_function`
+- Type checking: `mypy llm_quest_benchmark`
+- Run with LLM: `llm-quest run --quest quests/Boat.qm --model gpt-4o --debug`
+- Run benchmark: `llm-quest benchmark --config configs/test_benchmark.yaml`
+- Play interactive: `llm-quest play --quest quests/boat.qm --skip`
+- Start web interface: `llm-quest web`
+- Analyze results: `llm-quest analyze`
+- Check code quality: `pre-commit run --all-files`
 
-# Tools and Commands (Specific to this project)
-# Provide concise descriptions and usage examples.
-TOOLS:
-  - uv: Modern Python package manager (Required)
-    - Usage: uv pip install [package]
-    - Priority: 0 (Always use instead of pip)
-    - Notes: 
-      - Use for all Python package operations
-      - Keep uv.lock in version control
-      - Use virtual environments managed by uv
-  - install.sh: Setup environment
-    - Usage: install.sh
-    - Priority: 1 (Run before any Python commands)
-  - goose: AI agent for complex tasks and analysis
-    - Usage:
-      - Run task: `goose run -t "task description"`
-      - Run with file: `goose run -i instructions.txt`
-      - Debug output: Add debug context to task description
-    - Priority: 2 (Use for complex analysis and debugging)
-  - llm-quest: CLI tool for running and playing quests
-    - Usage: 
-      - Run with LLM: `llm-quest run --quest <quest_path> --log-level <level>`
-      - Play interactive: `llm-quest play --quest <quest_path> --log-level <level>`
-      - Analyze results: `llm-quest analyze --metrics-file <metrics_file>`
-  - pre-commit: Maintain code quality
-    - Usage: `pre-commit run --all-files`
+## Code Style
+- Python 3.11+ with type hints required for all public interfaces
+- Use absolute imports within the package (from llm_quest_benchmark.module import X)
+- Follow PEP 8 guidelines for Python code
+- Snake_case for variables and functions, PascalCase for classes
+- Handle exceptions with proper logging (use core.logging module)
+- Document public functions/classes with docstrings
+- All code must pass pre-commit checks
+- Lock files (uv.lock) must be committed
+- TypeScript: Use linting with `npm run lint` in space-rangers-quest directory
 
-STANDARDS:
-  - ENV_CONSISTENCY: Always use ensure_env.sh
-  - LOCK_FILES: uv.lock must be committed
-  - CODE_STYLE: All code must pass pre-commit checks and not duplicate existing code
-  - TYPING: Use type hints for all public interfaces
-  - DOCS: Keep docs updated with code changes
+## Project Structure
+- Core logic in `llm_quest_benchmark/`
+- Tests in `llm_quest_benchmark/tests/`
+- Quest files in `quests/`
+- Web UI templates in `llm_quest_benchmark/web/templates/`
+- QM parser in `space-rangers-quest/src/lib/qmreader.ts`
+
+## Metrics Storage
+- Primary storage in SQLite database: `metrics.db` (in project root)
+  - Tables: `runs` (quest metadata) and `steps` (individual steps)
+  - Analyze runs: `llm-quest analyze --last` or `llm-quest analyze --run-id <ID>`
+  - Export: `llm-quest analyze --last --export report.json`
+  - Format options: `--format summary|detail|compact`
+- JSON backup exports at run completion:
+  - Path format: `results/<agent_id>/<quest_name>/run_<ID>/`
+  - Contains individual step files and `run_summary.json`
+- Web interface uses separate SQLite database: `instance/llm_quest.sqlite`
+- Benchmark results saved to `metrics/quests/benchmark_*.json`
+
+## Working with Metrics
+- Quick run inspection: `llm-quest analyze --last`
+- View details: `llm-quest analyze --last --format detail`
+- Export to JSON: `llm-quest analyze --last --export output.json`
+- Analyze by quest: `llm-quest analyze --quest Boat.qm`
+- Analyze benchmark: `llm-quest analyze --benchmark first`
+- Raw SQL query: `sqlite3 metrics.db 'SELECT * FROM runs ORDER BY id DESC LIMIT 5'`
+
+## Web Interface
+- Start the server: `llm-quest server`
+- Access the web UI at: http://localhost:8000
+- The web interface provides:
+  - Quest runner for interactive testing
+  - Benchmark configuration and execution
+  - Detailed analysis of quest runs and metrics
+  - Visualization of agent performance
+  - Export of run data for further analysis
+- The server uses Flask and can be run in debug mode: `llm-quest server --debug`
+- For production use: `llm-quest server --production --workers 4`
+
+## Project Architecture Notes
+- The `schemas` package contains all data models used throughout the system
+- Avoid importing directly from the Python standard library `dataclasses` module to prevent circular imports
+- Thread-safe database connections for metrics recording
+- Schema migration support for database upgrades
+- JSON export functionality for completed runs
