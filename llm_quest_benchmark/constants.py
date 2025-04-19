@@ -29,7 +29,7 @@ DEFAULT_TEMPLATE = "reasoning.jinja"
 SYSTEM_ROLE_TEMPLATE = "system_role.jinja"
 
 # Default temperature
-DEFAULT_TEMPERATURE = 0.7  # Balance between focused results and exploration
+DEFAULT_TEMPERATURE = 0.4
 
 # Timeout settings (in seconds)
 READABILITY_DELAY = 0.5  # Delay between steps for readability in interactive mode
