@@ -6,7 +6,6 @@ import json
 import logging
 import os
 from typing import Any, Dict, List, Optional
-import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,13 @@ from llm_quest_benchmark.constants import (
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.utils.text_processor import clean_qm_text, wrap_text
 from ..models.database import db, Run, Step
-from ..utils.errors import handle_errors, validate_quest_file, validate_model, validate_choice
+from ..utils.errors import (
+    handle_errors,
+    validate_quest_file,
+    validate_model,
+    validate_choice,
+    QuestNotFoundError,
+)
 from ..utils.web_runner import run_quest_with_db_logging, take_manual_step
 from llm_quest_benchmark.schemas.config import AgentConfig
 
@@ -56,6 +61,21 @@ def get_available_templates():
     templates = [Path(f).stem for f in template_files]
     logger.debug(f"Available templates: {templates}")
     return sorted(templates)  # Sort for consistent display
+
+
+def _resolve_quest_path(quest_value: str) -> str:
+    """Resolve incoming quest value via registry without hardcoded path prefixes."""
+    from llm_quest_benchmark.core.quest_registry import get_registry
+
+    if not quest_value:
+        raise QuestNotFoundError("Quest path not found: empty value", status_code=404)
+
+    validate_quest_file(quest_value)
+    registry = get_registry()
+    resolved = registry.resolve_quest_path(quest_value)
+    if not resolved:
+        raise QuestNotFoundError(f"Quest path not found: {quest_value}", status_code=404)
+    return str(resolved[0])
 
 @bp.route('')
 @handle_errors
@@ -92,19 +112,13 @@ def run_quest():
 
     # Extract quest configuration
     quest_name = data.get('quest')
-    
-    # If quest_name already starts with "quests/", use it as is, otherwise prepend
-    if quest_name.startswith("quests/"):
-        quest_path = quest_name
-    else:
-        quest_path = f"quests/{quest_name}"
+    quest_path = _resolve_quest_path(quest_name)
     model = data.get('model', DEFAULT_MODEL)
     timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
     template = data.get('template', DEFAULT_TEMPLATE)
     temperature = float(data.get('temperature', DEFAULT_TEMPERATURE))
 
     # Validate inputs
-    validate_quest_file(quest_path)
     validate_model(model)
 
     logger.debug(f"Quest path: {quest_path}")
@@ -125,7 +139,7 @@ def run_quest():
     # Create run record with agent_config
     run = Run(
         quest_file=quest_path,
-        quest_name=Path(quest_name).stem,
+        quest_name=Path(quest_path).stem,
         agent_id=agent_id,
         agent_config=agent_config.__dict__
     )
@@ -167,74 +181,68 @@ def init_quest_route():
     data = request.get_json()
     logger.debug(f"Request data: {data}")
 
-    try:
-        # Extract quest configuration
-        quest_name = data.get('quest')
-        quest_path = f"quests/{quest_name}"
-        model = data.get('model', DEFAULT_MODEL)
-        timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
-        template = data.get('template', DEFAULT_TEMPLATE)
-        temperature = float(data.get('temperature', DEFAULT_TEMPERATURE))
+    # Extract quest configuration
+    quest_name = data.get('quest')
+    quest_path = _resolve_quest_path(quest_name)
+    model = data.get('model', DEFAULT_MODEL)
+    timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
+    template = data.get('template', DEFAULT_TEMPLATE)
+    temperature = float(data.get('temperature', DEFAULT_TEMPERATURE))
 
-        # Validate inputs
-        validate_quest_file(quest_path)
-        validate_model(model)
+    # Validate inputs
+    validate_model(model)
 
-        logger.debug(f"Quest path: {quest_path}")
+    logger.debug(f"Quest path: {quest_path}")
 
-        # Create agent config
-        agent_config = AgentConfig(
-            model=model,
-            system_template=SYSTEM_ROLE_TEMPLATE,
-            action_template=template + '.jinja',
-            temperature=temperature,
-            skip_single=True,
-            debug=True
-        )
+    # Create agent config
+    agent_config = AgentConfig(
+        model=model,
+        system_template=SYSTEM_ROLE_TEMPLATE,
+        action_template=template + '.jinja',
+        temperature=temperature,
+        skip_single=True,
+        debug=True
+    )
 
-        # Get agent_id from agent_config
-        agent_id = agent_config.agent_id
+    # Get agent_id from agent_config
+    agent_id = agent_config.agent_id
 
-        # Create run record with agent_config
-        run = Run(
-            quest_file=quest_path,
-            quest_name=Path(quest_name).stem,
-            agent_id=agent_id,
-            agent_config=agent_config.__dict__
-        )
-        db.session.add(run)
-        db.session.commit()
-        logger.debug(f"Run record created with ID: {run.id}")
+    # Create run record with agent_config
+    run = Run(
+        quest_file=quest_path,
+        quest_name=Path(quest_path).stem,
+        agent_id=agent_id,
+        agent_config=agent_config.__dict__
+    )
+    db.session.add(run)
+    db.session.commit()
+    logger.debug(f"Run record created with ID: {run.id}")
 
-        # Create agent
-        agent = create_agent(
-            model=model,
-            system_template=SYSTEM_ROLE_TEMPLATE,
-            action_template=template + '.jinja',
-            temperature=temperature,
-            skip_single=True,
-            debug=True
-        )
+    # Create agent
+    agent = create_agent(
+        model=model,
+        system_template=SYSTEM_ROLE_TEMPLATE,
+        action_template=template + '.jinja',
+        temperature=temperature,
+        skip_single=True,
+        debug=True
+    )
 
-        # Run quest and log to database
-        result = run_quest_with_db_logging(
-            quest_path=quest_path,
-            agent=agent,
-            run_record=run,
-            timeout=timeout,
-            debug=True,
-            request=request
-        )
+    # Run quest and log to database
+    result = run_quest_with_db_logging(
+        quest_path=quest_path,
+        agent=agent,
+        run_record=run,
+        timeout=timeout,
+        debug=True,
+        request=request
+    )
 
-        # Explicitly ensure end_time is None for initialization
-        run.end_time = None
-        db.session.commit()
+    # Explicitly ensure end_time is None for initialization
+    run.end_time = None
+    db.session.commit()
 
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"Error in init_quest_route: {str(e)}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+    return jsonify(result)
 
 @bp.route('/step/<int:run_id>', methods=['POST'])
 @handle_errors

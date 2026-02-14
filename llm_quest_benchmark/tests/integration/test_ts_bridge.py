@@ -80,7 +80,7 @@ def test_bridge_error_handling(monkeypatch):
     bridge = QMBridge(str(DEFAULT_QUEST))
     try:
         monkeypatch.setattr(bridge, '_read_response', mock_read_response)
-        with pytest.raises(RuntimeError, match="Invalid JSON response from TypeScript bridge"):
+        with pytest.raises(RuntimeError, match="Invalid response format|Invalid JSON response"):
             bridge.start_game()
     finally:
         bridge.close()
@@ -106,3 +106,14 @@ def test_bridge_process_cleanup():
     bridge = QMBridge(str(DEFAULT_QUEST))
     bridge.close()  # Should not raise
     assert bridge.process is None
+
+
+def test_bridge_missing_submodule_dependency(monkeypatch):
+    """Bridge should raise actionable error when quest engine sources are missing."""
+    monkeypatch.setattr(
+        QMBridge,
+        "_required_bridge_sources",
+        lambda self: [Path("/tmp/definitely-missing-qmreader.ts")],
+    )
+    with pytest.raises(RuntimeError, match="git submodule update --init --recursive"):
+        QMBridge(str(DEFAULT_QUEST))

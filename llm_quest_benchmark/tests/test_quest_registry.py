@@ -39,11 +39,10 @@ def test_registry():
     # Test resolving various path patterns
     test_paths = [
         "quests/Boat.qm",
-        "quests/kr1/Boat.qm",
-        "quests/kr2_en",
-        "quests/kr1",
+        "Boat",
+        "quests/spacerangers.gitlab.io/borrowed/qm/SR 2.1.2121 eng",
+        "quests/spacerangers.gitlab.io/borrowed/qm/SR 2.1.2121 eng/*.qm",
         "quests/*.qm",
-        "quests/kr2_en/*.qm",
         "nonexistent_dir",
     ]
     
