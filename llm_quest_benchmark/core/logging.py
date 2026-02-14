@@ -74,6 +74,81 @@ class QuestLogger:
             
             # Return default if all repair attempts failed
             return default
+
+    @staticmethod
+    def _safe_int(value) -> Optional[int]:
+        """Best-effort conversion to int."""
+        try:
+            if value is None:
+                return None
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _index_choices(choices: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Add 1-based index metadata to raw quest choices."""
+        indexed = []
+        for idx, choice in enumerate(choices, start=1):
+            indexed.append({
+                "index": idx,
+                "id": choice.get("id"),
+                "text": choice.get("text", ""),
+            })
+        return indexed
+
+    def _resolve_choice_by_index(
+        self, indexed_choices: List[Dict[str, Any]], action_index: Optional[int]
+    ) -> Optional[Dict[str, Any]]:
+        """Resolve action index to choice payload."""
+        if action_index is None:
+            return None
+        if action_index < 1 or action_index > len(indexed_choices):
+            return None
+        return indexed_choices[action_index - 1]
+
+    def _format_step_export(
+        self,
+        step_num: int,
+        location_id: str,
+        observation: str,
+        choices: List[Dict[str, Any]],
+        action: Any,
+        llm_response: Optional[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Format an exported step with explicit action/choice linkage."""
+        indexed_choices = self._index_choices(choices)
+        action_index = self._safe_int(action)
+        selected_choice = self._resolve_choice_by_index(indexed_choices, action_index)
+
+        llm_decision = None
+        if isinstance(llm_response, dict):
+            parsed_action_raw = (
+                llm_response.get("action")
+                or llm_response.get("result")
+                or llm_response.get("choice")
+            )
+            parsed_action_index = self._safe_int(parsed_action_raw)
+            llm_decision = {
+                "is_default": bool(llm_response.get("is_default", False)),
+                "analysis": llm_response.get("analysis"),
+                "reasoning": llm_response.get("reasoning"),
+                "parsed_action_index": parsed_action_index,
+                "parsed_choice": self._resolve_choice_by_index(indexed_choices, parsed_action_index),
+            }
+
+        return {
+            "step": step_num,
+            "location_id": location_id,
+            "observation": observation,
+            "choices": choices,
+            "choices_indexed": indexed_choices,
+            "action": str(action) if action is not None else None,
+            "action_index": action_index,
+            "selected_choice": selected_choice,
+            "llm_response": llm_response,
+            "llm_decision": llm_decision,
+        }
     # Thread-local storage for database connections
     _local = threading.local()
     # Track all instances for cleanup
@@ -95,6 +170,7 @@ class QuestLogger:
         self.steps = []
         self.run_outcome = None
         self.end_time = None
+        self.final_state = None
 
         # Setup logger
         self.logger = logging.getLogger('quest_logger')
@@ -259,13 +335,16 @@ class QuestLogger:
 
         try:
             # Format choices as JSON for storage
-            choices_json = json.dumps(agent_state.choices)
+            choices_json = json.dumps(agent_state.choices, ensure_ascii=False)
 
             # Store all step data together including action and llm_response if available
             if agent_state.observation:
                 llm_response_json = None
                 if agent_state.llm_response is not None:
-                    llm_response_json = json.dumps(agent_state.llm_response.to_dict())
+                    llm_response_json = json.dumps(
+                        agent_state.llm_response.to_dict(),
+                        ensure_ascii=False,
+                    )
 
                 self._local.cursor.execute('''
                     INSERT INTO steps (run_id, step, location_id, observation, choices, action, llm_response)
@@ -284,19 +363,27 @@ class QuestLogger:
         except Exception as e:
             self.logger.error(f"Error logging step: {e}")
 
-    def set_quest_outcome(self, outcome: str, reward: float = 0.0, benchmark_id: str = None):
+    def set_quest_outcome(
+        self,
+        outcome: str,
+        reward: float = 0.0,
+        benchmark_id: str = None,
+        final_state: Optional[Dict[str, Any]] = None,
+    ):
         """Set the quest outcome and finalize the run.
 
         Args:
             outcome: Quest outcome (SUCCESS, FAILURE, etc.)
             reward: Final reward value
             benchmark_id: Optional benchmark ID to associate with this run
+            final_state: Optional final environment state snapshot for export
         """
         if not self.current_run_id:
             self.logger.warning("Cannot set outcome, no active run")
             return
 
         self.run_outcome = outcome
+        self.final_state = final_state
         self.end_time = datetime.utcnow()
         run_duration = (self.end_time - self.start_time).total_seconds()
 
@@ -350,13 +437,13 @@ class QuestLogger:
             # Save individual step files
             for step in run_data["steps"]:
                 step_file = run_dir / f"step_{step['step']}.json"
-                with open(step_file, 'w') as f:
-                    json.dump(step, f, indent=2)
+                with open(step_file, 'w', encoding='utf-8') as f:
+                    json.dump(step, f, indent=2, ensure_ascii=False)
 
             # Save complete run summary
             run_summary_file = run_dir / "run_summary.json"
-            with open(run_summary_file, 'w') as f:
-                json.dump(run_data, f, indent=2)
+            with open(run_summary_file, 'w', encoding='utf-8') as f:
+                json.dump(run_data, f, indent=2, ensure_ascii=False)
 
             self.logger.debug(f"Exported run data to {run_summary_file}")
 
@@ -397,14 +484,18 @@ class QuestLogger:
         steps = []
         for step_data in self._local.cursor.fetchall():
             step_num, location_id, obs, choices_json, action, llm_response = step_data
-            steps.append({
-                "step": step_num,
-                "location_id": location_id,
-                "observation": obs,
-                "choices": self._safe_json_load(choices_json, []),
-                "action": action,
-                "llm_response": self._safe_json_load(llm_response)
-            })
+            parsed_choices = self._safe_json_load(choices_json, [])
+            parsed_response = self._safe_json_load(llm_response)
+            steps.append(
+                self._format_step_export(
+                    step_num=step_num,
+                    location_id=location_id,
+                    observation=obs,
+                    choices=parsed_choices if isinstance(parsed_choices, list) else [],
+                    action=action,
+                    llm_response=parsed_response if isinstance(parsed_response, dict) else None,
+                )
+            )
         
         return {
             "run_id": self.current_run_id,
@@ -418,6 +509,7 @@ class QuestLogger:
             "reward": reward,
             "run_duration": run_duration,
             "benchmark_id": benchmark_id,
+            "final_state": self.final_state,
             "steps": steps
         }
 
