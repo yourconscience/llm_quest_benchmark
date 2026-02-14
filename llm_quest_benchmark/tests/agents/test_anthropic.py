@@ -1,19 +1,30 @@
+"""Deterministic tests for Anthropic-backed agent behavior."""
 import pytest
+from unittest.mock import Mock, patch
+
 from llm_quest_benchmark.agents.agent_factory import create_agent
-from llm_quest_benchmark.constants import MODEL_CHOICES
 
-def test_anthropic_integration(monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
 
-    # Use a supported model from MODEL_CHOICES
-    agent = create_agent("claude-3-5-sonnet-latest")  # Using the correct model name
+@patch("llm_quest_benchmark.llm.client.anthropic.Anthropic")
+def test_anthropic_agent_mocked_completion(mock_anthropic_cls):
+    """Agent should parse a mocked Anthropic completion without network calls."""
+    mock_client = Mock()
+    mock_response = Mock()
+    mock_block = Mock()
+    mock_block.text = '{"result": 2, "reasoning": "mocked"}'
+    mock_response.content = [mock_block]
+    mock_client.messages.create.return_value = mock_response
+    mock_anthropic_cls.return_value = mock_client
 
-    # Test basic response handling with properly formatted choices
-    response = agent.get_action("Test prompt", [{"text": "Choice 1"}, {"text": "Choice 2"}])
-    assert response is not None
-    assert isinstance(response, int)
-    assert 1 <= response <= 2  # Should be within valid range
+    agent = create_agent("claude-sonnet-4-5")
+    action = agent.get_action("Test prompt", [{"text": "A"}, {"text": "B"}])
 
-    # Test error handling with empty choices - should raise ValueError
+    assert action == 2
+    assert mock_client.messages.create.call_count == 1
+
+
+def test_anthropic_agent_empty_choices_raises():
+    """Base player contract should reject empty choices."""
+    agent = create_agent("claude-sonnet-4-5")
     with pytest.raises(ValueError, match="No choices provided"):
         agent.get_action("Test prompt", [])

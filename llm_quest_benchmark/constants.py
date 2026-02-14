@@ -4,10 +4,10 @@ import re
 
 # Provider registry used by parser/client factory.
 MODEL_PROVIDER_CONFIG = {
-    "openai": {"models": ["gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-4.1", "gpt-4.1-mini", "o4-mini"]},
-    "anthropic": {"models": ["claude-sonnet-4-0", "claude-opus-4-1"]},
-    "google": {"models": ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"]},
-    "deepseek": {"models": ["deepseek-chat", "deepseek-reasoner"]},
+    "openai": {"models": ["gpt-5", "gpt-5-mini", "gpt-5-nano", "o4-mini"]},
+    "anthropic": {"models": ["claude-sonnet-4-5", "claude-opus-4-1"]},
+    "google": {"models": ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"]},
+    "deepseek": {"models": ["deepseek-3.2-chat", "deepseek-reasoner"]},
     # Optional compatibility gateway (hidden from default UI model list).
     "openrouter": {"models": []},
 }
@@ -15,18 +15,20 @@ MODEL_PROVIDER_CONFIG = {
 # User-facing model choices (clean list, no duplicated provider prefixes).
 MODEL_CHOICES = [
     "random_choice",
+    # OpenAI
     "gpt-5",
     "gpt-5-mini",
     "gpt-5-nano",
-    "gpt-4.1",
-    "gpt-4.1-mini",
     "o4-mini",
-    "claude-sonnet-4-0",
+    # Anthropic
+    "claude-sonnet-4-5",
     "claude-opus-4-1",
-    "gemini-2.5-pro",
+    # Google
     "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
-    "deepseek-chat",
+    "gemini-2.5-pro",
+    # DeepSeek
+    "deepseek-3.2-chat",
     "deepseek-reasoner",
 ]
 
@@ -36,29 +38,21 @@ MODEL_ALIASES = {
     "gpt-5": "openai:gpt-5",
     "gpt-5-mini": "openai:gpt-5-mini",
     "gpt-5-nano": "openai:gpt-5-nano",
-    "gpt-4.1": "openai:gpt-4.1",
-    "gpt-4.1-mini": "openai:gpt-4.1-mini",
     "o4-mini": "openai:o4-mini",
-    # Legacy OpenAI aliases
-    "gpt-4o": "openai:gpt-4o",
-    "gpt-4o-mini": "openai:gpt-4o-mini",
     # Anthropic
-    "claude-sonnet-4-0": "anthropic:claude-sonnet-4-20250514",
+    "claude-sonnet-4-5": "anthropic:claude-sonnet-4-5",
     "claude-opus-4-1": "anthropic:claude-opus-4-1-20250805",
-    # Legacy Anthropic aliases
-    "claude-opus-4-1-20250805": "anthropic:claude-opus-4-1-20250805",
-    "claude-opus-4-20250514": "anthropic:claude-opus-4-20250514",
-    "claude-opus-4-0": "anthropic:claude-opus-4-20250514",
+    # Compatibility Anthropic aliases
+    "claude-sonnet-4-0": "anthropic:claude-sonnet-4-20250514",
     "claude-sonnet-4-20250514": "anthropic:claude-sonnet-4-20250514",
-    "claude-3-7-sonnet-20250219": "anthropic:claude-3-7-sonnet-20250219",
-    "claude-3-7-sonnet-latest": "anthropic:claude-3-7-sonnet-latest",
-    "claude-3-5-sonnet-latest": "anthropic:claude-3-5-sonnet-latest",
-    "claude-3-5-haiku-latest": "anthropic:claude-3-5-haiku-latest",
+    "claude-opus-4-1-20250805": "anthropic:claude-opus-4-1-20250805",
     # Google
     "gemini-2.5-pro": "google:gemini-2.5-pro",
     "gemini-2.5-flash": "google:gemini-2.5-flash",
     "gemini-2.5-flash-lite": "google:gemini-2.5-flash-lite",
     # DeepSeek
+    "deepseek-3.2-chat": "deepseek:deepseek-chat",
+    # Compatibility DeepSeek aliases
     "deepseek-chat": "deepseek:deepseek-chat",
     "deepseek-reasoner": "deepseek:deepseek-reasoner",
 }

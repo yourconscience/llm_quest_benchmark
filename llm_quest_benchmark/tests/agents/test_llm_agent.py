@@ -18,11 +18,6 @@ def example_choices():
     ]
 
 
-@pytest.fixture
-def mock_openrouter_response():
-    return "1"
-
-
 @pytest.mark.timeout(5)  # Quick unit test
 @patch('llm_quest_benchmark.llm.client.OpenAI')
 def test_agent_basic_flow(mock_openai):
@@ -48,7 +43,7 @@ def test_agent_basic_flow(mock_openai):
     ]
 
     # Create agent and test
-    agent = LLMAgent(model_name="gpt-4o")
+    agent = LLMAgent(model_name="gpt-5-mini")
     result = agent.get_action(observation, choices)
 
     # Verify results
@@ -73,7 +68,7 @@ def test_agent_initialization_without_api_key(monkeypatch):
     """Agent construction should not require provider API keys before inference."""
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    agent = LLMAgent(model_name="gpt-4o-mini")
+    agent = LLMAgent(model_name="gpt-5-mini")
     assert agent.llm is None
 
 

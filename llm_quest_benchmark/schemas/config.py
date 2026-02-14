@@ -20,13 +20,13 @@ DEFAULT_BENCHMARK_CONFIG = {
         {
             "model": "random_choice",
             "skip_single": True,
-            "temperature": 0.5,
+            "temperature": 0.0,
             "template": "reasoning.jinja"
         },
         {
             "model": "gpt-5-mini",
             "skip_single": True,
-            "temperature": 0.5,
+            "temperature": 0.4,
             "template": "reasoning.jinja"
         }
     ],

@@ -144,6 +144,7 @@ class OpenAICompatibleClient(LLMClient):
         self.provider = provider
         self.max_tokens = max_tokens
         self._client: Optional[OpenAI] = None
+        self._temperature_warning_emitted = False
 
     def _require_api_key(self, env_var: str) -> str:
         value = os.getenv(env_var)
@@ -197,18 +198,42 @@ class OpenAICompatibleClient(LLMClient):
             return "\n".join(p for p in parts if p).strip()
         return str(content).strip()
 
+    def _build_completion_kwargs(self, prompt: str) -> dict:
+        """Build provider/model-specific kwargs for chat.completions.create."""
+        is_openai_gpt5_or_o = self.provider == "openai" and (
+            self.model_id.startswith("gpt-5") or self.model_id.startswith("o")
+        )
+        kwargs = {
+            "model": self.model_id,
+            "messages": [
+                {"role": "system", "content": self.system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            "timeout": self.request_timeout,
+        }
+
+        if not is_openai_gpt5_or_o:
+            kwargs["temperature"] = self.temperature
+        elif self.temperature != 1 and not self._temperature_warning_emitted:
+            logger.warning(
+                "Model %s only supports default temperature; ignoring configured value %.2f",
+                self.model_id,
+                self.temperature,
+            )
+            self._temperature_warning_emitted = True
+
+        # OpenAI GPT-5/o-series require max_completion_tokens.
+        if is_openai_gpt5_or_o:
+            kwargs["max_completion_tokens"] = self.max_tokens
+        else:
+            kwargs["max_tokens"] = self.max_tokens
+        return kwargs
+
     def get_completion(self, prompt: str) -> str:
         """Get a completion from the model."""
         def _call() -> str:
             response = self._get_client().chat.completions.create(
-                model=self.model_id,
-                messages=[
-                    {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": prompt},
-                ],
-                max_tokens=self.max_tokens,
-                temperature=self.temperature,
-                timeout=self.request_timeout,
+                **self._build_completion_kwargs(prompt)
             )
             return self._extract_content(response)
 

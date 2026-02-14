@@ -29,9 +29,3 @@ Available actions:
 1. Talk to merchant
 2. Leave station
 """
-
-
-@pytest.fixture
-def mock_openrouter_response():
-    """Mock LLM response"""
-    return "1"  # Always choose first option for tests
