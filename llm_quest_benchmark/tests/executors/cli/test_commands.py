@@ -64,3 +64,59 @@ def test_server_command():
     result = runner.invoke(app, ["server", "--host", "invalid"])
     assert result.exit_code == 1
     assert "Starting server on http://invalid:8000" in result.stdout
+
+
+def test_analyze_run_with_run_summary_path(tmp_path):
+    """Test analyze-run against explicit run_summary path."""
+    summary_path = tmp_path / "run_summary.json"
+    summary_path.write_text(
+        """
+{
+  "quest_name": "TestQuest",
+  "agent_id": "llm_test",
+  "outcome": "FAILURE",
+  "steps": [
+    {
+      "step": 1,
+      "observation": "State one",
+      "choices": {"1": "Go left", "2": "Go right"},
+      "llm_decision": {
+        "analysis": "Need progress",
+        "reasoning": "Right seems safer",
+        "is_default": false,
+        "choice": {"2": "Go right"}
+      }
+    }
+  ]
+}
+""".strip(),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["analyze-run", "--run-summary", str(summary_path)])
+    assert result.exit_code == 0
+    assert "Decision Steps: 1" in result.stdout
+    assert "selected [2:Go right]" in result.stdout
+
+
+def test_analyze_run_autolocates_latest_run(monkeypatch, tmp_path):
+    """Test analyze-run latest-run discovery with --agent and --quest."""
+    monkeypatch.chdir(tmp_path)
+    run_dir = tmp_path / "results" / "llm_test" / "QuestA" / "run_42"
+    run_dir.mkdir(parents=True)
+    summary_path = run_dir / "run_summary.json"
+    summary_path.write_text(
+        """
+{
+  "quest_name": "QuestA",
+  "agent_id": "llm_test",
+  "outcome": "SUCCESS",
+  "steps": []
+}
+""".strip(),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["analyze-run", "--agent", "llm_test", "--quest", "QuestA"])
+    assert result.exit_code == 0
+    assert "Outcome: SUCCESS" in result.stdout

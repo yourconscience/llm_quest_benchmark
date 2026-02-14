@@ -86,26 +86,21 @@ class QuestLogger:
             return None
 
     @staticmethod
-    def _index_choices(choices: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Add 1-based index metadata to raw quest choices."""
-        indexed = []
-        for idx, choice in enumerate(choices, start=1):
-            indexed.append({
-                "index": idx,
-                "id": choice.get("id"),
-                "text": choice.get("text", ""),
-            })
-        return indexed
+    def _choices_map(choices: List[Dict[str, Any]]) -> Dict[str, str]:
+        """Map quest choices to a compact indexed text dictionary."""
+        return {str(idx): choice.get("text", "") for idx, choice in enumerate(choices, start=1)}
 
-    def _resolve_choice_by_index(
-        self, indexed_choices: List[Dict[str, Any]], action_index: Optional[int]
-    ) -> Optional[Dict[str, Any]]:
-        """Resolve action index to choice payload."""
+    @staticmethod
+    def _selected_choice_map(
+        choices_map: Dict[str, str], action_index: Optional[int]
+    ) -> Optional[Dict[str, str]]:
+        """Return selected choice as {index: text} if action is valid."""
         if action_index is None:
             return None
-        if action_index < 1 or action_index > len(indexed_choices):
+        key = str(action_index)
+        if key not in choices_map:
             return None
-        return indexed_choices[action_index - 1]
+        return {key: choices_map[key]}
 
     def _format_step_export(
         self,
@@ -116,37 +111,52 @@ class QuestLogger:
         action: Any,
         llm_response: Optional[Dict[str, Any]],
     ) -> Dict[str, Any]:
-        """Format an exported step with explicit action/choice linkage."""
-        indexed_choices = self._index_choices(choices)
-        action_index = self._safe_int(action)
-        selected_choice = self._resolve_choice_by_index(indexed_choices, action_index)
+        """Format an exported step in compact analysis-friendly form."""
+        del location_id  # Not needed in exported run summaries.
+        choices_map = self._choices_map(choices)
+        parsed_action_index = self._safe_int(action)
+        analysis = None
+        reasoning = None
+        is_default = True
+        prompt_tokens = 0
+        completion_tokens = 0
+        total_tokens = 0
+        estimated_cost_usd = None
 
-        llm_decision = None
         if isinstance(llm_response, dict):
-            parsed_action_raw = (
+            parsed_action_index = self._safe_int(
                 llm_response.get("action")
                 or llm_response.get("result")
                 or llm_response.get("choice")
+                or action
             )
-            parsed_action_index = self._safe_int(parsed_action_raw)
-            llm_decision = {
-                "is_default": bool(llm_response.get("is_default", False)),
-                "analysis": llm_response.get("analysis"),
-                "reasoning": llm_response.get("reasoning"),
-                "parsed_action_index": parsed_action_index,
-                "parsed_choice": self._resolve_choice_by_index(indexed_choices, parsed_action_index),
-            }
+            analysis = llm_response.get("analysis")
+            reasoning = llm_response.get("reasoning")
+            is_default = bool(llm_response.get("is_default", False))
+            prompt_tokens = int(llm_response.get("prompt_tokens") or 0)
+            completion_tokens = int(llm_response.get("completion_tokens") or 0)
+            total_tokens = int(
+                llm_response.get("total_tokens")
+                or (prompt_tokens + completion_tokens)
+            )
+            if llm_response.get("estimated_cost_usd") is not None:
+                estimated_cost_usd = float(llm_response.get("estimated_cost_usd"))
+
+        llm_decision = {
+            "analysis": analysis,
+            "reasoning": reasoning,
+            "is_default": is_default,
+            "choice": self._selected_choice_map(choices_map, parsed_action_index),
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
+            "estimated_cost_usd": estimated_cost_usd,
+        }
 
         return {
             "step": step_num,
-            "location_id": location_id,
             "observation": observation,
-            "choices": choices,
-            "choices_indexed": indexed_choices,
-            "action": str(action) if action is not None else None,
-            "action_index": action_index,
-            "selected_choice": selected_choice,
-            "llm_response": llm_response,
+            "choices": choices_map,
             "llm_decision": llm_decision,
         }
     # Thread-local storage for database connections
@@ -411,10 +421,11 @@ class QuestLogger:
             self.logger.error(f"Error setting quest outcome: {e}")
 
     def _export_run_to_json(self):
-        """Export the complete run to JSON files.
-        Creates both individual step files and a full run summary file.
-        """
+        """Export the complete run to a single run_summary.json file."""
         if not self.agent or not self.quest_file or not self.current_run_id:
+            return
+        if self.agent.startswith("random"):
+            # Keep random-agent runs in DB for diagnostics, but avoid result-dir clutter.
             return
 
         try:
@@ -434,12 +445,6 @@ class QuestLogger:
             # Fetch complete run data from database
             run_data = self._get_run_data()
             
-            # Save individual step files
-            for step in run_data["steps"]:
-                step_file = run_dir / f"step_{step['step']}.json"
-                with open(step_file, 'w', encoding='utf-8') as f:
-                    json.dump(step, f, indent=2, ensure_ascii=False)
-
             # Save complete run summary
             run_summary_file = run_dir / "run_summary.json"
             with open(run_summary_file, 'w', encoding='utf-8') as f:
@@ -482,10 +487,28 @@ class QuestLogger:
         ''', (self.current_run_id,))
         
         steps = []
+        usage_prompt_tokens = 0
+        usage_completion_tokens = 0
+        usage_total_tokens = 0
+        usage_estimated_cost = 0.0
+        usage_priced_steps = 0
         for step_data in self._local.cursor.fetchall():
             step_num, location_id, obs, choices_json, action, llm_response = step_data
             parsed_choices = self._safe_json_load(choices_json, [])
             parsed_response = self._safe_json_load(llm_response)
+            if isinstance(parsed_response, dict):
+                prompt_tokens = int(parsed_response.get("prompt_tokens") or 0)
+                completion_tokens = int(parsed_response.get("completion_tokens") or 0)
+                total_tokens = int(
+                    parsed_response.get("total_tokens")
+                    or (prompt_tokens + completion_tokens)
+                )
+                usage_prompt_tokens += prompt_tokens
+                usage_completion_tokens += completion_tokens
+                usage_total_tokens += total_tokens
+                if parsed_response.get("estimated_cost_usd") is not None:
+                    usage_estimated_cost += float(parsed_response.get("estimated_cost_usd"))
+                    usage_priced_steps += 1
             steps.append(
                 self._format_step_export(
                     step_num=step_num,
@@ -510,6 +533,15 @@ class QuestLogger:
             "run_duration": run_duration,
             "benchmark_id": benchmark_id,
             "final_state": self.final_state,
+            "usage": {
+                "prompt_tokens": usage_prompt_tokens,
+                "completion_tokens": usage_completion_tokens,
+                "total_tokens": usage_total_tokens,
+                "estimated_cost_usd": (
+                    round(usage_estimated_cost, 8) if usage_priced_steps > 0 else None
+                ),
+                "priced_steps": usage_priced_steps,
+            },
             "steps": steps
         }
 

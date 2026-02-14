@@ -39,14 +39,17 @@ The runtime loop is:
     - Google Gemini (OpenAI-compatible endpoint)
     - DeepSeek
   - shared retry/backoff and timeout handling
+  - token/cost usage tracking per completion call
 
 ### 5. Execution and Analysis Layer
 - `llm_quest_benchmark/core/runner.py`:
   Core quest run loop.
 - `llm_quest_benchmark/core/analyzer.py`:
   Post-run analysis and benchmark summaries.
+- `llm_quest_benchmark/core/benchmark_report.py`:
+  Markdown report generator that joins benchmark artifacts with per-run summaries.
 - `llm_quest_benchmark/executors/cli/commands.py`:
-  CLI commands (`run`, `play`, `analyze`, `benchmark`, `cleanup`, `server`).
+  CLI commands (`run`, `play`, `analyze`, `analyze-run`, `benchmark`, `benchmark-report`, `cleanup`, `server`).
 
 ### 6. Web Layer (Flask)
 - `llm_quest_benchmark/web/app.py`:
@@ -63,10 +66,12 @@ The runtime loop is:
   Benchmark/run metrics for CLI workflows.
 - `instance/llm_quest.sqlite`:
   Flask web run/step records.
+- `results/<agent>/<quest>/run_<id>/run_summary.json`:
+  Compact step trace + per-step decisions + aggregated token/cost usage.
 
 ## Configuration
 - `.env` (copied from `.env.template`):
-  Provider API keys and local overrides.
+  Provider API keys and optional per-model pricing overrides.
 - `configs/`:
   Benchmark YAML configs.
 
