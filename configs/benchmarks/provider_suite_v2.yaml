@@ -1,0 +1,34 @@
+# Provider comparison suite (v2)
+# Changes vs v1:
+# - strengthened reasoning template with anti-terminal-choice guidance
+# - GPT-5 empty-output retry with larger completion budget
+# - slightly higher temperature for non-OpenAI providers
+name: provider_suite_v2
+quests:
+  - quests/Boat.qm
+  - quests/kr_1_ru/Fishing.qm
+  - quests/kr_1_ru/Gobsaur.qm
+  - quests/kr_1_ru/Rush.qm
+  - quests/kr_1_ru/Examen.qm
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
+agents:
+  - model: gpt-5-mini
+    template: reasoning.jinja
+    temperature: 0.4
+    skip_single: true
+  - model: claude-sonnet-4-5
+    template: reasoning.jinja
+    temperature: 0.6
+    skip_single: true
+  - model: gemini-2.5-flash
+    template: reasoning.jinja
+    temperature: 0.6
+    skip_single: true
+  - model: deepseek-3.2-chat
+    template: reasoning.jinja
+    temperature: 0.6
+    skip_single: true
+debug: true
+quest_timeout: 60
+max_workers: 2
+output_dir: results/benchmarks

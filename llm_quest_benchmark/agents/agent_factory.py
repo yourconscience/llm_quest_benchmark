@@ -22,7 +22,7 @@ def create_agent(
 
     Args:
         model (str): Model identifier. Can be:
-            - LLM model name (e.g. 'gpt-4o', 'sonnet')
+            - LLM model name (e.g. 'gpt-5-mini', 'claude-sonnet-4-5')
             - 'random_choice' for random testing agent (can include seed e.g. 'random_choice_123')
             - 'human' for interactive human player
         debug (bool): Enable debug logging

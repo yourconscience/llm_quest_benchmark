@@ -58,7 +58,7 @@ def test_server_command():
     # Test help output
     result = runner.invoke(app, ["server", "--help"])
     assert result.exit_code == 0
-    assert "Start the web interface server" in result.stdout
+    assert "Start the Flask web interface server" in result.stdout
 
     # Test invalid host
     result = runner.invoke(app, ["server", "--host", "invalid"])

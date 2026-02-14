@@ -1,5 +1,3 @@
-{# Tier 2: Structured reasoning with concise output #}
-{# Enhanced template for interactive fiction reasoning #}
 Current story state:
 {{ observation }}
 
@@ -8,16 +6,13 @@ Available actions:
 {{ loop.index }}. {{ choice.text }}
 {% endfor %}
 
-Analyze briefly:
-1. Context: What's happening now?
-2. Goal: What's the current objective?
-3. Impact: What could each choice lead to?
+Goal: maximize chances to complete the mission successfully.
+Guidelines:
+1. Prefer actions that keep progress alive and gather useful information.
+2. Avoid choices that obviously abandon, surrender, or prematurely end the quest.
+3. If uncertain, pick the safest non-terminal progress option.
+4. Prioritize the core mission objective over optional heroic detours and high-risk side events.
+5. Reuse explicit hints from earlier scenes (difficulty, pass/fail conditions) instead of making fresh assumptions.
 
-Your response should be exactly in this JSON format:
-```json
-{
-    "analysis": "<25 words on key situation elements>",
-    "reasoning": "<25 words on why this choice>",
-    "result": <action_number>
-}
-```
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}

@@ -32,7 +32,11 @@ class QuestPlayer(ABC):
 
         # Handle single choice skipping if enabled
         if self.skip_single and len(choices) == 1:
-            self._last_response = LLMResponse(action=1)
+            self._last_response = LLMResponse(
+                action=1,
+                reasoning="auto_single_choice",
+                is_default=True,
+            )
             return 1
 
         # Get action from implementation

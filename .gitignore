@@ -16,6 +16,7 @@ tge/
 # Local config
 .env
 .DS_Store
+.ra-aid/
 
 # Python
 *.py[cod]
@@ -35,6 +36,7 @@ dist/
 build/
 .coverage
 htmlcov/
+gunicorn.ctl
 
 # Database
 metrics.db

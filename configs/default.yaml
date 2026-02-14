@@ -1,53 +1,36 @@
-# Default benchmark configuration
-# Includes all supported models with standardized settings
+# Default benchmark configuration (quick smoke matrix)
 
 quests:
-  - quests/kr1/Boat.qm  # Single quest for quick testing
-  # Uncomment to test multiple quests:
-  # - quests/kr1/Diehard.qm
+  - quests/Boat.qm
 
 agents:
-  # Random baseline agent
   - model: random_choice
     template: reasoning.jinja
     temperature: 0.0
     skip_single: true
 
-  # OpenAI models
-  - model: gpt-4o
+  - model: gpt-5-mini
     template: reasoning.jinja
-    temperature: 0.5
+    temperature: 0.4
     skip_single: true
 
-  - model: gpt-4o-mini
+  - model: claude-sonnet-4-5
     template: reasoning.jinja
-    temperature: 0.5
+    temperature: 0.4
     skip_single: true
 
-  # Anthropic models
-  - model: claude-3-7-sonnet-latest
+  - model: gemini-2.5-flash
     template: reasoning.jinja
-    temperature: 0.5
+    temperature: 0.4
     skip_single: true
 
-  - model: claude-3-5-sonnet-latest
+  - model: deepseek-3.2-chat
     template: reasoning.jinja
-    temperature: 0.5
+    temperature: 0.4
     skip_single: true
 
-  - model: claude-3-5-haiku-latest
-    template: reasoning.jinja
-    temperature: 0.5
-    skip_single: true
-
-# Debug mode enables more detailed logging
-debug: true
-
-# Number of parallel workers (set higher for faster benchmarking)
+debug: false
+quest_timeout: 60
 max_workers: 2
-
-# Output directory for benchmark results
-output_dir: metrics/benchmark
-
-# Optional name for this benchmark run
+output_dir: results/benchmarks
 name: Default Benchmark

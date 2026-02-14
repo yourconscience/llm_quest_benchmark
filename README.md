@@ -1,123 +1,101 @@
 # LLM Quest Benchmark
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Observe and analyze LLM agents decision-making through Space Rangers text adventures! 👾🚀📊
+Benchmark how human and LLM agents solve Space Rangers text quests (`.qm`).
 
-## Features
+## What Works Now
+- TypeScript quest engine bridge (`space-rangers-quest` + Python bridge wrapper)
+- CLI run/play/analyze/benchmark flows
+- Provider-aware LLM clients:
+  - OpenAI
+  - Anthropic
+  - Google Gemini (via Google OpenAI-compatible endpoint)
+  - DeepSeek (OpenAI-compatible)
+- Flask UI (`llm-quest server`) with quest run + benchmark + analysis views
 
-- 🔥 **Modern Web UI**: Check out the demo: https://9b8c-94-43-167-97.ngrok-free.app
-- 👾 **Quest Environment**: Classic Space Rangers text quests act as single-agent environments
-- 🤖 **LLM Agents**: Simple yet customizable via prompt templates and optional thinking
-- ⭐️ **Latest LLM Providers**: OpenAI, Anthropic, Deepseek, OpenRouter models are supported
-- 🎮 **Interactive Mode**: Play quests as Human Agent in Rich terminal UI
-- 📊 **Metrics Collection**: Track success rates, decision patterns, and performance metrics
+## Prerequisites
+- Python 3.11+
+- Node.js 18+ (Node 23+ requires `NODE_OPTIONS=--openssl-legacy-provider`)
+- `uv`
 
 ## Setup
-
-### Option 1: Using Docker (Recommended)
-
-1. Clone the repository:
 ```bash
-git clone --recursive https://github.com/your-username/llm_quest_benchmark.git
+git clone --recursive <your-fork-url>
 cd llm_quest_benchmark
+
+git submodule update --init --recursive
+uv sync --extra dev
+npm install
+
+cd space-rangers-quest
+npm install --legacy-peer-deps
+npm run build
+cd ..
 ```
 
-2. Create a `.env` file with your API keys:
+Create environment file:
 ```bash
-cp .env.example .env
-# Edit .env with your API keys
+cp .env.template .env
 ```
 
-3. Build and run with Docker Compose:
+For Node 23+:
 ```bash
-docker-compose up -d
+export NODE_OPTIONS=--openssl-legacy-provider
 ```
 
-4. Access the web UI at http://localhost:8000
-
-### Option 2: Manual Installation
-
-#### Prerequisites
-- Python 3.11 or higher
-- Node.js 18 or higher (Note: For Node.js 23+ you'll need to set `NODE_OPTIONS=--openssl-legacy-provider`)
-- npm 9 or higher
-- uv (modern Python package manager)
-
-#### Installation
-
-1. Install uv:
+## CLI Usage
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+uv run llm-quest --help
+
+# Random smoke run
+NODE_OPTIONS=--openssl-legacy-provider uv run llm-quest run --quest quests/Boat.qm --model random_choice --timeout 20 --debug
+
+# Interactive play
+uv run llm-quest play --quest quests/Boat.qm
+
+# Analyze latest run
+uv run llm-quest analyze --last
+
+# Benchmark matrix from YAML
+uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v1.yaml
+uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v2.yaml
 ```
 
-2. Clone the repository with submodules:
+## Web Usage
+
 ```bash
-git clone --recursive https://github.com/your-username/llm_quest_benchmark.git
-cd llm_quest_benchmark
+uv run llm-quest server
 ```
+Open: `http://localhost:8000`
 
-3. Run the installation script:
+## Tests
 ```bash
-chmod +x install.sh
-./install.sh
+uv run python -m pytest
 ```
 
-The script will:
-- Set up a virtual environment using uv
-- Install Python dependencies using uv
-- Set up the Space Rangers Quest TypeScript bridge
-- Create a default .env file
+## Key Paths
+- `AGENTS.md` - repo guide
+- `docs/ARCHITECTURE.md`
+- `docs/API.md`
+- `docs/DEPLOYMENT.md`
+- `docs/RUNBOOK.md`
+- `docs/PLANS.md`
 
-4. Configure your API keys in .env file or set it in the environment:
-```bash
-export OPENAI_API_KEY=your-api-key  # On Windows: set OPENAI_API_KEY=your-api-key
-```
-
-5. Download quests from [gitlab](https://gitlab.com/spacerangers/spacerangers.gitlab.io/-/tree/master/borrowed/qm)
-
-## Usage
-
-### CLI Interface
-```bash
-# Run with LLM agent
-llm-quest run -q quests/boat.qm --model gpt-4o-mini
-
-# Play interactively
-llm-quest play -q quests/boat.qm --skip
-
-# Analyze quest run
-llm-quest analyze  # Uses most recent run
-
-# Run benchmark
-llm-quest benchmark --config configs/test_benchmark.yaml
-```
-
-### Web Interface
-```bash
-# Start the web server
-llm-quest server
-```
-
-Then open http://localhost:8000 in your browser.
-
-## Project Structure
-
-- `llm_quest_benchmark/` - Core package
-  - `core/` - Core functionality (logging, runner)
-  - `agents/` - LLM and human agents
-  - `environments/` - Quest environments
-  - `executors/` - CLI and bridges
-  - `renderers/` - Terminal UI
-  - `web/` - Web interface
-  - `utils/` - Shared utilities
-  - `tests/` - Test suite
-- `quests/` - Example quests
-
-## License
-MIT License - See LICENSE for details.
-
-## Disclaimer
-This project was created for fun with 99% code written by cursor's AI agent mode.
-
-This project is not affiliated with Elemental Games or the Space Rangers franchise.
+## Notes
+- Quest engine submodule is required.
+- API-key dependent model execution needs provider env vars:
+  - `OPENAI_API_KEY`
+  - `ANTHROPIC_API_KEY`
+  - `GOOGLE_API_KEY`
+  - `DEEPSEEK_API_KEY`
+- Current default benchmark models:
+  - `gpt-5-mini`
+  - `claude-sonnet-4-5`
+  - `gemini-2.5-flash`
+  - `deepseek-3.2-chat`
+- `gpt-5-mini` currently enforces provider-default temperature; the configured value is ignored for this model.
+- Prompt templates now drive non-number-mode LLM prompts, so benchmark template changes are effective.
+- Benchmark artifacts are written to:
+  - `results/benchmarks/<benchmark_id>/benchmark_config.json`
+  - `results/benchmarks/<benchmark_id>/benchmark_summary.json`
+- Per-run step logs remain in:
+  - `results/<agent_id>/<quest_name>/run_<run_id>/`

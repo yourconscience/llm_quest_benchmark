@@ -1,6 +1,7 @@
 """TypeScript bridge for QM file parsing and execution"""
 import logging
 import json
+import os
 import subprocess
 from copy import deepcopy
 from pathlib import Path
@@ -36,6 +37,56 @@ class QMBridge:
         # Validate parser script exists
         if not self.parser_script.exists():
             raise FileNotFoundError(f"Parser script not found: {self.parser_script}")
+        self._validate_bridge_dependencies()
+
+    def _required_bridge_sources(self) -> List[Path]:
+        """Return required TypeScript source files for bridge imports."""
+        repo_root = self.parser_script.parents[3]
+        return [
+            repo_root / "space-rangers-quest/src/lib/qmreader.ts",
+            repo_root / "space-rangers-quest/src/lib/qmplayer/index.ts",
+        ]
+
+    def _validate_bridge_dependencies(self) -> None:
+        """Validate that the TypeScript quest engine sources exist."""
+        missing_files = [path for path in self._required_bridge_sources() if not path.exists()]
+        if missing_files:
+            missing_preview = ", ".join(str(path) for path in missing_files[:2])
+            raise RuntimeError(
+                "TypeScript bridge dependencies are missing "
+                f"({missing_preview}). Run: git submodule update --init --recursive"
+            )
+
+    @staticmethod
+    def _submodule_help() -> str:
+        return "Run: git submodule update --init --recursive"
+
+    def _build_node_env(self) -> Dict[str, str]:
+        """Build subprocess environment with Node compatibility defaults."""
+        env = os.environ.copy()
+        node_options = env.get("NODE_OPTIONS", "")
+        legacy_flag = "--openssl-legacy-provider"
+        if legacy_flag not in node_options:
+            env["NODE_OPTIONS"] = f"{node_options} {legacy_flag}".strip()
+        return env
+
+    def _read_stderr_snapshot(self, max_lines: int = 8, timeout: float = 0.2) -> str:
+        """Read a small non-blocking stderr snapshot for diagnostics."""
+        if not self.process or not self.process.stderr:
+            return ""
+
+        import select
+
+        lines: List[str] = []
+        for _ in range(max_lines):
+            ready, _, _ = select.select([self.process.stderr], [], [], timeout)
+            if not ready:
+                break
+            line = self.process.stderr.readline()
+            if not line:
+                break
+            lines.append(line.strip())
+        return "\n".join(line for line in lines if line)
 
     def _read_response(self, timeout: int = 10) -> str:
         """Read response from process with timeout"""
@@ -71,7 +122,13 @@ class QMBridge:
             logger.debug(f"Running parser command: {' '.join(cmd)}")
 
         try:
-            proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            proc = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=True,
+                env=self._build_node_env(),
+            )
             if self.debug:
                 logger.debug(f"Raw parser output: {proc.stdout[:500]}...")
 
@@ -102,7 +159,9 @@ class QMBridge:
 
         except subprocess.CalledProcessError as e:
             logger.error(f"Node parser error:\n{e.stderr}")
-            raise RuntimeError(f"Failed to parse quest file: {e.stderr}")
+            raise RuntimeError(
+                f"Failed to parse quest file: {e.stderr}\n{self._submodule_help()}"
+            )
         except Exception as e:
             logger.error(f"Failed to parse QM data: {str(e)}")
             raise RuntimeError(f"Failed to parse quest file: {str(e)}")
@@ -126,13 +185,19 @@ class QMBridge:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                bufsize=1  # Line buffered
+                bufsize=1,  # Line buffered
+                env=self._build_node_env(),
             )
 
             # Read initial state
             initial_raw = self._read_response()
             if not initial_raw:
-                raise RuntimeError("No initial state received from TypeScript bridge")
+                stderr_snapshot = self._read_stderr_snapshot()
+                hint = self._submodule_help()
+                details = f"\nBridge stderr:\n{stderr_snapshot}" if stderr_snapshot else ""
+                raise RuntimeError(
+                    f"No initial state received from TypeScript bridge.{details}\n{hint}"
+                )
 
             # Parse response and extract state
             try:

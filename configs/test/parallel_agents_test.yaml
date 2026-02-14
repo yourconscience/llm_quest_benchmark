@@ -1,12 +1,12 @@
 # Test for parallel agent-based benchmark system
 quests:
-  - quests/kr1/Boat.qm
-  - quests/kr1/Build.qm
-  - quests/kr1/Diamond.qm
+  - quests/Boat.qm
+  - quests/kr_1_ru/Build.qm
+  - quests/kr_1_ru/Diamond.qm
 agents:
   - model: random_choice
-  - model: gpt-4o
+  - model: gpt-5-mini
     template: reasoning.jinja
 debug: true
 # No max_workers setting - we'll use one worker per agent
-output_dir: metrics/parallel_agents_test
+output_dir: results/benchmarks

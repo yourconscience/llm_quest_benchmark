@@ -2,19 +2,65 @@
 from pathlib import Path
 import re
 
-# Model choices
+# Provider registry used by parser/client factory.
+MODEL_PROVIDER_CONFIG = {
+    "openai": {"models": ["gpt-5", "gpt-5-mini", "gpt-5-nano", "o4-mini"]},
+    "anthropic": {"models": ["claude-sonnet-4-5", "claude-opus-4-1"]},
+    "google": {"models": ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"]},
+    "deepseek": {"models": ["deepseek-3.2-chat", "deepseek-reasoner"]},
+    # Optional compatibility gateway (hidden from default UI model list).
+    "openrouter": {"models": []},
+}
+
+# User-facing model choices (clean list, no duplicated provider prefixes).
 MODEL_CHOICES = [
-    "random_choice", # LLM Stub: selects random choice
-    "gpt-4o",
-    "gpt-4o-mini",
-    "claude-3-7-sonnet-latest",
-    "claude-3-5-sonnet-latest",
-    "claude-3-5-haiku-latest",
+    "random_choice",
+    # OpenAI
+    "gpt-5",
+    "gpt-5-mini",
+    "gpt-5-nano",
+    "o4-mini",
+    # Anthropic
+    "claude-sonnet-4-5",
+    "claude-opus-4-1",
+    # Google
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-pro",
+    # DeepSeek
+    "deepseek-3.2-chat",
+    "deepseek-reasoner",
 ]
-DEFAULT_MODEL = "gpt-4o"
+
+# Aliases accepted by parser for backwards compatibility.
+MODEL_ALIASES = {
+    # OpenAI
+    "gpt-5": "openai:gpt-5",
+    "gpt-5-mini": "openai:gpt-5-mini",
+    "gpt-5-nano": "openai:gpt-5-nano",
+    "o4-mini": "openai:o4-mini",
+    # Anthropic
+    "claude-sonnet-4-5": "anthropic:claude-sonnet-4-5",
+    "claude-opus-4-1": "anthropic:claude-opus-4-1-20250805",
+    # Compatibility Anthropic aliases
+    "claude-sonnet-4-0": "anthropic:claude-sonnet-4-20250514",
+    "claude-sonnet-4-20250514": "anthropic:claude-sonnet-4-20250514",
+    "claude-opus-4-1-20250805": "anthropic:claude-opus-4-1-20250805",
+    # Google
+    "gemini-2.5-pro": "google:gemini-2.5-pro",
+    "gemini-2.5-flash": "google:gemini-2.5-flash",
+    "gemini-2.5-flash-lite": "google:gemini-2.5-flash-lite",
+    # DeepSeek
+    "deepseek-3.2-chat": "deepseek:deepseek-chat",
+    # Compatibility DeepSeek aliases
+    "deepseek-chat": "deepseek:deepseek-chat",
+    "deepseek-reasoner": "deepseek:deepseek-reasoner",
+}
+
+DEFAULT_MODEL = "gpt-5-mini"
 
 # Default quest
-DEFAULT_QUEST = Path("quests/kr1/Boat.qm")
+DEFAULT_QUEST = Path("quests/Boat.qm")
 
 # Quest search configuration
 QUEST_ROOT_DIRECTORY = "quests"

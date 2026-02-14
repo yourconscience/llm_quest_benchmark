@@ -38,7 +38,7 @@ def init_quest(client, app):
     with app.app_context():
         # Test quest initialization
         data = {
-            'quest': 'kr1/Boat.qm',
+            'quest': 'quests/Boat.qm',
             'model': 'random_choice',
             'temperature': 0.7,
             'template': 'reasoning'
@@ -77,7 +77,7 @@ def test_quest_initialization(client, app):
     with app.app_context():
         # Test quest initialization
         data = {
-            'quest': 'kr1/Boat.qm',
+            'quest': 'quests/Boat.qm',
             'model': 'random_choice',
             'temperature': 0.7,
             'template': 'reasoning'
@@ -122,7 +122,7 @@ def test_quest_initialization(client, app):
         run = Run.query.get(response.json['run_id'])
         assert run is not None
         assert run.quest_name == 'Boat'
-        assert run.quest_file == 'quests/kr1/Boat.qm'
+        assert run.quest_file.endswith('Boat.qm')
         assert run.agent_id.startswith('random')
         assert run.end_time is None  # This is the key assertion for initialization
 
@@ -137,7 +137,7 @@ def test_quest_step(client, app):
     with app.app_context():
         # Initialize quest
         init_data = {
-            'quest': 'kr1/Boat.qm',
+            'quest': 'quests/Boat.qm',
             'model': 'random_choice',
             'temperature': 0.7,
             'template': 'reasoning'
@@ -215,7 +215,7 @@ def test_quest_invalid_step(client, app):
     with app.app_context():
         # Initialize quest
         init_data = {
-            'quest': 'kr1/Boat.qm',
+            'quest': 'quests/Boat.qm',
         'model': 'random_choice',
             'temperature': 0.7,
             'template': 'reasoning'
@@ -235,6 +235,16 @@ def test_quest_invalid_step(client, app):
         assert step_response.status_code == 400
         assert 'error' in step_response.json
         assert 'No choice provided' in step_response.json['error']
+
+
+def test_quest_not_found_returns_404(client):
+    response = client.post(
+        '/monitor/init',
+        json={'quest': 'quests/does-not-exist.qm', 'model': 'random_choice'},
+    )
+    assert response.status_code == 404
+    assert response.json['success'] is False
+    assert 'not found' in response.json['error'].lower()
 
 def test_database_operations(app):
     """Test database operations"""

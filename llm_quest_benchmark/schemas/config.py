@@ -15,24 +15,24 @@ from llm_quest_benchmark.constants import (
 
 # Default benchmark configuration
 DEFAULT_BENCHMARK_CONFIG = {
-    "quests": ["quests/boat.qm"],
+    "quests": ["quests/Boat.qm"],
     "agents": [
         {
             "model": "random_choice",
             "skip_single": True,
-            "temperature": 0.5,
+            "temperature": 0.0,
             "template": "reasoning.jinja"
         },
         {
-            "model": "gpt-4o",
+            "model": "gpt-5-mini",
             "skip_single": True,
-            "temperature": 0.5,
+            "temperature": 0.4,
             "template": "reasoning.jinja"
         }
     ],
     "debug": False,
     "quest_timeout": 30,
-    "output_dir": "metrics/web_benchmark",
+    "output_dir": "results/benchmarks",
     "name": "Default Benchmark"
 }
 
@@ -49,14 +49,14 @@ def get_default_benchmark_yaml() -> str:
     if not config_path.exists():
         return """# Example benchmark configuration
 quests:
-  - quests/boat.qm
+  - quests/Boat.qm
 agents:
   - model: random_choice
-  - model: gpt-4o
+  - model: gpt-5-mini
     template: reasoning.jinja
 debug: true
 # One worker per agent will be used automatically
-output_dir: metrics/test"""
+output_dir: results/benchmarks"""
     
     # Read the file content
     with open(config_path, 'r') as f:
@@ -75,8 +75,12 @@ class AgentConfig:
     benchmark_id: Optional[str] = None  # Added to link runs to benchmarks
 
     def __post_init__(self):
-        if self.model not in MODEL_CHOICES:
-            raise ValueError(f"Invalid model: {self.model}. Supported models: {MODEL_CHOICES}")
+        if self.model not in ("random_choice", "human"):
+            # Keep parser compatibility for legacy names while UI remains clean.
+            from llm_quest_benchmark.llm.client import is_supported_model_name
+
+            if not is_supported_model_name(self.model):
+                raise ValueError(f"Invalid model: {self.model}. Supported models: {MODEL_CHOICES}")
         if not (0.0 <= self.temperature <= 2.0):
             raise ValueError(f"Temperature must be between 0.0 and 2.0, got {self.temperature}")
 
@@ -100,11 +104,12 @@ class BenchmarkConfig:
     debug: bool = False
     quest_timeout: int = 60  # Timeout per quest
     benchmark_timeout: Optional[int] = None  # Total timeout for all quests, defaults to quest_timeout * num_quests
-    output_dir: Optional[str] = "metrics/quests"
+    output_dir: Optional[str] = "results/benchmarks"
     name: Optional[str] = "baseline"  # Name of the benchmark run
     renderer: str = "progress"  # Type of renderer to use (progress, simple, etc.)
     benchmark_id: Optional[str] = None  # Unique ID for the benchmark run
     max_quests: Optional[int] = None  # Maximum number of quests to run (useful for testing)
+    max_workers: Optional[int] = None  # Optional parallel workers for future benchmark scheduling
 
     def __post_init__(self):
         # Validate quest paths

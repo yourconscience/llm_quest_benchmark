@@ -1,11 +1,11 @@
-# Example benchmark configuration
+name: examen_gemini_v1
 quests:
-  - quests/Boat.qm
+  - quests/kr_1_ru/Examen.qm
 agents:
-  - model: random_choice
   - model: gemini-2.5-flash
     template: reasoning.jinja
+    temperature: 0.6
+    skip_single: true
 debug: true
-quest_timeout: 60
-max_workers: 2
+quest_timeout: 120
 output_dir: results/benchmarks

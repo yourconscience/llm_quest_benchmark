@@ -1,4 +1,5 @@
 """Quest runner implementation with improved logging and error handling"""
+from copy import deepcopy
 import json
 import logging
 import sqlite3
@@ -203,22 +204,30 @@ class QuestRunner:
                     reward = self.env.state.get('reward',
                                                 0.0) if self.env and self.env.state else 0.0
                     if self.quest_logger:
-                        self.quest_logger.set_quest_outcome(outcome.name, reward)
+                        self.quest_logger.set_quest_outcome(
+                            outcome.name,
+                            reward,
+                            final_state=self.env.state if self.env else None,
+                        )
 
                     return outcome
 
+                current_location_id = self.env.state['location_id']
+                current_observation = observation
+                current_choices = deepcopy(self.env.state['choices'])
+
                 # Get agent's action and take step
-                action = self.agent.get_action(observation, self.env.state['choices'])
+                action = self.agent.get_action(current_observation, current_choices)
 
                 if self.debug:
                     self.logger.debug(f"Agent selected action: {action}")
                     choices_debug = []
-                    for i, c in enumerate(self.env.state['choices']):
+                    for i, c in enumerate(current_choices):
                         choices_debug.append(f"{i+1}: {c['text']}")
                     self.logger.debug(f"Available choices: {choices_debug}")
 
                 # Validate action is within range (extra safety check)
-                num_choices = len(self.env.state['choices'])
+                num_choices = len(current_choices)
                 if action < 1 or action > num_choices:
                     self.logger.error(
                         f"RUNNER ERROR - Action {action} out of range 1-{num_choices}")
@@ -230,12 +239,14 @@ class QuestRunner:
                     observation, done, success, info = self.env.step(action)
 
                     # Create agent state and notify callbacks
-                    agent_state = AgentState(step=self.step_count,
-                                             location_id=self.env.state['location_id'],
-                                             observation=observation,
-                                             choices=self.env.state['choices'],
-                                             action=str(action),
-                                             llm_response=self.agent.get_last_response())
+                    agent_state = AgentState(
+                        step=self.step_count,
+                        location_id=current_location_id,
+                        observation=current_observation,
+                        choices=current_choices,
+                        action=str(action),
+                        llm_response=self.agent.get_last_response(),
+                    )
                     self._notify_callbacks("game_state", agent_state)
 
                     # Log step to database
@@ -255,7 +266,12 @@ class QuestRunner:
                             if hasattr(self, 'agent_config') and self.agent_config and hasattr(self.agent_config, 'benchmark_id'):
                                 benchmark_id = self.agent_config.benchmark_id
                             
-                            self.quest_logger.set_quest_outcome(outcome.name, reward, benchmark_id)
+                            self.quest_logger.set_quest_outcome(
+                                outcome.name,
+                                reward,
+                                benchmark_id,
+                                final_state=self.env.state if self.env else None,
+                            )
 
                         return outcome
 
@@ -270,7 +286,12 @@ class QuestRunner:
                         if hasattr(self, 'agent_config') and self.agent_config and hasattr(self.agent_config, 'benchmark_id'):
                             benchmark_id = self.agent_config.benchmark_id
                         
-                        self.quest_logger.set_quest_outcome(QuestOutcome.ERROR.name, 0.0, benchmark_id)
+                        self.quest_logger.set_quest_outcome(
+                            QuestOutcome.ERROR.name,
+                            0.0,
+                            benchmark_id,
+                            final_state=self.env.state if self.env else None,
+                        )
 
                     raise
 
@@ -287,7 +308,12 @@ class QuestRunner:
                 if hasattr(self, 'agent_config') and self.agent_config and hasattr(self.agent_config, 'benchmark_id'):
                     benchmark_id = self.agent_config.benchmark_id
                 
-                self.quest_logger.set_quest_outcome(QuestOutcome.ERROR.name, 0.0, benchmark_id)
+                self.quest_logger.set_quest_outcome(
+                    QuestOutcome.ERROR.name,
+                    0.0,
+                    benchmark_id,
+                    final_state=self.env.state if self.env else None,
+                )
 
             return QuestOutcome.ERROR
         finally:

@@ -78,7 +78,10 @@ def validate_quest_file(quest_path):
                 dirs = {info.directory for info in similar}
                 if dirs:
                     suggestion = f". Did you mean: {', '.join(dirs)}?"
-                    raise QuestNotFoundError(f"Quest directory not found: {quest_path}{suggestion}")
+                    raise QuestNotFoundError(
+                        f"Quest directory not found: {quest_path}{suggestion}",
+                        status_code=404,
+                    )
         
         # If it looks like a quest name, suggest similar quest names
         else:
@@ -87,9 +90,12 @@ def validate_quest_file(quest_path):
                 names = {info.name for info in similar}
                 if names:
                     suggestion = f". Did you mean: {', '.join(names)}?"
-                    raise QuestNotFoundError(f"Quest not found: {quest_path}{suggestion}")
+                    raise QuestNotFoundError(
+                        f"Quest not found: {quest_path}{suggestion}",
+                        status_code=404,
+                    )
         
-        raise QuestNotFoundError(f"Quest path not found: {quest_path}")
+        raise QuestNotFoundError(f"Quest path not found: {quest_path}", status_code=404)
 
 def validate_model(model):
     """Validate that model is supported"""

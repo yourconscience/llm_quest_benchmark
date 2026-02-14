@@ -1,30 +1,31 @@
-# KR1 benchmark configuration
-
+# Provider comparison suite (v1)
+# Goal: one model per provider, 6 lightweight quests, 60s quest timeout.
+name: provider_suite_v1
 quests:
-  - quests/kr_1_ru
-
+  - quests/Boat.qm
+  - quests/kr_1_ru/Fishing.qm
+  - quests/kr_1_ru/Gobsaur.qm
+  - quests/kr_1_ru/Rush.qm
+  - quests/kr_1_ru/Examen.qm
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
 agents:
   - model: gpt-5-mini
     template: reasoning.jinja
     temperature: 0.4
     skip_single: true
-
   - model: claude-sonnet-4-5
     template: reasoning.jinja
     temperature: 0.4
     skip_single: true
-
   - model: gemini-2.5-flash
     template: reasoning.jinja
     temperature: 0.4
     skip_single: true
-
   - model: deepseek-3.2-chat
     template: reasoning.jinja
     temperature: 0.4
     skip_single: true
-
-debug: false
+debug: true
 quest_timeout: 60
+max_workers: 2
 output_dir: results/benchmarks
-name: kr1
