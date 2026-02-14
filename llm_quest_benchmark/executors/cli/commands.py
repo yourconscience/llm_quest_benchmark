@@ -19,6 +19,7 @@ import typer
 from llm_quest_benchmark.core.logging import LogManager
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.core.analyzer import analyze_quest_run, analyze_benchmark
+from llm_quest_benchmark.core.benchmark_report import render_benchmark_report
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.benchmark import run_benchmark, print_summary
 from llm_quest_benchmark.renderers.terminal import RichRenderer
@@ -221,6 +222,42 @@ def analyze_run(
         raise
     except Exception as e:
         typer.echo(f"Error analyzing run summary: {str(e)}", err=True)
+        raise typer.Exit(code=2)
+
+
+@app.command("benchmark-report")
+def benchmark_report(
+    benchmark_id: Optional[List[str]] = typer.Option(
+        None,
+        "--benchmark-id",
+        help="Benchmark ID(s) to include. Repeat flag to compare multiple IDs.",
+    ),
+    output: Optional[Path] = typer.Option(
+        None,
+        help="Optional output markdown path. If omitted, prints to stdout.",
+    ),
+    output_dir: Path = typer.Option(
+        Path("results/benchmarks"),
+        help="Directory containing benchmark artifacts.",
+    ),
+):
+    """Render markdown report from benchmark artifacts and run summaries."""
+    try:
+        report_md, selected_ids = render_benchmark_report(
+            benchmark_ids=benchmark_id,
+            output_dir=str(output_dir),
+        )
+        if output is None:
+            typer.echo(report_md)
+            return
+
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(report_md, encoding="utf-8")
+        typer.echo(
+            f"Benchmark report written to {output} for: {', '.join(selected_ids)}"
+        )
+    except Exception as e:
+        typer.echo(f"Error creating benchmark report: {str(e)}", err=True)
         raise typer.Exit(code=2)
 
 @app.callback()
