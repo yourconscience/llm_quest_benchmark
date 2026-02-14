@@ -122,14 +122,14 @@ def _parse_run_insight(benchmark_id: str, run_row: Dict[str, Any]) -> RunInsight
     run_summary = _load_json(summary_path) if summary_path else None
 
     run_id = int(run_row.get("id") or -1)
+    # Keep DB row outcome/duration as canonical benchmark truth.
+    # run_summary can drift for timeout/error cases when background execution finishes later.
     outcome = str(run_row.get("outcome") or "UNKNOWN")
     duration = float(run_row.get("run_duration") or 0.0)
     usage = {}
     steps: List[Dict[str, Any]] = []
 
     if isinstance(run_summary, dict):
-        outcome = str(run_summary.get("outcome") or outcome)
-        duration = float(run_summary.get("run_duration") or duration or 0.0)
         usage = run_summary.get("usage") if isinstance(run_summary.get("usage"), dict) else {}
         loaded_steps = run_summary.get("steps")
         if isinstance(loaded_steps, list):
@@ -184,6 +184,11 @@ def _collect_insights(benchmark_id: str, output_dir: Path) -> List[RunInsight]:
     return [_parse_run_insight(benchmark_id, row) for row in db_runs if isinstance(row, dict)]
 
 
+def _load_benchmark_summary_doc(benchmark_id: str, output_dir: Path) -> Optional[Dict[str, Any]]:
+    summary_path = output_dir / benchmark_id / "benchmark_summary.json"
+    return _load_json(summary_path)
+
+
 def _format_benchmark_summary(insights: List[RunInsight]) -> Dict[str, Any]:
     outcomes = Counter(i.outcome for i in insights)
     total = len(insights)
@@ -210,7 +215,10 @@ def _format_benchmark_summary(insights: List[RunInsight]) -> Dict[str, Any]:
     }
 
 
-def _format_model_summary(insights: List[RunInsight]) -> Dict[str, Dict[str, Any]]:
+def _format_model_summary(
+    insights: List[RunInsight],
+    outcome_overrides: Optional[Dict[str, Dict[str, Any]]] = None,
+) -> Dict[str, Dict[str, Any]]:
     grouped: Dict[str, List[RunInsight]] = defaultdict(list)
     for insight in insights:
         grouped[insight.model].append(insight)
@@ -225,13 +233,36 @@ def _format_model_summary(insights: List[RunInsight]) -> Dict[str, Dict[str, Any
         priced_runs = sum(1 for r in rows if r.estimated_cost_usd is not None)
         decision_steps = sum(r.decision_steps for r in rows)
         default_steps = sum(r.default_decision_steps for r in rows)
+
+        override = (outcome_overrides or {}).get(model, {})
+        success_override = override.get("success")
+        failure_override = override.get("failed")
+        timeout_override = override.get("timeouts")
+        error_override = override.get("errors")
+        success_rate_override = override.get("success_rate")
+        total_override = override.get("total_runs")
+
+        if total_override is not None:
+            total = int(total_override)
+        if success_override is not None:
+            success = int(success_override)
+        failure = int(failure_override) if failure_override is not None else outcomes.get("FAILURE", 0)
+        timeout = int(timeout_override) if timeout_override is not None else outcomes.get("TIMEOUT", 0)
+        error = int(error_override) if error_override is not None else outcomes.get("ERROR", 0)
+        if success_rate_override is not None:
+            success_rate = float(success_rate_override)
+            if success_rate <= 1.0:
+                success_rate *= 100.0
+        else:
+            success_rate = (success / total * 100.0) if total else 0.0
+
         model_summary[model] = {
             "runs": total,
             "success": success,
-            "failure": outcomes.get("FAILURE", 0),
-            "timeout": outcomes.get("TIMEOUT", 0),
-            "error": outcomes.get("ERROR", 0),
-            "success_rate": (success / total * 100.0) if total else 0.0,
+            "failure": failure,
+            "timeout": timeout,
+            "error": error,
+            "success_rate": success_rate,
             "tokens": total_tokens,
             "cost": total_cost if priced_runs else None,
             "default_rate": (default_steps / decision_steps * 100.0) if decision_steps else 0.0,
@@ -264,6 +295,7 @@ def render_benchmark_report(
 
     all_insights: List[RunInsight] = []
     for benchmark_id in selected_ids:
+        benchmark_doc = _load_benchmark_summary_doc(benchmark_id, output_root)
         insights = _collect_insights(benchmark_id, output_root)
         if not insights:
             sections.append(f"## {benchmark_id}")
@@ -274,7 +306,24 @@ def render_benchmark_report(
 
         all_insights.extend(insights)
         summary = _format_benchmark_summary(insights)
-        model_summary = _format_model_summary(insights)
+        model_overrides = {}
+        if isinstance(benchmark_doc, dict):
+            summary_stats = benchmark_doc.get("summary_stats")
+            if isinstance(summary_stats, dict):
+                summary["total"] = int(summary_stats.get("total_runs", summary["total"]))
+                summary["success"] = int(summary_stats.get("total_success", summary["success"]))
+                summary["failure"] = int(summary_stats.get("total_failures", summary["failure"]))
+                summary["timeout"] = int(summary_stats.get("total_timeouts", summary["timeout"]))
+                summary["error"] = int(summary_stats.get("total_errors", summary["error"]))
+                raw_success_rate = float(summary_stats.get("success_rate", summary["success_rate"] / 100.0))
+                summary["success_rate"] = raw_success_rate * 100.0 if raw_success_rate <= 1.0 else raw_success_rate
+                model_overrides = (
+                    summary_stats.get("models")
+                    if isinstance(summary_stats.get("models"), dict)
+                    else {}
+                )
+
+        model_summary = _format_model_summary(insights, outcome_overrides=model_overrides)
         failure_rows = _format_failure_rows(insights)
 
         sections.append(f"## {benchmark_id}")
