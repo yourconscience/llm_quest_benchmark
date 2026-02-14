@@ -33,6 +33,7 @@ def test_agent_basic_flow(mock_openai):
     mock_message.content = "1"
     mock_choice.message = mock_message
     mock_completion.choices = [mock_choice]
+    mock_completion.usage = Mock(prompt_tokens=9, completion_tokens=2, total_tokens=11)
     mock_chat.completions.create.return_value = mock_completion
     mock_openai.return_value.chat = mock_chat
 
@@ -50,6 +51,10 @@ def test_agent_basic_flow(mock_openai):
     # Verify results
     assert result == 1  # Expect an integer
     assert mock_chat.completions.create.call_count == 1
+    last_response = agent.get_last_response()
+    assert last_response.prompt_tokens == 9
+    assert last_response.completion_tokens == 2
+    assert last_response.total_tokens == 11
 
 
 def test_template_rendering():

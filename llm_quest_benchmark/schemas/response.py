@@ -10,6 +10,10 @@ class LLMResponse:
     analysis: Optional[str] = None  # Optional analysis of the choice
     reasoning: Optional[str] = None  # Optional explanation for the choice
     is_default: bool = False  # Whether this is a default value due to parsing error
+    prompt_tokens: Optional[int] = None
+    completion_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
+    estimated_cost_usd: Optional[float] = None
 
     def to_choice_string(self) -> str:
         """Convert to choice string (1-based action number)"""

@@ -85,6 +85,50 @@ def test_openai_compatible_completion_extraction(mock_openai_cls):
 
 
 @patch("llm_quest_benchmark.llm.client.OpenAI")
+def test_openai_usage_is_tracked(mock_openai_cls):
+    mock_client = Mock()
+    mock_chat = Mock()
+    mock_completion = Mock()
+    mock_msg = Mock()
+    mock_msg.content = "1"
+    mock_completion.choices = [Mock(message=mock_msg)]
+    mock_completion.usage = Mock(prompt_tokens=11, completion_tokens=4, total_tokens=15)
+    mock_chat.completions.create.return_value = mock_completion
+    mock_client.chat = mock_chat
+    mock_openai_cls.return_value = mock_client
+
+    client = get_llm_client("gpt-5-mini")
+    assert client.get_completion("pick") == "1"
+    usage = client.get_last_usage()
+    assert usage["prompt_tokens"] == 11
+    assert usage["completion_tokens"] == 4
+    assert usage["total_tokens"] == 15
+    assert "estimated_cost_usd" in usage
+
+
+@patch("llm_quest_benchmark.llm.client.OpenAI")
+def test_openai_usage_sums_fallback_calls(mock_openai_cls):
+    mock_client = Mock()
+    mock_chat = Mock()
+    first = Mock()
+    second = Mock()
+    first.choices = [Mock(message=Mock(content=""))]
+    first.usage = Mock(prompt_tokens=20, completion_tokens=1, total_tokens=21)
+    second.choices = [Mock(message=Mock(content="1"))]
+    second.usage = Mock(prompt_tokens=30, completion_tokens=2, total_tokens=32)
+    mock_chat.completions.create.side_effect = [first, second]
+    mock_client.chat = mock_chat
+    mock_openai_cls.return_value = mock_client
+
+    client = get_llm_client("gpt-5-mini")
+    assert client.get_completion("pick") == "1"
+    usage = client.get_last_usage()
+    assert usage["prompt_tokens"] == 50
+    assert usage["completion_tokens"] == 3
+    assert usage["total_tokens"] == 53
+
+
+@patch("llm_quest_benchmark.llm.client.OpenAI")
 def test_openai_gpt5_retries_empty_with_larger_budget(mock_openai_cls):
     mock_client = Mock()
     mock_chat = Mock()

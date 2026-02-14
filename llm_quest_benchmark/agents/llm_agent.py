@@ -296,6 +296,39 @@ class LLMAgent(QuestPlayer):
             return best_action
         return action
 
+    @staticmethod
+    def _normalize_usage(usage: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        usage = usage or {}
+        prompt_tokens = int(usage.get("prompt_tokens") or 0)
+        completion_tokens = int(usage.get("completion_tokens") or 0)
+        total_tokens = int(
+            usage.get("total_tokens")
+            or (prompt_tokens + completion_tokens)
+        )
+        estimated_cost_usd = usage.get("estimated_cost_usd")
+        if estimated_cost_usd is not None:
+            estimated_cost_usd = float(estimated_cost_usd)
+        return {
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
+            "estimated_cost_usd": estimated_cost_usd,
+        }
+
+    @classmethod
+    def _merge_usage(cls, first: Optional[Dict[str, Any]], second: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        a = cls._normalize_usage(first)
+        b = cls._normalize_usage(second)
+        merged_cost = None
+        if a["estimated_cost_usd"] is not None or b["estimated_cost_usd"] is not None:
+            merged_cost = (a["estimated_cost_usd"] or 0.0) + (b["estimated_cost_usd"] or 0.0)
+        return {
+            "prompt_tokens": a["prompt_tokens"] + b["prompt_tokens"],
+            "completion_tokens": a["completion_tokens"] + b["completion_tokens"],
+            "total_tokens": a["total_tokens"] + b["total_tokens"],
+            "estimated_cost_usd": merged_cost,
+        }
+
     def _get_action_impl(self, state: str, choices: List[Dict[str, str]]) -> int:
         """Implementation of action selection logic.
 
@@ -319,6 +352,7 @@ class LLMAgent(QuestPlayer):
             # Get LLM response
             self._ensure_llm()
             llm_response = self.llm.get_completion(prompt)
+            llm_usage = self.llm.get_last_usage()
             if self.debug:
                 self.logger.debug(f"LLM response: {llm_response}")
                 choices_debug = []
@@ -332,12 +366,19 @@ class LLMAgent(QuestPlayer):
 
             if parsed_response.is_default:
                 retry_response = self.llm.get_completion(self._format_retry_prompt(state, choices))
+                retry_usage = self.llm.get_last_usage()
+                llm_usage = self._merge_usage(llm_usage, retry_usage)
                 retry_parsed = parse_llm_response(retry_response, len(choices), self.debug,
                                                   self.logger)
                 if not retry_parsed.is_default:
                     parsed_response = retry_parsed
 
             parsed_response.action = self._apply_safety_filter(parsed_response.action, choices)
+            usage_payload = self._normalize_usage(llm_usage)
+            parsed_response.prompt_tokens = usage_payload["prompt_tokens"]
+            parsed_response.completion_tokens = usage_payload["completion_tokens"]
+            parsed_response.total_tokens = usage_payload["total_tokens"]
+            parsed_response.estimated_cost_usd = usage_payload["estimated_cost_usd"]
 
             if self.debug:
                 self.logger.debug(f"Parsed LLM response: {parsed_response}")

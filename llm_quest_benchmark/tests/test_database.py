@@ -191,6 +191,10 @@ def test_run_summary_export_is_compact_and_single_file(tmp_path, monkeypatch, qu
             analysis="South has better odds",
             reasoning="Avoid immediate danger",
             is_default=False,
+            prompt_tokens=12,
+            completion_tokens=5,
+            total_tokens=17,
+            estimated_cost_usd=0.000123,
         ),
     )
     quest_logger.log_step(agent_state)
@@ -206,3 +210,29 @@ def test_run_summary_export_is_compact_and_single_file(tmp_path, monkeypatch, qu
     assert set(exported_step.keys()) == {"step", "observation", "choices", "llm_decision"}
     assert exported_step["choices"] == {"1": "Go north", "2": "Go south"}
     assert exported_step["llm_decision"]["choice"] == {"2": "Go south"}
+    assert exported["usage"]["prompt_tokens"] == 12
+    assert exported["usage"]["completion_tokens"] == 5
+    assert exported["usage"]["total_tokens"] == 17
+    assert exported["usage"]["estimated_cost_usd"] is not None
+
+
+def test_random_agent_does_not_export_json(tmp_path, monkeypatch, quest_logger):
+    """Random agent runs should not create result artifacts in results/."""
+    monkeypatch.setattr(logging_module, "RESULTS_DIR", tmp_path)
+
+    quest_logger.agent = "random_choice"
+    quest_logger.set_quest_file("quests/kr_1_ru/Test.qm")
+
+    quest_logger.log_step(
+        AgentState(
+            step=1,
+            location_id="r1",
+            observation="obs",
+            choices=[{"id": "1", "text": "x"}],
+            action="1",
+            llm_response=LLMResponse(action=1),
+        )
+    )
+    quest_logger.set_quest_outcome("FAILURE", reward=0.0)
+
+    assert not any(tmp_path.rglob("run_summary.json"))

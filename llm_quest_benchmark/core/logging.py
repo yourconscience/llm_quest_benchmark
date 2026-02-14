@@ -118,6 +118,10 @@ class QuestLogger:
         analysis = None
         reasoning = None
         is_default = True
+        prompt_tokens = 0
+        completion_tokens = 0
+        total_tokens = 0
+        estimated_cost_usd = None
 
         if isinstance(llm_response, dict):
             parsed_action_index = self._safe_int(
@@ -129,12 +133,24 @@ class QuestLogger:
             analysis = llm_response.get("analysis")
             reasoning = llm_response.get("reasoning")
             is_default = bool(llm_response.get("is_default", False))
+            prompt_tokens = int(llm_response.get("prompt_tokens") or 0)
+            completion_tokens = int(llm_response.get("completion_tokens") or 0)
+            total_tokens = int(
+                llm_response.get("total_tokens")
+                or (prompt_tokens + completion_tokens)
+            )
+            if llm_response.get("estimated_cost_usd") is not None:
+                estimated_cost_usd = float(llm_response.get("estimated_cost_usd"))
 
         llm_decision = {
             "analysis": analysis,
             "reasoning": reasoning,
             "is_default": is_default,
             "choice": self._selected_choice_map(choices_map, parsed_action_index),
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
+            "estimated_cost_usd": estimated_cost_usd,
         }
 
         return {
@@ -408,6 +424,9 @@ class QuestLogger:
         """Export the complete run to a single run_summary.json file."""
         if not self.agent or not self.quest_file or not self.current_run_id:
             return
+        if self.agent.startswith("random"):
+            # Keep random-agent runs in DB for diagnostics, but avoid result-dir clutter.
+            return
 
         try:
             # Create agent directory if it doesn't exist
@@ -468,10 +487,28 @@ class QuestLogger:
         ''', (self.current_run_id,))
         
         steps = []
+        usage_prompt_tokens = 0
+        usage_completion_tokens = 0
+        usage_total_tokens = 0
+        usage_estimated_cost = 0.0
+        usage_priced_steps = 0
         for step_data in self._local.cursor.fetchall():
             step_num, location_id, obs, choices_json, action, llm_response = step_data
             parsed_choices = self._safe_json_load(choices_json, [])
             parsed_response = self._safe_json_load(llm_response)
+            if isinstance(parsed_response, dict):
+                prompt_tokens = int(parsed_response.get("prompt_tokens") or 0)
+                completion_tokens = int(parsed_response.get("completion_tokens") or 0)
+                total_tokens = int(
+                    parsed_response.get("total_tokens")
+                    or (prompt_tokens + completion_tokens)
+                )
+                usage_prompt_tokens += prompt_tokens
+                usage_completion_tokens += completion_tokens
+                usage_total_tokens += total_tokens
+                if parsed_response.get("estimated_cost_usd") is not None:
+                    usage_estimated_cost += float(parsed_response.get("estimated_cost_usd"))
+                    usage_priced_steps += 1
             steps.append(
                 self._format_step_export(
                     step_num=step_num,
@@ -496,6 +533,15 @@ class QuestLogger:
             "run_duration": run_duration,
             "benchmark_id": benchmark_id,
             "final_state": self.final_state,
+            "usage": {
+                "prompt_tokens": usage_prompt_tokens,
+                "completion_tokens": usage_completion_tokens,
+                "total_tokens": usage_total_tokens,
+                "estimated_cost_usd": (
+                    round(usage_estimated_cost, 8) if usage_priced_steps > 0 else None
+                ),
+                "priced_steps": usage_priced_steps,
+            },
             "steps": steps
         }
 
