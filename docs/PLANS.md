@@ -3,6 +3,15 @@
 ## Current Direction
 Keep the existing Flask web app as the primary UI and harden the full experiment workflow around it.
 
+## Experiment Loop Status (February 14, 2026)
+1. `provider_suite_v1` (24 runs): 1 success, 23 failures, 0 timeouts.
+2. `provider_suite_v2` (24 runs): 3 successes, 20 failures, 1 timeout.
+3. Confirmed improvement:
+   - GPT-5 default-parse rate dropped from `51.9%` to `0%`.
+   - Successful `Boat` completion appeared for Anthropic, Gemini, and DeepSeek in v2.
+4. Remaining blocker:
+   - Timeout bookkeeping mismatch still exists (`benchmark result can show TIMEOUT while DB run later records FAILURE`).
+
 ## Phase 1: Runtime and Reliability
 1. Keep TypeScript bridge behavior unchanged, but preserve strong startup diagnostics.
 2. Validate environment setup with reproducible smoke checks (`CLI`, `bridge parse`, `random run`).
