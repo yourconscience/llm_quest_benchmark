@@ -9,7 +9,6 @@ Benchmark how human and LLM agents solve Space Rangers text quests (`.qm`).
   - OpenAI
   - Anthropic
   - Google Gemini (via Google OpenAI-compatible endpoint)
-  - OpenRouter (OpenAI-compatible)
   - DeepSeek (OpenAI-compatible)
 - Flask UI (`llm-quest server`) with quest run + benchmark + analysis views
 
@@ -57,7 +56,7 @@ uv run llm-quest play --quest quests/Boat.qm
 uv run llm-quest analyze --last
 
 # Benchmark matrix from YAML
-uv run llm-quest benchmark --config configs/test/test_benchmark.yaml
+uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v1.yaml
 ```
 
 ## Web Usage
@@ -86,8 +85,13 @@ uv run python -m pytest
   - `OPENAI_API_KEY`
   - `ANTHROPIC_API_KEY`
   - `GOOGLE_API_KEY`
-  - `OPENROUTER_API_KEY`
   - `DEEPSEEK_API_KEY`
+- Current default benchmark models:
+  - `gpt-5-mini`
+  - `claude-sonnet-4-5`
+  - `gemini-2.5-flash`
+  - `deepseek-3.2-chat`
+- `gpt-5-mini` currently enforces provider-default temperature; the configured value is ignored for this model.
 - Benchmark artifacts are written to:
   - `results/benchmarks/<benchmark_id>/benchmark_config.json`
   - `results/benchmarks/<benchmark_id>/benchmark_summary.json`

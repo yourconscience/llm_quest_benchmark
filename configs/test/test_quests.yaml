@@ -1,9 +1,0 @@
-# Test configuration with test quests
-quests:
-  - quests/test
-agents:
-  - model: random_choice
-  - model: gpt-4o
-    template: reasoning.jinja
-debug: true
-output_dir: metrics/test_quests

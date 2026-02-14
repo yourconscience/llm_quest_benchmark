@@ -11,7 +11,7 @@ This repository benchmarks how human and LLM agents solve Space Rangers text que
 - `llm_quest_benchmark/agents/`:
   Human, random, and LLM agents.
 - `llm_quest_benchmark/llm/`:
-  Provider-aware client adapters (OpenAI, Anthropic, Google, OpenRouter, DeepSeek).
+  Provider-aware client adapters (OpenAI, Anthropic, Google, DeepSeek).
 - `llm_quest_benchmark/executors/cli/`:
   Typer CLI (`llm-quest`) entrypoints.
 - `llm_quest_benchmark/web/`:

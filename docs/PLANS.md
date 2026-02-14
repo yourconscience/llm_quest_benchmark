@@ -14,7 +14,6 @@ Keep the existing Flask web app as the primary UI and harden the full experiment
    - Anthropic
    - Google Gemini
    - DeepSeek
-   - OpenRouter (optional gateway)
 2. Keep provider model list current and visible in Flask model selector.
 3. Add/maintain unit tests for provider parsing and client selection.
 

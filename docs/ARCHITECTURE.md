@@ -37,7 +37,6 @@ The runtime loop is:
     - OpenAI
     - Anthropic
     - Google Gemini (OpenAI-compatible endpoint)
-    - OpenRouter
     - DeepSeek
   - shared retry/backoff and timeout handling
 

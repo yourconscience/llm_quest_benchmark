@@ -1,57 +1,30 @@
-# Default benchmark configuration
-# Includes all supported models with standardized settings
+# KR1 benchmark configuration
 
 quests:
   - quests/spacerangers.gitlab.io/borrowed/qm/КР 1
 
 agents:
-  # OpenAI models
   - model: gpt-5-mini
-    template: reasoning.jinja
-    temperature: 0.5
-    skip_single: true
-
-  - model: gpt-4.1-mini
-    template: reasoning.jinja
-    temperature: 0.8
-    skip_single: true
-
-  - model: gpt-4.1-mini
-    template: reasoning.jinja
-    temperature: 0.6
-    skip_single: true
-
-  - model: gpt-4.1-mini
     template: reasoning.jinja
     temperature: 0.4
     skip_single: true
 
-  - model: gpt-4.1-mini
+  - model: claude-sonnet-4-5
     template: reasoning.jinja
-    temperature: 0.2
-    skip_single: true
-
-  # Anthropic models
-  - model: claude-sonnet-4-0
-    template: reasoning.jinja
-    temperature: 0.5
-    skip_single: true
-
-  - model: claude-opus-4-1
-    template: reasoning.jinja
-    temperature: 0.5
+    temperature: 0.4
     skip_single: true
 
   - model: gemini-2.5-flash
     template: reasoning.jinja
-    temperature: 0.5
+    temperature: 0.4
     skip_single: true
 
-# Debug mode enables more detailed logging
-debug: true
+  - model: deepseek-3.2-chat
+    template: reasoning.jinja
+    temperature: 0.4
+    skip_single: true
 
-# Output directory for benchmark results
+debug: false
+quest_timeout: 60
 output_dir: results/benchmarks
-
-# Optional name for this benchmark run
 name: kr1

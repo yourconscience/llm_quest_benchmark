@@ -49,7 +49,7 @@ Open `http://localhost:8000`.
 uv run llm-quest run --quest quests/Boat.qm --model gpt-5-mini --timeout 60 --debug
 
 # benchmark config run
-uv run llm-quest benchmark --config configs/test/test_benchmark.yaml
+uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v1.yaml
 
 # inspect latest run
 uv run llm-quest analyze --last
@@ -84,7 +84,7 @@ export NODE_OPTIONS=--openssl-legacy-provider
   - `ANTHROPIC_API_KEY`
   - `GOOGLE_API_KEY`
   - `DEEPSEEK_API_KEY`
-  - `OPENROUTER_API_KEY`
+- Note: `gpt-5-mini` currently uses provider-default temperature (custom value is ignored).
 
 ### Database issues
 Remove stale local DBs only when you want a clean slate:
