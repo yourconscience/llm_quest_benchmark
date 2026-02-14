@@ -1,17 +1,17 @@
 """CLI commands for llm-quest-benchmark"""
 import logging
-import click
 import json
 import sqlite3
 from pathlib import Path
 from typing import Optional, List
-import socket
 import shutil
 from datetime import datetime
+from dotenv import load_dotenv
 
 # Initialize quest registry early
 from llm_quest_benchmark.core.quest_registry import get_registry
 get_registry(reset_cache=True)
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[3] / ".env", override=False)
 
 from llm_quest_benchmark.agents.agent_factory import create_agent
 import typer
@@ -35,7 +35,6 @@ from llm_quest_benchmark.constants import (
 )
 from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.agents.human_player import HumanPlayer
-from llm_quest_benchmark.web.app import create_app
 
 # Initialize logging
 log_manager = LogManager()
@@ -717,7 +716,7 @@ def server(
     workers: int = typer.Option(4, help="Number of worker processes (only used in production mode)"),
     production: bool = typer.Option(False, help="Run in production mode using gunicorn")
 ):
-    """Start the web interface server.
+    """Start the Flask web interface server.
 
     This command starts the Flask web interface for running and analyzing quests.
     It uses Flask's built-in server which is suitable for local development.
@@ -747,6 +746,7 @@ def server(
     except Exception as e:
         log.exception(f"Error starting server: {e}")
         raise typer.Exit(code=1)
+
 
 if __name__ == "__main__":
     app()

@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 from pathlib import Path
 import logging
 import os
+from dotenv import load_dotenv
 
 # Initialize quest registry early
 from llm_quest_benchmark.core.quest_registry import get_registry
@@ -11,6 +12,7 @@ get_registry(reset_cache=True)
 from llm_quest_benchmark.constants import WEB_SERVER_HOST, WEB_SERVER_PORT
 # Set working directory to workspace root
 workspace_root = Path(__file__).parent.parent.parent
+load_dotenv(dotenv_path=workspace_root / ".env", override=False)
 os.chdir(str(workspace_root))
 
 def create_app():
@@ -51,6 +53,7 @@ def create_app():
         return redirect(url_for('monitor.index'))
     
     # Add shutdown handler to ensure database connections are properly closed
+    is_pytest = bool(os.getenv("PYTEST_CURRENT_TEST"))
     import atexit
     import signal
     import sys
@@ -88,12 +91,14 @@ def create_app():
         # Forcefully exit
         sys.exit(0)
     
-    # Register shutdown handler for normal exit
-    atexit.register(shutdown_handler)
-    
-    # Register signal handlers for SIGINT (Ctrl+C) and SIGTERM
-    signal.signal(signal.SIGINT, sigint_handler)
-    signal.signal(signal.SIGTERM, shutdown_handler)
+    # Avoid global signal/atexit hooks during pytest collection and test runs.
+    if not is_pytest:
+        # Register shutdown handler for normal exit
+        atexit.register(shutdown_handler)
+        
+        # Register signal handlers for SIGINT (Ctrl+C) and SIGTERM
+        signal.signal(signal.SIGINT, sigint_handler)
+        signal.signal(signal.SIGTERM, shutdown_handler)
 
     return app
 
