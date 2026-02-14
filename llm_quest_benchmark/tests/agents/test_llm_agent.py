@@ -78,17 +78,38 @@ def test_agent_initialization_without_api_key(monkeypatch):
     assert agent.llm is None
 
 
-def test_gemini_prompt_uses_number_mode():
+def test_gemini_prompt_uses_selected_template():
     agent = LLMAgent(model_name="gemini-2.5-flash")
     prompt = agent._format_prompt("state", [{"text": "A"}, {"text": "B"}])
-    assert "Return only one integer from 1 to 2." in prompt
-    assert "Return ONLY valid JSON" not in prompt
+    assert "Return ONLY valid JSON" in prompt
+    assert "A" in prompt
+    assert "B" in prompt
 
 
 def test_non_gemini_prompt_uses_selected_template():
     agent = LLMAgent(model_name="gpt-5-mini", action_template="stub.jinja")
     prompt = agent._format_prompt("state", [{"text": "A"}, {"text": "B"}])
     assert "IMPORTANT: Please respond with ONLY a single number" in prompt
+
+
+def test_gpt5_force_numeric_retry_path():
+    agent = LLMAgent(model_name="gpt-5-mini")
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = ["```json\n{", "```json\n{", "2"]
+    mocked_llm.get_last_usage.side_effect = [
+        {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 12, "estimated_cost_usd": 0.001},
+        {"prompt_tokens": 6, "completion_tokens": 1, "total_tokens": 7, "estimated_cost_usd": 0.0005},
+        {"prompt_tokens": 4, "completion_tokens": 1, "total_tokens": 5, "estimated_cost_usd": 0.0003},
+    ]
+    agent.llm = mocked_llm
+
+    action = agent.get_action("state", [{"text": "A"}, {"text": "B"}])
+
+    assert action == 2
+    assert mocked_llm.get_completion.call_count == 3
+    last = agent.get_last_response()
+    assert last.total_tokens == 24
+    assert last.estimated_cost_usd == pytest.approx(0.0018)
 
 
 def test_contextual_state_includes_previous_observations():

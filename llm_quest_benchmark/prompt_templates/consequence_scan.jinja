@@ -1,0 +1,18 @@
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Mission objective: complete the quest successfully.
+
+Decision method:
+1. For each action, estimate immediate consequence in 5 words max.
+2. Prefer actions that preserve progress and gather information.
+3. Avoid options that abandon, surrender, or end the mission early.
+4. If uncertain, choose the lowest-risk progress action.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}

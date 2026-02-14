@@ -1,0 +1,30 @@
+# Multi-provider matrix baseline with shared reasoning prompt.
+name: provider_suite_matrix_reasoning
+quests:
+  - quests/Boat.qm
+  - quests/kr_1_ru/Fishing.qm
+  - quests/kr_1_ru/Gobsaur.qm
+  - quests/kr_1_ru/Rush.qm
+  - quests/kr_1_ru/Examen.qm
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
+agents:
+  - model: gpt-5-mini
+    template: reasoning.jinja
+    temperature: 0.4
+    skip_single: true
+  - model: claude-sonnet-4-5
+    template: reasoning.jinja
+    temperature: 0.4
+    skip_single: true
+  - model: gemini-2.5-flash
+    template: reasoning.jinja
+    temperature: 0.4
+    skip_single: true
+  - model: deepseek-3.2-chat
+    template: reasoning.jinja
+    temperature: 0.4
+    skip_single: true
+debug: true
+quest_timeout: 60
+max_workers: 2
+output_dir: results/benchmarks

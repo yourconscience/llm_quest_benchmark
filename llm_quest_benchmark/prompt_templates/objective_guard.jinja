@@ -1,0 +1,18 @@
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Choose the action that best supports mission completion.
+
+Guardrails:
+1. Keep the run alive unless ending is clearly successful.
+2. Penalize actions that look like quitting, escaping, or self-sabotage.
+3. Prefer actions that unlock clues, credentials, access, or progression gates.
+4. Resolve ambiguity by selecting the most reversible safe option.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}

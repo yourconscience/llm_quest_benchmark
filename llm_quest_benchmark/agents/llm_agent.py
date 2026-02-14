@@ -185,9 +185,6 @@ class LLMAgent(QuestPlayer):
                 f"Unsupported model: {model_name}. Supported models are: {self.SUPPORTED_MODELS}")
 
         self.model_spec = parse_model_name(self.model_name)
-        # Gemini often truncates JSON under long prompts; use number-only mode for reliability.
-        self._prefer_number_response = self.model_spec.provider == "google"
-
         self.logger = logging.getLogger(self.__class__.__name__)
         if self.debug:
             self.logger.setLevel(logging.DEBUG)
@@ -207,8 +204,8 @@ class LLMAgent(QuestPlayer):
         self.llm = None
         self.history: List[LLMResponse] = []
         self._observation_history: List[str] = []
-        self._context_window = 8
-        self._context_chars = 450
+        self._context_window = 3
+        self._context_chars = 220
         self._use_safety_filter = True
         self._last_response = LLMResponse(action=1,
                                           is_default=True)  # Initialize with default response
@@ -372,6 +369,22 @@ class LLMAgent(QuestPlayer):
                                                   self.logger)
                 if not retry_parsed.is_default:
                     parsed_response = retry_parsed
+                elif self._needs_force_numeric_retry():
+                    # GPT-5/o models occasionally return empty visible text on long prompts.
+                    # Use a tiny final retry that asks for number-only output.
+                    force_retry_response = self.llm.get_completion(
+                        self._format_force_numeric_retry_prompt(choices)
+                    )
+                    force_retry_usage = self.llm.get_last_usage()
+                    llm_usage = self._merge_usage(llm_usage, force_retry_usage)
+                    force_retry_parsed = parse_llm_response(
+                        force_retry_response,
+                        len(choices),
+                        self.debug,
+                        self.logger,
+                    )
+                    if not force_retry_parsed.is_default:
+                        parsed_response = force_retry_parsed
 
             parsed_response.action = self._apply_safety_filter(parsed_response.action, choices)
             usage_payload = self._normalize_usage(llm_usage)
@@ -429,23 +442,36 @@ class LLMAgent(QuestPlayer):
 
     def _format_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
         """Format the prompt for the LLM"""
-        if self._prefer_number_response:
-            choices_text = "\n".join([f"{i+1}. {c['text']}" for i, c in enumerate(choices)])
-            return f"""Current story state:
-{state}
-
-Available actions:
-{choices_text}
-
-Return only one integer from 1 to {len(choices)}."""
         return self.prompt_renderer.render_action_prompt(state, choices).strip()
 
     def _format_retry_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
         """Compact fallback prompt used when JSON parsing fails."""
-        choices_text = "\n".join([f"{i+1}. {c['text']}" for i, c in enumerate(choices)])
+        clipped_state = (state or "").strip()
+        if len(clipped_state) > 500:
+            clipped_state = clipped_state[:500] + "..."
+        choices_text = "\n".join([
+            f"{i+1}. {(c.get('text', '') or '')[:160]}"
+            for i, c in enumerate(choices)
+        ])
         return f"""Choose the best action.
-State: {state}
+State: {clipped_state}
 Actions:
 {choices_text}
 
 Return only one integer from 1 to {len(choices)}."""
+
+    def _format_force_numeric_retry_prompt(self, choices: List[Dict[str, str]]) -> str:
+        """Very short retry prompt used for models that return empty visible output."""
+        choices_text = "\n".join([
+            f"{i+1}. {(c.get('text', '') or '')[:110]}"
+            for i, c in enumerate(choices)
+        ])
+        return f"""Pick one action number.
+{choices_text}
+Reply with one integer only: 1 to {len(choices)}."""
+
+    def _needs_force_numeric_retry(self) -> bool:
+        return self.model_spec.provider == "openai" and (
+            self.model_spec.model_id.startswith("gpt-5")
+            or self.model_spec.model_id.startswith("o")
+        )
