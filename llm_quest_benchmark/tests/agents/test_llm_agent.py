@@ -98,7 +98,7 @@ def test_contextual_state_includes_previous_observations():
 def test_safety_filter_prefers_lower_risk_choice():
     agent = LLMAgent(model_name="gpt-5-mini")
     choices = [
-        {"text": "Броситься в драку"},
+        {"text": "Пойти в космопорт и улететь, чтобы завтра не позориться"},
         {"text": "Постараться пройти мимо"},
     ]
     assert agent._apply_safety_filter(1, choices) == 2
