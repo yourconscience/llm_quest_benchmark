@@ -22,6 +22,32 @@ from llm_quest_benchmark.llm.client import (
 from llm_quest_benchmark.llm.prompt import PromptRenderer
 from llm_quest_benchmark.schemas.response import LLMResponse
 
+RISKY_CHOICE_KEYWORDS = (
+    "улететь",
+    "сдаться",
+    "отказ",
+    "провал",
+    "броситься",
+    "драться",
+    "напасть",
+    "убежать",
+    "fight",
+    "attack",
+    "surrender",
+    "give up",
+)
+
+SAFE_CHOICE_KEYWORDS = (
+    "пройти мимо",
+    "избежать",
+    "подготов",
+    "библиотек",
+    "изуч",
+    "wait",
+    "avoid",
+    "study",
+)
+
 
 def _parse_json_response(response: str,
                          debug: bool = False,
@@ -185,6 +211,10 @@ class LLMAgent(QuestPlayer):
         # Delay API client creation so template-only flows and tests do not require API keys.
         self.llm = None
         self.history: List[LLMResponse] = []
+        self._observation_history: List[str] = []
+        self._context_window = 8
+        self._context_chars = 450
+        self._use_safety_filter = True
         self._last_response = LLMResponse(action=1,
                                           is_default=True)  # Initialize with default response
 
@@ -199,7 +229,77 @@ class LLMAgent(QuestPlayer):
 
     def get_last_response(self) -> Optional[LLMResponse]:
         """Get the last LLM response from history"""
-        return self.history[-1] if self.history else self._last_response
+        return self._last_response
+
+    def get_action(self, observation: str, choices: List[Dict[str, str]]) -> int:
+        """Track observation history for context, then delegate base action flow."""
+        self._remember_observation(observation)
+        return super().get_action(observation, choices)
+
+    def _remember_observation(self, observation: str) -> None:
+        clean = (observation or "").strip()
+        if not clean:
+            return
+        self._observation_history.append(clean)
+        if len(self._observation_history) > 20:
+            self._observation_history = self._observation_history[-20:]
+
+    def _build_contextual_state(self, state: str) -> str:
+        """Add a compact previous-step context window for better local decisions."""
+        if len(self._observation_history) <= 1:
+            return state
+
+        previous = self._observation_history[:-1][-self._context_window:]
+        if not previous:
+            return state
+
+        snippets = []
+        for idx, text in enumerate(previous, start=1):
+            clipped = text if len(text) <= self._context_chars else text[:self._context_chars] + "..."
+            snippets.append(f"[Previous {idx}] {clipped}")
+
+        context_block = "\n\n".join(snippets)
+        return f"Recent context from previous steps:\n{context_block}\n\n{state}"
+
+    def _choice_risk_score(self, choice_text: str) -> int:
+        text = (choice_text or "").lower()
+        score = 0
+        for keyword in RISKY_CHOICE_KEYWORDS:
+            if keyword in text:
+                score += 2
+        for keyword in SAFE_CHOICE_KEYWORDS:
+            if keyword in text:
+                score -= 1
+        return score
+
+    def _apply_safety_filter(self, action: int, choices: List[Dict[str, str]]) -> int:
+        """Replace obviously risky actions when a clearly safer alternative exists."""
+        if not self._use_safety_filter or len(choices) < 2:
+            return action
+
+        current_idx = action - 1
+        if current_idx < 0 or current_idx >= len(choices):
+            return action
+
+        scored = [(idx + 1, self._choice_risk_score(c.get("text", "")))
+                  for idx, c in enumerate(choices)]
+        scored.sort(key=lambda item: item[1])
+
+        best_action, best_score = scored[0]
+        current_score = self._choice_risk_score(choices[current_idx].get("text", ""))
+
+        # Only override when the chosen action is materially riskier than the best option.
+        if current_score - best_score >= 2:
+            if self.debug:
+                self.logger.debug(
+                    "Safety filter override: %s -> %s (risk %s -> %s)",
+                    action,
+                    best_action,
+                    current_score,
+                    best_score,
+                )
+            return best_action
+        return action
 
     def _get_action_impl(self, state: str, choices: List[Dict[str, str]]) -> int:
         """Implementation of action selection logic.
@@ -217,7 +317,7 @@ class LLMAgent(QuestPlayer):
                 self.logger.debug(f"Choice {i+1}: {choice.get('text', 'NO TEXT')}")
         try:
             # Format prompt
-            prompt = self._format_prompt(state, choices)
+            prompt = self._format_prompt(self._build_contextual_state(state), choices)
             if self.debug:
                 self.logger.debug(f"\nPrompt:\n{prompt}")
 
@@ -241,6 +341,8 @@ class LLMAgent(QuestPlayer):
                                                   self.logger)
                 if not retry_parsed.is_default:
                     parsed_response = retry_parsed
+
+            parsed_response.action = self._apply_safety_filter(parsed_response.action, choices)
 
             if self.debug:
                 self.logger.debug(f"Parsed LLM response: {parsed_response}")
@@ -271,11 +373,13 @@ class LLMAgent(QuestPlayer):
     def reset(self) -> None:
         """Reset agent state"""
         self.history = []
+        self._observation_history = []
         self._last_response = LLMResponse(action=1, is_default=True)  # Reset to default response
 
     def on_game_start(self) -> None:
         """Called when game starts"""
         super().on_game_start()
+        self._observation_history = []
         self._last_response = LLMResponse(action=1, is_default=True)  # Reset to default response
 
     def on_game_end(self, final_state: Dict[str, Any]) -> None:

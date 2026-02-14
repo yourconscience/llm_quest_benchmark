@@ -1,0 +1,11 @@
+name: examen_claude_v2
+quests:
+  - quests/kr_1_ru/Examen.qm
+agents:
+  - model: claude-sonnet-4-5
+    template: reasoning.jinja
+    temperature: 0.2
+    skip_single: true
+debug: true
+quest_timeout: 120
+output_dir: results/benchmarks

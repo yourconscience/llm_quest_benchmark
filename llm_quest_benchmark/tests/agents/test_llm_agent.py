@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import Mock, patch
 
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
+from llm_quest_benchmark.schemas.response import LLMResponse
 
 
 @pytest.fixture
@@ -83,3 +84,33 @@ def test_non_gemini_prompt_uses_selected_template():
     agent = LLMAgent(model_name="gpt-5-mini", action_template="stub.jinja")
     prompt = agent._format_prompt("state", [{"text": "A"}, {"text": "B"}])
     assert "IMPORTANT: Please respond with ONLY a single number" in prompt
+
+
+def test_contextual_state_includes_previous_observations():
+    agent = LLMAgent(model_name="gpt-5-mini")
+    agent._remember_observation("Previous hint")
+    agent._remember_observation("Current state")
+    contextual = agent._build_contextual_state("Current state")
+    assert "Recent context from previous steps" in contextual
+    assert "Previous hint" in contextual
+
+
+def test_safety_filter_prefers_lower_risk_choice():
+    agent = LLMAgent(model_name="gpt-5-mini")
+    choices = [
+        {"text": "Броситься в драку"},
+        {"text": "Постараться пройти мимо"},
+    ]
+    assert agent._apply_safety_filter(1, choices) == 2
+
+
+def test_get_last_response_uses_skip_single_result():
+    agent = LLMAgent(model_name="gpt-5-mini", skip_single=True)
+    agent.history.append(LLMResponse(action=2, is_default=False))
+    agent._last_response = LLMResponse(action=2, is_default=False)
+
+    action = agent.get_action("state", [{"id": "1", "text": "Only option"}])
+
+    assert action == 1
+    assert agent.get_last_response().action == 1
+    assert agent.get_last_response().reasoning == "auto_single_choice"
