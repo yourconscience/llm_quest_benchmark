@@ -12,14 +12,17 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 - 🧠 **Prompt Templates**: Swap strategy/reasoning templates without changing runner code
 - 🎮 **Interactive Mode**: Play quests as a human agent in terminal UI
 - 📊 **Run Artifacts**: Compact `run_summary.json` logs per run for easy analysis/iteration
+- 💸 **Usage + Cost Tracking**: Per-step and per-run token counts with estimated USD cost in `run_summary.json`
 - 🧪 **Benchmark Mode**: YAML-driven experiment matrix for model/template/temperature sweeps
-- 🔍 **CLI Diagnostics**: `analyze` for DB metrics + `analyze-run` for decision-by-decision trace debugging
+- 🔍 **CLI Diagnostics**: `analyze` for DB metrics + `analyze-run` and `benchmark-report` for trace/debug/report loops
 
 ## What's Updated
 
 - ✅ Quest downloader now rebuilds a flat, normalized layout under `quests/` (no nested source tree needed)
 - ✅ Run summaries now use a compact schema focused on observation/choices/LLM decision
+- ✅ Run summaries include token/cost usage aggregates and per-step usage fields
 - ✅ Added CLI run-summary analyzer for faster prompt/config iteration loops
+- ✅ Added matrix benchmark configs + markdown benchmark report command
 - ✅ Existing Flask workflow remains primary web interface (no Vercel dependency)
 
 ## Setup
@@ -98,7 +101,16 @@ uv run llm-quest run --quest quests/kr_1_ru/Diehard.qm --model gpt-5-mini --time
 uv run llm-quest play --quest quests/kr_1_ru/Boat.qm --skip
 
 # Run benchmark from YAML config
-uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v2.yaml
+uv run llm-quest benchmark --config configs/benchmarks/provider_suite_matrix_reasoning.yaml
+
+# Compare one or more benchmark IDs and generate markdown report
+uv run llm-quest benchmark-report \
+  --benchmark-id CLI_benchmark_20260214_235403 \
+  --benchmark-id CLI_benchmark_20260215_000103 \
+  --output results/benchmarks/report_provider_matrix.md
+
+# One-command matrix loop (baseline + creative variants + merged report)
+./scripts/run_provider_matrix.sh
 
 # Analyze DB metrics (latest run / quest / benchmark)
 uv run llm-quest analyze --last
@@ -135,6 +147,7 @@ Then open [http://localhost:8000](http://localhost:8000).
 - `configs/` - Run and benchmark configurations
 - `quests/` - Local normalized quest files
 - `results/` - Run artifacts and summaries
+- `scripts/` - Operational/debug helpers (database, templates, Flask app inspection)
 - `space-rangers-quest/` - TypeScript quest engine submodule
 
 ## License
