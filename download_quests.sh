@@ -59,8 +59,8 @@ PY
 download_upstream_from_git() {
   local repo_dir="${TMP_DIR}/spacerangers.gitlab.io"
   echo "Cloning quest source from GitLab..."
-  git clone --depth 1 --filter=blob:none --sparse "${UPSTREAM_GIT_URL}" "${repo_dir}" >/dev/null 2>&1
-  git -C "${repo_dir}" sparse-checkout set borrowed/qm >/dev/null 2>&1
+  git clone --depth 1 --filter=blob:none --sparse "${UPSTREAM_GIT_URL}" "${repo_dir}"
+  git -C "${repo_dir}" sparse-checkout set borrowed/qm
 }
 
 copy_collection_qm_files() {
