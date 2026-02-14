@@ -3,7 +3,7 @@
 
 quests:
   - quests/Boat.qm
-  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1/Diehard.qm
+  - quests/kr_1_ru/Diehard.qm
 
 agents:
   - model: claude-sonnet-4-5

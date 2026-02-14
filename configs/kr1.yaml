@@ -1,7 +1,7 @@
 # KR1 benchmark configuration
 
 quests:
-  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1
+  - quests/kr_1_ru
 
 agents:
   - model: gpt-5-mini

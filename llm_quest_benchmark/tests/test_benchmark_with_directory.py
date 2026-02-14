@@ -15,7 +15,7 @@ def create_test_config():
     """Create a test benchmark configuration with directory path"""
     return {
         "name": "Directory Benchmark Test",
-        "quests": ["quests/spacerangers.gitlab.io/borrowed/qm/SR 2.1.2121 eng"],
+        "quests": ["quests/sr_2_1_2121_eng"],
         "agents": [
             {
                 "model": "random_choice",

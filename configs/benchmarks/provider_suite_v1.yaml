@@ -3,11 +3,11 @@
 name: provider_suite_v1
 quests:
   - quests/Boat.qm
-  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1/Fishing.qm
-  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1/Gobsaur.qm
-  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1/Rush.qm
-  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1/Examen.qm
-  - quests/spacerangers.gitlab.io/borrowed/qm/SR 2.1.2121 eng/Banket_eng.qm
+  - quests/kr_1_ru/Fishing.qm
+  - quests/kr_1_ru/Gobsaur.qm
+  - quests/kr_1_ru/Rush.qm
+  - quests/kr_1_ru/Examen.qm
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
 agents:
   - model: gpt-5-mini
     template: reasoning.jinja

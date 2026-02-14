@@ -2,8 +2,8 @@
 # Only runs 2 quests with 2 agent configurations to verify functionality
 
 quests:
-  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1/Bank.qm
-  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1/Boat.qm
+  - quests/kr_1_ru/Bank.qm
+  - quests/kr_1_ru/Boat.qm
 
 agents:
   # Just 2 agents to validate the process

@@ -1,7 +1,7 @@
 # Test benchmark for kr2_en directory
 name: KR2 English Test
 quests:
-  - quests/spacerangers.gitlab.io/borrowed/qm/SR 2.1.2121 eng
+  - quests/sr_2_1_2121_eng
 agents:
   - model: random_choice  # Use random agent for speed and reliability
     temperature: 0.5

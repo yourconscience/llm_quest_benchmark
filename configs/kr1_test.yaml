@@ -2,7 +2,7 @@
 # A smaller subset to validate benchmarking works correctly
 
 quests:
-  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1
+  - quests/kr_1_ru
 
 agents:
   # Just 2 agents to validate the process

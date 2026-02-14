@@ -1,8 +1,8 @@
 # Test for parallel agent-based benchmark system
 quests:
   - quests/Boat.qm
-  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1/Build.qm
-  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1/Diamond.qm
+  - quests/kr_1_ru/Build.qm
+  - quests/kr_1_ru/Diamond.qm
 agents:
   - model: random_choice
   - model: gpt-5-mini
