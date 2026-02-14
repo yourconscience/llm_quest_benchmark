@@ -229,13 +229,34 @@ class OpenAICompatibleClient(LLMClient):
             kwargs["max_tokens"] = self.max_tokens
         return kwargs
 
+    def _is_openai_gpt5_or_o(self) -> bool:
+        return self.provider == "openai" and (
+            self.model_id.startswith("gpt-5") or self.model_id.startswith("o")
+        )
+
     def get_completion(self, prompt: str) -> str:
         """Get a completion from the model."""
         def _call() -> str:
-            response = self._get_client().chat.completions.create(
-                **self._build_completion_kwargs(prompt)
+            kwargs = self._build_completion_kwargs(prompt)
+            response = self._get_client().chat.completions.create(**kwargs)
+            content = self._extract_content(response)
+            if content or not self._is_openai_gpt5_or_o():
+                return content
+
+            # GPT-5/o-series can return empty visible output on long prompts when
+            # completion budget is too small. Retry once with a larger budget.
+            fallback_kwargs = dict(kwargs)
+            fallback_kwargs["max_completion_tokens"] = max(
+                int(fallback_kwargs.get("max_completion_tokens", self.max_tokens)),
+                800,
             )
-            return self._extract_content(response)
+            logger.warning(
+                "Model %s returned empty output; retrying once with max_completion_tokens=%s",
+                self.model_id,
+                fallback_kwargs["max_completion_tokens"],
+            )
+            fallback_response = self._get_client().chat.completions.create(**fallback_kwargs)
+            return self._extract_content(fallback_response)
 
         return self._with_retries(_call)
 

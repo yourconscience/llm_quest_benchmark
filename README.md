@@ -57,6 +57,7 @@ uv run llm-quest analyze --last
 
 # Benchmark matrix from YAML
 uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v1.yaml
+uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v2.yaml
 ```
 
 ## Web Usage
@@ -92,6 +93,7 @@ uv run python -m pytest
   - `gemini-2.5-flash`
   - `deepseek-3.2-chat`
 - `gpt-5-mini` currently enforces provider-default temperature; the configured value is ignored for this model.
+- Prompt templates now drive non-number-mode LLM prompts, so benchmark template changes are effective.
 - Benchmark artifacts are written to:
   - `results/benchmarks/<benchmark_id>/benchmark_config.json`
   - `results/benchmarks/<benchmark_id>/benchmark_summary.json`

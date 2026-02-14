@@ -77,3 +77,9 @@ def test_gemini_prompt_uses_number_mode():
     prompt = agent._format_prompt("state", [{"text": "A"}, {"text": "B"}])
     assert "Return only one integer from 1 to 2." in prompt
     assert "Return ONLY valid JSON" not in prompt
+
+
+def test_non_gemini_prompt_uses_selected_template():
+    agent = LLMAgent(model_name="gpt-5-mini", action_template="stub.jinja")
+    prompt = agent._format_prompt("state", [{"text": "A"}, {"text": "B"}])
+    assert "IMPORTANT: Please respond with ONLY a single number" in prompt

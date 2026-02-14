@@ -50,6 +50,7 @@ uv run llm-quest run --quest quests/Boat.qm --model gpt-5-mini --timeout 60 --de
 
 # benchmark config run
 uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v1.yaml
+uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v2.yaml
 
 # inspect latest run
 uv run llm-quest analyze --last

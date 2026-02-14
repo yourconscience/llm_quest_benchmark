@@ -289,10 +289,8 @@ class LLMAgent(QuestPlayer):
 
     def _format_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
         """Format the prompt for the LLM"""
-        # Format choices as numbered list
-        choices_text = "\n".join([f"{i+1}. {c['text']}" for i, c in enumerate(choices)])
-
         if self._prefer_number_response:
+            choices_text = "\n".join([f"{i+1}. {c['text']}" for i, c in enumerate(choices)])
             return f"""Current story state:
 {state}
 
@@ -300,20 +298,7 @@ Available actions:
 {choices_text}
 
 Return only one integer from 1 to {len(choices)}."""
-
-        return f"""Current story state:
-{state}
-
-Available actions:
-{choices_text}
-
-Analyze briefly:
-1. Context: What's happening now?
-2. Goal: What's the current objective?
-3. Impact: What could each choice lead to?
-
-Return ONLY valid JSON (no markdown code fences), exactly:
-{{"analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}}"""
+        return self.prompt_renderer.render_action_prompt(state, choices).strip()
 
     def _format_retry_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
         """Compact fallback prompt used when JSON parsing fails."""

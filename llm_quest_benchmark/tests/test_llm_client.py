@@ -82,3 +82,22 @@ def test_openai_compatible_completion_extraction(mock_openai_cls):
     kwargs = mock_chat.completions.create.call_args.kwargs
     assert "max_tokens" in kwargs
     assert "temperature" in kwargs
+
+
+@patch("llm_quest_benchmark.llm.client.OpenAI")
+def test_openai_gpt5_retries_empty_with_larger_budget(mock_openai_cls):
+    mock_client = Mock()
+    mock_chat = Mock()
+    first = Mock()
+    second = Mock()
+    first.choices = [Mock(message=Mock(content=""))]
+    second.choices = [Mock(message=Mock(content="1"))]
+    mock_chat.completions.create.side_effect = [first, second]
+    mock_client.chat = mock_chat
+    mock_openai_cls.return_value = mock_client
+
+    client = get_llm_client("gpt-5-mini")
+    assert client.get_completion("pick") == "1"
+    assert mock_chat.completions.create.call_count == 2
+    second_kwargs = mock_chat.completions.create.call_args_list[1].kwargs
+    assert second_kwargs["max_completion_tokens"] >= 800
