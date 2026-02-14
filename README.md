@@ -15,13 +15,36 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 
 ## Setup
 
-### Prerequisites
+### Option 1: Using Docker (Recommended)
+
+1. Clone the repository:
+```bash
+git clone --recursive https://github.com/your-username/llm_quest_benchmark.git
+cd llm_quest_benchmark
+```
+
+2. Create a `.env` file with your API keys:
+```bash
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+3. Build and run with Docker Compose:
+```bash
+docker-compose up -d
+```
+
+4. Access the web UI at http://localhost:8000
+
+### Option 2: Manual Installation
+
+#### Prerequisites
 - Python 3.11 or higher
 - Node.js 18 or higher (Note: For Node.js 23+ you'll need to set `NODE_OPTIONS=--openssl-legacy-provider`)
 - npm 9 or higher
 - uv (modern Python package manager)
 
-### Installation
+#### Installation
 
 1. Install uv:
 ```bash
