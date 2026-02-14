@@ -67,3 +67,18 @@ def test_template_rendering():
     assert "Test observation" in prompt
     assert "Option 1" in prompt
     assert "Option 2" in prompt
+
+
+def test_agent_initialization_without_api_key(monkeypatch):
+    """Agent construction should not require provider API keys before inference."""
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    agent = LLMAgent(model_name="gpt-4o-mini")
+    assert agent.llm is None
+
+
+def test_gemini_prompt_uses_number_mode():
+    agent = LLMAgent(model_name="gemini-2.5-flash")
+    prompt = agent._format_prompt("state", [{"text": "A"}, {"text": "B"}])
+    assert "Return only one integer from 1 to 2." in prompt
+    assert "Return ONLY valid JSON" not in prompt

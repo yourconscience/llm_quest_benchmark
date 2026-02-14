@@ -2,19 +2,71 @@
 from pathlib import Path
 import re
 
-# Model choices
+# Provider registry used by parser/client factory.
+MODEL_PROVIDER_CONFIG = {
+    "openai": {"models": ["gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-4.1", "gpt-4.1-mini", "o4-mini"]},
+    "anthropic": {"models": ["claude-sonnet-4-0", "claude-opus-4-1"]},
+    "google": {"models": ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"]},
+    "deepseek": {"models": ["deepseek-chat", "deepseek-reasoner"]},
+    # Optional compatibility gateway (hidden from default UI model list).
+    "openrouter": {"models": []},
+}
+
+# User-facing model choices (clean list, no duplicated provider prefixes).
 MODEL_CHOICES = [
-    "random_choice", # LLM Stub: selects random choice
-    "gpt-4o",
-    "gpt-4o-mini",
-    "claude-3-7-sonnet-latest",
-    "claude-3-5-sonnet-latest",
-    "claude-3-5-haiku-latest",
+    "random_choice",
+    "gpt-5",
+    "gpt-5-mini",
+    "gpt-5-nano",
+    "gpt-4.1",
+    "gpt-4.1-mini",
+    "o4-mini",
+    "claude-sonnet-4-0",
+    "claude-opus-4-1",
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "deepseek-chat",
+    "deepseek-reasoner",
 ]
-DEFAULT_MODEL = "gpt-4o"
+
+# Aliases accepted by parser for backwards compatibility.
+MODEL_ALIASES = {
+    # OpenAI
+    "gpt-5": "openai:gpt-5",
+    "gpt-5-mini": "openai:gpt-5-mini",
+    "gpt-5-nano": "openai:gpt-5-nano",
+    "gpt-4.1": "openai:gpt-4.1",
+    "gpt-4.1-mini": "openai:gpt-4.1-mini",
+    "o4-mini": "openai:o4-mini",
+    # Legacy OpenAI aliases
+    "gpt-4o": "openai:gpt-4o",
+    "gpt-4o-mini": "openai:gpt-4o-mini",
+    # Anthropic
+    "claude-sonnet-4-0": "anthropic:claude-sonnet-4-20250514",
+    "claude-opus-4-1": "anthropic:claude-opus-4-1-20250805",
+    # Legacy Anthropic aliases
+    "claude-opus-4-1-20250805": "anthropic:claude-opus-4-1-20250805",
+    "claude-opus-4-20250514": "anthropic:claude-opus-4-20250514",
+    "claude-opus-4-0": "anthropic:claude-opus-4-20250514",
+    "claude-sonnet-4-20250514": "anthropic:claude-sonnet-4-20250514",
+    "claude-3-7-sonnet-20250219": "anthropic:claude-3-7-sonnet-20250219",
+    "claude-3-7-sonnet-latest": "anthropic:claude-3-7-sonnet-latest",
+    "claude-3-5-sonnet-latest": "anthropic:claude-3-5-sonnet-latest",
+    "claude-3-5-haiku-latest": "anthropic:claude-3-5-haiku-latest",
+    # Google
+    "gemini-2.5-pro": "google:gemini-2.5-pro",
+    "gemini-2.5-flash": "google:gemini-2.5-flash",
+    "gemini-2.5-flash-lite": "google:gemini-2.5-flash-lite",
+    # DeepSeek
+    "deepseek-chat": "deepseek:deepseek-chat",
+    "deepseek-reasoner": "deepseek:deepseek-reasoner",
+}
+
+DEFAULT_MODEL = "gpt-5-mini"
 
 # Default quest
-DEFAULT_QUEST = Path("quests/kr1/Boat.qm")
+DEFAULT_QUEST = Path("quests/Boat.qm")
 
 # Quest search configuration
 QUEST_ROOT_DIRECTORY = "quests"

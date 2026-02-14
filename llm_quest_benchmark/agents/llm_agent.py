@@ -1,6 +1,7 @@
 """LLM agent for Space Rangers quests"""
 import json
 import logging
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from json_repair import repair_json
@@ -13,7 +14,11 @@ from llm_quest_benchmark.constants import (
     MODEL_CHOICES,
     SYSTEM_ROLE_TEMPLATE,
 )
-from llm_quest_benchmark.llm.client import get_llm_client
+from llm_quest_benchmark.llm.client import (
+    get_llm_client,
+    is_supported_model_name,
+    parse_model_name,
+)
 from llm_quest_benchmark.llm.prompt import PromptRenderer
 from llm_quest_benchmark.schemas.response import LLMResponse
 
@@ -71,6 +76,15 @@ def _validate_action_number(action: int,
     return False
 
 
+def _extract_action_from_text(response: str, num_choices: int) -> Optional[int]:
+    """Extract a candidate action from free-form text."""
+    for match in re.finditer(r"\b(\d+)\b", response):
+        action = int(match.group(1))
+        if 1 <= action <= num_choices:
+            return action
+    return None
+
+
 def parse_llm_response(response: str,
                        num_choices: int,
                        debug: bool = False,
@@ -83,7 +97,11 @@ def parse_llm_response(response: str,
     response_json = _parse_json_response(response, debug, logger)
     if response_json and isinstance(response_json, dict):
         # Check for either 'action' or 'result' field
-        action_value = response_json.get('action') or response_json.get('result')
+        action_value = (
+            response_json.get('action')
+            or response_json.get('result')
+            or response_json.get('choice')
+        )
         if action_value is not None:
             try:
                 action = int(action_value)
@@ -104,6 +122,11 @@ def parse_llm_response(response: str,
     except ValueError:
         if debug and logger:
             logger.error(f"Could not parse response as number: {response}")
+
+    # Fallback: extract first valid integer from text.
+    extracted_action = _extract_action_from_text(response, num_choices)
+    if extracted_action is not None:
+        return LLMResponse(action=extracted_action, is_default=False)
 
     # Default to first choice if all parsing attempts fail
     if debug and logger:
@@ -136,29 +159,43 @@ class LLMAgent(QuestPlayer):
         # Set agent_id for database records
         self.agent_id = f"llm_{self.model_name}"
 
-        if self.model_name not in self.SUPPORTED_MODELS:
+        if not is_supported_model_name(self.model_name):
             raise ValueError(
                 f"Unsupported model: {model_name}. Supported models are: {self.SUPPORTED_MODELS}")
+
+        self.model_spec = parse_model_name(self.model_name)
+        # Gemini often truncates JSON under long prompts; use number-only mode for reliability.
+        self._prefer_number_response = self.model_spec.provider == "google"
 
         self.logger = logging.getLogger(self.__class__.__name__)
         if self.debug:
             self.logger.setLevel(logging.DEBUG)
-            handler = logging.StreamHandler()
-            handler.setFormatter(logging.Formatter('%(name)s - %(message)s'))
-            self.logger.addHandler(handler)
+            self.logger.propagate = False
+            if not any(getattr(h, "_llm_quest_handler", False) for h in self.logger.handlers):
+                handler = logging.StreamHandler()
+                handler.setFormatter(logging.Formatter('%(name)s - %(message)s'))
+                handler._llm_quest_handler = True
+                self.logger.addHandler(handler)
 
         # Initialize prompt renderer
         self.prompt_renderer = PromptRenderer(None,
                                               system_template=system_template,
                                               action_template=action_template)
 
-        # Initialize LLM client with system prompt and temperature
-        self.llm = get_llm_client(model_name,
-                                  system_prompt=self.prompt_renderer.render_system_prompt(),
-                                  temperature=temperature)
+        # Delay API client creation so template-only flows and tests do not require API keys.
+        self.llm = None
         self.history: List[LLMResponse] = []
         self._last_response = LLMResponse(action=1,
                                           is_default=True)  # Initialize with default response
+
+    def _ensure_llm(self):
+        """Lazily create the provider client only when inference is needed."""
+        if self.llm is None:
+            self.llm = get_llm_client(
+                self.model_name,
+                system_prompt=self.prompt_renderer.render_system_prompt(),
+                temperature=self.temperature,
+            )
 
     def get_last_response(self) -> Optional[LLMResponse]:
         """Get the last LLM response from history"""
@@ -185,6 +222,7 @@ class LLMAgent(QuestPlayer):
                 self.logger.debug(f"\nPrompt:\n{prompt}")
 
             # Get LLM response
+            self._ensure_llm()
             llm_response = self.llm.get_completion(prompt)
             if self.debug:
                 self.logger.debug(f"LLM response: {llm_response}")
@@ -196,6 +234,14 @@ class LLMAgent(QuestPlayer):
             # Parse response
             parsed_response = parse_llm_response(llm_response, len(choices), self.debug,
                                                  self.logger)
+
+            if parsed_response.is_default:
+                retry_response = self.llm.get_completion(self._format_retry_prompt(state, choices))
+                retry_parsed = parse_llm_response(retry_response, len(choices), self.debug,
+                                                  self.logger)
+                if not retry_parsed.is_default:
+                    parsed_response = retry_parsed
+
             if self.debug:
                 self.logger.debug(f"Parsed LLM response: {parsed_response}")
                 self.logger.debug(f"Final action to be returned: {parsed_response.action}")
@@ -246,6 +292,15 @@ class LLMAgent(QuestPlayer):
         # Format choices as numbered list
         choices_text = "\n".join([f"{i+1}. {c['text']}" for i, c in enumerate(choices)])
 
+        if self._prefer_number_response:
+            return f"""Current story state:
+{state}
+
+Available actions:
+{choices_text}
+
+Return only one integer from 1 to {len(choices)}."""
+
         return f"""Current story state:
 {state}
 
@@ -257,11 +312,15 @@ Analyze briefly:
 2. Goal: What's the current objective?
 3. Impact: What could each choice lead to?
 
-Your response should be exactly in this JSON format:
-```json
-{{
-    "analysis": "<25 words on key situation elements>",
-    "reasoning": "<25 words on why this choice>",
-    "result": <action_number>
-}}
-```"""
+Return ONLY valid JSON (no markdown code fences), exactly:
+{{"analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}}"""
+
+    def _format_retry_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
+        """Compact fallback prompt used when JSON parsing fails."""
+        choices_text = "\n".join([f"{i+1}. {c['text']}" for i, c in enumerate(choices)])
+        return f"""Choose the best action.
+State: {state}
+Actions:
+{choices_text}
+
+Return only one integer from 1 to {len(choices)}."""
