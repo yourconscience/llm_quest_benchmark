@@ -6,6 +6,6 @@ agents:
   - model: gemini-2.5-flash
     template: reasoning.jinja
 debug: true
-quest_timeout: 20
+quest_timeout: 60
 max_workers: 2
 output_dir: results/benchmarks
