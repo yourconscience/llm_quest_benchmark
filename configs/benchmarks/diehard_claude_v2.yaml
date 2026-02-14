@@ -1,0 +1,11 @@
+name: diehard_claude_v2
+quests:
+  - quests/kr_1_ru/Diehard.qm
+agents:
+  - model: claude-sonnet-4-5
+    template: reasoning.jinja
+    temperature: 0.2
+    skip_single: true
+debug: false
+quest_timeout: 180
+output_dir: results/benchmarks

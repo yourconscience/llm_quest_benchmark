@@ -4,7 +4,7 @@ import json
 import logging
 import sqlite3
 import warnings
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -54,9 +54,7 @@ def run_quest_with_timeout(
         with ThreadPoolExecutor() as executor:
             future = executor.submit(runner.run, quest_path)
             try:
-                # Use a slightly shorter timeout to ensure we can handle the result properly
-                effective_timeout = max(timeout - 2, 1)  # At least 1 second
-                outcome = future.result(timeout=effective_timeout)
+                outcome = future.result(timeout=max(timeout, 1))
 
                 # Update run with agent_id and config if provided
                 if agent_config and agent_id:
@@ -97,23 +95,30 @@ def run_quest_with_timeout(
                 # The outcome is already recorded in the QuestRunner
 
                 return outcome
-            except TimeoutError:
-                future.cancel()
-                logger.logger.warning(f"Quest timed out after {timeout} seconds")
+            except FuturesTimeoutError:
+                # Give the runner a short grace window to finish naturally.
+                try:
+                    outcome = future.result(timeout=5)
+                    logger.logger.warning(
+                        f"Quest exceeded timeout ({timeout}s) but finished during grace window")
+                    return outcome
+                except FuturesTimeoutError:
+                    future.cancel()
+                    logger.logger.warning(f"Quest timed out after {timeout} seconds")
 
-                # Set outcome for timeout case
-                logger.set_quest_outcome("TIMEOUT", 0.0)
+                    # Set outcome for timeout case
+                    logger.set_quest_outcome("TIMEOUT", 0.0)
 
-                # Notify callbacks about the timeout
-                if callbacks:
-                    for callback in callbacks:
-                        try:
-                            callback("timeout",
-                                     {"message": f"Quest timed out after {timeout} seconds"})
-                        except Exception as e:
-                            logger.logger.error(f"Error in timeout callback: {e}")
+                    # Notify callbacks about the timeout
+                    if callbacks:
+                        for callback in callbacks:
+                            try:
+                                callback("timeout",
+                                         {"message": f"Quest timed out after {timeout} seconds"})
+                            except Exception as e:
+                                logger.logger.error(f"Error in timeout callback: {e}")
 
-                return None
+                    return None
 
     except Exception as e:
         logger.logger.error(f"Error running quest: {e}")
