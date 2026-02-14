@@ -80,7 +80,7 @@ def main():
         logger.info("Creating test benchmark with explicit benchmark_id")
         
         config = BenchmarkConfig(
-            quests=["quests/kr1/Boat.qm"],
+            quests=["quests/kr_1_ru/Boat.qm"],
             agents=[
                 AgentConfig(model="random_choice")
             ],

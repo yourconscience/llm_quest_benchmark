@@ -28,7 +28,7 @@ def main():
         print(f"  {rule}")
     
     print("\nHOW TO USE:")
-    print("  1. Start the server: llm-quest web")
+    print("  1. Start the server: llm-quest server")
     print("  2. Run a benchmark through the web interface")
     print("  3. Access the benchmark results through the Analyze link")
     print("\nThe database is stored at:")

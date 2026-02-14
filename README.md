@@ -1,101 +1,146 @@
 # LLM Quest Benchmark
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Benchmark how human and LLM agents solve Space Rangers text quests (`.qm`).
+Observe and analyze LLM agents decision-making through Space Rangers text adventures! 👾🚀📊
 
-## What Works Now
-- TypeScript quest engine bridge (`space-rangers-quest` + Python bridge wrapper)
-- CLI run/play/analyze/benchmark flows
-- Provider-aware LLM clients:
-  - OpenAI
-  - Anthropic
-  - Google Gemini (via Google OpenAI-compatible endpoint)
-  - DeepSeek (OpenAI-compatible)
-- Flask UI (`llm-quest server`) with quest run + benchmark + analysis views
+## Features
 
-## Prerequisites
-- Python 3.11+
-- Node.js 18+ (Node 23+ requires `NODE_OPTIONS=--openssl-legacy-provider`)
-- `uv`
+- 🔥 **Flask Web UI**: Run quests from browser, inspect playthroughs, and view run analytics
+- 👾 **Quest Environment**: Space Rangers text quests wrapped as agent-friendly environments via TS bridge
+- 🤖 **LLM Agents**: OpenAI, Anthropic, Google Gemini, and DeepSeek models supported
+- 🧠 **Prompt Templates**: Swap strategy/reasoning templates without changing runner code
+- 🎮 **Interactive Mode**: Play quests as a human agent in terminal UI
+- 📊 **Run Artifacts**: Compact `run_summary.json` logs per run for easy analysis/iteration
+- 🧪 **Benchmark Mode**: YAML-driven experiment matrix for model/template/temperature sweeps
+- 🔍 **CLI Diagnostics**: `analyze` for DB metrics + `analyze-run` for decision-by-decision trace debugging
+
+## What's Updated
+
+- ✅ Quest downloader now rebuilds a flat, normalized layout under `quests/` (no nested source tree needed)
+- ✅ Run summaries now use a compact schema focused on observation/choices/LLM decision
+- ✅ Added CLI run-summary analyzer for faster prompt/config iteration loops
+- ✅ Existing Flask workflow remains primary web interface (no Vercel dependency)
 
 ## Setup
+
+### Option 1: Using Docker
+
+1. Clone the repository:
 ```bash
-git clone --recursive <your-fork-url>
+git clone --recursive https://github.com/yourconscience/llm_quest_benchmark.git
 cd llm_quest_benchmark
+```
 
+2. Configure environment:
+```bash
+cp .env.template .env
+# Edit .env with your provider API keys
+```
+
+3. Start services:
+```bash
+docker-compose up -d
+```
+
+4. Open the app at [http://localhost:8000](http://localhost:8000).
+
+### Option 2: Manual Installation
+
+#### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- npm 9+
+- `uv` package manager
+
+#### Installation
+
+1. Clone repository with submodules:
+```bash
+git clone --recursive https://github.com/yourconscience/llm_quest_benchmark.git
+cd llm_quest_benchmark
 git submodule update --init --recursive
-uv sync --extra dev
-npm install
+```
 
+2. Install Python deps:
+```bash
+uv sync --extra dev
+```
+
+3. Install Node deps:
+```bash
+npm install
 cd space-rangers-quest
 npm install --legacy-peer-deps
 npm run build
 cd ..
 ```
 
-Create environment file:
+4. Configure API keys:
 ```bash
 cp .env.template .env
+# Edit .env with OPENAI_API_KEY / ANTHROPIC_API_KEY / GOOGLE_API_KEY / DEEPSEEK_API_KEY
 ```
 
-For Node 23+:
+5. Download quests into normalized local layout:
 ```bash
-export NODE_OPTIONS=--openssl-legacy-provider
+./download_quests.sh --refresh
 ```
 
-## CLI Usage
+## Usage
+
+### CLI Interface
 ```bash
-uv run llm-quest --help
+# Run one quest with an LLM agent
+uv run llm-quest run --quest quests/kr_1_ru/Diehard.qm --model gpt-5-mini --timeout 120 --debug
 
-# Random smoke run
-NODE_OPTIONS=--openssl-legacy-provider uv run llm-quest run --quest quests/Boat.qm --model random_choice --timeout 20 --debug
+# Play as human in terminal
+uv run llm-quest play --quest quests/kr_1_ru/Boat.qm --skip
 
-# Interactive play
-uv run llm-quest play --quest quests/Boat.qm
+# Run benchmark from YAML config
+uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v2.yaml
 
-# Analyze latest run
+# Analyze DB metrics (latest run / quest / benchmark)
 uv run llm-quest analyze --last
 
-# Benchmark matrix from YAML
-uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v1.yaml
-uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v2.yaml
+# Analyze one run_summary decision trace
+uv run llm-quest analyze-run --agent llm_gpt-5-mini --quest Diehard
+# or
+uv run llm-quest analyze-run --run-summary results/llm_gpt-5-mini/Diehard/run_123/run_summary.json
 ```
 
-## Web Usage
-
+### Web Interface
 ```bash
 uv run llm-quest server
 ```
-Open: `http://localhost:8000`
+Then open [http://localhost:8000](http://localhost:8000).
 
-## Tests
-```bash
-uv run python -m pytest
-```
+## Quest Layout
 
-## Key Paths
-- `AGENTS.md` - repo guide
-- `docs/ARCHITECTURE.md`
-- `docs/API.md`
-- `docs/DEPLOYMENT.md`
-- `docs/RUNBOOK.md`
-- `docs/PLANS.md`
+`download_quests.sh` builds this normalized structure:
 
-## Notes
-- Quest engine submodule is required.
-- API-key dependent model execution needs provider env vars:
-  - `OPENAI_API_KEY`
-  - `ANTHROPIC_API_KEY`
-  - `GOOGLE_API_KEY`
-  - `DEEPSEEK_API_KEY`
-- Current default benchmark models:
-  - `gpt-5-mini`
-  - `claude-sonnet-4-5`
-  - `gemini-2.5-flash`
-  - `deepseek-3.2-chat`
-- `gpt-5-mini` currently enforces provider-default temperature; the configured value is ignored for this model.
-- Prompt templates now drive non-number-mode LLM prompts, so benchmark template changes are effective.
-- Benchmark artifacts are written to:
-  - `results/benchmarks/<benchmark_id>/benchmark_config.json`
-  - `results/benchmarks/<benchmark_id>/benchmark_summary.json`
-- Per-run step logs remain in:
-  - `results/<agent_id>/<quest_name>/run_<run_id>/`
+- `quests/kr_1_ru`
+- `quests/sr_2_1_2121_eng`
+- `quests/sr_2_1_2170_ru`
+- `quests/sr_2_2_1_2369_ru`
+- `quests/sr_2_dominators_ru`
+- `quests/sr_2_revolution_ru`
+- `quests/sr_2_revolution_fan_ru`
+- `quests/sr_2_reboot_ru`
+- `quests/fanmade_ru`
+
+## Project Structure
+
+- `llm_quest_benchmark/` - Core package
+- `configs/` - Run and benchmark configurations
+- `quests/` - Local normalized quest files
+- `results/` - Run artifacts and summaries
+- `space-rangers-quest/` - TypeScript quest engine submodule
+
+## License
+MIT License - See LICENSE for details.
+
+## Disclaimer
+This project was created for fun with heavy AI-assisted coding.
+
+This project is not affiliated with Elemental Games or the Space Rangers franchise.
