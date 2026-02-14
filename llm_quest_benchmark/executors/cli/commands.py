@@ -3,7 +3,7 @@ import logging
 import json
 import sqlite3
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import shutil
 from datetime import datetime
 from dotenv import load_dotenv
@@ -50,6 +50,61 @@ def version_callback(value: bool):
         typer.echo(f"llm-quest version 0.1.0")
         raise typer.Exit()
 
+
+def _parse_run_dir_id(path: Path) -> int:
+    """Parse run_<id> directory names for sorting."""
+    try:
+        return int(path.name.split("_", 1)[1])
+    except (IndexError, ValueError):
+        return -1
+
+
+def _load_run_summary(path: Path) -> Dict[str, Any]:
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _coerce_choices(step: Dict[str, Any]) -> Dict[str, str]:
+    """Normalize old/new step choice formats to {index: text} map."""
+    choices = step.get("choices")
+    if isinstance(choices, dict):
+        return {str(k): str(v) for k, v in choices.items()}
+    if isinstance(choices, list):
+        return {str(i): c.get("text", "") for i, c in enumerate(choices, start=1) if isinstance(c, dict)}
+    indexed = step.get("choices_indexed")
+    if isinstance(indexed, list):
+        return {
+            str(c.get("index")): c.get("text", "")
+            for c in indexed
+            if isinstance(c, dict) and c.get("index") is not None
+        }
+    return {}
+
+
+def _coerce_selected_choice(step: Dict[str, Any], choices_map: Dict[str, str]) -> Optional[Dict[str, str]]:
+    """Extract selected choice from old/new step schema."""
+    llm_decision = step.get("llm_decision") or {}
+    if isinstance(llm_decision, dict):
+        choice_map = llm_decision.get("choice")
+        if isinstance(choice_map, dict) and choice_map:
+            return {str(k): str(v) for k, v in choice_map.items()}
+
+    selected_choice = step.get("selected_choice")
+    if isinstance(selected_choice, dict):
+        idx = selected_choice.get("index")
+        text = selected_choice.get("text")
+        if idx is not None and text is not None:
+            return {str(idx): str(text)}
+
+    action_index = step.get("action_index") or step.get("action")
+    try:
+        idx = str(int(action_index))
+    except (TypeError, ValueError):
+        return None
+    if idx not in choices_map:
+        return None
+    return {idx: choices_map[idx]}
+
 def _handle_quest_outcome(outcome: QuestOutcome, log_prefix: str) -> None:
     """Handle quest outcome and exit appropriately.
 
@@ -65,6 +120,108 @@ def _handle_quest_outcome(outcome: QuestOutcome, log_prefix: str) -> None:
     if outcome.is_error:
         log.error("Quest encountered an error")
     raise typer.Exit(code=outcome.exit_code)
+
+
+@app.command("analyze-run")
+def analyze_run(
+    run_summary: Optional[Path] = typer.Option(None, help="Path to run_summary.json."),
+    agent: Optional[str] = typer.Option(None, help="Agent results folder name (e.g. llm_gpt-5-mini)."),
+    quest: Optional[str] = typer.Option(None, help="Quest results folder name (e.g. Diehard)."),
+    max_steps: int = typer.Option(25, help="Max decision steps to print."),
+):
+    """Analyze one run summary and print decision-level diagnostics."""
+    try:
+        summary_path = run_summary
+        if summary_path is None:
+            if not agent or not quest:
+                typer.echo(
+                    "Provide --run-summary or both --agent and --quest to auto-locate latest run.",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+
+            run_root = Path("results") / agent / quest
+            if not run_root.exists():
+                typer.echo(f"Run directory not found: {run_root}", err=True)
+                raise typer.Exit(code=1)
+
+            run_dirs = sorted(
+                [p for p in run_root.iterdir() if p.is_dir() and p.name.startswith("run_")],
+                key=_parse_run_dir_id,
+            )
+            if not run_dirs:
+                typer.echo(f"No run_* directories found under {run_root}", err=True)
+                raise typer.Exit(code=1)
+            summary_path = run_dirs[-1] / "run_summary.json"
+
+        if not summary_path.exists():
+            typer.echo(f"run_summary not found: {summary_path}", err=True)
+            raise typer.Exit(code=1)
+
+        data = _load_run_summary(summary_path)
+        steps = data.get("steps") or []
+        outcome = data.get("outcome", "UNKNOWN")
+        quest_name = data.get("quest_name", "unknown")
+        agent_id = data.get("agent_id", "unknown")
+
+        typer.echo(f"Run: {summary_path}")
+        typer.echo(f"Quest: {quest_name}")
+        typer.echo(f"Agent: {agent_id}")
+        typer.echo(f"Outcome: {outcome}")
+        typer.echo(f"Total Steps: {len(steps)}")
+
+        decision_rows = []
+        for step in steps:
+            if not isinstance(step, dict):
+                continue
+            choices_map = _coerce_choices(step)
+            if len(choices_map) <= 1:
+                continue
+            llm_decision = step.get("llm_decision") if isinstance(step.get("llm_decision"), dict) else {}
+            decision_rows.append(
+                {
+                    "step": step.get("step"),
+                    "observation": step.get("observation", ""),
+                    "choices": choices_map,
+                    "selected": _coerce_selected_choice(step, choices_map),
+                    "analysis": llm_decision.get("analysis"),
+                    "reasoning": llm_decision.get("reasoning"),
+                    "is_default": bool(llm_decision.get("is_default", False)),
+                }
+            )
+
+        typer.echo(f"Decision Steps: {len(decision_rows)}")
+        if not decision_rows:
+            return
+
+        typer.echo("\nDecision Trace:")
+        for row in decision_rows[:max_steps]:
+            selected = row["selected"] or {}
+            selected_str = ", ".join(f"{k}:{v}" for k, v in selected.items()) if selected else "none"
+            typer.echo(f"- step {row['step']}: selected [{selected_str}] default={row['is_default']}")
+            if row["reasoning"]:
+                typer.echo(f"  reasoning: {row['reasoning']}")
+            if row["analysis"]:
+                typer.echo(f"  analysis: {row['analysis']}")
+
+        if outcome != QuestOutcome.SUCCESS.name:
+            last = decision_rows[-1]
+            typer.echo("\nFailure Focus:")
+            typer.echo(f"- last decision step: {last['step']}")
+            typer.echo(f"- observation: {(last['observation'] or '')[:280]}")
+            typer.echo("- available choices:")
+            for idx, text in last["choices"].items():
+                typer.echo(f"  {idx}: {text}")
+            selected = last["selected"] or {}
+            if selected:
+                chosen_idx, chosen_text = next(iter(selected.items()))
+                typer.echo(f"- selected: {chosen_idx}: {chosen_text}")
+
+    except typer.Exit:
+        raise
+    except Exception as e:
+        typer.echo(f"Error analyzing run summary: {str(e)}", err=True)
+        raise typer.Exit(code=2)
 
 @app.callback()
 def main(
