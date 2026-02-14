@@ -2,16 +2,16 @@
 # A smaller subset to validate benchmarking works correctly
 
 quests:
-  - quests/kr1
+  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1
 
 agents:
   # Just 2 agents to validate the process
-  - model: gpt-4o-mini
+  - model: gpt-5-mini
     template: reasoning.jinja
     temperature: 0.7
     skip_single: true
     
-  - model: claude-3-5-haiku-latest
+  - model: gemini-2.5-flash
     template: reasoning.jinja
     temperature: 0.6
     skip_single: true
@@ -23,7 +23,7 @@ max_quests: 4
 debug: true
 
 # Output directory for benchmark results
-output_dir: metrics/kr1_test
+output_dir: results/benchmarks
 
 # Optional name for this benchmark run
 name: kr1_test

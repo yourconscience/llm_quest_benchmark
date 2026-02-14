@@ -2,17 +2,17 @@
 # Only runs 2 quests with 2 agent configurations to verify functionality
 
 quests:
-  - quests/kr1/Bank.qm
-  - quests/kr1/Boat.qm
+  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1/Bank.qm
+  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1/Boat.qm
 
 agents:
   # Just 2 agents to validate the process
-  - model: gpt-4o-mini
+  - model: gpt-5-mini
     template: reasoning.jinja
     temperature: 0.7
     skip_single: true
     
-  - model: claude-3-5-haiku-latest
+  - model: gemini-2.5-flash
     template: reasoning.jinja
     temperature: 0.6
     skip_single: true
@@ -21,7 +21,7 @@ agents:
 debug: true
 
 # Output directory for benchmark results
-output_dir: metrics/kr1_micro
+output_dir: results/benchmarks
 
 # Optional name for this benchmark run
 name: kr1_micro_test

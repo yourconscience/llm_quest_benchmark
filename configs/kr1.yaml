@@ -2,47 +2,47 @@
 # Includes all supported models with standardized settings
 
 quests:
-  - quests/kr1
+  - quests/spacerangers.gitlab.io/borrowed/qm/КР 1
 
 agents:
   # OpenAI models
-  - model: gpt-4o
+  - model: gpt-5-mini
     template: reasoning.jinja
     temperature: 0.5
     skip_single: true
 
-  - model: gpt-4o-mini
+  - model: gpt-4.1-mini
     template: reasoning.jinja
     temperature: 0.8
     skip_single: true
 
-  - model: gpt-4o-mini
+  - model: gpt-4.1-mini
     template: reasoning.jinja
     temperature: 0.6
     skip_single: true
 
-  - model: gpt-4o-mini
+  - model: gpt-4.1-mini
     template: reasoning.jinja
     temperature: 0.4
     skip_single: true
 
-  - model: gpt-4o-mini
+  - model: gpt-4.1-mini
     template: reasoning.jinja
     temperature: 0.2
     skip_single: true
 
   # Anthropic models
-  - model: claude-3-7-sonnet-latest
+  - model: claude-sonnet-4-0
     template: reasoning.jinja
     temperature: 0.5
     skip_single: true
 
-  - model: claude-3-5-sonnet-latest
+  - model: claude-opus-4-1
     template: reasoning.jinja
     temperature: 0.5
     skip_single: true
 
-  - model: claude-3-5-haiku-latest
+  - model: gemini-2.5-flash
     template: reasoning.jinja
     temperature: 0.5
     skip_single: true
@@ -51,7 +51,7 @@ agents:
 debug: true
 
 # Output directory for benchmark results
-output_dir: metrics/kr1
+output_dir: results/benchmarks
 
 # Optional name for this benchmark run
 name: kr1

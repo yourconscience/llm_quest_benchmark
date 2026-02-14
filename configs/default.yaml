@@ -2,7 +2,7 @@
 # Includes all supported models with standardized settings
 
 quests:
-  - quests/kr1/Boat.qm  # Single quest for quick testing
+  - quests/Boat.qm  # Single quest for quick testing
   # Uncomment to test multiple quests:
   # - quests/kr1/Diehard.qm
 
@@ -14,28 +14,29 @@ agents:
     skip_single: true
 
   # OpenAI models
-  - model: gpt-4o
+  - model: gpt-5-mini
     template: reasoning.jinja
     temperature: 0.5
     skip_single: true
 
-  - model: gpt-4o-mini
+  - model: gpt-4.1-mini
     template: reasoning.jinja
     temperature: 0.5
     skip_single: true
 
   # Anthropic models
-  - model: claude-3-7-sonnet-latest
+  - model: claude-sonnet-4-0
     template: reasoning.jinja
     temperature: 0.5
     skip_single: true
 
-  - model: claude-3-5-sonnet-latest
+  - model: claude-opus-4-1
     template: reasoning.jinja
     temperature: 0.5
     skip_single: true
 
-  - model: claude-3-5-haiku-latest
+  # Google model
+  - model: gemini-2.5-flash
     template: reasoning.jinja
     temperature: 0.5
     skip_single: true
@@ -47,7 +48,7 @@ debug: true
 max_workers: 2
 
 # Output directory for benchmark results
-output_dir: metrics/benchmark
+output_dir: results/benchmarks
 
 # Optional name for this benchmark run
 name: Default Benchmark

@@ -1,27 +1,16 @@
 """Benchmark executor for running multiple quests with multiple agents"""
-import os
-import sys
 import logging
 import json
-import glob
-import time
-import queue
-import threading
+import sqlite3
 from pathlib import Path
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
-from typing import List, Dict, Any, Optional, Tuple, Set
+from typing import List, Dict, Any, Optional
 
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.agents.agent_factory import create_agent
-from llm_quest_benchmark.agents.llm_agent import LLMAgent
 from llm_quest_benchmark.environments.state import QuestOutcome
-from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
-from llm_quest_benchmark.core.time import calculate_benchmark_timeout, DEFAULT_QUEST_TIMEOUT
-from llm_quest_benchmark.renderers.factory import create_renderer
-from llm_quest_benchmark.renderers.progress import ProgressRenderer
-from llm_quest_benchmark.core.logging import LogManager, QuestLogger
-from llm_quest_benchmark.constants import DEFAULT_QUEST_TIMEOUT
+from llm_quest_benchmark.schemas.config import BenchmarkConfig
+from llm_quest_benchmark.core.logging import DEFAULT_DB_PATH
 
 # Configure logging
 logging.basicConfig(
@@ -59,113 +48,93 @@ def get_quest_files(quest_paths: List[str], max_quests: Optional[int] = None) ->
     return quest_files
 
 
-def agent_worker(
-    agent_config: AgentConfig,
-    quest_queue: queue.Queue,
-    results: List[Dict[str, Any]],
-    results_lock: threading.Lock,
-    benchmark_id: str,
-    quest_timeout: int,
-    progress_callback=None
-) -> None:
-    """Worker function to process quests for a specific agent
-    
-    Args:
-        agent_config: Configuration for the agent
-        quest_queue: Queue of quests to process
-        results: Shared list to store results
-        results_lock: Lock for thread-safe access to results
-        benchmark_id: ID for the benchmark run
-        quest_timeout: Timeout for each quest
-        progress_callback: Optional callback to report progress
-    """
-    # Set benchmark_id in agent_config for database tracking
-    agent_config.benchmark_id = benchmark_id
-    
-    # Create agent
-    agent = create_agent(
-        model=agent_config.model,
-        temperature=agent_config.temperature,
-        system_template=agent_config.system_template,
-        action_template=agent_config.action_template,
-        skip_single=agent_config.skip_single,
-        debug=agent_config.debug
-    )
-    
-    # Get agent_id from agent_config
-    agent_id = agent_config.agent_id
-    
-    # Process quests from the queue
-    while True:
-        try:
-            # Get a quest from the queue (non-blocking)
-            quest_file = quest_queue.get_nowait()
-        except queue.Empty:
-            # No more quests in the queue
-            break
-            
-        # Always convert Path to string for consistent handling
-        quest_str = str(quest_file)
-        quest_name = Path(quest_file).name
-            
-        logger.info(f"Agent {agent_id} running quest {quest_name}")
-        
-        try:
-            # Run quest with timeout - always use string not Path
-            outcome = run_quest_with_timeout(
-                quest_str,
-                agent,
-                timeout=quest_timeout,
-                agent_config=agent_config
-            )
-            
-            # Call progress callback if provided
-            if progress_callback:
-                # Always pass string paths to callback
-                progress_callback(quest_str, agent_id)
-                
-            # Create result entry
-            result = {
-                'quest': quest_str,
-                'model': agent_config.model,
-                'temperature': agent_config.temperature,
-                'template': agent_config.action_template,
-                'agent_id': agent_id,
-                'outcome': outcome.name if outcome else QuestOutcome.ERROR.name,
-                'reward': getattr(outcome, 'reward', 0.0),
-                'error': None
+def _load_benchmark_runs_from_db(benchmark_id: str, db_path: str = DEFAULT_DB_PATH) -> List[Dict[str, Any]]:
+    """Load DB runs associated with a benchmark id."""
+    if not Path(db_path).exists():
+        return []
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, quest_file, quest_name, start_time, end_time, agent_id,
+                   agent_config, outcome, reward, run_duration, benchmark_id
+            FROM runs
+            WHERE benchmark_id = ?
+            ORDER BY id
+            """,
+            (benchmark_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def _write_benchmark_artifacts(config: BenchmarkConfig, results: List[Dict[str, Any]]) -> Optional[Path]:
+    """Write benchmark-level manifest/config/summary artifacts."""
+    if not config.output_dir:
+        return None
+
+    output_root = Path(config.output_dir)
+    benchmark_dir = output_root / config.benchmark_id
+    benchmark_dir.mkdir(exist_ok=True, parents=True)
+
+    summary = {
+        "name": config.name,
+        "benchmark_id": config.benchmark_id,
+        "timestamp": datetime.now().isoformat(),
+        "quests": config.quests,
+        "agents": [
+            {
+                "agent_id": agent.agent_id,
+                "model": agent.model,
+                "temperature": agent.temperature,
+                "system_template": agent.system_template,
+                "action_template": agent.action_template,
             }
-            
-        except Exception as e:
-            # Log the error but continue with other quests
-            logger.error(f"Error running quest {quest_file} with agent {agent_id}: {e}")
-            
-            # Create error result
-            result = {
-                'quest': str(quest_file),
-                'model': agent_config.model,
-                'temperature': agent_config.temperature,
-                'template': agent_config.action_template,
-                'agent_id': agent_id,
-                'outcome': QuestOutcome.ERROR.name,
-                'reward': 0.0,
-                'error': str(e)
+            for agent in config.agents
+        ],
+        "results": results,
+        "db_runs": _load_benchmark_runs_from_db(config.benchmark_id),
+        "summary_stats": calculate_summary_stats(results),
+    }
+
+    with open(benchmark_dir / "benchmark_summary.json", "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2, ensure_ascii=False)
+
+    config_dump = {
+        "quests": config.quests,
+        "debug": config.debug,
+        "quest_timeout": config.quest_timeout,
+        "benchmark_timeout": config.benchmark_timeout,
+        "output_dir": config.output_dir,
+        "name": config.name,
+        "renderer": config.renderer,
+        "benchmark_id": config.benchmark_id,
+        "max_quests": config.max_quests,
+        "max_workers": config.max_workers,
+        "agents": [
+            {
+                "model": agent.model,
+                "system_template": agent.system_template,
+                "action_template": agent.action_template,
+                "temperature": agent.temperature,
+                "skip_single": agent.skip_single,
+                "debug": agent.debug,
             }
-        
-        # Add result to the shared results list (thread-safe)
-        with results_lock:
-            results.append(result)
-            
-        # Mark this quest as done in the queue
-        quest_queue.task_done()
+            for agent in config.agents
+        ],
+    }
+    with open(benchmark_dir / "benchmark_config.json", "w", encoding="utf-8") as f:
+        json.dump(config_dump, f, indent=2, ensure_ascii=False)
+
+    return benchmark_dir
 
 
 def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[str, Any]]:
     """Run benchmark on a set of quests with multiple agents
-    
-    Uses a worker per agent design where each agent processes quests from a shared queue.
-    This ensures that each agent only works on one quest at a time.
-    
+
     Args:
         config: Benchmark configuration
         progress_callback: Optional callback to report progress
@@ -176,9 +145,10 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
     # Generate a benchmark ID if not provided
     if not config.benchmark_id:
         config.benchmark_id = f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    
-    # Create logger for benchmark
-    logger_manager = QuestLogger(debug=config.debug)
+
+    if config.max_workers and config.max_workers > 1:
+        logger.info("max_workers=%s is currently accepted but benchmark runs sequentially", config.max_workers)
+
     logger.info(f"Running benchmark with ID: {config.benchmark_id}")
     
     # Expand quest paths into actual quest files
@@ -189,15 +159,10 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
     logger.info(f"Running {len(quest_files)} quests with {len(config.agents)} agents")
     logger.info(f"Agents: {', '.join(a.agent_id for a in config.agents)}")
     
-    # Shared results list and lock
+    # Collect results for each agent x quest combination.
     results = []
-    results_lock = threading.Lock()
-    
-    # Queue no longer used with sequential processing
-    
-    # Ensure each agent processes all quests
+
     for agent_config in config.agents:
-        # Process quests directly for this agent (simpler than threads)
         for quest_file in quest_files:
             quest_str = str(quest_file)
             quest_name = Path(quest_file).name
@@ -237,9 +202,9 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
                     'temperature': agent_config.temperature,
                     'template': agent_config.action_template,
                     'agent_id': agent_config.agent_id,
-                    'outcome': outcome.name if outcome else QuestOutcome.ERROR.name,
+                    'outcome': outcome.name if outcome else QuestOutcome.TIMEOUT.name,
                     'reward': getattr(outcome, 'reward', 0.0),
-                    'error': None
+                    'error': None if outcome else f"Timed out after {config.quest_timeout} seconds"
                 }
                 
             except Exception as e:
@@ -257,45 +222,12 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
                     'reward': 0.0,
                     'error': str(e)
                 }
-            
-            # Add result to the shared results list
-            with results_lock:
-                results.append(result)
-    
-    # Prepare benchmark metrics
-    benchmark_metrics = {
-        'name': config.name,
-        'benchmark_id': config.benchmark_id,
-        'timestamp': datetime.now().isoformat(),
-        'quests': [],
-        'agents': [agent.agent_id for agent in config.agents],
-        'results': results
-    }
-    
-    # Organize results by quest
-    quest_data = {}
-    for result in results:
-        quest = result['quest']
-        if quest not in quest_data:
-            quest_data[quest] = {'quest': quest, 'runs': []}
-        quest_data[quest]['runs'].append(result)
-    
-    # Add organized quest data to benchmark metrics
-    benchmark_metrics['quests'] = list(quest_data.values())
-    
-    # Save results if output dir specified
-    if config.output_dir:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        metrics_root = Path(config.output_dir)
-        metrics_root.mkdir(exist_ok=True, parents=True)
-        
-        # Save benchmark summary
-        summary_file = metrics_root / f"benchmark_{timestamp}.json"
-        with open(summary_file, 'w') as f:
-            json.dump(benchmark_metrics, f, indent=2)
-        
-        logger.info(f"Benchmark results saved to {summary_file}")
-    
+            results.append(result)
+
+    artifact_dir = _write_benchmark_artifacts(config, results)
+    if artifact_dir:
+        logger.info("Benchmark artifacts saved to %s", artifact_dir)
+
     return results
 
 

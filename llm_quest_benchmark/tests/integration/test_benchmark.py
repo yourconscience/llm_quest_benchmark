@@ -66,12 +66,14 @@ def test_benchmark_e2e(caplog, tmp_path):
         assert result['quest'] == str(quest_path)
         assert result['model'] == "random_choice"
         assert result['temperature'] == 0.0
-        assert result['template'] == SYSTEM_ROLE_TEMPLATE
+        assert result['template'] == DEFAULT_TEMPLATE
         assert 'agent_id' in result
         assert 'outcome' in result
 
-        # Check metrics file was created
-        assert any(tmp_path.glob("benchmark_*.json")), "No metrics file created"
+        # Check benchmark artifact files were created.
+        benchmark_dir = tmp_path / config.benchmark_id
+        assert (benchmark_dir / "benchmark_config.json").exists(), "Missing benchmark config artifact"
+        assert (benchmark_dir / "benchmark_summary.json").exists(), "Missing benchmark summary artifact"
 
     except Exception as e:
         print(f"\nBenchmark failed with error: {str(e)}")
