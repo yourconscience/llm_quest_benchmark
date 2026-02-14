@@ -5,13 +5,14 @@ Keep the existing Flask web app as the primary UI and harden the full experiment
 
 ## Experiment Loop Status (February 15, 2026)
 1. Baseline matrix `CLI_benchmark_20260214_235403` (reasoning prompt): 2/24 success.
-2. Creative matrix `CLI_benchmark_20260215_000103` (consequence scan): 3/24 success.
+2. Creative matrix `CLI_benchmark_20260215_000103` (consequence scan): 2/24 success.
 3. Creative matrix `CLI_benchmark_20260215_000925` (objective guard + completion system): 2/24 success.
-4. Current pattern:
+4. Provider-tuned matrix `CLI_benchmark_20260215_002034` (best-known prompt per provider): 3/24 success with lower token/cost footprint.
+5. Current pattern:
    - `consequence_scan` improved Claude and Gemini on `Boat`.
    - DeepSeek regressed under both creative variants.
    - GPT-5-mini remains latency-unstable due frequent empty visible outputs/retries.
-5. Reporting artifact:
+6. Reporting artifact:
    - `results/benchmarks/report_provider_matrix.md` contains per-model outcomes, token/cost totals, and failure decision highlights.
 
 ## Phase 1: Runtime and Reliability
