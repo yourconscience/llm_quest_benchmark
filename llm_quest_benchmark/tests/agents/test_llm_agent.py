@@ -152,6 +152,17 @@ def test_parse_llm_response_extracts_fields_without_strict_json():
     assert "low fuel" in parsed.analysis
 
 
+def test_parse_llm_response_uses_analysis_as_reasoning_when_truncated():
+    raw = '2\n{"analysis":"Low stats: avoid fight and prepare via library'
+    parsed = parse_llm_response(raw, num_choices=4)
+    assert parsed.action == 2
+    assert parsed.analysis is not None
+    assert "avoid fight" in parsed.analysis
+    assert parsed.reasoning is not None
+    assert "avoid fight" in parsed.reasoning
+    assert not parsed.reasoning.startswith("raw_response:")
+
+
 def test_llm_error_default_response_keeps_reasoning_marker():
     agent = LLMAgent(model_name="gemini-2.5-flash")
     mocked_llm = Mock()

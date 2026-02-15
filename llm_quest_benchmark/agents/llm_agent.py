@@ -122,6 +122,17 @@ def _extract_field_from_text(response: str, field: str) -> Optional[str]:
         if value:
             return value
 
+    # Partial JSON field forms without a closing quote in truncated outputs.
+    partial_json_pattern = re.compile(
+        rf"""['"]{re.escape(field)}['"]\s*:\s*['"](?P<value>[^"\n\r]+)""",
+        re.IGNORECASE,
+    )
+    match = partial_json_pattern.search(response)
+    if match:
+        value = " ".join(match.group("value").strip().split())
+        if value:
+            return value
+
     # Label forms: Analysis: ..., Reasoning - ...
     label_pattern = re.compile(
         rf"""(?im)^\s*{re.escape(field)}\s*[:\-]\s*(?P<value>.+?)\s*$""",
@@ -170,6 +181,8 @@ def parse_llm_response(response: str,
     if response_json and isinstance(response_json, dict):
         analysis = response_json.get("analysis") or extracted_analysis
         reasoning = response_json.get("reasoning") or extracted_reasoning
+        if not reasoning and analysis:
+            reasoning = analysis
         if not analysis and not reasoning:
             reasoning = raw_reasoning
 
@@ -197,7 +210,7 @@ def parse_llm_response(response: str,
         if _validate_action_number(action, num_choices, debug, logger):
             return LLMResponse(
                 action=action,
-                reasoning=extracted_reasoning or raw_reasoning,
+                reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
                 analysis=extracted_analysis,
                 is_default=False,
             )
@@ -210,7 +223,7 @@ def parse_llm_response(response: str,
     if extracted_action is not None:
         return LLMResponse(
             action=extracted_action,
-            reasoning=extracted_reasoning or raw_reasoning,
+            reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
             analysis=extracted_analysis,
             is_default=False,
         )
@@ -222,7 +235,7 @@ def parse_llm_response(response: str,
         )
     return LLMResponse(
         action=1,
-        reasoning=extracted_reasoning or raw_reasoning,
+        reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
         analysis=extracted_analysis,
         is_default=True,
     )

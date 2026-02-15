@@ -1,0 +1,13 @@
+name: gpt4o_sr_2_1_2121_eng_180
+benchmark_id: gpt4o_sr_2_1_2121_eng_180_20260216
+quests:
+  - quests/sr_2_1_2121_eng
+agents:
+  - model: gpt-4o-mini
+    template: reasoning.jinja
+    temperature: 0.4
+    skip_single: true
+debug: false
+quest_timeout: 180
+max_workers: 1
+output_dir: results/benchmarks
