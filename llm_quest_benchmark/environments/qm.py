@@ -207,20 +207,31 @@ class QMPlayerEnv:
             # or if we see 5+ daily routine messages
             if any(count >= 5 for count in fragment_counts.values()) or repeat_day_pattern_count >= 5:
                 self.logger.warning(f"Detected potential infinite loop after {len(self.bridge.state_history)} steps")
-                
-                # Create success end state with appropriate message
-                synthetic_text = current_text + "\n\n[Quest completed successfully after detecting repetitive pattern]"
-                
-                # If text suggests we're in a prison context, add thematic ending
-                if "тюрьм" in current_text.lower() or "камер" in current_text.lower():
-                    synthetic_text += "\n\nВы успешно отбыли свой срок и были освобождены!"
-                
-                # Force completion with success
+
+                synthetic_text = (
+                    current_text
+                    + "\n\n[Forced stop: repetitive state loop detected before terminal quest outcome]"
+                )
+
+                forced_info = {"forced_completion": True, "reason": "infinite_loop_detected"}
+                self._current_state = {
+                    "location_id": self._current_state.get("location_id", "unknown"),
+                    "text": synthetic_text,
+                    "params_state": self._current_state.get("params_state", []),
+                    "choices": [],
+                    "reward": self._current_state.get("reward", 0.0),
+                    "done": True,
+                    "info": forced_info,
+                }
+
+                # Loop detection is a non-terminal fallback signal, not a quest success.
                 return (
-                    synthetic_text,
-                    True,  # done
-                    True,  # success
-                    {"forced_completion": True, "reason": "infinite_loop_detected"}
+                    self._compose_observation_text(
+                        self._current_state["text"], self._current_state.get("params_state")
+                    ),
+                    True,
+                    False,
+                    forced_info,
                 )
 
         try:

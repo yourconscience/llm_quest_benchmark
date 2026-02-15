@@ -106,6 +106,44 @@ def _extract_action_from_text(response: str, num_choices: int) -> Optional[int]:
     return None
 
 
+def _extract_field_from_text(response: str, field: str) -> Optional[str]:
+    """Best-effort extraction of analysis/reasoning from loosely formatted output."""
+    if not response:
+        return None
+
+    # JSON-like field forms: "analysis": "...", 'analysis': '...'
+    json_pattern = re.compile(
+        rf"""['"]{re.escape(field)}['"]\s*:\s*['"](?P<value>.*?)['"]""",
+        re.IGNORECASE | re.DOTALL,
+    )
+    match = json_pattern.search(response)
+    if match:
+        value = " ".join(match.group("value").strip().split())
+        if value:
+            return value
+
+    # Label forms: Analysis: ..., Reasoning - ...
+    label_pattern = re.compile(
+        rf"""(?im)^\s*{re.escape(field)}\s*[:\-]\s*(?P<value>.+?)\s*$""",
+    )
+    match = label_pattern.search(response)
+    if match:
+        value = " ".join(match.group("value").strip().split())
+        if value:
+            return value
+
+    return None
+
+
+def _raw_reasoning_fallback(response: str) -> Optional[str]:
+    compact = " ".join((response or "").strip().split())
+    if not compact:
+        return None
+    if len(compact) > 240:
+        compact = compact[:237] + "..."
+    return f"raw_response: {compact}"
+
+
 def parse_llm_response(response: str,
                        num_choices: int,
                        debug: bool = False,
@@ -114,9 +152,18 @@ def parse_llm_response(response: str,
     if debug and logger:
         logger.debug(f"Raw LLM response: {response}")
 
+    extracted_analysis = _extract_field_from_text(response, "analysis")
+    extracted_reasoning = _extract_field_from_text(response, "reasoning")
+    raw_reasoning = _raw_reasoning_fallback(response)
+
     # Try parsing as JSON first
     response_json = _parse_json_response(response, debug, logger)
     if response_json and isinstance(response_json, dict):
+        analysis = response_json.get("analysis") or extracted_analysis
+        reasoning = response_json.get("reasoning") or extracted_reasoning
+        if not analysis and not reasoning:
+            reasoning = raw_reasoning
+
         # Check for either 'action' or 'result' field
         action_value = (
             response_json.get('action')
@@ -128,8 +175,8 @@ def parse_llm_response(response: str,
                 action = int(action_value)
                 if _validate_action_number(action, num_choices, debug, logger):
                     return LLMResponse(action=action,
-                                       reasoning=response_json.get('reasoning'),
-                                       analysis=response_json.get('analysis'),
+                                       reasoning=reasoning,
+                                       analysis=analysis,
                                        is_default=False)
             except (ValueError, TypeError):
                 if debug and logger:
@@ -139,7 +186,12 @@ def parse_llm_response(response: str,
     try:
         action = int(response.strip())
         if _validate_action_number(action, num_choices, debug, logger):
-            return LLMResponse(action=action, is_default=False)
+            return LLMResponse(
+                action=action,
+                reasoning=extracted_reasoning or raw_reasoning,
+                analysis=extracted_analysis,
+                is_default=False,
+            )
     except ValueError:
         if debug and logger:
             logger.error(f"Could not parse response as number: {response}")
@@ -147,14 +199,24 @@ def parse_llm_response(response: str,
     # Fallback: extract first valid integer from text.
     extracted_action = _extract_action_from_text(response, num_choices)
     if extracted_action is not None:
-        return LLMResponse(action=extracted_action, is_default=False)
+        return LLMResponse(
+            action=extracted_action,
+            reasoning=extracted_reasoning or raw_reasoning,
+            analysis=extracted_analysis,
+            is_default=False,
+        )
 
     # Default to first choice if all parsing attempts fail
     if debug and logger:
         logger.error(
             f"Error during response parsing, defaulting to first choice. Response: {response[:100]}..."
         )
-    return LLMResponse(action=1, is_default=True)
+    return LLMResponse(
+        action=1,
+        reasoning=extracted_reasoning or raw_reasoning,
+        analysis=extracted_analysis,
+        is_default=True,
+    )
 
 
 class LLMAgent(QuestPlayer):

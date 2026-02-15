@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import Mock, patch
 
-from llm_quest_benchmark.agents.llm_agent import LLMAgent
+from llm_quest_benchmark.agents.llm_agent import LLMAgent, parse_llm_response
 from llm_quest_benchmark.schemas.response import LLMResponse
 
 
@@ -140,3 +140,13 @@ def test_get_last_response_uses_skip_single_result():
     assert action == 1
     assert agent.get_last_response().action == 1
     assert agent.get_last_response().reasoning == "auto_single_choice"
+
+
+def test_parse_llm_response_extracts_fields_without_strict_json():
+    raw = "Reasoning: safer path\nAnalysis: low fuel, need pit stop\n2"
+    parsed = parse_llm_response(raw, num_choices=3)
+    assert parsed.action == 2
+    assert parsed.reasoning is not None
+    assert "safer path" in parsed.reasoning
+    assert parsed.analysis is not None
+    assert "low fuel" in parsed.analysis

@@ -236,3 +236,40 @@ def test_random_agent_does_not_export_json(tmp_path, monkeypatch, quest_logger):
     quest_logger.set_quest_outcome("FAILURE", reward=0.0)
 
     assert not any(tmp_path.rglob("run_summary.json"))
+
+
+def test_set_quest_outcome_is_first_write_wins(tmp_path, monkeypatch, quest_logger):
+    """Late outcome writes (e.g., from background timeout races) must be ignored."""
+    monkeypatch.setattr(logging_module, "RESULTS_DIR", tmp_path)
+
+    quest_logger.agent = "llm_test-agent"
+    quest_logger.set_quest_file("quests/kr_1_ru/Rush.qm")
+    run_id = quest_logger.current_run_id
+
+    timeout_state = {
+        "location_id": "1",
+        "text": "race in progress",
+        "choices": [{"id": "2", "text": "hold speed"}],
+        "reward": 0.0,
+        "done": False,
+        "info": {},
+    }
+    quest_logger.set_quest_outcome("TIMEOUT", reward=0.0, final_state=timeout_state)
+
+    # Simulate a late background write that previously overwrote timeout runs.
+    success_state = {
+        "location_id": "99",
+        "text": "late success",
+        "choices": [],
+        "reward": 1.0,
+        "done": True,
+        "info": {},
+    }
+    quest_logger.set_quest_outcome("SUCCESS", reward=1.0, final_state=success_state)
+
+    summary_path = tmp_path / "llm_test-agent" / "Rush" / f"run_{run_id}" / "run_summary.json"
+    exported = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exported["outcome"] == "TIMEOUT"
+    assert exported["reward"] == 0.0
+    assert exported["final_state"]["done"] is False
+    assert exported["final_state"]["text"] == "race in progress"

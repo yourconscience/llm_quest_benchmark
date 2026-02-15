@@ -190,6 +190,12 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
                     timeout=config.quest_timeout,
                     agent_config=agent_config
                 )
+                outcome_name = outcome.name if outcome else QuestOutcome.TIMEOUT.name
+                timeout_error = (
+                    f"Timed out after {config.quest_timeout} seconds"
+                    if outcome_name == QuestOutcome.TIMEOUT.name
+                    else None
+                )
                 
                 # Call progress callback if provided
                 if progress_callback:
@@ -202,9 +208,9 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
                     'temperature': agent_config.temperature,
                     'template': agent_config.action_template,
                     'agent_id': agent_config.agent_id,
-                    'outcome': outcome.name if outcome else QuestOutcome.TIMEOUT.name,
+                    'outcome': outcome_name,
                     'reward': getattr(outcome, 'reward', 0.0),
-                    'error': None if outcome else f"Timed out after {config.quest_timeout} seconds"
+                    'error': timeout_error
                 }
                 
             except Exception as e:
