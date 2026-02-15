@@ -150,3 +150,24 @@ def test_parse_llm_response_extracts_fields_without_strict_json():
     assert "safer path" in parsed.reasoning
     assert parsed.analysis is not None
     assert "low fuel" in parsed.analysis
+
+
+def test_llm_error_default_response_keeps_reasoning_marker():
+    agent = LLMAgent(model_name="gemini-2.5-flash")
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = RuntimeError("provider returned empty message")
+    mocked_llm.get_last_usage.return_value = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "estimated_cost_usd": None,
+    }
+    agent.llm = mocked_llm
+
+    action = agent.get_action("state", [{"text": "A"}, {"text": "B"}])
+
+    assert action == 1
+    last = agent.get_last_response()
+    assert last.is_default is True
+    assert last.reasoning is not None
+    assert "llm_call_error" in last.reasoning

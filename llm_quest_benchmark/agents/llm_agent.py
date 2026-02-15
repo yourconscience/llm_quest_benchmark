@@ -476,7 +476,12 @@ class LLMAgent(QuestPlayer):
 
         except Exception as e:
             self.logger.error(f"Error during LLM call: {e}")
-            default_response = LLMResponse(action=1, is_default=True)
+            error_reason = _raw_reasoning_fallback(f"llm_call_error: {e}")
+            default_response = LLMResponse(
+                action=1,
+                reasoning=error_reason,
+                is_default=True,
+            )
             self.history.append(default_response)
             self._last_response = default_response
             return 1  # Default to first choice on error

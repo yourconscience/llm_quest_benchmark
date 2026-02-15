@@ -320,7 +320,18 @@ class OpenAICompatibleClient(LLMClient):
 
     @staticmethod
     def _extract_content(response: Any) -> str:
-        content = response.choices[0].message.content
+        choices = _get_attr_or_key(response, "choices", []) or []
+        if not choices:
+            return ""
+
+        first_choice = choices[0]
+        message = _get_attr_or_key(first_choice, "message")
+        if message is None:
+            # Some OpenAI-compatible providers can occasionally return a choice
+            # without message content; treat it as empty output.
+            return ""
+
+        content = _get_attr_or_key(message, "content")
         if content is None:
             return ""
         if isinstance(content, str):

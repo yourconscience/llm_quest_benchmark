@@ -35,6 +35,7 @@ def run_quest_with_timeout(
     """Run quest with timeout."""
     logger: Optional[QuestLogger] = None
     executor: Optional[ThreadPoolExecutor] = None
+    benchmark_id = getattr(agent_config, "benchmark_id", None) if agent_config else None
     try:
         # Get agent_id from agent itself if available, or from config
         agent_id = getattr(agent, 'agent_id', None)
@@ -69,8 +70,6 @@ def run_quest_with_timeout(
                     agent_config_json = json.dumps(agent_config.__dict__)
 
                     # Also store benchmark_id if provided
-                    benchmark_id = getattr(agent_config, 'benchmark_id', None)
-
                     if benchmark_id:
                         # Include benchmark_id in the update if available
                         logger._local.cursor.execute(
@@ -107,6 +106,7 @@ def run_quest_with_timeout(
                 QuestOutcome.TIMEOUT.name,
                 0.0,
                 final_state=runner.snapshot_state(),
+                benchmark_id=benchmark_id,
             )
 
             # Notify callbacks about the timeout
@@ -124,7 +124,7 @@ def run_quest_with_timeout(
         if logger:
             logger.logger.error(f"Error running quest: {e}")
         if logger:
-            logger.set_quest_outcome("ERROR", 0.0)
+            logger.set_quest_outcome("ERROR", 0.0, benchmark_id=benchmark_id)
         raise
     finally:
         if executor:
