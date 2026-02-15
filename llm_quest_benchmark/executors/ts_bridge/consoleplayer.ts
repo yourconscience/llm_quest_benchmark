@@ -5,6 +5,7 @@ import { parse } from "../../../space-rangers-quest/src/lib/qmreader";
 import * as fs from "fs";
 import * as process from "process";
 import { QMPlayer } from "../../../space-rangers-quest/src/lib/qmplayer";
+import { performJump } from "../../../space-rangers-quest/src/lib/qmplayer/funcs";
 
 // Get the quest file path and language from command line arguments
 if (process.argv.length < 3) {
@@ -81,7 +82,12 @@ rl.on('line', (input) => {
         // Try to perform jump
         const jumpId = parseInt(command, 10);
         if (!isNaN(jumpId)) {
-            player.performJump(jumpId);
+            // IMPORTANT: keep stdout protocol clean.
+            // space-rangers-quest performJump defaults showDebug=true, which can emit console.info lines
+            // (e.g. autojump logs) to stdout and break the Python bridge parser.
+            const currentSaving = player.getSaving();
+            const nextSaving = performJump(jumpId, qm, currentSaving, Date.now(), false);
+            player.loadSaving(nextSaving);
             console.log(JSON.stringify({
                 state: player.getState(),
                 saving: player.getSaving()

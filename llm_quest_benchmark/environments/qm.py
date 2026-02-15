@@ -83,7 +83,7 @@ class QMPlayerEnv:
                 self.logger.debug(f"Using quest file: {self.quest_file}")
                 
             # Initialize bridge
-            self.bridge = QMBridge(self.quest_file, debug=debug)
+            self.bridge = QMBridge(self.quest_file, language=self.language, debug=debug)
             self.state_history: List[QMState] = []
             self.choice_mapper: Optional[ChoiceMapper] = None
             self._current_state: Dict[str, Any] = {}  # Internal state storage
@@ -91,17 +91,48 @@ class QMPlayerEnv:
             self.logger.error(f"Failed to initialize QMPlayerEnv: {e}")
             raise RuntimeError(f"Failed to initialize QMPlayerEnv: {e}")
 
+    @staticmethod
+    def _format_params_state(params_state: Any) -> str:
+        if not params_state:
+            return ""
+        if isinstance(params_state, list):
+            lines = [str(x).strip() for x in params_state if str(x).strip()]
+        else:
+            lines = [str(params_state).strip()]
+        if not lines:
+            return ""
+        return "Status:\n" + "\n".join(lines)
+
+    def _compose_observation_text(self, text: str, params_state: Any) -> str:
+        base = (text or "").strip()
+        params_block = self._format_params_state(params_state)
+        if not params_block:
+            return base
+        if not base:
+            return params_block
+        return f"{base}\n\n{params_block}"
+
     def _format_observation(self, state) -> str:
         """Format observation text from game state"""
         if not state:
             return "No state available"
 
-        text = state.text or ""
+        # Support both QMState-like objects and internal dict state.
+        if isinstance(state, dict):
+            text = state.get("text") or ""
+            params_state = state.get("params_state") or []
+            choices = state.get("choices") or []
+        else:
+            text = getattr(state, "text", "") or ""
+            params_state = getattr(state, "params_state", []) or []
+            choices = getattr(state, "choices", []) or []
+
+        text = self._compose_observation_text(text, params_state)
 
         # Add choices if available
-        if state.choices:
+        if choices:
             text += "\n\nAvailable actions:\n"
-            for i, choice in enumerate(state.choices, 1):
+            for i, choice in enumerate(choices, 1):
                 text += f"{i}. {choice['text']}\n"
 
         return text
@@ -116,7 +147,9 @@ class QMPlayerEnv:
             self._current_state = {
                 'location_id': initial_bridge_state.location_id,
                 'text': initial_bridge_state.text,
+                'params_state': initial_bridge_state.params_state,
                 'choices': initial_bridge_state.choices,
+                'reward': initial_bridge_state.reward,
                 'done': initial_bridge_state.game_ended,
                 'info': {}
             }
@@ -124,7 +157,9 @@ class QMPlayerEnv:
             if not self._current_state['choices']:
                 raise RuntimeError("No valid choices in initial state")
 
-            return self._current_state['text']
+            return self._compose_observation_text(
+                self._current_state["text"], self._current_state.get("params_state")
+            )
         except Exception as e:
             self.logger.error(f"Failed to reset environment: {e}")
             self.bridge.close()  # Clean up on error
@@ -198,7 +233,9 @@ class QMPlayerEnv:
             self._current_state = {
                 'location_id': new_bridge_state.location_id,
                 'text': new_bridge_state.text,
+                'params_state': new_bridge_state.params_state,
                 'choices': new_bridge_state.choices,
+                'reward': new_bridge_state.reward,
                 'done': new_bridge_state.game_ended,
                 'info': {}
             }
@@ -234,7 +271,9 @@ class QMPlayerEnv:
                 self.logger.info(f"Game ended with reward: {new_bridge_state.reward}, success: {success}")
 
             return (
-                self._current_state['text'],
+                self._compose_observation_text(
+                    self._current_state["text"], self._current_state.get("params_state")
+                ),
                 self._current_state['done'],
                 success,
                 self._current_state['info']

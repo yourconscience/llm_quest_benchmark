@@ -452,9 +452,9 @@ class AnthropicClient(LLMClient):
                 timeout=self.request_timeout,
             )
             usage = _get_attr_or_key(response, "usage")
-            prompt_tokens = _get_attr_or_key(usage, "input_tokens", 0)
-            completion_tokens = _get_attr_or_key(usage, "output_tokens", 0)
-            self._record_usage(int(prompt_tokens or 0), int(completion_tokens or 0))
+            prompt_tokens = _coerce_int(_get_attr_or_key(usage, "input_tokens", 0) or 0)
+            completion_tokens = _coerce_int(_get_attr_or_key(usage, "output_tokens", 0) or 0)
+            self._record_usage(prompt_tokens, completion_tokens)
             if not response.content:
                 return ""
             return "\n".join(
