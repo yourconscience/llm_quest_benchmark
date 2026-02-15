@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from llm_quest_benchmark.constants import QUEST_ROOT_DIRECTORY
 
 logger = logging.getLogger(__name__)
+QUEST_EXTENSIONS = {".qm", ".qmm"}
 
 @dataclass
 class QuestInfo:
@@ -81,8 +82,8 @@ class QuestRegistry:
         self._quest_by_name = {}
         
         # Walk through all directories
-        for path in root_path.glob("**/*.qm"):
-            if not path.is_file():
+        for path in root_path.rglob("*"):
+            if not path.is_file() or path.suffix.lower() not in QUEST_EXTENSIONS:
                 continue
                 
             try:
@@ -143,7 +144,7 @@ class QuestRegistry:
             # Use glob.glob to resolve the pattern
             for match in glob.glob(quest_path, recursive=True):
                 p = Path(match)
-                if p.is_file() and p.suffix == '.qm':
+                if p.is_file() and p.suffix.lower() in QUEST_EXTENSIONS:
                     result.append(p)
         else:
             # Regular path processing
@@ -151,19 +152,21 @@ class QuestRegistry:
             
             # Handle relative paths that don't exist yet
             # If path starts with the quest root directory, use it as is
-            if p.is_file() and p.suffix == '.qm':
+            if p.is_file() and p.suffix.lower() in QUEST_EXTENSIONS:
                 result.append(p)
             elif p.is_dir():
-                result.extend(sorted(p.glob("**/*.qm")))
+                for ext in QUEST_EXTENSIONS:
+                    result.extend(sorted(p.glob(f"**/*{ext}")))
             # Otherwise, try treating as path relative to QUEST_ROOT_DIRECTORY
             elif not p.is_absolute() and not str(p).startswith(QUEST_ROOT_DIRECTORY):
                 # First try with QUEST_ROOT_DIRECTORY prepended
                 full_path = Path(QUEST_ROOT_DIRECTORY) / p
                 
-                if full_path.is_file() and full_path.suffix == '.qm':
+                if full_path.is_file() and full_path.suffix.lower() in QUEST_EXTENSIONS:
                     result.append(full_path)
                 elif full_path.is_dir():
-                    result.extend(sorted(full_path.glob("**/*.qm")))
+                    for ext in QUEST_EXTENSIONS:
+                        result.extend(sorted(full_path.glob(f"**/*{ext}")))
                 # If path contains directory component, check if directory exists
                 elif '/' in str(p):
                     # Extract directory part
@@ -172,11 +175,16 @@ class QuestRegistry:
                     if full_dir.is_dir():
                         # Find all matching quest files in this directory
                         file_pattern = str(p).rsplit('/', 1)[1]
-                        if not file_pattern.endswith('.qm'):
-                            file_pattern += '.qm'
-                        for match in full_dir.glob(file_pattern):
-                            if match.is_file():
-                                result.append(match)
+                        has_extension = Path(file_pattern).suffix.lower() in QUEST_EXTENSIONS
+                        if has_extension:
+                            for match in full_dir.glob(file_pattern):
+                                if match.is_file() and match.suffix.lower() in QUEST_EXTENSIONS:
+                                    result.append(match)
+                        else:
+                            for ext in QUEST_EXTENSIONS:
+                                for match in full_dir.glob(file_pattern + ext):
+                                    if match.is_file():
+                                        result.append(match)
                 # Check if it's just a quest name (without directory or extension)
                 elif quest_path in self._quest_by_name:
                     result.extend(self._quest_by_name[quest_path])
