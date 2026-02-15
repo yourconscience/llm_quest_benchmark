@@ -167,11 +167,6 @@ class QuestRunner:
         """Signal runner loop to stop as soon as possible."""
         self._stop_reason = reason
         self._stop_requested.set()
-        if self.env:
-            try:
-                self.env.close()
-            except Exception:
-                pass
 
     def snapshot_state(self) -> Optional[Dict[str, Any]]:
         """Best-effort snapshot of current environment state."""
@@ -267,6 +262,10 @@ class QuestRunner:
                         f"RUNNER ERROR - Action {action} out of range 1-{num_choices}")
                     self.logger.error(f"Defaulting to action 1")
                     action = 1
+
+                if self._stop_requested.is_set():
+                    self.logger.info("Quest runner stopped before step after %s", self._stop_reason or "request")
+                    return QuestOutcome.TIMEOUT
 
                 try:
                     self.logger.debug(f"Taking step with final action: {action}")
