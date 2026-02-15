@@ -224,3 +224,31 @@ def test_retry_preserves_reasoning_from_first_attempt():
     assert "low oxygen" in last.analysis
     assert last.reasoning is not None
     assert "safer move first" in last.reasoning
+
+
+def test_loop_escape_diversifies_repeated_state_action():
+    agent = LLMAgent(model_name="gemini-2.5-flash")
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = ["1", "1", "1", "1"]
+    mocked_llm.get_last_usage.return_value = {
+        "prompt_tokens": 10,
+        "completion_tokens": 2,
+        "total_tokens": 12,
+        "estimated_cost_usd": 0.0001,
+    }
+    agent.llm = mocked_llm
+
+    choices = [{"text": "Option A"}, {"text": "Option B"}]
+    state = "Looping state"
+
+    first = agent.get_action(state, choices)
+    second = agent.get_action(state, choices)
+    third = agent.get_action(state, choices)
+    fourth = agent.get_action(state, choices)
+
+    assert first == 1
+    # Conservative loop escape should diversify after deeper repetition.
+    assert second == 1
+    assert third == 1
+    assert fourth == 2
+    assert "loop_escape_diversify" in (agent.get_last_response().reasoning or "")
