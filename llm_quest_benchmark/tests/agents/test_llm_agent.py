@@ -171,3 +171,45 @@ def test_llm_error_default_response_keeps_reasoning_marker():
     assert last.is_default is True
     assert last.reasoning is not None
     assert "llm_call_error" in last.reasoning
+
+
+def test_retry_prompt_requests_json_payload():
+    agent = LLMAgent(model_name="gemini-2.5-flash")
+    prompt = agent._format_retry_prompt("state", [{"text": "A"}, {"text": "B"}])
+    assert "Return valid JSON only" in prompt
+    assert '"analysis"' in prompt
+    assert '"reasoning"' in prompt
+    assert '"result"' in prompt
+
+
+def test_retry_preserves_reasoning_from_first_attempt():
+    agent = LLMAgent(model_name="gemini-2.5-flash")
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = [
+        "Analysis: low oxygen\nReasoning: safer move first\n```json\n{",
+        "2",
+    ]
+    mocked_llm.get_last_usage.side_effect = [
+        {
+            "prompt_tokens": 100,
+            "completion_tokens": 10,
+            "total_tokens": 110,
+            "estimated_cost_usd": 0.001,
+        },
+        {
+            "prompt_tokens": 20,
+            "completion_tokens": 2,
+            "total_tokens": 22,
+            "estimated_cost_usd": 0.0002,
+        },
+    ]
+    agent.llm = mocked_llm
+
+    action = agent.get_action("state", [{"text": "A"}, {"text": "B"}])
+
+    assert action == 2
+    last = agent.get_last_response()
+    assert last.analysis is not None
+    assert "low oxygen" in last.analysis
+    assert last.reasoning is not None
+    assert "safer move first" in last.reasoning

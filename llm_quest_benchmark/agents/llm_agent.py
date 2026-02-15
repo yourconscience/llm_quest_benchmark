@@ -144,6 +144,15 @@ def _raw_reasoning_fallback(response: str) -> Optional[str]:
     return f"raw_response: {compact}"
 
 
+def _is_numeric_raw_reasoning(reasoning: Optional[str]) -> bool:
+    if not reasoning:
+        return False
+    if not reasoning.startswith("raw_response:"):
+        return False
+    payload = reasoning.split(":", 1)[1].strip()
+    return payload.isdigit()
+
+
 def parse_llm_response(response: str,
                        num_choices: int,
                        debug: bool = False,
@@ -420,8 +429,13 @@ class LLMAgent(QuestPlayer):
                 self.logger.debug(f"Available choices: {choices_debug}")
 
             # Parse response
-            parsed_response = parse_llm_response(llm_response, len(choices), self.debug,
-                                                 self.logger)
+            first_response = parse_llm_response(
+                llm_response,
+                len(choices),
+                self.debug,
+                self.logger,
+            )
+            parsed_response = first_response
 
             if parsed_response.is_default:
                 retry_response = self.llm.get_completion(self._format_retry_prompt(state, choices))
@@ -447,6 +461,21 @@ class LLMAgent(QuestPlayer):
                     )
                     if not force_retry_parsed.is_default:
                         parsed_response = force_retry_parsed
+
+            if parsed_response is not first_response:
+                if parsed_response.analysis is None and first_response.analysis is not None:
+                    parsed_response.analysis = first_response.analysis
+                if _is_numeric_raw_reasoning(parsed_response.reasoning):
+                    if first_response.reasoning and not _is_numeric_raw_reasoning(
+                        first_response.reasoning
+                    ):
+                        parsed_response.reasoning = first_response.reasoning
+                    else:
+                        first_raw_reasoning = _raw_reasoning_fallback(llm_response)
+                        if first_raw_reasoning and not _is_numeric_raw_reasoning(
+                            first_raw_reasoning
+                        ):
+                            parsed_response.reasoning = first_raw_reasoning
 
             parsed_response.action = self._apply_safety_filter(parsed_response.action, choices)
             usage_payload = self._normalize_usage(llm_usage)
@@ -512,7 +541,7 @@ class LLMAgent(QuestPlayer):
         return self.prompt_renderer.render_action_prompt(state, choices).strip()
 
     def _format_retry_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
-        """Compact fallback prompt used when JSON parsing fails."""
+        """Fallback prompt that still preserves reasoning for log analysis."""
         clipped_state = (state or "").strip()
         if len(clipped_state) > 500:
             clipped_state = clipped_state[:500] + "..."
@@ -525,7 +554,12 @@ State: {clipped_state}
 Actions:
 {choices_text}
 
-Return only one integer from 1 to {len(choices)}."""
+Return valid JSON only:
+{{
+  "analysis": "<max 25 words>",
+  "reasoning": "<max 25 words>",
+  "result": <integer from 1 to {len(choices)}>
+}}"""
 
     def _format_force_numeric_retry_prompt(self, choices: List[Dict[str, str]]) -> str:
         """Very short retry prompt used for models that return empty visible output."""
