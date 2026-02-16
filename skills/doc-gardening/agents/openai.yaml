@@ -1,5 +1,0 @@
-version: 1
-interface:
-  display_name: Doc Gardening
-  short_description: Scan and fix stale docs with focused PRs
-  default_prompt: Scan repository docs for stale behavior, fix mismatches against code, and open focused documentation PRs.

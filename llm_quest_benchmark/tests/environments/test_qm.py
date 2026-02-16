@@ -1,4 +1,5 @@
 """Tests for QM environment"""
+import logging
 import pytest
 from llm_quest_benchmark.environments.qm import QMPlayerEnv
 from llm_quest_benchmark.constants import DEFAULT_QUEST
@@ -42,6 +43,46 @@ def test_qm_env_error_handling():
             env.step("1")
     finally:
         env.close()
+
+
+class _FakeBridgeState:
+    def __init__(self, text: str):
+        self.text = text
+
+
+class _FakeBridge:
+    def __init__(self, states):
+        self.state_history = states
+
+    def step(self, _action):
+        raise AssertionError("step() should not be called when loop detection triggers")
+
+
+def test_infinite_loop_detection_sets_terminal_failure_state():
+    """Loop guard must produce a terminal env state, not a dangling non-final snapshot."""
+    env = QMPlayerEnv.__new__(QMPlayerEnv)
+    env.debug = False
+    env.language = "rus"
+    env.logger = logging.getLogger("test_qm_loop_guard")
+    env.bridge = _FakeBridge([_FakeBridgeState("Наступил новый день") for _ in range(31)])
+    env._current_state = {
+        "location_id": "1",
+        "text": "Наступил новый день",
+        "params_state": ["День: 10"],
+        "choices": [{"id": "1", "text": "Ждать"}],
+        "reward": 0.0,
+        "done": False,
+        "info": {},
+    }
+
+    observation, done, success, info = env.step("1")
+
+    assert done is True
+    assert success is False
+    assert info["forced_completion"] is True
+    assert env.state["done"] is True
+    assert env.state["choices"] == []
+    assert "Forced stop" in observation
 
     # Test invalid choice
     env = QMPlayerEnv(str(DEFAULT_QUEST))

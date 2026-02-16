@@ -41,6 +41,12 @@ This repository benchmarks how human and LLM agents solve Space Rangers text que
   - `uv run llm-quest benchmark --config configs/test/test_benchmark.yaml`
 - Start Flask UI:
   - `uv run llm-quest server`
+- Run doc-gardening scan:
+  - `./scripts/doc_gardening.sh audit . markdown`
+
+## Doc-Gardening Trigger
+- Mention `/doc-gardening` to trigger the `doc-gardening` skill workflow.
+- Global skill source: `~/.codex/skills/doc-gardening/SKILL.md`.
 
 ## Documentation Index
 - `README.md`: quickstart + usage.
@@ -49,3 +55,4 @@ This repository benchmarks how human and LLM agents solve Space Rangers text que
 - `docs/DEPLOYMENT.md`: non-local Flask deployment options (stable domain).
 - `docs/RUNBOOK.md`: operations and troubleshooting.
 - `docs/PLANS.md`: roadmap and execution plans.
+- `docs/experiments/`: experiment logs and iteration notes.

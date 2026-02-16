@@ -23,7 +23,8 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 - ✅ Run summaries include token/cost usage aggregates and per-step usage fields
 - ✅ Added CLI run-summary analyzer for faster prompt/config iteration loops
 - ✅ Added matrix benchmark configs + markdown benchmark report command
-- ✅ Existing Flask workflow remains primary web interface (no Vercel dependency)
+- ✅ Existing Flask workflow remains the primary web interface
+- ✅ Added `/doc-gardening` workflow + helper script for stale docs scan workflow
 
 ## Setup
 
@@ -103,6 +104,9 @@ uv run llm-quest play --quest quests/kr_1_ru/Boat.qm --skip
 # Run benchmark from YAML config
 uv run llm-quest benchmark --config configs/benchmarks/provider_suite_matrix_reasoning.yaml
 
+# Scan docs for stale commands/paths before PRs
+./scripts/doc_gardening.sh audit . markdown
+
 # Compare one or more benchmark IDs and generate markdown report
 uv run llm-quest benchmark-report \
   --benchmark-id CLI_benchmark_20260214_235403 \
@@ -148,6 +152,7 @@ Then open [http://localhost:8000](http://localhost:8000).
 - `quests/` - Local normalized quest files
 - `results/` - Run artifacts and summaries
 - `scripts/` - Operational/debug helpers (database, templates, Flask app inspection)
+- `docs/` - Architecture/runbook/deployment/plans + `docs/experiments/` iteration logs
 - `space-rangers-quest/` - TypeScript quest engine submodule
 
 ## License

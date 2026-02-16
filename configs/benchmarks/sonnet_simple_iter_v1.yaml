@@ -1,0 +1,26 @@
+name: sonnet_simple_iter_v1
+benchmark_id: sonnet_simple_iter_v1_20260216
+quests:
+  - quests/kr_1_ru/Diehard.qm
+  - quests/kr_1_ru/Boat.qm
+  - quests/kr_1_ru/Rush.qm
+  - quests/sr_2_1_2121_eng/Pizza_eng.qm
+  - quests/sr_2_1_2121_eng/Logic_eng.qm
+  - quests/sr_2_1_2121_eng/Badday_eng.qm
+agents:
+  - model: claude-sonnet-4-5
+    template: reasoning.jinja
+    temperature: 0.4
+    skip_single: true
+  - model: claude-sonnet-4-5
+    template: loop_aware_reasoning.jinja
+    temperature: 0.3
+    skip_single: true
+  - model: claude-sonnet-4-5
+    template: loop_aware_reasoning.jinja
+    temperature: 0.6
+    skip_single: true
+debug: false
+quest_timeout: 120
+max_workers: 1
+output_dir: results/benchmarks

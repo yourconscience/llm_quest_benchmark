@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import Mock, patch
 
-from llm_quest_benchmark.agents.llm_agent import LLMAgent
+from llm_quest_benchmark.agents.llm_agent import LLMAgent, parse_llm_response
 from llm_quest_benchmark.schemas.response import LLMResponse
 
 
@@ -140,3 +140,115 @@ def test_get_last_response_uses_skip_single_result():
     assert action == 1
     assert agent.get_last_response().action == 1
     assert agent.get_last_response().reasoning == "auto_single_choice"
+
+
+def test_parse_llm_response_extracts_fields_without_strict_json():
+    raw = "Reasoning: safer path\nAnalysis: low fuel, need pit stop\n2"
+    parsed = parse_llm_response(raw, num_choices=3)
+    assert parsed.action == 2
+    assert parsed.reasoning is not None
+    assert "safer path" in parsed.reasoning
+    assert parsed.analysis is not None
+    assert "low fuel" in parsed.analysis
+
+
+def test_parse_llm_response_uses_analysis_as_reasoning_when_truncated():
+    raw = '2\n{"analysis":"Low stats: avoid fight and prepare via library'
+    parsed = parse_llm_response(raw, num_choices=4)
+    assert parsed.action == 2
+    assert parsed.analysis is not None
+    assert "avoid fight" in parsed.analysis
+    assert parsed.reasoning is not None
+    assert "avoid fight" in parsed.reasoning
+    assert not parsed.reasoning.startswith("raw_response:")
+
+
+def test_llm_error_default_response_keeps_reasoning_marker():
+    agent = LLMAgent(model_name="gemini-2.5-flash")
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = RuntimeError("provider returned empty message")
+    mocked_llm.get_last_usage.return_value = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "estimated_cost_usd": None,
+    }
+    agent.llm = mocked_llm
+
+    action = agent.get_action("state", [{"text": "A"}, {"text": "B"}])
+
+    assert action == 1
+    last = agent.get_last_response()
+    assert last.is_default is True
+    assert last.reasoning is not None
+    assert "llm_call_error" in last.reasoning
+
+
+def test_retry_prompt_requests_json_payload():
+    agent = LLMAgent(model_name="gemini-2.5-flash")
+    prompt = agent._format_retry_prompt("state", [{"text": "A"}, {"text": "B"}])
+    assert "Return valid JSON only" in prompt
+    assert '"analysis"' in prompt
+    assert '"reasoning"' in prompt
+    assert '"result"' in prompt
+
+
+def test_retry_preserves_reasoning_from_first_attempt():
+    agent = LLMAgent(model_name="gemini-2.5-flash")
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = [
+        "Analysis: low oxygen\nReasoning: safer move first\n```json\n{",
+        "2",
+    ]
+    mocked_llm.get_last_usage.side_effect = [
+        {
+            "prompt_tokens": 100,
+            "completion_tokens": 10,
+            "total_tokens": 110,
+            "estimated_cost_usd": 0.001,
+        },
+        {
+            "prompt_tokens": 20,
+            "completion_tokens": 2,
+            "total_tokens": 22,
+            "estimated_cost_usd": 0.0002,
+        },
+    ]
+    agent.llm = mocked_llm
+
+    action = agent.get_action("state", [{"text": "A"}, {"text": "B"}])
+
+    assert action == 2
+    last = agent.get_last_response()
+    assert last.analysis is not None
+    assert "low oxygen" in last.analysis
+    assert last.reasoning is not None
+    assert "safer move first" in last.reasoning
+
+
+def test_loop_escape_diversifies_repeated_state_action():
+    agent = LLMAgent(model_name="gemini-2.5-flash")
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = ["1", "1", "1", "1"]
+    mocked_llm.get_last_usage.return_value = {
+        "prompt_tokens": 10,
+        "completion_tokens": 2,
+        "total_tokens": 12,
+        "estimated_cost_usd": 0.0001,
+    }
+    agent.llm = mocked_llm
+
+    choices = [{"text": "Option A"}, {"text": "Option B"}]
+    state = "Looping state"
+
+    first = agent.get_action(state, choices)
+    second = agent.get_action(state, choices)
+    third = agent.get_action(state, choices)
+    fourth = agent.get_action(state, choices)
+
+    assert first == 1
+    # Conservative loop escape should diversify after deeper repetition.
+    assert second == 1
+    assert third == 1
+    assert fourth == 2
+    assert "loop_escape_diversify" in (agent.get_last_response().reasoning or "")

@@ -106,6 +106,64 @@ def _extract_action_from_text(response: str, num_choices: int) -> Optional[int]:
     return None
 
 
+def _extract_field_from_text(response: str, field: str) -> Optional[str]:
+    """Best-effort extraction of analysis/reasoning from loosely formatted output."""
+    if not response:
+        return None
+
+    # JSON-like field forms: "analysis": "...", 'analysis': '...'
+    json_pattern = re.compile(
+        rf"""['"]{re.escape(field)}['"]\s*:\s*['"](?P<value>.*?)['"]""",
+        re.IGNORECASE | re.DOTALL,
+    )
+    match = json_pattern.search(response)
+    if match:
+        value = " ".join(match.group("value").strip().split())
+        if value:
+            return value
+
+    # Partial JSON field forms without a closing quote in truncated outputs.
+    partial_json_pattern = re.compile(
+        rf"""['"]{re.escape(field)}['"]\s*:\s*['"](?P<value>[^"\n\r]+)""",
+        re.IGNORECASE,
+    )
+    match = partial_json_pattern.search(response)
+    if match:
+        value = " ".join(match.group("value").strip().split())
+        if value:
+            return value
+
+    # Label forms: Analysis: ..., Reasoning - ...
+    label_pattern = re.compile(
+        rf"""(?im)^\s*{re.escape(field)}\s*[:\-]\s*(?P<value>.+?)\s*$""",
+    )
+    match = label_pattern.search(response)
+    if match:
+        value = " ".join(match.group("value").strip().split())
+        if value:
+            return value
+
+    return None
+
+
+def _raw_reasoning_fallback(response: str) -> Optional[str]:
+    compact = " ".join((response or "").strip().split())
+    if not compact:
+        return None
+    if len(compact) > 240:
+        compact = compact[:237] + "..."
+    return f"raw_response: {compact}"
+
+
+def _is_numeric_raw_reasoning(reasoning: Optional[str]) -> bool:
+    if not reasoning:
+        return False
+    if not reasoning.startswith("raw_response:"):
+        return False
+    payload = reasoning.split(":", 1)[1].strip()
+    return payload.isdigit()
+
+
 def parse_llm_response(response: str,
                        num_choices: int,
                        debug: bool = False,
@@ -114,9 +172,20 @@ def parse_llm_response(response: str,
     if debug and logger:
         logger.debug(f"Raw LLM response: {response}")
 
+    extracted_analysis = _extract_field_from_text(response, "analysis")
+    extracted_reasoning = _extract_field_from_text(response, "reasoning")
+    raw_reasoning = _raw_reasoning_fallback(response)
+
     # Try parsing as JSON first
     response_json = _parse_json_response(response, debug, logger)
     if response_json and isinstance(response_json, dict):
+        analysis = response_json.get("analysis") or extracted_analysis
+        reasoning = response_json.get("reasoning") or extracted_reasoning
+        if not reasoning and analysis:
+            reasoning = analysis
+        if not analysis and not reasoning:
+            reasoning = raw_reasoning
+
         # Check for either 'action' or 'result' field
         action_value = (
             response_json.get('action')
@@ -128,8 +197,8 @@ def parse_llm_response(response: str,
                 action = int(action_value)
                 if _validate_action_number(action, num_choices, debug, logger):
                     return LLMResponse(action=action,
-                                       reasoning=response_json.get('reasoning'),
-                                       analysis=response_json.get('analysis'),
+                                       reasoning=reasoning,
+                                       analysis=analysis,
                                        is_default=False)
             except (ValueError, TypeError):
                 if debug and logger:
@@ -139,7 +208,12 @@ def parse_llm_response(response: str,
     try:
         action = int(response.strip())
         if _validate_action_number(action, num_choices, debug, logger):
-            return LLMResponse(action=action, is_default=False)
+            return LLMResponse(
+                action=action,
+                reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
+                analysis=extracted_analysis,
+                is_default=False,
+            )
     except ValueError:
         if debug and logger:
             logger.error(f"Could not parse response as number: {response}")
@@ -147,14 +221,24 @@ def parse_llm_response(response: str,
     # Fallback: extract first valid integer from text.
     extracted_action = _extract_action_from_text(response, num_choices)
     if extracted_action is not None:
-        return LLMResponse(action=extracted_action, is_default=False)
+        return LLMResponse(
+            action=extracted_action,
+            reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
+            analysis=extracted_analysis,
+            is_default=False,
+        )
 
     # Default to first choice if all parsing attempts fail
     if debug and logger:
         logger.error(
             f"Error during response parsing, defaulting to first choice. Response: {response[:100]}..."
         )
-    return LLMResponse(action=1, is_default=True)
+    return LLMResponse(
+        action=1,
+        reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
+        analysis=extracted_analysis,
+        is_default=True,
+    )
 
 
 class LLMAgent(QuestPlayer):
@@ -207,6 +291,8 @@ class LLMAgent(QuestPlayer):
         self._context_window = 3
         self._context_chars = 220
         self._use_safety_filter = True
+        self._decision_trace: List[Dict[str, Any]] = []
+        self._state_action_counts: Dict[str, Dict[int, int]] = {}
         self._last_response = LLMResponse(action=1,
                                           is_default=True)  # Initialize with default response
 
@@ -238,20 +324,31 @@ class LLMAgent(QuestPlayer):
 
     def _build_contextual_state(self, state: str) -> str:
         """Add a compact previous-step context window for better local decisions."""
-        if len(self._observation_history) <= 1:
+        blocks: List[str] = []
+
+        if len(self._observation_history) > 1:
+            previous = self._observation_history[:-1][-self._context_window:]
+            if previous:
+                snippets = []
+                for idx, text in enumerate(previous, start=1):
+                    clipped = text if len(text) <= self._context_chars else text[:self._context_chars] + "..."
+                    snippets.append(f"[Previous {idx}] {clipped}")
+                blocks.append("Recent context from previous steps:\n" + "\n\n".join(snippets))
+
+        if self._decision_trace:
+            decisions = self._decision_trace[-3:]
+            lines = []
+            for idx, entry in enumerate(decisions, start=1):
+                choice = (entry.get("choice_text") or "").strip()
+                choice = choice[:120] + ("..." if len(choice) > 120 else "")
+                reason = (entry.get("reasoning") or "").strip()
+                reason = reason[:90] + ("..." if len(reason) > 90 else "")
+                lines.append(f"[Decision {idx}] chose {entry.get('action')}: {choice}; why: {reason}")
+            blocks.append("Recent selected actions:\n" + "\n".join(lines))
+
+        if not blocks:
             return state
-
-        previous = self._observation_history[:-1][-self._context_window:]
-        if not previous:
-            return state
-
-        snippets = []
-        for idx, text in enumerate(previous, start=1):
-            clipped = text if len(text) <= self._context_chars else text[:self._context_chars] + "..."
-            snippets.append(f"[Previous {idx}] {clipped}")
-
-        context_block = "\n\n".join(snippets)
-        return f"Recent context from previous steps:\n{context_block}\n\n{state}"
+        return "\n\n".join(blocks) + f"\n\n{state}"
 
     def _choice_risk_score(self, choice_text: str) -> int:
         text = (choice_text or "").lower()
@@ -292,6 +389,73 @@ class LLMAgent(QuestPlayer):
                 )
             return best_action
         return action
+
+    @staticmethod
+    def _state_fingerprint(state: str) -> str:
+        """Create a stable fingerprint for loop detection."""
+        compact = " ".join((state or "").lower().split())
+        if len(compact) > 500:
+            compact = compact[:500]
+        return compact
+
+    def _apply_loop_escape(
+        self,
+        state_key: str,
+        action: int,
+        choices: List[Dict[str, str]],
+    ) -> Tuple[int, bool]:
+        """Diversify action when the same state repeats with no apparent progress."""
+        if len(choices) <= 1:
+            return action, False
+
+        counts = self._state_action_counts.get(state_key, {})
+        total_visits = sum(counts.values())
+        if total_visits < 3:
+            return action, False
+
+        current_count = counts.get(action, 0)
+        if current_count < 2:
+            return action, False
+        all_actions = list(range(1, len(choices) + 1))
+        ranked = sorted(
+            all_actions,
+            key=lambda a: (
+                counts.get(a, 0),
+                self._choice_risk_score(choices[a - 1].get("text", "")),
+            ),
+        )
+        best_action = ranked[0]
+
+        if best_action != action and counts.get(best_action, 0) < current_count:
+            return best_action, True
+        if total_visits >= 5 and current_count >= 3 and best_action != action:
+            return best_action, True
+        return action, False
+
+    def _record_decision(
+        self,
+        state: str,
+        action: int,
+        choices: List[Dict[str, str]],
+        reasoning: Optional[str],
+    ) -> None:
+        state_key = self._state_fingerprint(state)
+        if state_key:
+            by_action = self._state_action_counts.setdefault(state_key, {})
+            by_action[action] = by_action.get(action, 0) + 1
+
+        choice_text = ""
+        if 1 <= action <= len(choices):
+            choice_text = choices[action - 1].get("text", "")
+        self._decision_trace.append(
+            {
+                "action": action,
+                "choice_text": choice_text,
+                "reasoning": reasoning or "",
+            }
+        )
+        if len(self._decision_trace) > 30:
+            self._decision_trace = self._decision_trace[-30:]
 
     @staticmethod
     def _normalize_usage(usage: Optional[Dict[str, Any]]) -> Dict[str, Any]:
@@ -358,8 +522,14 @@ class LLMAgent(QuestPlayer):
                 self.logger.debug(f"Available choices: {choices_debug}")
 
             # Parse response
-            parsed_response = parse_llm_response(llm_response, len(choices), self.debug,
-                                                 self.logger)
+            state_key = self._state_fingerprint(state)
+            first_response = parse_llm_response(
+                llm_response,
+                len(choices),
+                self.debug,
+                self.logger,
+            )
+            parsed_response = first_response
 
             if parsed_response.is_default:
                 retry_response = self.llm.get_completion(self._format_retry_prompt(state, choices))
@@ -386,7 +556,33 @@ class LLMAgent(QuestPlayer):
                     if not force_retry_parsed.is_default:
                         parsed_response = force_retry_parsed
 
+            if parsed_response is not first_response:
+                if parsed_response.analysis is None and first_response.analysis is not None:
+                    parsed_response.analysis = first_response.analysis
+                if _is_numeric_raw_reasoning(parsed_response.reasoning):
+                    if first_response.reasoning and not _is_numeric_raw_reasoning(
+                        first_response.reasoning
+                    ):
+                        parsed_response.reasoning = first_response.reasoning
+                    else:
+                        first_raw_reasoning = _raw_reasoning_fallback(llm_response)
+                        if first_raw_reasoning and not _is_numeric_raw_reasoning(
+                            first_raw_reasoning
+                        ):
+                            parsed_response.reasoning = first_raw_reasoning
+
             parsed_response.action = self._apply_safety_filter(parsed_response.action, choices)
+            escaped_action, escaped = self._apply_loop_escape(
+                state_key,
+                parsed_response.action,
+                choices,
+            )
+            if escaped:
+                parsed_response.action = escaped_action
+                parsed_response.reasoning = (
+                    (parsed_response.reasoning or "loop_escape")
+                    + "; loop_escape_diversify"
+                )
             usage_payload = self._normalize_usage(llm_usage)
             parsed_response.prompt_tokens = usage_payload["prompt_tokens"]
             parsed_response.completion_tokens = usage_payload["completion_tokens"]
@@ -410,11 +606,17 @@ class LLMAgent(QuestPlayer):
                 parsed_response.action = 1
                 self.logger.warning(f"Defaulting to action 1 instead")
 
+            self._record_decision(state, parsed_response.action, choices, parsed_response.reasoning)
             return parsed_response.action
 
         except Exception as e:
             self.logger.error(f"Error during LLM call: {e}")
-            default_response = LLMResponse(action=1, is_default=True)
+            error_reason = _raw_reasoning_fallback(f"llm_call_error: {e}")
+            default_response = LLMResponse(
+                action=1,
+                reasoning=error_reason,
+                is_default=True,
+            )
             self.history.append(default_response)
             self._last_response = default_response
             return 1  # Default to first choice on error
@@ -423,12 +625,16 @@ class LLMAgent(QuestPlayer):
         """Reset agent state"""
         self.history = []
         self._observation_history = []
+        self._decision_trace = []
+        self._state_action_counts = {}
         self._last_response = LLMResponse(action=1, is_default=True)  # Reset to default response
 
     def on_game_start(self) -> None:
         """Called when game starts"""
         super().on_game_start()
         self._observation_history = []
+        self._decision_trace = []
+        self._state_action_counts = {}
         self._last_response = LLMResponse(action=1, is_default=True)  # Reset to default response
 
     def on_game_end(self, final_state: Dict[str, Any]) -> None:
@@ -445,7 +651,7 @@ class LLMAgent(QuestPlayer):
         return self.prompt_renderer.render_action_prompt(state, choices).strip()
 
     def _format_retry_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
-        """Compact fallback prompt used when JSON parsing fails."""
+        """Fallback prompt that still preserves reasoning for log analysis."""
         clipped_state = (state or "").strip()
         if len(clipped_state) > 500:
             clipped_state = clipped_state[:500] + "..."
@@ -458,7 +664,12 @@ State: {clipped_state}
 Actions:
 {choices_text}
 
-Return only one integer from 1 to {len(choices)}."""
+Return valid JSON only:
+{{
+  "analysis": "<max 25 words>",
+  "reasoning": "<max 25 words>",
+  "result": <integer from 1 to {len(choices)}>
+}}"""
 
     def _format_force_numeric_retry_prompt(self, choices: List[Dict[str, str]]) -> str:
         """Very short retry prompt used for models that return empty visible output."""
