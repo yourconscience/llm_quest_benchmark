@@ -135,6 +135,9 @@ class BenchmarkThread(threading.Thread):
             # Set up app context for this thread
             with self.app.app_context():
                 try:
+                    # Ensure web DB schema exists before writing benchmark rows.
+                    db.create_all()
+
                     # Convert agent dictionaries to AgentConfig objects
                     if 'agents' in self.config_dict:
                         self.config_dict['agents'] = [
