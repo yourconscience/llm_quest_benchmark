@@ -22,15 +22,16 @@ STALE_TERMS = {
     "Next.js frontend": "Project no longer ships the Next.js UI in this repo.",
     "llm-quest api-server": "Removed command; use `llm-quest server`.",
     "llm_quest_benchmark/web_next": "Removed path; Flask UI is canonical.",
-    "Vercel": "Modern Vercel web deployment path was removed from this repo.",
 }
 
 KNOWN_CLI_COMMANDS = {
     "run",
     "play",
     "analyze",
+    "analyze-run",
     "cleanup",
     "benchmark",
+    "benchmark-report",
     "server",
 }
 

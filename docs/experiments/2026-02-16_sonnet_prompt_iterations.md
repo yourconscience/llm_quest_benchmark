@@ -1,4 +1,4 @@
-# Experiment Log - 2026-02-16
+# 2026-02-16 Sonnet Prompt Iterations
 
 ## Goal
 Increase quest success rate by iterating on one promising model without leaking quest answers.
@@ -79,4 +79,3 @@ Benchmark ID: `sonnet_targeted_diehard_rush_v1_20260216`
    - arithmetic mixer helper for `Banket_eng`-style composition tasks,
    - race/minigame controller for `Rush`-type control loops.
 4. Keep Sonnet loop-aware template as current default for iterative experimentation.
-

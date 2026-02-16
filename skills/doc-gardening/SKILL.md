@@ -7,6 +7,13 @@ description: Scan repository documentation for stale or obsolete content that di
 
 Use this skill when documentation may be stale, contradictory, or no longer aligned with current code paths, commands, APIs, or architecture.
 
+## Quick Trigger
+- Chat shortcut: `/gardrning` (accepted typo alias) or `/gardening`.
+- Local scan command:
+```bash
+./scripts/doc_gardening.sh
+```
+
 ## Scope
 - Markdown docs in:
   - `README.md`
@@ -34,7 +41,7 @@ uv run python skills/doc-gardening/scripts/stale_docs_scan.py --root . --format 
 4. For each slice:
 - Create branch:
 ```bash
-git checkout -b codex/docs-garden-<topic>
+git checkout -b docs_garden_<topic>
 ```
 - Apply doc edits only.
 - Validate:

@@ -52,8 +52,17 @@ uv run llm-quest run --quest quests/Boat.qm --model gpt-5-mini --timeout 60 --de
 uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v1.yaml
 uv run llm-quest benchmark --config configs/benchmarks/provider_suite_v2.yaml
 
+# benchmark markdown report
+uv run llm-quest benchmark-report --benchmark-id <BENCHMARK_ID>
+
+# run-summary decision trace analyzer
+uv run llm-quest analyze-run --agent llm_gpt-5-mini --quest Diehard
+
 # inspect latest run
 uv run llm-quest analyze --last
+
+# docs drift scan (doc-gardening)
+./scripts/doc_gardening.sh
 ```
 
 ## Artifacts Layout
@@ -62,7 +71,6 @@ uv run llm-quest analyze --last
   - `results/benchmarks/<benchmark_id>/benchmark_summary.json`
 - Run-level artifacts:
   - `results/<agent_id>/<quest_name>/run_<run_id>/run_summary.json`
-  - `results/<agent_id>/<quest_name>/run_<run_id>/step_<n>.json`
 
 ## Troubleshooting
 

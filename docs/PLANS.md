@@ -57,7 +57,10 @@ Keep the existing Flask web app as the primary UI and harden the full experiment
 ## Documentation Quality
 1. Keep `README.md`, `AGENTS.md`, and files in `docs/` aligned with current code behavior.
 2. Use the `skills/doc-gardening` scanner before releases.
+   - Quick command: `./scripts/doc_gardening.sh`
+   - Shortcut trigger in chat: `/gardrning`
 3. Open doc-only fix PRs for stale commands, paths, and architecture claims.
+4. Keep experiment notes under `docs/experiments/` with one file per iteration batch.
 
 ## Later (Not ASAP)
 1. Optional live debug stream in web UI during runs (terminal-grade trace visibility in browser).
