@@ -1,7 +1,8 @@
 """Tests for web interface"""
 import pytest
 from llm_quest_benchmark.web.app import create_app
-from llm_quest_benchmark.web.models.database import db, Run, Step
+from llm_quest_benchmark.web.models.database import db, Run, Step, RunEvent
+from llm_quest_benchmark.web.views import monitor as monitor_view
 from llm_quest_benchmark.constants import DEFAULT_QUEST
 import json
 
@@ -341,3 +342,118 @@ def test_readable_endpoint(client, init_quest):
     # Basic check that the output contains expected sections
     readable_output = data['readable_output']
     assert "QUEST PLAYTHROUGH" in readable_output
+
+
+def test_run_events_endpoint(client, app):
+    """Run events endpoint should return structured events in order."""
+    with app.app_context():
+        run = Run(
+            quest_name='Boat',
+            quest_file='quests/Boat.qm',
+            agent_id='llm_test',
+            agent_config={'model': 'random_choice'},
+        )
+        db.session.add(run)
+        db.session.commit()
+
+        ev1 = RunEvent(
+            run_id=run.id,
+            event_type='step',
+            step=1,
+            location_id='1',
+            payload={'llm_decision': {'reasoning': 'pick 1'}},
+        )
+        ev2 = RunEvent(
+            run_id=run.id,
+            event_type='outcome',
+            payload={'outcome': 'SUCCESS'},
+        )
+        db.session.add_all([ev1, ev2])
+        db.session.commit()
+
+        resp = client.get(f'/monitor/runs/{run.id}/events?after_id=0&limit=10')
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['success'] is True
+        assert len(data['events']) == 2
+        assert data['events'][0]['event_type'] == 'step'
+        assert data['events'][1]['event_type'] == 'outcome'
+
+
+def test_run_status_endpoint_uses_active_state(client, app):
+    """Run status endpoint should expose active in-memory state and DB counters."""
+    with app.app_context():
+        run = Run(
+            quest_name='Boat',
+            quest_file='quests/Boat.qm',
+            agent_id='llm_test',
+            agent_config={'model': 'random_choice'},
+        )
+        db.session.add(run)
+        db.session.commit()
+
+        monitor_view.active_run_jobs[run.id] = {
+            "status": "running",
+            "current_task": "Step 3",
+            "step_count": 3,
+            "event_count": 7,
+        }
+        db.session.add(RunEvent(run_id=run.id, event_type='step', step=1, payload={}))
+        db.session.commit()
+
+        resp = client.get(f'/monitor/run_status/{run.id}')
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['success'] is True
+        assert data['status'] == 'running'
+        assert data['current_task'] == 'Step 3'
+        assert data['event_count'] >= 1
+
+        monitor_view.active_run_jobs.pop(run.id, None)
+
+
+def test_failure_explorer_endpoint(client, app):
+    """Failure explorer should expose default-rate and repeat-streak diagnostics."""
+    with app.app_context():
+        run = Run(
+            quest_name='Rush',
+            quest_file='quests/kr_1_ru/Rush.qm',
+            agent_id='llm_test',
+            agent_config={'model': 'gemini-2.5-flash'},
+            outcome='FAILURE',
+        )
+        db.session.add(run)
+        db.session.commit()
+
+        steps = [
+            Step(
+                run_id=run.id,
+                step=1,
+                location_id='10',
+                observation='obs1',
+                choices=[{'id': '1', 'text': 'A'}, {'id': '2', 'text': 'B'}],
+                action='2',
+                llm_response={'reasoning': 'try B', 'is_default': False},
+            ),
+            Step(
+                run_id=run.id,
+                step=2,
+                location_id='10',
+                observation='obs2',
+                choices=[{'id': '1', 'text': 'A2'}, {'id': '2', 'text': 'B2'}],
+                action='1',
+                llm_response={'reasoning': 'fallback', 'is_default': True},
+            ),
+        ]
+        db.session.add_all(steps)
+        db.session.commit()
+
+        resp = client.get('/analyze/failure_explorer?limit=10')
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['success'] is True
+        assert len(data['rows']) >= 1
+        row = next(r for r in data['rows'] if r['run_id'] == run.id)
+        assert row['quest_name'] == 'Rush'
+        assert row['max_repeat_streak'] >= 2
+        assert row['default_rate'] >= 0.5

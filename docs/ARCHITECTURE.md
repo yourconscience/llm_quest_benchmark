@@ -60,12 +60,14 @@ The runtime loop is:
   Benchmark execution UX.
 - `llm_quest_benchmark/web/views/analyze.py`:
   Dashboard and run analytics views.
+- `llm_quest_benchmark/web/models/database.py`:
+  Includes `RunEvent` table for structured live step telemetry.
 
 ## Persistence
 - `metrics.db`:
   Benchmark/run metrics for CLI workflows.
 - `instance/llm_quest.sqlite`:
-  Flask web run/step records.
+  Flask web run/step/event records.
 - `results/<agent>/<quest>/run_<id>/run_summary.json`:
   Compact step trace + per-step decisions + aggregated token/cost usage.
 
