@@ -105,7 +105,7 @@ uv run llm-quest play --quest quests/kr_1_ru/Boat.qm --skip
 uv run llm-quest benchmark --config configs/benchmarks/provider_suite_matrix_reasoning.yaml
 
 # Scan docs for stale commands/paths before PRs
-./scripts/doc_gardening.sh
+./scripts/doc_gardening.sh audit . markdown
 
 # Compare one or more benchmark IDs and generate markdown report
 uv run llm-quest benchmark-report \

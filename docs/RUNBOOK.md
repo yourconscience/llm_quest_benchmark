@@ -62,7 +62,7 @@ uv run llm-quest analyze-run --agent llm_gpt-5-mini --quest Diehard
 uv run llm-quest analyze --last
 
 # docs drift scan (doc-gardening)
-./scripts/doc_gardening.sh
+./scripts/doc_gardening.sh audit . markdown
 ```
 
 ## Artifacts Layout

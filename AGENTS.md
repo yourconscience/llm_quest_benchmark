@@ -42,11 +42,11 @@ This repository benchmarks how human and LLM agents solve Space Rangers text que
 - Start Flask UI:
   - `uv run llm-quest server`
 - Run doc-gardening scan:
-  - `./scripts/doc_gardening.sh`
+  - `./scripts/doc_gardening.sh audit . markdown`
 
 ## Doc-Gardening Trigger
-- Mention `/gardrning` or `/gardening` to trigger the `doc-gardening` skill workflow.
-- Skill source: `skills/doc-gardening/SKILL.md`.
+- Mention `/doc-gardening` to trigger the `doc-gardening` skill workflow.
+- Global skill source: `~/.codex/skills/doc-gardening/SKILL.md`.
 
 ## Documentation Index
 - `README.md`: quickstart + usage.
