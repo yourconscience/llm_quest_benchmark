@@ -198,6 +198,43 @@
         </div>
     </div>
 
+    <!-- Failure Explorer -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Failure Explorer</h5>
+                    <button id="refreshFailureExplorerBtn" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Run</th>
+                                    <th>Quest</th>
+                                    <th>Agent</th>
+                                    <th>Outcome</th>
+                                    <th>Defaults</th>
+                                    <th>Repeat Streak</th>
+                                    <th>Last Choice</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="failureExplorerBody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-3 text-muted">Loading failure explorer...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Additional Analysis Tools -->
     <div class="row">
         <div class="col-md-6">
@@ -390,5 +427,61 @@
                 console.error('Failed to copy: ', err);
             });
     });
+
+    function renderFailureExplorer(rows) {
+        const tbody = document.getElementById('failureExplorerBody');
+        tbody.innerHTML = '';
+        if (!rows || rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-3 text-muted">No failed runs available yet.</td></tr>';
+            return;
+        }
+
+        rows.forEach((row) => {
+            const tr = document.createElement('tr');
+            const outcomeBadgeClass = row.outcome === 'TIMEOUT' ? 'bg-warning text-dark' : 'bg-danger';
+            tr.innerHTML = `
+                <td>${row.run_id}</td>
+                <td>${row.quest_name || '-'}</td>
+                <td>${row.agent_id || '-'}</td>
+                <td><span class="badge ${outcomeBadgeClass}">${row.outcome}</span></td>
+                <td>${(row.default_rate * 100).toFixed(0)}%</td>
+                <td>${row.max_repeat_streak}</td>
+                <td class="small">${row.last_choice || '<span class="text-muted">n/a</span>'}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a class="btn btn-outline-primary" href="${row.details_url}">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary view-readable" data-run-id="${row.run_id}">
+                            <i class="fas fa-file-alt"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll('#failureExplorerBody .view-readable').forEach((button) => {
+            button.addEventListener('click', function() {
+                fetchReadableOutput(this.dataset.runId);
+            });
+        });
+    }
+
+    function loadFailureExplorer() {
+        fetch('/analyze/failure_explorer?limit=50')
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    renderFailureExplorer(data.rows || []);
+                }
+            })
+            .catch((error) => {
+                console.error('Error loading failure explorer:', error);
+            });
+    }
+
+    document.getElementById('refreshFailureExplorerBtn').addEventListener('click', loadFailureExplorer);
+    loadFailureExplorer();
 </script>
 {% endblock %}
