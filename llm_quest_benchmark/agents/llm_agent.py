@@ -247,7 +247,7 @@ class LLMAgent(QuestPlayer):
         self._context_window = 3
         self._context_chars = 220
         self._decision_window = 5
-        self._loop_repetition_threshold = 2
+        self._loop_repetition_threshold = 1
         self._max_state_signatures = 200
         self._use_safety_filter = True
         self._last_response = LLMResponse(action=1,

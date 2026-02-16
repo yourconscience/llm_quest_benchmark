@@ -479,7 +479,13 @@ def get_llm_client(model_name: str, system_prompt: str = "", temperature: float 
             request_timeout=request_timeout,
         )
     if spec.provider in {"openai", "google", "openrouter", "deepseek"}:
-        max_tokens = 512 if spec.provider == "google" else 200
+        if spec.provider == "google":
+            max_tokens = 512
+        elif spec.provider == "openai":
+            # GPT-5/o models often require larger completion budgets for stable structured output.
+            max_tokens = 900
+        else:
+            max_tokens = 300
         return OpenAICompatibleClient(
             provider=spec.provider,
             model_id=spec.model_id,
