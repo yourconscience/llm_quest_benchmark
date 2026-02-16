@@ -1,0 +1,28 @@
+name: parallel_sonnet_prompt_sweep_v1
+quests:
+  - quests/Boat.qm
+  - quests/kr_1_ru/Fishing.qm
+  - quests/kr_1_ru/Gobsaur.qm
+  - quests/kr_1_ru/Examen.qm
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
+agents:
+  - model: claude-sonnet-4-5
+    template: reasoning.jinja
+    temperature: 0.3
+    skip_single: true
+  - model: claude-sonnet-4-5
+    template: objective_guard.jinja
+    temperature: 0.3
+    skip_single: true
+  - model: claude-sonnet-4-5
+    template: consequence_scan.jinja
+    temperature: 0.3
+    skip_single: true
+  - model: claude-sonnet-4-5
+    template: strategic.jinja
+    temperature: 0.2
+    skip_single: true
+debug: true
+quest_timeout: 180
+max_workers: 1
+output_dir: results/benchmarks
