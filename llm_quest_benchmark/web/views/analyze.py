@@ -139,6 +139,84 @@ def step_analysis():
         'data': step_data
     })
 
+
+def _max_repeat_streak(location_ids):
+    max_streak = 1
+    current = 1
+    for i in range(1, len(location_ids)):
+        if location_ids[i] == location_ids[i - 1]:
+            current += 1
+            max_streak = max(max_streak, current)
+        else:
+            current = 1
+    return max_streak if location_ids else 0
+
+
+@bp.route('/failure_explorer')
+@handle_errors
+def failure_explorer():
+    """Return recent failed runs with decision diagnostics for fast triage."""
+    limit = min(int(request.args.get("limit", 50)), 200)
+    runs = (
+        Run.query
+        .filter(Run.outcome.in_(["FAILURE", "TIMEOUT", "ERROR"]))
+        .order_by(Run.start_time.desc())
+        .limit(limit)
+        .all()
+    )
+
+    rows = []
+    for run in runs:
+        steps = Step.query.filter_by(run_id=run.id).order_by(Step.step.asc()).all()
+        if not steps:
+            continue
+
+        decision_steps = []
+        default_count = 0
+        for s in steps:
+            choices = s.choices or []
+            llm = s.llm_response if isinstance(s.llm_response, dict) else {}
+            if len(choices) > 1:
+                decision_steps.append(s)
+                if llm.get("is_default"):
+                    default_count += 1
+
+        last_decision = decision_steps[-1] if decision_steps else steps[-1]
+        last_choice_text = None
+        if last_decision.action and isinstance(last_decision.choices, list):
+            try:
+                choice_idx = int(last_decision.action) - 1
+                if 0 <= choice_idx < len(last_decision.choices):
+                    last_choice_text = last_decision.choices[choice_idx].get("text")
+            except (TypeError, ValueError):
+                last_choice_text = None
+
+        llm_payload = last_decision.llm_response if isinstance(last_decision.llm_response, dict) else {}
+        location_ids = [s.location_id for s in steps if s.location_id]
+        default_rate = float(default_count / len(decision_steps)) if decision_steps else 0.0
+
+        rows.append({
+            "run_id": run.id,
+            "quest_name": run.quest_name,
+            "agent_id": run.agent_id,
+            "outcome": run.outcome,
+            "start_time": run.start_time.isoformat() if run.start_time else None,
+            "total_steps": len(steps),
+            "decision_steps": len(decision_steps),
+            "default_rate": default_rate,
+            "max_repeat_streak": _max_repeat_streak(location_ids),
+            "last_decision_step": last_decision.step,
+            "last_choice": last_choice_text,
+            "last_reasoning": llm_payload.get("reasoning"),
+            "last_analysis": llm_payload.get("analysis"),
+            "last_observation": (last_decision.observation or "")[:220],
+            "readable_url": f"/analyze/run/{run.id}/readable",
+            "details_url": f"/analyze/run/{run.id}",
+            "analysis_url": f"/analyze/run/{run.id}/analysis",
+        })
+
+    return jsonify({"success": True, "rows": rows})
+
 @bp.route('/run/<int:run_id>')
 @handle_errors
 def run_details(run_id):

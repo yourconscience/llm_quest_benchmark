@@ -48,6 +48,7 @@ class Run(db.Model):
     reward = db.Column(db.Float, nullable=True)
     benchmark_id = db.Column(db.String(64), nullable=True)  # Link to benchmark run if part of one
     steps = db.relationship('Step', backref='run', lazy=True)
+    events = db.relationship('RunEvent', backref='run', lazy=True)
 
     def to_dict(self):
         """Convert run to dictionary"""
@@ -95,6 +96,31 @@ class Step(db.Model):
             'step': self.step,
             'id': self.id,
             'run_id': self.run_id
+        }
+
+
+class RunEvent(db.Model):
+    """Structured runtime events for live monitor/debug views."""
+    __tablename__ = 'run_events'
+
+    id = db.Column(db.Integer, primary_key=True)
+    run_id = db.Column(db.Integer, db.ForeignKey('runs.id'), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, index=True)
+    event_type = db.Column(db.String(32), nullable=False, index=True)  # step, timeout, outcome, error
+    step = db.Column(db.Integer, nullable=True)
+    location_id = db.Column(db.String(100), nullable=True)
+    payload = db.Column(JSONEncodedDict, nullable=True)
+
+    def to_dict(self):
+        """Convert event to dictionary."""
+        return {
+            "id": self.id,
+            "run_id": self.run_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "event_type": self.event_type,
+            "step": self.step,
+            "location_id": self.location_id,
+            "payload": self.payload or {},
         }
 
 class BenchmarkRun(db.Model):

@@ -27,6 +27,10 @@ class BenchmarkStatus:
         self.end_time = None
         self.result = None
         self.error = None
+        self.total_runs = 0
+        self.completed_runs = 0
+        self.pairs = []
+        self.recent_issues = []
         
     def update(self, status, progress, current_task=None):
         self.status = status
@@ -55,7 +59,11 @@ class BenchmarkStatus:
             'current_task': self.current_task,
             'start_time': self.start_time.isoformat(),
             'end_time': self.end_time.isoformat() if self.end_time else None,
-            'error': self.error
+            'error': self.error,
+            'total_runs': self.total_runs,
+            'completed_runs': self.completed_runs,
+            'pairs': self.pairs,
+            'recent_issues': self.recent_issues[:20],
         }
 
 def get_benchmark_status(benchmark_id):
@@ -195,30 +203,80 @@ class BenchmarkThread(threading.Thread):
                     status.update('running', 20, f'Running {total_runs} total quest runs ({total_quests} quests with {total_agents} agents)')
                     
                     # Create a progress callback
-                    def progress_callback(quest_name, agent_id):
+                    pair_index = {}
+                    for idx, quest_path in enumerate(quest_files):
+                        quest_str = str(quest_path)
+                        for agent in benchmark_config.agents:
+                            key = f"{quest_str}::{agent.agent_id}"
+                            pair_index[key] = len(status.pairs)
+                            status.pairs.append({
+                                "quest": quest_str,
+                                "quest_name": quest_path.name,
+                                "agent_id": agent.agent_id,
+                                "model": agent.model,
+                                "status": "pending",
+                                "outcome": None,
+                                "error": None,
+                            })
+                    status.total_runs = total_runs
+
+                    def progress_callback(event):
                         nonlocal completed_runs
-                        completed_runs += 1
-                        # Calculate real percentage - ensure we never reach 100% until actually complete
-                        # Scale from 20% to 90% to leave room for initialization and results processing
-                        progress = min(89, 20 + int((completed_runs / total_runs) * 69))
-                        
-                        # Handle Path objects correctly by converting to string first
-                        quest_str = str(quest_name)
-                        
-                        # Extract filename - handle both Windows and Unix paths
-                        if '/' in quest_str:
-                            quest_filename = quest_str.split('/')[-1]
-                        elif '\\' in quest_str:
-                            quest_filename = quest_str.split('\\')[-1]
-                        else:
-                            quest_filename = quest_str
-                            
-                        # Log progress
-                        logger.info(f"Web benchmark progress: {completed_runs}/{total_runs} runs completed ({progress}%)")
-                        
-                        # Update status
-                        status.update('running', progress, 
-                                      f'Completed {completed_runs}/{total_runs} runs - {quest_filename} with {agent_id}')
+                        if not isinstance(event, dict):
+                            return
+
+                        quest_str = str(event.get("quest") or "")
+                        quest_name = event.get("quest_name") or (
+                            quest_str.split("/")[-1] if "/" in quest_str else quest_str
+                        )
+                        agent_id = str(event.get("agent_id") or "unknown")
+                        key = f"{quest_str}::{agent_id}"
+                        idx = pair_index.get(key)
+                        if idx is None:
+                            return
+
+                        if event.get("event") == "pair_start":
+                            status.pairs[idx]["status"] = "running"
+                            status.update(
+                                "running",
+                                max(status.progress, 20),
+                                f"Running {quest_name} with {agent_id}",
+                            )
+                            return
+
+                        if event.get("event") == "pair_done":
+                            completed_runs += 1
+                            status.completed_runs = completed_runs
+                            outcome = event.get("outcome")
+                            err = event.get("error")
+                            status.pairs[idx]["status"] = "complete"
+                            status.pairs[idx]["outcome"] = outcome
+                            status.pairs[idx]["error"] = err
+
+                            if outcome in {"TIMEOUT", "ERROR", "FAILURE"}:
+                                status.recent_issues.insert(
+                                    0,
+                                    {
+                                        "quest_name": quest_name,
+                                        "agent_id": agent_id,
+                                        "outcome": outcome,
+                                        "error": err,
+                                    },
+                                )
+                                status.recent_issues = status.recent_issues[:20]
+
+                            progress = min(89, 20 + int((completed_runs / total_runs) * 69))
+                            logger.info(
+                                "Web benchmark progress: %s/%s runs completed (%s%%)",
+                                completed_runs,
+                                total_runs,
+                                progress,
+                            )
+                            status.update(
+                                "running",
+                                progress,
+                                f"Completed {completed_runs}/{total_runs} runs - {quest_name} with {agent_id}",
+                            )
                     
                     # Override the renderer to use our progress tracking
                     benchmark_config.renderer = "null"  # Use minimal renderer since we track progress here

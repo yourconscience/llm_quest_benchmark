@@ -1,10 +1,12 @@
 """Quest runner and monitor blueprint"""
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, current_app
 from pathlib import Path
+from datetime import datetime
 import glob
 import json
 import logging
 import os
+import threading
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -21,7 +23,7 @@ from llm_quest_benchmark.constants import (
 
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.utils.text_processor import clean_qm_text, wrap_text
-from ..models.database import db, Run, Step
+from ..models.database import db, Run, Step, RunEvent
 from ..utils.errors import (
     handle_errors,
     validate_quest_file,
@@ -36,6 +38,8 @@ from llm_quest_benchmark.schemas.config import AgentConfig
 os.environ['NODE_OPTIONS'] = '--openssl-legacy-provider'
 
 bp = Blueprint('monitor', __name__, url_prefix='/monitor')
+active_run_jobs: Dict[int, Dict[str, Any]] = {}
+active_run_lock = threading.Lock()
 
 def get_available_quests():
     """Get list of available quests using the registry"""
@@ -77,6 +81,158 @@ def _resolve_quest_path(quest_value: str) -> str:
         raise QuestNotFoundError(f"Quest path not found: {quest_value}", status_code=404)
     return str(resolved[0])
 
+
+def _parse_run_payload(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Parse and validate run payload from request body."""
+    quest_name = data.get('quest')
+    quest_path = _resolve_quest_path(quest_name)
+    model = data.get('model', DEFAULT_MODEL)
+    timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
+    template = data.get('template', DEFAULT_TEMPLATE)
+    temperature = float(data.get('temperature', DEFAULT_TEMPERATURE))
+    validate_model(model)
+    return {
+        "quest_name": quest_name,
+        "quest_path": quest_path,
+        "model": model,
+        "timeout": timeout,
+        "template": template,
+        "temperature": temperature,
+    }
+
+
+def _build_agent_and_run(payload: Dict[str, Any], create_agent_instance: bool = True) -> Dict[str, Any]:
+    """Create AgentConfig/Run and optionally instantiate an agent."""
+    agent_config = AgentConfig(
+        model=payload["model"],
+        system_template=SYSTEM_ROLE_TEMPLATE,
+        action_template=payload["template"] + '.jinja',
+        temperature=payload["temperature"],
+        skip_single=True,
+        debug=True
+    )
+
+    run = Run(
+        quest_file=payload["quest_path"],
+        quest_name=Path(payload["quest_path"]).stem,
+        agent_id=agent_config.agent_id,
+        agent_config=agent_config.__dict__,
+    )
+    db.session.add(run)
+    db.session.commit()
+
+    result: Dict[str, Any] = {"agent_config": agent_config, "run": run}
+    if create_agent_instance:
+        agent = create_agent(
+            model=payload["model"],
+            system_template=SYSTEM_ROLE_TEMPLATE,
+            action_template=payload["template"] + '.jinja',
+            temperature=payload["temperature"],
+            skip_single=True,
+            debug=True
+        )
+        result["agent"] = agent
+    return result
+
+
+def _update_active_run(run_id: int, **kwargs: Any) -> None:
+    with active_run_lock:
+        state = active_run_jobs.setdefault(run_id, {})
+        state.update(kwargs)
+        state["updated_at"] = datetime.utcnow().isoformat()
+
+
+def _get_active_run(run_id: int) -> Dict[str, Any]:
+    with active_run_lock:
+        return dict(active_run_jobs.get(run_id, {}))
+
+
+def _run_quest_background(
+    app,
+    run_id: int,
+    quest_path: str,
+    model: str,
+    template: str,
+    temperature: float,
+    timeout: int,
+) -> None:
+    """Background worker that executes quest run and updates job state."""
+    with app.app_context():
+        run = Run.query.get(run_id)
+        if not run:
+            _update_active_run(run_id, status="error", error="Run not found")
+            return
+
+        _update_active_run(
+            run_id,
+            status="running",
+            current_task=f"Running {Path(quest_path).name} with {model}",
+            step_count=0,
+            event_count=0,
+        )
+
+        def event_sink(event_name: str, payload: Dict[str, Any]) -> None:
+            if event_name == "step":
+                _update_active_run(
+                    run_id,
+                    step_count=int(payload.get("step") or 0),
+                    event_count=int(payload.get("event_id") or 0),
+                    current_task=f"Step {payload.get('step')} at location {payload.get('location_id')}",
+                )
+            elif event_name == "timeout":
+                _update_active_run(run_id, current_task="Timed out")
+            elif event_name == "outcome":
+                _update_active_run(
+                    run_id,
+                    current_task=f"Finished with {payload.get('outcome')}",
+                    outcome=payload.get("outcome"),
+                    event_count=int(payload.get("event_id") or 0),
+                )
+
+        try:
+            agent = create_agent(
+                model=model,
+                system_template=SYSTEM_ROLE_TEMPLATE,
+                action_template=template + '.jinja',
+                temperature=temperature,
+                skip_single=True,
+                debug=True
+            )
+            run_quest_with_db_logging(
+                quest_path=quest_path,
+                agent=agent,
+                run_record=run,
+                timeout=timeout,
+                debug=True,
+                request=None,
+                event_sink=event_sink,
+            )
+            db.session.refresh(run)
+            _update_active_run(
+                run_id,
+                status="complete",
+                outcome=run.outcome,
+                current_task="Completed",
+            )
+        except Exception as e:
+            logger.error("Background run failed for %s: %s", run_id, e, exc_info=True)
+            run.end_time = datetime.utcnow()
+            run.outcome = "ERROR"
+            db.session.add(
+                RunEvent(
+                    run_id=run_id,
+                    event_type="error",
+                    payload={"message": str(e)},
+                )
+            )
+            db.session.commit()
+            _update_active_run(
+                run_id,
+                status="error",
+                error=str(e),
+                current_task="Error",
+            )
+
 @bp.route('')
 @handle_errors
 def index():
@@ -101,73 +257,106 @@ def index():
 @bp.route('/run', methods=['POST'])
 @handle_errors
 def run_quest():
-    """Create and start a new quest run"""
+    """Create and run a quest synchronously (legacy mode)."""
     logger.debug("Received quest run request")
     if not request.is_json:
         logger.error("Request is not JSON")
         return jsonify({'success': False, 'error': 'Request must be JSON'}), 400
 
     data = request.get_json()
-    logger.debug(f"Request data: {data}")
-
-    # Extract quest configuration
-    quest_name = data.get('quest')
-    quest_path = _resolve_quest_path(quest_name)
-    model = data.get('model', DEFAULT_MODEL)
-    timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
-    template = data.get('template', DEFAULT_TEMPLATE)
-    temperature = float(data.get('temperature', DEFAULT_TEMPERATURE))
-
-    # Validate inputs
-    validate_model(model)
-
-    logger.debug(f"Quest path: {quest_path}")
-
-    # Create agent config
-    agent_config = AgentConfig(
-        model=model,
-        system_template=SYSTEM_ROLE_TEMPLATE,
-        action_template=template + '.jinja',
-        temperature=temperature,
-        skip_single=True,
-        debug=True
-    )
-
-    # Get agent_id from agent_config
-    agent_id = agent_config.agent_id
-
-    # Create run record with agent_config
-    run = Run(
-        quest_file=quest_path,
-        quest_name=Path(quest_path).stem,
-        agent_id=agent_id,
-        agent_config=agent_config.__dict__
-    )
-    db.session.add(run)
-    db.session.commit()
+    payload = _parse_run_payload(data)
+    created = _build_agent_and_run(payload)
+    run = created["run"]
+    agent = created["agent"]
     logger.debug(f"Run record created with ID: {run.id}")
-
-    # Create agent
-    agent = create_agent(
-        model=model,
-        system_template=SYSTEM_ROLE_TEMPLATE,
-        action_template=template + '.jinja',
-        temperature=temperature,
-        skip_single=True,
-        debug=True
-    )
 
     # Run quest and log to database
     result = run_quest_with_db_logging(
-        quest_path=quest_path,
+        quest_path=payload["quest_path"],
         agent=agent,
         run_record=run,
-        timeout=timeout,
+        timeout=payload["timeout"],
         debug=True,
         request=request
     )
 
     return jsonify(result)
+
+
+@bp.route('/run_async', methods=['POST'])
+@handle_errors
+def run_quest_async():
+    """Create a run and execute it in a background thread for live polling."""
+    logger.debug("Received async quest run request")
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'Request must be JSON'}), 400
+
+    payload = _parse_run_payload(request.get_json())
+    created = _build_agent_and_run(payload, create_agent_instance=False)
+    run = created["run"]
+
+    _update_active_run(
+        run.id,
+        status="queued",
+        current_task="Queued",
+        step_count=0,
+        event_count=0,
+    )
+
+    app = current_app._get_current_object()
+    thread = threading.Thread(
+        target=_run_quest_background,
+        kwargs={
+            "app": app,
+            "run_id": run.id,
+            "quest_path": payload["quest_path"],
+            "model": payload["model"],
+            "template": payload["template"],
+            "temperature": payload["temperature"],
+            "timeout": payload["timeout"],
+        },
+        daemon=True,
+    )
+    thread.start()
+
+    return jsonify({
+        "success": True,
+        "run_id": run.id,
+        "status": "queued",
+        "status_url": f"/monitor/run_status/{run.id}",
+        "events_url": f"/monitor/runs/{run.id}/events",
+    })
+
+
+@bp.route('/run_status/<int:run_id>')
+@handle_errors
+def run_status(run_id: int):
+    """Get async run status and current counters."""
+    run = Run.query.get_or_404(run_id)
+    active = _get_active_run(run_id)
+    latest_event = db.session.query(db.func.max(RunEvent.id)).filter_by(run_id=run_id).scalar() or 0
+    step_count = Step.query.filter_by(run_id=run_id).count()
+
+    status = active.get("status")
+    if not status:
+        if run.end_time:
+            status = "complete" if run.outcome != "ERROR" else "error"
+        else:
+            status = "running"
+    progress = 100 if status in {"complete", "error"} else 5
+
+    return jsonify({
+        "success": True,
+        "run_id": run_id,
+        "status": status,
+        "progress": progress,
+        "outcome": run.outcome,
+        "step_count": step_count,
+        "event_count": latest_event,
+        "current_task": active.get("current_task", "Running"),
+        "error": active.get("error"),
+        "updated_at": active.get("updated_at"),
+    })
 
 @bp.route('/init', methods=['POST'])
 @handle_errors
@@ -178,62 +367,18 @@ def init_quest_route():
         logger.error("Request is not JSON")
         return jsonify({'success': False, 'error': 'Request must be JSON'}), 400
 
-    data = request.get_json()
-    logger.debug(f"Request data: {data}")
-
-    # Extract quest configuration
-    quest_name = data.get('quest')
-    quest_path = _resolve_quest_path(quest_name)
-    model = data.get('model', DEFAULT_MODEL)
-    timeout = int(data.get('timeout', DEFAULT_QUEST_TIMEOUT))
-    template = data.get('template', DEFAULT_TEMPLATE)
-    temperature = float(data.get('temperature', DEFAULT_TEMPERATURE))
-
-    # Validate inputs
-    validate_model(model)
-
-    logger.debug(f"Quest path: {quest_path}")
-
-    # Create agent config
-    agent_config = AgentConfig(
-        model=model,
-        system_template=SYSTEM_ROLE_TEMPLATE,
-        action_template=template + '.jinja',
-        temperature=temperature,
-        skip_single=True,
-        debug=True
-    )
-
-    # Get agent_id from agent_config
-    agent_id = agent_config.agent_id
-
-    # Create run record with agent_config
-    run = Run(
-        quest_file=quest_path,
-        quest_name=Path(quest_path).stem,
-        agent_id=agent_id,
-        agent_config=agent_config.__dict__
-    )
-    db.session.add(run)
-    db.session.commit()
+    payload = _parse_run_payload(request.get_json())
+    created = _build_agent_and_run(payload)
+    run = created["run"]
+    agent = created["agent"]
     logger.debug(f"Run record created with ID: {run.id}")
-
-    # Create agent
-    agent = create_agent(
-        model=model,
-        system_template=SYSTEM_ROLE_TEMPLATE,
-        action_template=template + '.jinja',
-        temperature=temperature,
-        skip_single=True,
-        debug=True
-    )
 
     # Run quest and log to database
     result = run_quest_with_db_logging(
-        quest_path=quest_path,
+        quest_path=payload["quest_path"],
         agent=agent,
         run_record=run,
-        timeout=timeout,
+        timeout=payload["timeout"],
         debug=True,
         request=request
     )
@@ -313,6 +458,45 @@ def get_run(run_id):
         'run': run_dict,
         'steps': step_dicts,
         'outcome': run.outcome
+    })
+
+
+@bp.route('/runs/<int:run_id>/events')
+@handle_errors
+def get_run_events(run_id: int):
+    """Return structured run events for live monitor polling."""
+    Run.query.get_or_404(run_id)
+    after_id = int(request.args.get("after_id", 0))
+    limit = min(int(request.args.get("limit", 200)), 1000)
+    compact = str(request.args.get("compact", "0")).lower() in {"1", "true", "yes"}
+
+    events = (
+        RunEvent.query
+        .filter(RunEvent.run_id == run_id, RunEvent.id > after_id)
+        .order_by(RunEvent.id.asc())
+        .limit(limit)
+        .all()
+    )
+    event_rows = [e.to_dict() for e in events]
+    if compact:
+        for row in event_rows:
+            payload = row.get("payload") or {}
+            if isinstance(payload, dict):
+                obs = payload.get("observation")
+                if isinstance(obs, str) and len(obs) > 320:
+                    payload["observation"] = obs[:320] + "..."
+                llm_decision = payload.get("llm_decision")
+                if isinstance(llm_decision, dict):
+                    for k in ("reasoning", "analysis"):
+                        val = llm_decision.get(k)
+                        if isinstance(val, str) and len(val) > 200:
+                            llm_decision[k] = val[:200] + "..."
+
+    return jsonify({
+        "success": True,
+        "run_id": run_id,
+        "events": event_rows,
+        "last_event_id": events[-1].id if events else after_id,
     })
 
 @bp.route('/runs/<int:run_id>/readable')

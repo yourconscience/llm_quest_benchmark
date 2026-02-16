@@ -27,6 +27,19 @@ logging.getLogger('llm_quest_benchmark.executors.ts_bridge').setLevel(logging.WA
 logger = logging.getLogger(__name__)
 
 
+def _emit_progress(progress_callback, payload: Dict[str, Any]) -> None:
+    """Emit progress payload while preserving legacy callback signature."""
+    if not progress_callback:
+        return
+    try:
+        progress_callback(payload)
+    except TypeError:
+        quest = payload.get("quest")
+        agent_id = payload.get("agent_id")
+        if quest and agent_id:
+            progress_callback(quest, agent_id)
+
+
 def get_quest_files(quest_paths: List[str], max_quests: Optional[int] = None) -> List[Path]:
     """Get list of quest files from paths (files or directories or glob patterns)
 
@@ -162,12 +175,28 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
     # Collect results for each agent x quest combination.
     results = []
 
+    total_runs = len(config.agents) * len(quest_files)
+    run_index = 0
+
     for agent_config in config.agents:
         for quest_file in quest_files:
+            run_index += 1
             quest_str = str(quest_file)
             quest_name = Path(quest_file).name
             
             logger.info(f"Agent {agent_config.agent_id} running quest {quest_name}")
+            _emit_progress(
+                progress_callback,
+                {
+                    "event": "pair_start",
+                    "run_index": run_index,
+                    "total_runs": total_runs,
+                    "quest": quest_str,
+                    "quest_name": quest_name,
+                    "agent_id": agent_config.agent_id,
+                    "model": agent_config.model,
+                },
+            )
             
             try:
                 # Set the benchmark_id in agent_config for database tracking
@@ -191,10 +220,9 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
                     agent_config=agent_config
                 )
                 
-                # Call progress callback if provided
-                if progress_callback:
-                    progress_callback(quest_str, agent_config.agent_id)
-                    
+                outcome_name = outcome.name if outcome else QuestOutcome.TIMEOUT.name
+                timeout_error = None if outcome else f"Timed out after {config.quest_timeout} seconds"
+
                 # Create result entry
                 result = {
                     'quest': quest_str,
@@ -202,10 +230,24 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
                     'temperature': agent_config.temperature,
                     'template': agent_config.action_template,
                     'agent_id': agent_config.agent_id,
-                    'outcome': outcome.name if outcome else QuestOutcome.TIMEOUT.name,
+                    'outcome': outcome_name,
                     'reward': getattr(outcome, 'reward', 0.0),
-                    'error': None if outcome else f"Timed out after {config.quest_timeout} seconds"
+                    'error': timeout_error
                 }
+                _emit_progress(
+                    progress_callback,
+                    {
+                        "event": "pair_done",
+                        "run_index": run_index,
+                        "total_runs": total_runs,
+                        "quest": quest_str,
+                        "quest_name": quest_name,
+                        "agent_id": agent_config.agent_id,
+                        "model": agent_config.model,
+                        "outcome": outcome_name,
+                        "error": timeout_error,
+                    },
+                )
                 
             except Exception as e:
                 # Log the error but continue with other quests
@@ -222,6 +264,20 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
                     'reward': 0.0,
                     'error': str(e)
                 }
+                _emit_progress(
+                    progress_callback,
+                    {
+                        "event": "pair_done",
+                        "run_index": run_index,
+                        "total_runs": total_runs,
+                        "quest": quest_str,
+                        "quest_name": quest_name,
+                        "agent_id": agent_config.agent_id,
+                        "model": agent_config.model,
+                        "outcome": QuestOutcome.ERROR.name,
+                        "error": str(e),
+                    },
+                )
             results.append(result)
 
     artifact_dir = _write_benchmark_artifacts(config, results)
