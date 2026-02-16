@@ -31,21 +31,21 @@ def test_bridge_invalid_quest():
 
 def test_bridge_game_flow(monkeypatch):
     """Test complete game flow"""
-    def mock_read_response(*args, **kwargs):
-        return '''{
+    def mock_read_response_json(*args, **kwargs):
+        return {
             "state": {
                 "text": "Test observation",
-                "choices": [{"jumpId": "1", "text": "Choice 1", "active": true}],
+                "choices": [{"jumpId": "1", "text": "Choice 1", "active": True}],
                 "gameState": "running"
             },
             "saving": {
                 "locationId": 1
             }
-        }'''
+        }
 
     bridge = QMBridge(str(DEFAULT_QUEST))
     try:
-        monkeypatch.setattr(bridge, '_read_response', mock_read_response)
+        monkeypatch.setattr(bridge, '_read_response_json', mock_read_response_json)
 
         # Test start game
         state = bridge.start_game()
@@ -74,12 +74,12 @@ def test_bridge_game_flow(monkeypatch):
 
 def test_bridge_error_handling(monkeypatch):
     """Test error handling"""
-    def mock_read_response(*args, **kwargs):
-        return 'invalid json'
+    def mock_read_response_json(*args, **kwargs):
+        raise RuntimeError("Invalid JSON response from TypeScript bridge")
 
     bridge = QMBridge(str(DEFAULT_QUEST))
     try:
-        monkeypatch.setattr(bridge, '_read_response', mock_read_response)
+        monkeypatch.setattr(bridge, '_read_response_json', mock_read_response_json)
         with pytest.raises(RuntimeError, match="Invalid response format|Invalid JSON response"):
             bridge.start_game()
     finally:
@@ -87,15 +87,15 @@ def test_bridge_error_handling(monkeypatch):
 
 def test_bridge_missing_state(monkeypatch):
     """Test missing state handling"""
-    def mock_read_response(*args, **kwargs):
-        return '''{
+    def mock_read_response_json(*args, **kwargs):
+        return {
             "state": {},
             "saving": {}
-        }'''
+        }
 
     bridge = QMBridge(str(DEFAULT_QUEST))
     try:
-        monkeypatch.setattr(bridge, '_read_response', mock_read_response)
+        monkeypatch.setattr(bridge, '_read_response_json', mock_read_response_json)
         with pytest.raises(RuntimeError):
             bridge.start_game()
     finally:
@@ -117,3 +117,16 @@ def test_bridge_missing_submodule_dependency(monkeypatch):
     )
     with pytest.raises(RuntimeError, match="git submodule update --init --recursive"):
         QMBridge(str(DEFAULT_QUEST))
+
+
+def test_bridge_parse_response_json_noise():
+    """Bridge parser should ignore non-JSON protocol noise lines."""
+    bridge = QMBridge(str(DEFAULT_QUEST))
+    try:
+        assert bridge._parse_response_json("Performing autojump...") is None
+        parsed = bridge._parse_response_json('{"state":{"text":"ok","choices":[],"gameState":"running"},"saving":{"locationId":1}}')
+        assert isinstance(parsed, dict)
+        assert "state" in parsed
+        assert "saving" in parsed
+    finally:
+        bridge.close()
