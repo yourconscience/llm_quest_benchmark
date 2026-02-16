@@ -24,7 +24,7 @@ Observe and analyze LLM agents decision-making through Space Rangers text advent
 - ✅ Added CLI run-summary analyzer for faster prompt/config iteration loops
 - ✅ Added matrix benchmark configs + markdown benchmark report command
 - ✅ Existing Flask workflow remains the primary web interface
-- ✅ Added `doc-gardening` skill + helper script for stale docs scan workflow
+- ✅ Added `/doc-gardening` workflow + helper script for stale docs scan workflow
 
 ## Setup
 
@@ -153,7 +153,6 @@ Then open [http://localhost:8000](http://localhost:8000).
 - `results/` - Run artifacts and summaries
 - `scripts/` - Operational/debug helpers (database, templates, Flask app inspection)
 - `docs/` - Architecture/runbook/deployment/plans + `docs/experiments/` iteration logs
-- `skills/doc-gardening/` - Doc drift scanner + skill workflow
 - `space-rangers-quest/` - TypeScript quest engine submodule
 
 ## License

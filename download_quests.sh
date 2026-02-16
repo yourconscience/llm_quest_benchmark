@@ -94,6 +94,7 @@ copy_collection_qm_files() {
     cp -f "${qm_file}" "${target_file}"
     copied=$((copied + 1))
   done < <(find "${source_dir}" -type f \( -name '*.qm' -o -name '*.qmm' \) -print0 | sort -z)
+  done < <(find "${source_dir}" -type f \( -name '*.qm' -o -name '*.qmm' \) -print0 | sort -z)
 
   printf '%s' "${copied}"
 }

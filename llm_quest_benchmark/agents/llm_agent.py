@@ -457,7 +457,6 @@ class LLMAgent(QuestPlayer):
         if len(self._decision_trace) > 30:
             self._decision_trace = self._decision_trace[-30:]
 
-    @staticmethod
     def _normalize_usage(usage: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         usage = usage or {}
         prompt_tokens = int(usage.get("prompt_tokens") or 0)
