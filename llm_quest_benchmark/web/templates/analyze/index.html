@@ -440,6 +440,20 @@
         rows.forEach((row) => {
             const tr = document.createElement('tr');
             const outcomeBadgeClass = row.outcome === 'TIMEOUT' ? 'bg-warning text-dark' : 'bg-danger';
+            const detailsAction = row.details_url
+                ? `<a class="btn btn-outline-primary" href="${row.details_url}">
+                        <i class="fas fa-eye"></i>
+                   </a>`
+                : `<button type="button" class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-eye"></i>
+                   </button>`;
+            const readableAction = row.readable_url
+                ? `<button type="button" class="btn btn-outline-secondary view-readable" data-run-id="${row.run_id}">
+                        <i class="fas fa-file-alt"></i>
+                   </button>`
+                : `<button type="button" class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-file-alt"></i>
+                   </button>`;
             tr.innerHTML = `
                 <td>${row.run_id}</td>
                 <td>${row.quest_name || '-'}</td>
@@ -451,12 +465,8 @@
                 <td class="small">${row.last_choice || '<span class="text-muted">n/a</span>'}</td>
                 <td>
                     <div class="btn-group btn-group-sm">
-                        <a class="btn btn-outline-primary" href="${row.details_url}">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <button type="button" class="btn btn-outline-secondary view-readable" data-run-id="${row.run_id}">
-                            <i class="fas fa-file-alt"></i>
-                        </button>
+                        ${detailsAction}
+                        ${readableAction}
                     </div>
                 </td>
             `;
