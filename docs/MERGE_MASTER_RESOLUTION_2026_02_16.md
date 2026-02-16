@@ -57,5 +57,5 @@ Result: all tests passed (`33 passed` total across these suites).
 ## Follow-up Applied After Merge
 
 - Migrated `doc-gardening` to global skill location: `~/.codex/skills/doc-gardening`.
-- Removed repo-local skill implementation under `skills/doc-gardening/`.
+- Removed repo-local skill implementation under the former `skills` folder.
 - Updated repo wrapper and docs to call global skill (`/doc-gardening`, `./scripts/doc_gardening.sh`).
