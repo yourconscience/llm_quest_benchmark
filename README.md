@@ -46,7 +46,7 @@ cp .env.template .env
 docker-compose up -d
 ```
 
-4. Open the app at [http://localhost:8000](http://localhost:8000).
+4. Open the app at [http://localhost:8011](http://localhost:8011).
 
 ### Option 2: Manual Installation
 
@@ -125,7 +125,7 @@ uv run llm-quest analyze-run --run-summary results/llm_gpt-5-mini/Diehard/run_12
 ```bash
 uv run llm-quest server
 ```
-Then open [http://localhost:8000](http://localhost:8000).
+Then open [http://localhost:8011](http://localhost:8011).
 
 ## Quest Layout
 

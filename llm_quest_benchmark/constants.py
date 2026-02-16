@@ -88,7 +88,7 @@ INFINITE_TIMEOUT = 10**9  # Infinite timeout (used for interactive play)
 
 # Web server
 WEB_SERVER_HOST = "0.0.0.0"
-WEB_SERVER_PORT = 8000
+WEB_SERVER_PORT = 8011
 
 # Quest state detection patterns
 # Pattern to detect credit rewards in text (e.g., "10000 cr")

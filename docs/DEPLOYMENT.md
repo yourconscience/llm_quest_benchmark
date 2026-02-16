@@ -9,7 +9,7 @@ This keeps your Flask app running where it already runs, while Cloudflare provid
 ### Steps
 1. Run Flask in production mode on local host:
 ```bash
-uv run llm-quest server --host 127.0.0.1 --port 8000 --production --workers 4
+uv run llm-quest server --host 127.0.0.1 --port 8011 --production --workers 4
 ```
 2. Install and authenticate `cloudflared`.
 3. Create a named tunnel:
@@ -27,7 +27,7 @@ credentials-file: /Users/<user>/.cloudflared/<TUNNEL_ID>.json
 
 ingress:
   - hostname: quest.yourdomain.com
-    service: http://127.0.0.1:8000
+    service: http://127.0.0.1:8011
   - service: http_status:404
 ```
 6. Run tunnel:
