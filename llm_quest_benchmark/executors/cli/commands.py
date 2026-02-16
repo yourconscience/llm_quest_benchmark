@@ -21,7 +21,11 @@ from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.core.analyzer import analyze_quest_run, analyze_benchmark
 from llm_quest_benchmark.core.benchmark_report import render_benchmark_report
 from llm_quest_benchmark.environments.state import QuestOutcome
-from llm_quest_benchmark.executors.benchmark import run_benchmark, print_summary
+from llm_quest_benchmark.executors.benchmark import (
+    generate_benchmark_id,
+    print_summary,
+    run_benchmark,
+)
 from llm_quest_benchmark.renderers.terminal import RichRenderer
 from llm_quest_benchmark.constants import (
     MODEL_CHOICES,
@@ -880,7 +884,7 @@ def benchmark(
 
         # Set benchmark_id if not in config
         if not benchmark_config.benchmark_id:
-            benchmark_config.benchmark_id = f"CLI_benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            benchmark_config.benchmark_id = generate_benchmark_id("CLI_benchmark")
             
         # Run benchmark
         results = run_benchmark(benchmark_config)

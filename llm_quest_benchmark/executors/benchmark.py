@@ -2,6 +2,7 @@
 import logging
 import json
 import sqlite3
+import uuid
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any, Optional
@@ -25,6 +26,13 @@ logging.getLogger('llm_quest_benchmark').setLevel(logging.WARNING)
 logging.getLogger('llm_quest_benchmark.executors.ts_bridge').setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
+
+
+def generate_benchmark_id(prefix: str = "benchmark") -> str:
+    """Generate a unique benchmark id safe for parallel starts."""
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    suffix = uuid.uuid4().hex[:8]
+    return f"{prefix}_{stamp}_{suffix}"
 
 
 def _emit_progress(progress_callback, payload: Dict[str, Any]) -> None:
@@ -157,7 +165,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
     """
     # Generate a benchmark ID if not provided
     if not config.benchmark_id:
-        config.benchmark_id = f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        config.benchmark_id = generate_benchmark_id("benchmark")
 
     if config.max_workers and config.max_workers > 1:
         logger.info("max_workers=%s is currently accepted but benchmark runs sequentially", config.max_workers)

@@ -9,6 +9,7 @@ class LLMResponse:
     action: int  # The chosen action number (1-based)
     analysis: Optional[str] = None  # Optional analysis of the choice
     reasoning: Optional[str] = None  # Optional explanation for the choice
+    subgoal: Optional[str] = None  # Optional short-term objective for next turns
     is_default: bool = False  # Whether this is a default value due to parsing error
     parse_mode: Optional[str] = None  # How the output was parsed (json/number/default/etc)
     prompt_tokens: Optional[int] = None

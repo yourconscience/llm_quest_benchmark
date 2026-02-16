@@ -151,6 +151,7 @@ def parse_llm_response(response: str,
                         action=action,
                         reasoning=response_json.get('reasoning'),
                         analysis=response_json.get('analysis'),
+                        subgoal=response_json.get('subgoal'),
                         is_default=False,
                         parse_mode=json_parse_mode or "json",
                     )
@@ -297,13 +298,32 @@ class LLMAgent(QuestPlayer):
                 blocks.append("Recent context from previous steps:\n" + "\n\n".join(snippets))
 
         if self._decision_history:
+            recent_subgoals = []
+            for item in self._decision_history[-self._decision_window:]:
+                subgoal = (item.get("subgoal") or "").strip()
+                if not subgoal:
+                    continue
+                if recent_subgoals and recent_subgoals[-1] == subgoal:
+                    continue
+                recent_subgoals.append(subgoal)
+            if recent_subgoals:
+                lines = [
+                    f"[Subgoal {idx}] {sg}"
+                    for idx, sg in enumerate(recent_subgoals, start=1)
+                ]
+                blocks.append(
+                    "Subgoal memory (recent short-term objectives):\n" + "\n".join(lines)
+                )
+
             recent_decisions = self._decision_history[-self._decision_window:]
             decision_lines = []
             for idx, item in enumerate(recent_decisions, start=1):
                 choice = item.get("choice", "")
                 parse_mode = item.get("parse_mode", "unknown")
+                subgoal = item.get("subgoal")
+                subgoal_suffix = f" | subgoal: {subgoal}" if subgoal else ""
                 decision_lines.append(
-                    f"[Decision {idx}] action {item.get('action')}: {choice} (parse={parse_mode})"
+                    f"[Decision {idx}] action {item.get('action')}: {choice} (parse={parse_mode}){subgoal_suffix}"
                 )
             blocks.append("Recent selected actions:\n" + "\n".join(decision_lines))
 
@@ -391,6 +411,7 @@ class LLMAgent(QuestPlayer):
                 "action": action,
                 "choice": selected_text,
                 "parse_mode": response.parse_mode or "unknown",
+                "subgoal": (response.subgoal or "").strip()[:160] or None,
             }
         )
         if len(self._decision_history) > 40:
