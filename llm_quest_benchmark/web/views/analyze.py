@@ -207,6 +207,7 @@ def failure_explorer():
             "max_repeat_streak": _max_repeat_streak(location_ids),
             "last_decision_step": last_decision.step,
             "last_choice": last_choice_text,
+            "last_parse_mode": llm_payload.get("parse_mode"),
             "last_reasoning": llm_payload.get("reasoning"),
             "last_analysis": llm_payload.get("analysis"),
             "last_observation": (last_decision.observation or "")[:220],

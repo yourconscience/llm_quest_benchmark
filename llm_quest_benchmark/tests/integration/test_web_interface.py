@@ -433,7 +433,7 @@ def test_failure_explorer_endpoint(client, app):
                 observation='obs1',
                 choices=[{'id': '1', 'text': 'A'}, {'id': '2', 'text': 'B'}],
                 action='2',
-                llm_response={'reasoning': 'try B', 'is_default': False},
+                llm_response={'reasoning': 'try B', 'is_default': False, 'parse_mode': 'json_direct'},
             ),
             Step(
                 run_id=run.id,
@@ -442,7 +442,7 @@ def test_failure_explorer_endpoint(client, app):
                 observation='obs2',
                 choices=[{'id': '1', 'text': 'A2'}, {'id': '2', 'text': 'B2'}],
                 action='1',
-                llm_response={'reasoning': 'fallback', 'is_default': True},
+                llm_response={'reasoning': 'fallback', 'is_default': True, 'parse_mode': 'default_first'},
             ),
         ]
         db.session.add_all(steps)
@@ -457,3 +457,4 @@ def test_failure_explorer_endpoint(client, app):
         assert row['quest_name'] == 'Rush'
         assert row['max_repeat_streak'] >= 2
         assert row['default_rate'] >= 0.5
+        assert row['last_parse_mode'] == 'default_first'

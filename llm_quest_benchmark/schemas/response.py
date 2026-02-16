@@ -10,6 +10,7 @@ class LLMResponse:
     analysis: Optional[str] = None  # Optional analysis of the choice
     reasoning: Optional[str] = None  # Optional explanation for the choice
     is_default: bool = False  # Whether this is a default value due to parsing error
+    parse_mode: Optional[str] = None  # How the output was parsed (json/number/default/etc)
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None
     total_tokens: Optional[int] = None

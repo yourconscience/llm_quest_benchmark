@@ -208,6 +208,7 @@
         const reasoning = payload.llm_decision?.reasoning || null;
         const analysis = payload.llm_decision?.analysis || null;
         const isDefault = payload.llm_decision?.is_default ? ' default' : '';
+        const parseMode = payload.llm_decision?.parse_mode || 'unknown';
 
         appendDebugLog(`----- STEP ${event.step || '-'} -----`);
         appendDebugLog(payload.observation || '');
@@ -215,7 +216,7 @@
             appendDebugLog('Available choices:');
             Object.entries(choices).forEach(([idx, text]) => appendDebugLog(`${idx}. ${text}`));
         }
-        appendDebugLog(`Selected option ${selectedText}${isDefault}`);
+        appendDebugLog(`Selected option ${selectedText}${isDefault} [parse=${parseMode}]`);
         if (reasoning) appendDebugLog(`Reasoning: ${reasoning}`);
         if (analysis) appendDebugLog(`Analysis: ${analysis}`);
 
@@ -224,6 +225,7 @@
         addTimelineItem(
             `<div><strong>Step ${event.step || '-'}</strong> <span class="text-muted">(${event.location_id || '-'})</span></div>
              <div class="text-muted">choice: ${selectedText}</div>
+             <div class="text-muted">parse: ${parseMode}${isDefault ? ' (default)' : ''}</div>
              <div class="text-muted">tokens p/c/t: ${usageText}</div>`
         );
     }

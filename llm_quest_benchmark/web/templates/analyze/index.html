@@ -219,13 +219,14 @@
                                     <th>Outcome</th>
                                     <th>Defaults</th>
                                     <th>Repeat Streak</th>
+                                    <th>Parse Mode</th>
                                     <th>Last Choice</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="failureExplorerBody">
                                 <tr>
-                                    <td colspan="8" class="text-center py-3 text-muted">Loading failure explorer...</td>
+                                    <td colspan="9" class="text-center py-3 text-muted">Loading failure explorer...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -432,7 +433,7 @@
         const tbody = document.getElementById('failureExplorerBody');
         tbody.innerHTML = '';
         if (!rows || rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-3 text-muted">No failed runs available yet.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center py-3 text-muted">No failed runs available yet.</td></tr>';
             return;
         }
 
@@ -446,6 +447,7 @@
                 <td><span class="badge ${outcomeBadgeClass}">${row.outcome}</span></td>
                 <td>${(row.default_rate * 100).toFixed(0)}%</td>
                 <td>${row.max_repeat_streak}</td>
+                <td><code>${row.last_parse_mode || 'n/a'}</code></td>
                 <td class="small">${row.last_choice || '<span class="text-muted">n/a</span>'}</td>
                 <td>
                     <div class="btn-group btn-group-sm">

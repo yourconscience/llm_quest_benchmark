@@ -84,6 +84,7 @@ def run_quest_with_db_logging(
             "analysis": llm_payload.get("analysis"),
             "reasoning": llm_payload.get("reasoning"),
             "is_default": bool(llm_payload.get("is_default", False)),
+            "parse_mode": llm_payload.get("parse_mode"),
             "parse_fallback_used": bool(llm_payload.get("is_default", False)),
             "choice": selected_map,
         }
