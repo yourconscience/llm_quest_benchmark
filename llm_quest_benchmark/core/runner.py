@@ -3,6 +3,7 @@ from copy import deepcopy
 import json
 import logging
 import sqlite3
+import threading
 import warnings
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from datetime import datetime
@@ -32,6 +33,9 @@ def run_quest_with_timeout(
         debug: bool = False,
         callbacks: List[Callable[[str, Any], None]] = None) -> Optional[QuestOutcome]:
     """Run quest with timeout."""
+    logger: Optional[QuestLogger] = None
+    executor: Optional[ThreadPoolExecutor] = None
+    benchmark_id = getattr(agent_config, "benchmark_id", None) if agent_config else None
     try:
         # Get agent_id from agent itself if available, or from config
         agent_id = getattr(agent, 'agent_id', None)
@@ -51,80 +55,80 @@ def run_quest_with_timeout(
                              agent_config=agent_config)
 
         # Run quest with timeout
-        with ThreadPoolExecutor() as executor:
-            future = executor.submit(runner.run, quest_path)
-            try:
-                outcome = future.result(timeout=max(timeout, 1))
+        executor = ThreadPoolExecutor(max_workers=1)
+        future = executor.submit(runner.run, quest_path)
+        try:
+            outcome = future.result(timeout=max(timeout, 1))
 
-                # Update run with agent_id and config if provided
-                if agent_config and agent_id:
-                    try:
-                        # Ensure we have a connection for this thread
-                        logger._init_connection()
-
-                        # Store agent config as JSON for better storage/retrieval
-                        agent_config_json = json.dumps(agent_config.__dict__)
-                        
-                        # Also store benchmark_id if provided
-                        benchmark_id = getattr(agent_config, 'benchmark_id', None)
-                        
-                        if benchmark_id:
-                            # Include benchmark_id in the update if available
-                            logger._local.cursor.execute(
-                                '''
-                                UPDATE runs
-                                SET agent_id = ?, agent_config = ?, benchmark_id = ?
-                                WHERE id = ?
-                            ''', (agent_id, agent_config_json, benchmark_id, logger.current_run_id))
-                            logger.logger.info(f"Updated run {logger.current_run_id} with benchmark_id {benchmark_id}")
-                        else:
-                            logger._local.cursor.execute(
-                                '''
-                                UPDATE runs
-                                SET agent_id = ?, agent_config = ?
-                                WHERE id = ?
-                            ''', (agent_id, agent_config_json, logger.current_run_id))
-                        logger._local.conn.commit()
-                    except sqlite3.OperationalError as e:
-                        if "no such column: agent_id" in str(e):
-                            logger.logger.warning(
-                                "agent_id column not found in database, skipping update")
-                        else:
-                            raise
-
-                # The outcome is already recorded in the QuestRunner
-
-                return outcome
-            except FuturesTimeoutError:
-                # Give the runner a short grace window to finish naturally.
+            # Update run with agent_id and config if provided
+            if agent_config and agent_id:
                 try:
-                    outcome = future.result(timeout=5)
-                    logger.logger.warning(
-                        f"Quest exceeded timeout ({timeout}s) but finished during grace window")
-                    return outcome
-                except FuturesTimeoutError:
-                    future.cancel()
-                    logger.logger.warning(f"Quest timed out after {timeout} seconds")
+                    # Ensure we have a connection for this thread
+                    logger._init_connection()
 
-                    # Set outcome for timeout case
-                    logger.set_quest_outcome("TIMEOUT", 0.0)
+                    # Store agent config as JSON for better storage/retrieval
+                    agent_config_json = json.dumps(agent_config.__dict__)
 
-                    # Notify callbacks about the timeout
-                    if callbacks:
-                        for callback in callbacks:
-                            try:
-                                callback("timeout",
-                                         {"message": f"Quest timed out after {timeout} seconds"})
-                            except Exception as e:
-                                logger.logger.error(f"Error in timeout callback: {e}")
+                    # Also store benchmark_id if provided
+                    if benchmark_id:
+                        # Include benchmark_id in the update if available
+                        logger._local.cursor.execute(
+                            '''
+                            UPDATE runs
+                            SET agent_id = ?, agent_config = ?, benchmark_id = ?
+                            WHERE id = ?
+                        ''', (agent_id, agent_config_json, benchmark_id, logger.current_run_id))
+                        logger.logger.info(f"Updated run {logger.current_run_id} with benchmark_id {benchmark_id}")
+                    else:
+                        logger._local.cursor.execute(
+                            '''
+                            UPDATE runs
+                            SET agent_id = ?, agent_config = ?
+                            WHERE id = ?
+                        ''', (agent_id, agent_config_json, logger.current_run_id))
+                    logger._local.conn.commit()
+                except sqlite3.OperationalError as e:
+                    if "no such column: agent_id" in str(e):
+                        logger.logger.warning(
+                            "agent_id column not found in database, skipping update")
+                    else:
+                        raise
 
-                    return None
+            # The outcome is already recorded in the QuestRunner
+            return outcome
+        except FuturesTimeoutError:
+            future.cancel()
+            runner.request_stop("timeout")
+            logger.logger.warning(f"Quest timed out after {timeout} seconds")
+
+            # Persist timeout as authoritative outcome.
+            logger.set_quest_outcome(
+                QuestOutcome.TIMEOUT.name,
+                0.0,
+                final_state=runner.snapshot_state(),
+                benchmark_id=benchmark_id,
+            )
+
+            # Notify callbacks about the timeout
+            if callbacks:
+                for callback in callbacks:
+                    try:
+                        callback("timeout",
+                                 {"message": f"Quest timed out after {timeout} seconds"})
+                    except Exception as e:
+                        logger.logger.error(f"Error in timeout callback: {e}")
+
+            return QuestOutcome.TIMEOUT
 
     except Exception as e:
-        logger.logger.error(f"Error running quest: {e}")
         if logger:
-            logger.set_quest_outcome("ERROR", 0.0)
+            logger.logger.error(f"Error running quest: {e}")
+        if logger:
+            logger.set_quest_outcome("ERROR", 0.0, benchmark_id=benchmark_id)
         raise
+    finally:
+        if executor:
+            executor.shutdown(wait=False, cancel_futures=True)
 
 
 class QuestRunner:
@@ -143,6 +147,8 @@ class QuestRunner:
         self.step_count = 0
         self.env = None
         self.agent_config = agent_config
+        self._stop_requested = threading.Event()
+        self._stop_reason = ""
 
         # Set up central logging
         log_manager = LogManager()
@@ -156,6 +162,20 @@ class QuestRunner:
 
         if debug:
             self.logger.debug(f"QuestRunner initialized with agent: {str(agent)}")
+
+    def request_stop(self, reason: str = "requested") -> None:
+        """Signal runner loop to stop as soon as possible."""
+        self._stop_reason = reason
+        self._stop_requested.set()
+
+    def snapshot_state(self) -> Optional[Dict[str, Any]]:
+        """Best-effort snapshot of current environment state."""
+        if not self.env:
+            return None
+        state = self.env.state if getattr(self.env, "state", None) else None
+        if isinstance(state, dict):
+            return deepcopy(state)
+        return None
 
     def _notify_callbacks(self, event: str, data: Any = None) -> None:
         """Notify all callbacks of an event"""
@@ -193,6 +213,10 @@ class QuestRunner:
             observation = self.env.reset()
 
             while True:
+                if self._stop_requested.is_set():
+                    self.logger.warning("Quest runner stop requested: %s", self._stop_reason or "unknown")
+                    return QuestOutcome.TIMEOUT
+
                 self.step_count += 1
                 self._notify_callbacks("progress", {
                     "step": self.step_count,
@@ -239,6 +263,10 @@ class QuestRunner:
                     self.logger.error(f"Defaulting to action 1")
                     action = 1
 
+                if self._stop_requested.is_set():
+                    self.logger.info("Quest runner stopped before step after %s", self._stop_reason or "request")
+                    return QuestOutcome.TIMEOUT
+
                 try:
                     self.logger.debug(f"Taking step with final action: {action}")
                     observation, done, success, info = self.env.step(action)
@@ -281,6 +309,9 @@ class QuestRunner:
                         return outcome
 
                 except Exception as e:
+                    if self._stop_requested.is_set():
+                        self.logger.info("Quest runner stopped during step after %s", self._stop_reason or "request")
+                        return QuestOutcome.TIMEOUT
                     self.logger.error("Error during step: %s", str(e), exc_info=True)
                     self._notify_callbacks("error", str(e))
 
@@ -301,6 +332,9 @@ class QuestRunner:
                     raise
 
         except Exception as e:
+            if self._stop_requested.is_set():
+                self.logger.info("Quest runner stopped after %s", self._stop_reason or "request")
+                return QuestOutcome.TIMEOUT
             self.logger.error("Error running quest: %s", str(e), exc_info=True)
             self._notify_callbacks("error", str(e))
             if self.env and self.env.state:

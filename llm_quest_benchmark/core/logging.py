@@ -187,6 +187,8 @@ class QuestLogger:
         self.run_outcome = None
         self.end_time = None
         self.final_state = None
+        self._finalize_lock = threading.Lock()
+        self._finalized = False
 
         # Setup logger
         self.logger = logging.getLogger('quest_logger')
@@ -303,6 +305,10 @@ class QuestLogger:
         self.quest_file = quest_file
         self.steps = []
         self.start_time = datetime.utcnow()
+        self.end_time = None
+        self.run_outcome = None
+        self.final_state = None
+        self._finalized = False
 
         try:
             # Extract quest name from path (filename without extension)
@@ -394,37 +400,47 @@ class QuestLogger:
             benchmark_id: Optional benchmark ID to associate with this run
             final_state: Optional final environment state snapshot for export
         """
-        if not self.current_run_id:
-            self.logger.warning("Cannot set outcome, no active run")
-            return
+        with self._finalize_lock:
+            if not self.current_run_id:
+                self.logger.warning("Cannot set outcome, no active run")
+                return
+            if self._finalized:
+                self.logger.debug(
+                    "Ignoring late outcome update for run %s: %s (already finalized as %s)",
+                    self.current_run_id,
+                    outcome,
+                    self.run_outcome,
+                )
+                return
 
-        self.run_outcome = outcome
-        self.final_state = final_state
-        self.end_time = datetime.utcnow()
-        run_duration = (self.end_time - self.start_time).total_seconds()
+            self.run_outcome = outcome
+            self.final_state = final_state
+            self.end_time = datetime.utcnow()
+            run_duration = (self.end_time - self.start_time).total_seconds()
 
-        try:
-            # Update the run record with outcome and end time
-            if benchmark_id:
-                self.logger.debug(f"Setting quest outcome with benchmark_id: {benchmark_id}")
-                self._local.cursor.execute('''
-                    UPDATE runs 
-                    SET outcome = ?, end_time = ?, reward = ?, run_duration = ?, benchmark_id = ?
-                    WHERE id = ?
-                ''', (outcome, self.end_time, reward, run_duration, benchmark_id, self.current_run_id))
-            else:
-                self._local.cursor.execute('''
-                    UPDATE runs 
-                    SET outcome = ?, end_time = ?, reward = ?, run_duration = ?
-                    WHERE id = ?
-                ''', (outcome, self.end_time, reward, run_duration, self.current_run_id))
-            self._local.conn.commit()
+            try:
+                # Update the run record with outcome and end time
+                if benchmark_id:
+                    self.logger.debug(f"Setting quest outcome with benchmark_id: {benchmark_id}")
+                    self._local.cursor.execute('''
+                        UPDATE runs 
+                        SET outcome = ?, end_time = ?, reward = ?, run_duration = ?, benchmark_id = ?
+                        WHERE id = ?
+                    ''', (outcome, self.end_time, reward, run_duration, benchmark_id, self.current_run_id))
+                else:
+                    self._local.cursor.execute('''
+                        UPDATE runs 
+                        SET outcome = ?, end_time = ?, reward = ?, run_duration = ?
+                        WHERE id = ?
+                    ''', (outcome, self.end_time, reward, run_duration, self.current_run_id))
+                self._local.conn.commit()
 
-            # Export the run to JSON
-            self._export_run_to_json()
+                # Export the run to JSON
+                self._export_run_to_json()
+                self._finalized = True
 
-        except Exception as e:
-            self.logger.error(f"Error setting quest outcome: {e}")
+            except Exception as e:
+                self.logger.error(f"Error setting quest outcome: {e}")
 
     def _export_run_to_json(self):
         """Export the complete run to a single run_summary.json file."""

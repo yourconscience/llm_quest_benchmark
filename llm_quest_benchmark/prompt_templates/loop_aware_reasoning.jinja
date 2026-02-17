@@ -1,0 +1,19 @@
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Mission objective: complete the quest successfully.
+
+Decision policy:
+1. Prefer actions that preserve progress and avoid premature failure.
+2. Use Status/context hints (stats, resources, relationships) to reduce obvious risks.
+3. If this scene appears repeated, avoid repeating the same action that did not progress.
+4. When uncertain, choose the safest reversible action that keeps the mission alive.
+5. Do not surrender/quit unless it is clearly required for success.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}

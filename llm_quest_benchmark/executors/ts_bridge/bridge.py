@@ -3,9 +3,10 @@ import logging
 import json
 import os
 import subprocess
+import time
 from copy import deepcopy
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple, Union
 
 from llm_quest_benchmark.schemas.bridge import QMBridgeState
 from llm_quest_benchmark.utils.text_processor import clean_qm_text
@@ -22,9 +23,10 @@ _QUEST_JSON_FAILURES = set()  # Track quests with JSON parsing issues to prevent
 class QMBridge:
     """Bridge to TypeScript QM parser and executor"""
 
-    def __init__(self, quest_file: str, debug: bool = False):
+    def __init__(self, quest_file: str, language: str = "rus", debug: bool = False):
         """Initialize bridge with quest file path"""
         self.quest_file = Path(quest_file).resolve()
+        self.language = language
         self.debug = debug
         self.process = None
         self.parser_script = Path(__file__).parent / "consoleplayer.ts"
@@ -68,7 +70,113 @@ class QMBridge:
         legacy_flag = "--openssl-legacy-provider"
         if legacy_flag not in node_options:
             env["NODE_OPTIONS"] = f"{node_options} {legacy_flag}".strip()
+        if self.language:
+            env["QM_LANG"] = self.language
         return env
+
+    def _try_parse_json_object(self, line: str) -> Optional[Dict[str, Any]]:
+        """Parse a single stdout line into a protocol JSON object, if possible.
+
+        The TypeScript side is expected to emit a single-line JSON object with keys:
+        - state
+        - saving
+
+        Some quests (or engine debug paths) may print additional stdout lines; those must be
+        ignored rather than treated as terminal game states.
+        """
+        if not line:
+            return None
+
+        stripped = line.strip()
+        if not stripped:
+            return None
+
+        # Fast-path: protocol messages are JSON objects.
+        if not stripped.startswith("{"):
+            return None
+
+        try:
+            parsed: Any = json.loads(stripped)
+        except json.JSONDecodeError:
+            # Attempt repair (best-effort) but only for object-shaped payloads.
+            try:
+                from json_repair import repair_json  # type: ignore
+
+                repaired = repair_json(stripped)
+                parsed = json.loads(repaired)
+            except Exception:
+                # Manual trimming fallback.
+                cleaned = stripped
+                if "{" in cleaned and "}" in cleaned:
+                    cleaned = cleaned[cleaned.find("{") : cleaned.rfind("}") + 1]
+                try:
+                    parsed = json.loads(cleaned)
+                except Exception:
+                    return None
+
+        if not isinstance(parsed, dict):
+            return None
+        return parsed
+
+    def _read_protocol_message(
+        self,
+        timeout: float = 10.0,
+        max_noise_lines: int = 20,
+    ) -> Tuple[Dict[str, Any], List[str]]:
+        """Read stdout lines until a valid protocol JSON message is found.
+
+        Returns:
+            (message_dict, skipped_noise_lines)
+        """
+        if not self.process or not self.process.stdout:
+            raise RuntimeError("Game process not started")
+
+        deadline = time.monotonic() + max(timeout, 0.01)
+        noise: List[str] = []
+
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                preview = "\n".join(noise[-5:])
+                raise TimeoutError(
+                    "Invalid JSON response from TypeScript bridge (timeout waiting for protocol message)."
+                    + (f"\nLast skipped stdout lines:\n{preview}" if preview else "")
+                )
+
+            # Read a single line. This indirection is intentional:
+            # tests monkeypatch `_read_response` to simulate bridge output.
+            try:
+                line = self._read_response(timeout=max(0.01, remaining))
+            except TimeoutError:
+                continue
+
+            if not line:
+                preview = "\n".join(noise[-5:])
+                raise RuntimeError(
+                    "Invalid JSON response from TypeScript bridge (stdout closed)."
+                    + (f"\nLast skipped stdout lines:\n{preview}" if preview else "")
+                )
+
+            if self.debug:
+                logger.debug("Bridge stdout line: %s", line[:500].rstrip("\n"))
+
+            parsed = self._try_parse_json_object(line)
+            if parsed is None:
+                noise.append(line.rstrip("\n"))
+            else:
+                # Surface structured errors immediately.
+                if "error" in parsed and "state" not in parsed:
+                    raise RuntimeError(f"TypeScript bridge error: {parsed.get('error')}")
+                if "state" in parsed and "saving" in parsed:
+                    return parsed, noise
+                noise.append(line.rstrip("\n"))
+
+            if len(noise) > max_noise_lines:
+                preview = "\n".join(noise[-5:])
+                raise RuntimeError(
+                    "Invalid JSON response from TypeScript bridge (too many non-protocol stdout lines)."
+                    + (f"\nLast skipped stdout lines:\n{preview}" if preview else "")
+                )
 
     def _read_stderr_snapshot(self, max_lines: int = 8, timeout: float = 0.2) -> str:
         """Read a small non-blocking stderr snapshot for diagnostics."""
@@ -89,30 +197,14 @@ class QMBridge:
         return "\n".join(line for line in lines if line)
 
     def _read_response(self, timeout: int = 10) -> str:
-        """Read response from process with timeout"""
+        """Backward-compatible: read a single line (may be non-protocol noise)."""
         if not self.process:
             raise RuntimeError("Game process not started")
 
         import select
         if select.select([self.process.stdout], [], [], timeout)[0]:
-            response = self.process.stdout.readline()
-            if self.debug:
-                logger.debug(f"Raw response: {response[:500]}...")
-                
-            # Check for empty response, which can happen with some quests
-            if not response or response.strip() == '':
-                logger.warning("Empty response received from TypeScript bridge")
-                # Try one more time as sometimes the first line is empty
-                if select.select([self.process.stdout], [], [], timeout)[0]:
-                    response = self.process.stdout.readline()
-                    if self.debug:
-                        logger.debug(f"Second attempt raw response: {response[:500]}...")
-                else:
-                    raise TimeoutError("Timeout waiting for response after empty line")
-                    
-            return response
-        else:
-            raise TimeoutError("Timeout waiting for response from TypeScript bridge")
+            return self.process.stdout.readline()
+        raise TimeoutError("Timeout waiting for response from TypeScript bridge")
 
     @staticmethod
     def _is_probably_json(raw: str) -> bool:
@@ -264,23 +356,46 @@ class QMBridge:
                 env=self._build_node_env(),
             )
 
-            response = self._read_response_json(timeout=10, require_state=True)
-            state = response['state']
-            choices = [
-                {'id': str(c['jumpId']), 'text': clean_qm_text(c['text'])}
-                for c in state['choices'] if c['active']
+            # Read initial state
+            try:
+                response, noise = self._read_protocol_message(timeout=10.0)
+            except Exception as e:
+                stderr_snapshot = self._read_stderr_snapshot()
+                hint = self._submodule_help()
+                details = f"\nBridge stderr:\n{stderr_snapshot}" if stderr_snapshot else ""
+                raise RuntimeError(f"{str(e)}{details}\n{hint}")
+
+            if noise and self.debug:
+                logger.debug("Skipped %d non-protocol stdout lines on start", len(noise))
+
+            state = response.get("state")
+            saving = response.get("saving")
+            if not isinstance(state, dict) or not isinstance(saving, dict):
+                raise RuntimeError("Invalid response format: missing 'state' or 'saving' field")
+            if "text" not in state or "choices" not in state or "gameState" not in state:
+                raise RuntimeError("Invalid response format: missing required state fields")
+            if "locationId" not in saving:
+                raise RuntimeError("Invalid response format: missing saving.locationId")
+
+            params_state_raw = state.get("paramsState") or []
+            params_state = [
+                clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)
             ]
             initial_state = QMBridgeState(
-                location_id=str(response['saving']['locationId']),
-                text=clean_qm_text(state['text']),
-                choices=choices,
-                reward=0.0,  # Initial state has no reward
-                game_ended=state['gameState'] != 'running'
+                location_id=str(saving["locationId"]),
+                text=clean_qm_text(state.get("text", "")),
+                params_state=params_state,
+                choices=[
+                    {"id": str(c["jumpId"]), "text": clean_qm_text(c["text"])}
+                    for c in (state.get("choices") or [])
+                    if isinstance(c, dict) and c.get("active", False)
+                ],
+                reward=0.0,  # UI state does not provide reward directly
+                game_ended=state.get("gameState") != "running",
             )
 
             if not initial_state.choices and not initial_state.game_ended:
                 raise RuntimeError("No valid choices in initial state")
-
             self.state_history.append(initial_state)
             return initial_state
 
@@ -298,15 +413,34 @@ class QMBridge:
             self.process.stdin.write("get_state\n")
             self.process.stdin.flush()
 
-            response_data = self._read_response_json(timeout=10, require_state=True)
+            response_data, noise = self._read_protocol_message(timeout=10.0)
+            if noise and self.debug:
+                logger.debug("Skipped %d non-protocol stdout lines on get_state", len(noise))
 
-            state = response_data['state']
+            state = response_data.get("state")
+            saving = response_data.get("saving")
+            if not isinstance(state, dict) or not isinstance(saving, dict):
+                raise RuntimeError("Invalid response format: missing 'state' or 'saving' field")
+            if "text" not in state or "choices" not in state or "gameState" not in state:
+                raise RuntimeError("Invalid response format: missing required state fields")
+            if "locationId" not in saving:
+                raise RuntimeError("Invalid response format: missing saving.locationId")
+
+            params_state_raw = state.get("paramsState") or []
+            params_state = [
+                clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)
+            ]
             current_state = QMBridgeState(
-                location_id=str(response_data['saving']['locationId']),
-                text=clean_qm_text(state['text']),
-                choices=[{'id': str(c['jumpId']), 'text': clean_qm_text(c['text'])} for c in state['choices'] if c['active']],
-                reward=0.0,  # Get reward from game state if available
-                game_ended=state['gameState'] != 'running'
+                location_id=str(saving["locationId"]),
+                text=clean_qm_text(state.get("text", "")),
+                params_state=params_state,
+                choices=[
+                    {"id": str(c["jumpId"]), "text": clean_qm_text(c["text"])}
+                    for c in (state.get("choices") or [])
+                    if isinstance(c, dict) and c.get("active", False)
+                ],
+                reward=0.0,  # UI state does not provide reward directly
+                game_ended=state.get("gameState") != "running",
             )
 
             if not current_state.choices and not current_state.game_ended:
@@ -361,28 +495,44 @@ class QMBridge:
             self.process.stdin.write(f"{jump_id}\n")
             self.process.stdin.flush()
 
-            response_data = self._read_response_json(timeout=10, require_state=True)
-            state = response_data['state']
+            # Read until we get a protocol JSON state.
+            try:
+                response_data, noise = self._read_protocol_message(timeout=10.0)
+            except TimeoutError:
+                logger.warning("No protocol response received from TypeScript bridge, trying get_state fallback")
+                return self.get_current_state()
 
-            location_id = str(response_data['saving'].get('locationId', 0))
-            choices = []
-            if 'choices' in state:
-                choices = [
-                    {'id': str(c.get('jumpId', 0)), 'text': clean_qm_text(c.get('text', ''))}
-                    for c in state['choices']
-                    if c.get('active', True)
-                ]
+            if noise and self.debug:
+                logger.debug("Skipped %d non-protocol stdout lines on step", len(noise))
+
+            state = response_data.get("state")
+            saving = response_data.get("saving")
+            if not isinstance(state, dict) or not isinstance(saving, dict):
+                raise RuntimeError("Invalid response format: missing 'state' or 'saving' field")
+            if "text" not in state or "choices" not in state or "gameState" not in state:
+                raise RuntimeError("Invalid response format: missing required state fields")
+            if "locationId" not in saving:
+                raise RuntimeError("Invalid response format: missing saving.locationId")
+
+            params_state_raw = state.get("paramsState") or []
+            params_state = [
+                clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)
+            ]
+
+            choices = [
+                {"id": str(c["jumpId"]), "text": clean_qm_text(c["text"])}
+                for c in (state.get("choices") or [])
+                if isinstance(c, dict) and c.get("active", False)
+            ]
 
             new_state = QMBridgeState(
-                location_id=location_id,
-                text=clean_qm_text(state.get('text', 'Game text unavailable.')),
+                location_id=str(saving["locationId"]),
+                text=clean_qm_text(state.get("text", "")),
+                params_state=params_state,
                 choices=choices,
-                reward=float(state.get('reward', 0.0)),
-                game_ended=state.get('gameState', 'complete') != 'running'
+                reward=0.0,  # UI state does not provide reward directly
+                game_ended=state.get("gameState") != "running",
             )
-
-            if not new_state.choices and not new_state.game_ended:
-                raise RuntimeError("No valid choices in running state")
 
             self.state_history.append(new_state)
             return new_state

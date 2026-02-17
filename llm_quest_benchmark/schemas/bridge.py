@@ -11,3 +11,4 @@ class QMBridgeState:
     choices: List[Dict[str, str]]  # [{id: str, text: str}]
     reward: float
     game_ended: bool
+    params_state: List[str] = field(default_factory=list)

@@ -1,0 +1,12 @@
+name: gemini_sr_2_1_2121_eng_all
+quests:
+  - quests/sr_2_1_2121_eng
+agents:
+  - model: gemini-2.5-flash
+    template: reasoning.jinja
+    temperature: 0.4
+    skip_single: true
+debug: false
+quest_timeout: 60
+max_workers: 1
+output_dir: results/benchmarks

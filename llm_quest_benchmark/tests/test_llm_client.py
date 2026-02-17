@@ -91,6 +91,20 @@ def test_openai_compatible_completion_extraction(mock_openai_cls):
 
 
 @patch("llm_quest_benchmark.llm.client.OpenAI")
+def test_openai_compatible_handles_missing_message_content(mock_openai_cls):
+    mock_client = Mock()
+    mock_chat = Mock()
+    mock_completion = Mock()
+    mock_completion.choices = [Mock(message=None)]
+    mock_chat.completions.create.return_value = mock_completion
+    mock_client.chat = mock_chat
+    mock_openai_cls.return_value = mock_client
+
+    client = get_llm_client("gemini-2.5-flash")
+    assert client.get_completion("pick") == ""
+
+
+@patch("llm_quest_benchmark.llm.client.OpenAI")
 def test_openai_usage_is_tracked(mock_openai_cls):
     mock_client = Mock()
     mock_chat = Mock()

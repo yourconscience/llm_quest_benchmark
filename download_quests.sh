@@ -81,18 +81,19 @@ copy_collection_qm_files() {
     local target_file="${target_dir}/${base_name}"
 
     if [[ -f "${target_file}" ]]; then
-      local stem n
-      stem="${base_name%.qm}"
+      local stem ext n
+      stem="${base_name%.*}"
+      ext=".${base_name##*.}"
       n=2
-      while [[ -f "${target_dir}/${stem}__${n}.qm" ]]; do
+      while [[ -f "${target_dir}/${stem}__${n}${ext}" ]]; do
         n=$((n + 1))
       done
-      target_file="${target_dir}/${stem}__${n}.qm"
+      target_file="${target_dir}/${stem}__${n}${ext}"
     fi
 
     cp -f "${qm_file}" "${target_file}"
     copied=$((copied + 1))
-  done < <(find "${source_dir}" -type f -name '*.qm' -print0 | sort -z)
+  done < <(find "${source_dir}" -type f \( -name '*.qm' -o -name '*.qmm' \) -print0 | sort -z)
 
   printf '%s' "${copied}"
 }
@@ -144,7 +145,7 @@ if [[ -f "${QUESTS_DIR}/kr_1_ru/Boat.qm" ]]; then
 fi
 
 echo "Quest setup complete."
-echo "Total copied .qm files: ${TOTAL}"
+echo "Total copied quest files (.qm/.qmm): ${TOTAL}"
 echo "Collections:"
 for mapping in "${QUEST_MAP[@]}"; do
   echo "  - ${mapping##*|}"

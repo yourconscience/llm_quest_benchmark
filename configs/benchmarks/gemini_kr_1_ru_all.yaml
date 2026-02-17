@@ -1,0 +1,12 @@
+name: gemini_kr_1_ru_all
+quests:
+  - quests/kr_1_ru
+agents:
+  - model: gemini-2.5-flash
+    template: reasoning.jinja
+    temperature: 0.4
+    skip_single: true
+debug: false
+quest_timeout: 60
+max_workers: 1
+output_dir: results/benchmarks
