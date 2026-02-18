@@ -110,6 +110,7 @@ def test_gpt5_force_numeric_retry_path():
     last = agent.get_last_response()
     assert last.total_tokens == 24
     assert last.estimated_cost_usd == pytest.approx(0.0018)
+    assert last.parse_mode == "force_retry_number_only"
 
 
 def test_contextual_state_includes_previous_observations():
@@ -121,6 +122,18 @@ def test_contextual_state_includes_previous_observations():
     assert "Previous hint" in contextual
 
 
+def test_contextual_state_includes_recent_decisions():
+    agent = LLMAgent(model_name="gpt-5-mini")
+    agent._decision_history = [
+        {"action": 2, "choice": "Inspect the terminal", "parse_mode": "json_direct"},
+        {"action": 1, "choice": "Ask for access", "parse_mode": "retry_json_repaired"},
+    ]
+    contextual = agent._build_contextual_state("Current state")
+    assert "Recent selected actions" in contextual
+    assert "Inspect the terminal" in contextual
+    assert "parse=json_direct" in contextual
+
+
 def test_safety_filter_prefers_lower_risk_choice():
     agent = LLMAgent(model_name="gpt-5-mini")
     choices = [
@@ -128,6 +141,18 @@ def test_safety_filter_prefers_lower_risk_choice():
         {"text": "Постараться пройти мимо"},
     ]
     assert agent._apply_safety_filter(1, choices) == 2
+
+
+def test_loop_breaker_prefers_alternative_after_repeated_state():
+    agent = LLMAgent(model_name="gpt-5-mini")
+    choices = [
+        {"text": "Пойти в космопорт и улететь, чтобы завтра не позориться"},
+        {"text": "Пойти позаниматься в библиотеку"},
+    ]
+    sig = agent._state_signature("Looping state", choices)
+    agent._state_action_counts[sig] = {1: 2, 2: 0}
+
+    assert agent._apply_loop_breaker(1, sig, choices) == 2
 
 
 def test_get_last_response_uses_skip_single_result():
@@ -140,6 +165,20 @@ def test_get_last_response_uses_skip_single_result():
     assert action == 1
     assert agent.get_last_response().action == 1
     assert agent.get_last_response().reasoning == "auto_single_choice"
+
+
+def test_parse_llm_response_number_only_tracks_parse_mode():
+    parsed = parse_llm_response("2", num_choices=3)
+    assert parsed.action == 2
+    assert parsed.parse_mode == "number_only"
+    assert parsed.is_default is False
+
+
+def test_parse_llm_response_default_sets_parse_mode():
+    parsed = parse_llm_response("no valid action", num_choices=3)
+    assert parsed.action == 1
+    assert parsed.parse_mode == "default_first"
+    assert parsed.is_default is True
 
 
 def test_parse_llm_response_extracts_fields_without_strict_json():
@@ -224,31 +263,3 @@ def test_retry_preserves_reasoning_from_first_attempt():
     assert "low oxygen" in last.analysis
     assert last.reasoning is not None
     assert "safer move first" in last.reasoning
-
-
-def test_loop_escape_diversifies_repeated_state_action():
-    agent = LLMAgent(model_name="gemini-2.5-flash")
-    mocked_llm = Mock()
-    mocked_llm.get_completion.side_effect = ["1", "1", "1", "1"]
-    mocked_llm.get_last_usage.return_value = {
-        "prompt_tokens": 10,
-        "completion_tokens": 2,
-        "total_tokens": 12,
-        "estimated_cost_usd": 0.0001,
-    }
-    agent.llm = mocked_llm
-
-    choices = [{"text": "Option A"}, {"text": "Option B"}]
-    state = "Looping state"
-
-    first = agent.get_action(state, choices)
-    second = agent.get_action(state, choices)
-    third = agent.get_action(state, choices)
-    fourth = agent.get_action(state, choices)
-
-    assert first == 1
-    # Conservative loop escape should diversify after deeper repetition.
-    assert second == 1
-    assert third == 1
-    assert fourth == 2
-    assert "loop_escape_diversify" in (agent.get_last_response().reasoning or "")

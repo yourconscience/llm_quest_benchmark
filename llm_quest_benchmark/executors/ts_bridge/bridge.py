@@ -206,6 +206,81 @@ class QMBridge:
             return self.process.stdout.readline()
         raise TimeoutError("Timeout waiting for response from TypeScript bridge")
 
+    @staticmethod
+    def _is_probably_json(raw: str) -> bool:
+        text = (raw or "").strip()
+        return text.startswith("{") or text.startswith("[")
+
+    def _parse_response_json(self, raw: str) -> Optional[Dict[str, Any]]:
+        """Parse one bridge line into JSON dict, returning None on non-JSON/noise lines."""
+        text = (raw or "").strip()
+        if not text or not self._is_probably_json(text):
+            return None
+
+        try:
+            parsed = json.loads(text)
+            return parsed if isinstance(parsed, dict) else None
+        except json.JSONDecodeError:
+            pass
+
+        try:
+            from json_repair import repair_json
+            repaired = repair_json(text)
+            parsed = json.loads(repaired)
+            return parsed if isinstance(parsed, dict) else None
+        except Exception:
+            return None
+
+    def _read_response_json(self, timeout: int = 10, require_state: bool = True) -> Dict[str, Any]:
+        """Read bridge stdout until we get a valid JSON response packet."""
+        if not self.process:
+            raise RuntimeError("Game process not started")
+
+        import select
+        import time
+
+        deadline = time.monotonic() + timeout
+        skipped_lines = 0
+        last_candidate: Optional[Dict[str, Any]] = None
+
+        while time.monotonic() < deadline:
+            remaining = max(0.05, deadline - time.monotonic())
+            if not select.select([self.process.stdout], [], [], remaining)[0]:
+                continue
+
+            raw = self.process.stdout.readline()
+            if self.debug:
+                logger.debug(f"Raw response line: {raw[:500]}...")
+            if not raw:
+                continue
+
+            parsed = self._parse_response_json(raw)
+            if parsed is None:
+                skipped_lines += 1
+                continue
+
+            last_candidate = parsed
+
+            if "error" in parsed:
+                raise RuntimeError(f"TypeScript bridge error: {parsed.get('error')}")
+
+            if require_state and ("state" not in parsed or "saving" not in parsed):
+                skipped_lines += 1
+                continue
+
+            if skipped_lines > 0 and self.debug:
+                logger.debug("Skipped %s non-protocol bridge lines before valid JSON packet", skipped_lines)
+            return parsed
+
+        stderr_snapshot = self._read_stderr_snapshot()
+        details = f"Bridge stderr:\n{stderr_snapshot}\n" if stderr_snapshot else ""
+        if last_candidate is not None:
+            keys = ", ".join(sorted(last_candidate.keys()))
+            raise TimeoutError(
+                f"Timed out waiting for valid bridge state packet. Last JSON keys: [{keys}].\n{details}"
+            )
+        raise TimeoutError(f"Timeout waiting for JSON response from TypeScript bridge.\n{details}")
+
     def parse_quest_locations(self) -> Dict[str, Any]:
         """Parse quest file and return metadata including locations and start location"""
         cmd = ["node", "-r", "ts-node/register", str(self.parser_script), str(self.quest_file), "--parse"]
@@ -321,7 +396,6 @@ class QMBridge:
 
             if not initial_state.choices and not initial_state.game_ended:
                 raise RuntimeError("No valid choices in initial state")
-
             self.state_history.append(initial_state)
             return initial_state
 

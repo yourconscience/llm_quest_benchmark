@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 from ..models.database import db, Run, Step, BenchmarkRun
 from ..utils.errors import handle_errors, WebUIError
+from llm_quest_benchmark.core.logging import DEFAULT_DB_PATH
 
 bp = Blueprint('analyze', __name__, url_prefix='/analyze')
 
@@ -138,6 +139,186 @@ def step_analysis():
         'success': True,
         'data': step_data
     })
+
+
+def _max_repeat_streak(location_ids):
+    max_streak = 1
+    current = 1
+    for i in range(1, len(location_ids)):
+        if location_ids[i] == location_ids[i - 1]:
+            current += 1
+            max_streak = max(max_streak, current)
+        else:
+            current = 1
+    return max_streak if location_ids else 0
+
+
+def _first_choice_text(choice_map):
+    if isinstance(choice_map, dict) and choice_map:
+        first_key = next(iter(choice_map.keys()))
+        return choice_map.get(first_key)
+    return None
+
+
+def _load_failure_rows_from_metrics(limit: int):
+    """Fallback failure explorer rows from CLI/benchmark DB + run_summary artifacts."""
+    db_path = Path(DEFAULT_DB_PATH)
+    if not db_path.exists():
+        return []
+
+    rows = []
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        run_rows = conn.execute(
+            """
+            SELECT id, quest_name, quest_file, agent_id, outcome, start_time
+            FROM runs
+            WHERE outcome IN ('FAILURE', 'TIMEOUT', 'ERROR')
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    for run in run_rows:
+        run_id = run["id"]
+        quest_name = run["quest_name"] or Path(run["quest_file"] or "").stem
+        agent_id = run["agent_id"] or "unknown"
+        summary_path = Path("results") / agent_id / quest_name / f"run_{run_id}" / "run_summary.json"
+        if not summary_path.exists():
+            continue
+
+        try:
+            run_summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+
+        steps = run_summary.get("steps") if isinstance(run_summary, dict) else []
+        if not isinstance(steps, list) or not steps:
+            continue
+
+        decision_steps = []
+        default_count = 0
+        location_ids = []
+        for step in steps:
+            if not isinstance(step, dict):
+                continue
+            llm_decision = step.get("llm_decision") or {}
+            choices = step.get("choices") or {}
+            if len(choices) > 1:
+                decision_steps.append(step)
+                if bool(llm_decision.get("is_default")):
+                    default_count += 1
+            location_id = step.get("location_id")
+            if location_id:
+                location_ids.append(str(location_id))
+
+        if not decision_steps:
+            decision_steps = [s for s in steps if isinstance(s, dict)]
+        if not decision_steps:
+            continue
+
+        last_decision = decision_steps[-1]
+        last_llm = last_decision.get("llm_decision") if isinstance(last_decision, dict) else {}
+        if not isinstance(last_llm, dict):
+            last_llm = {}
+
+        rows.append(
+            {
+                "run_id": run_id,
+                "quest_name": quest_name,
+                "agent_id": agent_id,
+                "outcome": run["outcome"],
+                "start_time": run["start_time"],
+                "total_steps": len(steps),
+                "decision_steps": len(decision_steps),
+                "default_rate": (default_count / len(decision_steps)) if decision_steps else 0.0,
+                "max_repeat_streak": _max_repeat_streak(location_ids),
+                "last_decision_step": last_decision.get("step"),
+                "last_choice": _first_choice_text(last_llm.get("choice")),
+                "last_parse_mode": last_llm.get("parse_mode"),
+                "last_reasoning": last_llm.get("reasoning"),
+                "last_analysis": last_llm.get("analysis"),
+                "last_observation": (last_decision.get("observation") or "")[:220],
+                "readable_url": None,
+                "details_url": None,
+                "analysis_url": None,
+            }
+        )
+    return rows
+
+
+@bp.route('/failure_explorer')
+@handle_errors
+def failure_explorer():
+    """Return recent failed runs with decision diagnostics for fast triage."""
+    limit = min(int(request.args.get("limit", 50)), 200)
+    runs = (
+        Run.query
+        .filter(Run.outcome.in_(["FAILURE", "TIMEOUT", "ERROR"]))
+        .order_by(Run.start_time.desc())
+        .limit(limit)
+        .all()
+    )
+
+    rows = []
+    for run in runs:
+        steps = Step.query.filter_by(run_id=run.id).order_by(Step.step.asc()).all()
+        if not steps:
+            continue
+
+        decision_steps = []
+        default_count = 0
+        for s in steps:
+            choices = s.choices or []
+            llm = s.llm_response if isinstance(s.llm_response, dict) else {}
+            if len(choices) > 1:
+                decision_steps.append(s)
+                if llm.get("is_default"):
+                    default_count += 1
+
+        last_decision = decision_steps[-1] if decision_steps else steps[-1]
+        last_choice_text = None
+        if last_decision.action and isinstance(last_decision.choices, list):
+            try:
+                choice_idx = int(last_decision.action) - 1
+                if 0 <= choice_idx < len(last_decision.choices):
+                    last_choice_text = last_decision.choices[choice_idx].get("text")
+            except (TypeError, ValueError):
+                last_choice_text = None
+
+        llm_payload = last_decision.llm_response if isinstance(last_decision.llm_response, dict) else {}
+        location_ids = [s.location_id for s in steps if s.location_id]
+        default_rate = float(default_count / len(decision_steps)) if decision_steps else 0.0
+
+        rows.append({
+            "run_id": run.id,
+            "quest_name": run.quest_name,
+            "agent_id": run.agent_id,
+            "outcome": run.outcome,
+            "start_time": run.start_time.isoformat() if run.start_time else None,
+            "total_steps": len(steps),
+            "decision_steps": len(decision_steps),
+            "default_rate": default_rate,
+            "max_repeat_streak": _max_repeat_streak(location_ids),
+            "last_decision_step": last_decision.step,
+            "last_choice": last_choice_text,
+            "last_parse_mode": llm_payload.get("parse_mode"),
+            "last_reasoning": llm_payload.get("reasoning"),
+            "last_analysis": llm_payload.get("analysis"),
+            "last_observation": (last_decision.observation or "")[:220],
+            "readable_url": f"/analyze/run/{run.id}/readable",
+            "details_url": f"/analyze/run/{run.id}",
+            "analysis_url": f"/analyze/run/{run.id}/analysis",
+        })
+
+    if not rows:
+        rows = _load_failure_rows_from_metrics(limit)
+
+    return jsonify({"success": True, "rows": rows[:limit]})
 
 @bp.route('/run/<int:run_id>')
 @handle_errors

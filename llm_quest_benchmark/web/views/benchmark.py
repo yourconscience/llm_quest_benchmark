@@ -115,7 +115,11 @@ def status(benchmark_id):
             'benchmark_id': benchmark_id,
             'status': benchmark_status.status,
             'progress': benchmark_status.progress,
-            'current_task': benchmark_status.current_task
+            'current_task': benchmark_status.current_task,
+            'total_runs': benchmark_status.total_runs,
+            'completed_runs': benchmark_status.completed_runs,
+            'pairs': benchmark_status.pairs,
+            'recent_issues': benchmark_status.recent_issues[:20],
         })
     
     # If not active, check database for completed benchmark

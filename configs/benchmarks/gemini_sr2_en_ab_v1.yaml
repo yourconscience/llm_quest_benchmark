@@ -1,0 +1,18 @@
+name: gemini_sr2_en_ab_v1
+quests:
+  - quests/sr_2_1_2121_eng
+agents:
+  - model: gemini-2.5-flash
+    system_template: system_role.jinja
+    template: consequence_scan.jinja
+    temperature: 0.4
+    skip_single: true
+  - model: gemini-2.5-flash
+    system_template: system_role_risk.jinja
+    template: consequence_scan_subgoal.jinja
+    temperature: 0.4
+    skip_single: true
+debug: true
+quest_timeout: 180
+max_workers: 1
+output_dir: results/benchmarks

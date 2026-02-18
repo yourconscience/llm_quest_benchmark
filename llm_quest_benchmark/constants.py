@@ -5,7 +5,7 @@ import re
 # Provider registry used by parser/client factory.
 MODEL_PROVIDER_CONFIG = {
     "openai": {"models": ["gpt-5", "gpt-5-mini", "gpt-5-nano", "o4-mini"]},
-    "anthropic": {"models": ["claude-sonnet-4-5", "claude-opus-4-1"]},
+    "anthropic": {"models": ["claude-sonnet-4-5", "claude-opus-4-1", "claude-3-5-haiku-latest"]},
     "google": {"models": ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"]},
     "deepseek": {"models": ["deepseek-3.2-chat", "deepseek-reasoner"]},
     # Optional compatibility gateway (hidden from default UI model list).
@@ -23,6 +23,7 @@ MODEL_CHOICES = [
     # Anthropic
     "claude-sonnet-4-5",
     "claude-opus-4-1",
+    "claude-3-5-haiku-latest",
     # Google
     "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
@@ -42,6 +43,7 @@ MODEL_ALIASES = {
     # Anthropic
     "claude-sonnet-4-5": "anthropic:claude-sonnet-4-5",
     "claude-opus-4-1": "anthropic:claude-opus-4-1-20250805",
+    "claude-3-5-haiku-latest": "anthropic:claude-3-5-haiku-latest",
     # Compatibility Anthropic aliases
     "claude-sonnet-4-0": "anthropic:claude-sonnet-4-20250514",
     "claude-sonnet-4-20250514": "anthropic:claude-sonnet-4-20250514",
@@ -86,7 +88,7 @@ INFINITE_TIMEOUT = 10**9  # Infinite timeout (used for interactive play)
 
 # Web server
 WEB_SERVER_HOST = "0.0.0.0"
-WEB_SERVER_PORT = 8000
+WEB_SERVER_PORT = 8011
 
 # Quest state detection patterns
 # Pattern to detect credit rewards in text (e.g., "10000 cr")

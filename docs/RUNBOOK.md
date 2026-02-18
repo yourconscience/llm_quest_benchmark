@@ -31,7 +31,7 @@ NODE_OPTIONS=--openssl-legacy-provider uv run llm-quest run --quest quests/Boat.
 ```bash
 uv run llm-quest server
 ```
-Open `http://localhost:8000`.
+Open `http://localhost:8011`.
 
 ## Agent Experiment Workflow
 1. Choose quest(s) from registry-backed paths.

@@ -108,7 +108,16 @@
                 </div>
 
                 <!-- Debug Output -->
-                <pre id="debugOutput" class="bg-dark text-light p-3 rounded" style="max-height: 600px; overflow-y: auto; font-family: monospace; font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word;"></pre>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="liveDebugToggle" checked>
+                    <label class="form-check-label" for="liveDebugToggle">Show live decision trace</label>
+                </div>
+                <pre id="debugOutput" class="bg-dark text-light p-3 rounded" style="max-height: 420px; overflow-y: auto; font-family: monospace; font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word;"></pre>
+
+                <h6 class="mt-3">Decision Timeline</h6>
+                <div id="timelineContainer" class="list-group small" style="max-height: 170px; overflow-y: auto;">
+                    <div class="list-group-item text-muted">No events yet.</div>
+                </div>
             </div>
         </div>
     </div>
@@ -117,137 +126,169 @@
 
 {% block scripts %}
 <script>
-    // Global state
     let debugLog = '';
+    let activeRunId = null;
+    let lastEventId = 0;
+    let statusPollHandle = null;
+    let eventsPollHandle = null;
 
-    // Client-side text wrapping function
     function wrapText(text, maxWidth = 120) {
         if (!text) return '';
-        
-        // Check if text already appears to be wrapped (most lines shorter than maxWidth)
-        const lines = text.split('\n');
-        const longLines = lines.filter(line => line.length > maxWidth);
-        
-        // If less than 15% of lines are long, consider it pre-wrapped
-        if (lines.length > 5 && longLines.length / lines.length < 0.15) {
-            console.log("Text appears to be pre-wrapped, skipping rewrap");
-            return text;
-        }
-        
-        // Split text into paragraphs
-        const paragraphs = text.split('\n');
-        const wrappedParagraphs = [];
-        
-        for (const paragraph of paragraphs) {
-            if (!paragraph.trim()) {
-                wrappedParagraphs.push('');
-                continue;
+        const words = String(text).split(' ');
+        const lines = [];
+        let line = '';
+        words.forEach((word) => {
+            if ((line + ' ' + word).trim().length > maxWidth) {
+                if (line) lines.push(line);
+                line = word;
+            } else {
+                line = (line ? `${line} ` : '') + word;
             }
-            
-            // Split paragraph into words
-            const words = paragraph.split(' ');
-            let currentLine = [];
-            let currentLength = 0;
-            
-            // Process each word
-            for (const word of words) {
-                // Calculate new length if we add this word
-                const newLength = currentLength + word.length + (currentLength > 0 ? 1 : 0);
-                
-                // If adding this word would exceed maxWidth
-                if (newLength > maxWidth) {
-                    // Add current line to wrapped paragraphs
-                    wrappedParagraphs.push(currentLine.join(' '));
-                    // Start a new line with the current word
-                    currentLine = [word];
-                    currentLength = word.length;
-                } else {
-                    // Add word to current line
-                    currentLine.push(word);
-                    // Update length (add 1 for space if not first word)
-                    currentLength = newLength;
-                }
-            }
-            
-            // Add the last line if there's anything left
-            if (currentLine.length > 0) {
-                wrappedParagraphs.push(currentLine.join(' '));
-            }
-        }
-        
-        // Join paragraphs with line breaks
-        return wrappedParagraphs.join('\n');
+        });
+        if (line) lines.push(line);
+        return lines.join('\n');
     }
 
     function appendDebugLog(text) {
-        // Ensure text is wrapped
-        const wrappedText = wrapText(text, 120);
-        debugLog += wrappedText + '\n';
-        
-        // Apply some formatting to the debug output
-        const formattedLog = debugLog
-            // Highlight step headers
-            .replace(/-----\s+STEP\s+\d+\s+-----/g, match => 
-                `<span style="color: #5bc0de; font-weight: bold;">${match}</span>`)
-            // Highlight section headers with outcome-specific colors
-            .replace(/==========\s+QUEST OUTCOME:\s+(SUCCESS)\s+==========+/g, 
-                '<span style="color: #5cb85c; font-weight: bold;">========== QUEST OUTCOME: $1 ==========</span>')
-            .replace(/==========\s+QUEST OUTCOME:\s+(FAILURE|ERROR|TIMEOUT)\s+==========+/g, 
-                '<span style="color: #d9534f; font-weight: bold;">========== QUEST OUTCOME: $1 ==========</span>')
-            .replace(/==========\s+QUEST PLAYTHROUGH\s+==========+/g, 
-                '<span style="color: #428bca; font-weight: bold;">========== QUEST PLAYTHROUGH ==========</span>')
-            // Highlight quest info
-            .replace(/(QUEST|AGENT|STEPS|END TIME):\s+([^\n]+)/g, 
-                '<span style="color: #428bca; font-weight: bold;">$1:</span> <span style="color: #d9d9d9;">$2</span>')
-            .replace(/OUTCOME:\s+(SUCCESS)/g,
-                '<span style="color: #5cb85c; font-weight: bold;">OUTCOME:</span> <span style="color: #5cb85c;">$1</span>')
-            .replace(/OUTCOME:\s+(FAILURE|ERROR|TIMEOUT)/g,
-                '<span style="color: #d9534f; font-weight: bold;">OUTCOME:</span> <span style="color: #d9534f;">$1</span>')
-            // Highlight selected option
-            .replace(/(Selected option \d+):\s+([^\n]+)/g, 
-                '<span style="color: #5bc0de;">$1:</span> <span style="color: #ffffff; font-style: italic;">$2</span>')
-            // Highlight reasoning and analysis
-            .replace(/(Reasoning|Analysis):\s+([^\n]+)/g, 
-                '<span style="color: #f0ad4e; font-weight: bold;">$1:</span> <span style="color: #d9d9d9; font-style: italic;">$2</span>');
-        
-        document.getElementById('debugOutput').innerHTML = formattedLog;
-        
-        // Auto-scroll to bottom
-        const debugOutput = document.getElementById('debugOutput');
-        debugOutput.scrollTop = debugOutput.scrollHeight;
+        if (!document.getElementById('liveDebugToggle').checked) return;
+        debugLog += wrapText(text, 120) + '\n';
+        const formatted = debugLog
+            .replace(/-----\s+STEP\s+\d+\s+-----/g, (m) => `<span style="color:#5bc0de;font-weight:bold;">${m}</span>`)
+            .replace(/OUTCOME:\s+(SUCCESS)/g, '<span style="color:#5cb85c;font-weight:bold;">OUTCOME: $1</span>')
+            .replace(/OUTCOME:\s+(FAILURE|ERROR|TIMEOUT)/g, '<span style="color:#d9534f;font-weight:bold;">OUTCOME: $1</span>')
+            .replace(/(Reasoning|Analysis):\s+([^\n]+)/g, '<span style="color:#f0ad4e;font-weight:bold;">$1:</span> <span style="color:#d9d9d9;font-style:italic;">$2</span>');
+        const out = document.getElementById('debugOutput');
+        out.innerHTML = formatted;
+        out.scrollTop = out.scrollHeight;
     }
 
-    // Load template content
+    function resetTimeline() {
+        const c = document.getElementById('timelineContainer');
+        c.innerHTML = '<div class="list-group-item text-muted">No events yet.</div>';
+    }
+
+    function addTimelineItem(html) {
+        const c = document.getElementById('timelineContainer');
+        if (c.children.length === 1 && c.children[0].textContent.includes('No events yet')) {
+            c.innerHTML = '';
+        }
+        const item = document.createElement('div');
+        item.className = 'list-group-item';
+        item.innerHTML = html;
+        c.appendChild(item);
+        c.scrollTop = c.scrollHeight;
+    }
+
     async function loadTemplateContent() {
         const templateSelect = document.getElementById('templateSelect');
         const templateContent = document.getElementById('templateContent');
-
         try {
             const response = await fetch(`/monitor/template/${templateSelect.value}`);
             const data = await response.json();
-
-            if (data.success) {
-                templateContent.textContent = data.content;
-            } else {
-                templateContent.textContent = 'Error loading template content';
-            }
+            templateContent.textContent = data.success ? data.content : 'Error loading template content';
         } catch (error) {
             console.error('Error loading template:', error);
             templateContent.textContent = 'Error loading template content';
         }
     }
 
-    // Load initial template content
-    loadTemplateContent();
+    function stopRunPolling() {
+        if (statusPollHandle) clearInterval(statusPollHandle);
+        if (eventsPollHandle) clearInterval(eventsPollHandle);
+        statusPollHandle = null;
+        eventsPollHandle = null;
+    }
 
-    // Update template content when selection changes
+    function renderStepEvent(event) {
+        const payload = event.payload || {};
+        const choices = payload.choices || {};
+        const selected = payload.llm_decision?.choice || {};
+        const selectedEntry = Object.entries(selected)[0];
+        const selectedText = selectedEntry ? `${selectedEntry[0]}: ${selectedEntry[1]}` : 'n/a';
+        const reasoning = payload.llm_decision?.reasoning || null;
+        const analysis = payload.llm_decision?.analysis || null;
+        const isDefault = payload.llm_decision?.is_default ? ' default' : '';
+        const parseMode = payload.llm_decision?.parse_mode || 'unknown';
+
+        appendDebugLog(`----- STEP ${event.step || '-'} -----`);
+        appendDebugLog(payload.observation || '');
+        if (Object.keys(choices).length > 0) {
+            appendDebugLog('Available choices:');
+            Object.entries(choices).forEach(([idx, text]) => appendDebugLog(`${idx}. ${text}`));
+        }
+        appendDebugLog(`Selected option ${selectedText}${isDefault} [parse=${parseMode}]`);
+        if (reasoning) appendDebugLog(`Reasoning: ${reasoning}`);
+        if (analysis) appendDebugLog(`Analysis: ${analysis}`);
+
+        const usage = payload.usage || {};
+        const usageText = `${usage.prompt_tokens || 0}/${usage.completion_tokens || 0}/${usage.total_tokens || 0}`;
+        addTimelineItem(
+            `<div><strong>Step ${event.step || '-'}</strong> <span class="text-muted">(${event.location_id || '-'})</span></div>
+             <div class="text-muted">choice: ${selectedText}</div>
+             <div class="text-muted">parse: ${parseMode}${isDefault ? ' (default)' : ''}</div>
+             <div class="text-muted">tokens p/c/t: ${usageText}</div>`
+        );
+    }
+
+    async function pollRunEvents() {
+        if (!activeRunId) return;
+        try {
+            const response = await fetch(`/monitor/runs/${activeRunId}/events?after_id=${lastEventId}&limit=200&compact=1`);
+            const data = await response.json();
+            if (!data.success) return;
+            (data.events || []).forEach((event) => {
+                lastEventId = Math.max(lastEventId, event.id || 0);
+                if (event.event_type === 'step') {
+                    renderStepEvent(event);
+                } else if (event.event_type === 'outcome') {
+                    appendDebugLog(`OUTCOME: ${event.payload?.outcome || 'UNKNOWN'}`);
+                    addTimelineItem(`<div><strong>Outcome:</strong> ${event.payload?.outcome || 'UNKNOWN'}</div>`);
+                } else if (event.event_type === 'timeout') {
+                    appendDebugLog('OUTCOME: TIMEOUT');
+                    addTimelineItem('<div><strong>Timeout</strong></div>');
+                } else if (event.event_type === 'error') {
+                    appendDebugLog(`Error: ${event.payload?.message || 'unknown error'}`);
+                    addTimelineItem(`<div><strong>Error:</strong> ${event.payload?.message || 'unknown error'}</div>`);
+                }
+            });
+        } catch (error) {
+            console.error('Error polling run events:', error);
+        }
+    }
+
+    async function pollRunStatus() {
+        if (!activeRunId) return;
+        try {
+            const response = await fetch(`/monitor/run_status/${activeRunId}`);
+            const data = await response.json();
+            if (!data.success) return;
+
+            const questProgress = document.getElementById('questProgress');
+            const questInfo = document.getElementById('currentQuestInfo');
+            questProgress.classList.remove('d-none');
+            questInfo.textContent = `${data.current_task || 'Running'} | steps=${data.step_count || 0}`;
+
+            if (data.status === 'complete' || data.status === 'error') {
+                stopRunPolling();
+                document.getElementById('questProgress').classList.add('d-none');
+                appendDebugLog(`\nQuest run completed with status: ${data.status}`);
+                if (data.error) appendDebugLog(`Error: ${data.error}`);
+            }
+        } catch (error) {
+            console.error('Error polling run status:', error);
+        }
+    }
+
+    loadTemplateContent();
     document.getElementById('templateSelect').addEventListener('change', loadTemplateContent);
 
-    // Handle form submission
     document.getElementById('questForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        debugLog = ''; // Clear debug log
-        console.log('Form submitted');
+        stopRunPolling();
+        debugLog = '';
+        resetTimeline();
+        lastEventId = 0;
+        activeRunId = null;
 
         const formData = {
             quest: document.getElementById('questSelect').value,
@@ -260,158 +301,27 @@
         appendDebugLog(`Configuration: ${JSON.stringify(formData, null, 2)}`);
 
         try {
-            // Show progress with quest info
-            const questProgress = document.getElementById('questProgress');
-            const questInfo = document.getElementById('currentQuestInfo');
-            questProgress.classList.remove('d-none');
-            questInfo.textContent = `${formData.quest} with ${formData.model} agent (${formData.template} template)`;
-
-            // Run quest
-            appendDebugLog('Sending request to run quest...');
-            let response;
-            try {
-                response = await fetch('/monitor/run', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-            } catch (fetchError) {
-                // If the quest completed but server disconnected, show success
-                if (debugLog.includes('Outcome: SUCCESS') || debugLog.includes('Outcome: FAILURE')) {
-                    appendDebugLog('\nQuest completed successfully but server disconnected. This is expected behavior.');
-                    return;
-                }
-                throw fetchError;
-            }
-
+            const response = await fetch('/monitor/run_async', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
             const result = await response.json();
-            appendDebugLog(`Response: ${JSON.stringify(result, null, 2)}`);
-
-            if (result.success) {
-                // Clear previous output
-                debugLog = '';
-
-                // Display quest header
-                appendDebugLog(`QUEST: ${result.run?.quest_name || result.quest_name || 'Unknown'}`);
-                // Use appropriate agent identification
-                let agentName = result.run?.agent_id || 'Unknown';
-                if (result.run?.agent_config?.model) {
-                    agentName = `${agentName} (${result.run.agent_config.model})`;
-                }
-                appendDebugLog(`AGENT: ${agentName}`);
-                // Show step count instead of start time
-                appendDebugLog(`STEPS: ${result.steps?.length || 0}`);
-                if (result.run?.end_time) {
-                    const endTime = new Date(result.run.end_time);
-                    appendDebugLog(`END TIME: ${endTime.toLocaleString()}`);
-                }
-                if (result.outcome) {
-                    appendDebugLog(`OUTCOME: ${result.outcome}`);
-                }
-                appendDebugLog('');
-                appendDebugLog(`========== QUEST PLAYTHROUGH ==========\n`);
-
-                // Display all steps in a human-readable format
-                result.steps.forEach((state, index) => {
-                    // Step header with number
-                    appendDebugLog(`\n----- STEP ${state.step} -----\n`);
-
-                    // Observation text - use wrapped_observation if available
-                    // We still wrap client-side even if wrapped_observation is available (double-wrapping handled by function)
-                    const observationText = state.wrapped_observation || state.observation;
-                    appendDebugLog(`${observationText}\n`);
-
-                    // Format choices as a numbered list
-                    if (state.choices && state.choices.length > 0) {
-                        appendDebugLog(`Available choices:`);
-                        state.choices.forEach((choice, i) => {
-                            // Use wrapped_text if available
-                            const choiceText = choice.wrapped_text || choice.text;
-                            // If text contains line breaks, indent subsequent lines
-                            if (choiceText.includes('\n')) {
-                                const lines = choiceText.split('\n');
-                                appendDebugLog(`${i+1}. ${lines[0]}`);
-                                lines.slice(1).forEach(line => {
-                                    appendDebugLog(`   ${line}`);
-                                });
-                            } else {
-                                appendDebugLog(`${i+1}. ${choiceText}`);
-                            }
-                        });
-                        appendDebugLog(``);
-                    }
-
-                    // Show the action taken - only if we have choices
-                    if (state.action && state.choices && state.choices.length > 0) {
-                        const choiceIndex = parseInt(state.action) - 1;
-                        if (choiceIndex >= 0 && choiceIndex < state.choices.length) {
-                            // Use wrapped_text if available
-                            const choice = state.choices[choiceIndex];
-                            const choiceText = choice.wrapped_text || choice.text;
-                            
-                            // If text contains line breaks, indent subsequent lines
-                            if (choiceText.includes('\n')) {
-                                const lines = choiceText.split('\n');
-                                appendDebugLog(`Selected option ${state.action}: ${lines[0]}`);
-                                lines.slice(1).forEach(line => {
-                                    appendDebugLog(`   ${line}`);
-                                });
-                                appendDebugLog(``);
-                            } else {
-                                appendDebugLog(`Selected option ${state.action}: ${choiceText}\n`);
-                            }
-                        }
-                    }
-
-                    // Get the NEXT step's LLM response (if available) which corresponds to THIS step's choices
-                    const nextStepIndex = index + 1;
-                    if (nextStepIndex < result.steps.length && result.steps[nextStepIndex].llm_response) {
-                        let nextStepResponse = result.steps[nextStepIndex].llm_response;
-
-                        // If nextStepResponse is a string, parse it as JSON
-                        if (typeof nextStepResponse === 'string') {
-                            try {
-                                nextStepResponse = JSON.parse(nextStepResponse);
-                            } catch (e) {
-                                console.error('Failed to parse LLM response as JSON:', e);
-                                nextStepResponse = {};
-                            }
-                        }
-
-                        // Show reasoning if available
-                        if (nextStepResponse && nextStepResponse.reasoning) {
-                            // Use the full string instead of embedding in template string to ensure wrapping
-                            const reasoningLine = `Reasoning: ${nextStepResponse.reasoning}`;
-                            appendDebugLog(reasoningLine + '\n');
-                        }
-
-                        // Show analysis if available
-                        if (nextStepResponse && nextStepResponse.analysis) {
-                            // Use the full string instead of embedding in template string to ensure wrapping
-                            const analysisLine = `Analysis: ${nextStepResponse.analysis}`;
-                            appendDebugLog(analysisLine + '\n');
-                        }
-                    }
-                });
-
-                // Show final outcome
-                appendDebugLog(`\n========== QUEST OUTCOME: ${result.outcome} ==========\n`);
-            } else {
-                throw new Error(result.error);
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to start run');
             }
+            activeRunId = result.run_id;
+            appendDebugLog(`Run ID: ${activeRunId}`);
+
+            statusPollHandle = setInterval(pollRunStatus, 1500);
+            eventsPollHandle = setInterval(pollRunEvents, 1200);
+            pollRunStatus();
+            pollRunEvents();
         } catch (error) {
             console.error('Error running quest:', error);
             appendDebugLog(`Error: ${error.message}`);
-            if (error.message === 'Failed to fetch' && debugLog.includes('Outcome:')) {
-                appendDebugLog('\nQuest completed successfully but server disconnected. This is expected behavior.');
-            } else {
-                alert(`Error running quest: ${error.message}`);
-            }
-        } finally {
             document.getElementById('questProgress').classList.add('d-none');
-            appendDebugLog('\nQuest run completed.');
+            alert(`Error running quest: ${error.message}`);
         }
     });
 </script>

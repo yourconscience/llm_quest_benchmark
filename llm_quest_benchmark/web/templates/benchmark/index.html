@@ -45,6 +45,42 @@
         <div class="col-lg-6">
             <!-- Progress Tracker Component -->
             {% include "components/progress_tracker.html" %}
+
+            <div class="card border-0 shadow-sm mb-4" id="benchmarkMatrixCard" style="display: none;">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Live Run Matrix</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                        <table class="table table-sm table-hover align-middle mb-0" id="benchmarkMatrixTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Quest</th>
+                                    <th>Agent</th>
+                                    <th>Status</th>
+                                    <th>Outcome</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" class="text-center py-3 text-muted">Waiting for benchmark start...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4" id="benchmarkIssuesCard" style="display: none;">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Recent Issues</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush" id="benchmarkIssuesList">
+                        <li class="list-group-item text-muted">No issues reported yet.</li>
+                    </ul>
+                </div>
+            </div>
             
             <!-- Recent Benchmark Results -->
             <div class="card border-0 shadow-sm">
@@ -112,6 +148,8 @@
         
         // Disable run button during execution
         document.getElementById('runBenchmarkBtn').disabled = true;
+        document.getElementById('benchmarkMatrixCard').style.display = 'block';
+        document.getElementById('benchmarkIssuesCard').style.display = 'block';
         
         // Send config to server
         fetch('/benchmark/run', {
@@ -138,6 +176,7 @@
                     showError(error);
                     document.getElementById('runBenchmarkBtn').disabled = false;
                 });
+                startBenchmarkDetailsPolling('/benchmark/status/' + benchmarkId);
             } else {
                 hideProgressTracker();
                 showError(data.error);
@@ -149,6 +188,69 @@
             showError('Failed to start benchmark: ' + error);
             document.getElementById('runBenchmarkBtn').disabled = false;
         });
+    }
+
+    function statusBadge(status, outcome = null) {
+        if (status === 'running') return '<span class="badge bg-primary">running</span>';
+        if (status === 'pending') return '<span class="badge bg-secondary">pending</span>';
+        if (status === 'complete' && outcome === 'SUCCESS') return '<span class="badge bg-success">complete</span>';
+        if (status === 'complete') return '<span class="badge bg-warning text-dark">complete</span>';
+        return `<span class="badge bg-secondary">${status || 'unknown'}</span>`;
+    }
+
+    function renderBenchmarkMatrix(pairs) {
+        const tbody = document.querySelector('#benchmarkMatrixTable tbody');
+        tbody.innerHTML = '';
+        if (!pairs || pairs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">No pair data yet.</td></tr>';
+            return;
+        }
+        pairs.forEach((pair) => {
+            const outcomeBadge = pair.outcome
+                ? `<span class="badge ${pair.outcome === 'SUCCESS' ? 'bg-success' : pair.outcome === 'TIMEOUT' ? 'bg-warning text-dark' : 'bg-danger'}">${pair.outcome}</span>`
+                : '<span class="text-muted">-</span>';
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${pair.quest_name || pair.quest || '-'}</td>
+                <td>${pair.agent_id || '-'}</td>
+                <td>${statusBadge(pair.status, pair.outcome)}</td>
+                <td>${outcomeBadge}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function renderBenchmarkIssues(issues) {
+        const list = document.getElementById('benchmarkIssuesList');
+        list.innerHTML = '';
+        if (!issues || issues.length === 0) {
+            list.innerHTML = '<li class="list-group-item text-muted">No issues reported yet.</li>';
+            return;
+        }
+        issues.slice(0, 10).forEach((issue) => {
+            const item = document.createElement('li');
+            item.className = 'list-group-item small';
+            item.innerHTML = `<strong>${issue.outcome}</strong>: ${issue.quest_name} with ${issue.agent_id}${issue.error ? ` <span class="text-muted">(${issue.error})</span>` : ''}`;
+            list.appendChild(item);
+        });
+    }
+
+    function startBenchmarkDetailsPolling(url, interval = 2000) {
+        const timer = setInterval(() => {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) return;
+                    renderBenchmarkMatrix(data.pairs || []);
+                    renderBenchmarkIssues(data.recent_issues || []);
+                    if (data.status === 'complete' || data.status === 'error') {
+                        clearInterval(timer);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error polling benchmark details:', error);
+                });
+        }, interval);
     }
     
     function showError(message) {

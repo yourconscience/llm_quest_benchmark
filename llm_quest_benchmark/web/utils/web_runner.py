@@ -19,7 +19,7 @@ from llm_quest_benchmark.schemas.state import AgentState
 from llm_quest_benchmark.schemas.config import AgentConfig
 from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
 from llm_quest_benchmark.environments.qm import QMPlayerEnv
-from ..models.database import db, Run, Step
+from ..models.database import db, Run, Step, RunEvent
 from .errors import validate_run, validate_choice, RunNotFoundError, RunCompletedError
 from llm_quest_benchmark.constants import DEFAULT_QUEST_TIMEOUT
 
@@ -31,7 +31,8 @@ def run_quest_with_db_logging(
     run_record: Run,
     timeout: int = DEFAULT_QUEST_TIMEOUT,
     debug: bool = False,
-    request = None
+    request = None,
+    event_sink: Optional[Callable[[str, Dict[str, Any]], None]] = None,
 ) -> Dict[str, Any]:
     """Run a quest and log results to database.
 
@@ -52,6 +53,59 @@ def run_quest_with_db_logging(
     # Get the current Flask app
     app = current_app._get_current_object()
 
+    def _emit_event(event_name: str, payload: Dict[str, Any]) -> None:
+        if event_sink:
+            try:
+                event_sink(event_name, payload)
+            except Exception as e:
+                logger.error(f"Error in event sink: {e}")
+
+    def _serialize_step_event(data: AgentState) -> Dict[str, Any]:
+        choices = data.choices or []
+        action_raw = data.action
+        selected_map: Dict[str, str] = {}
+        action_idx: Optional[int] = None
+        try:
+            action_idx = int(action_raw) if action_raw is not None else None
+        except (TypeError, ValueError):
+            action_idx = None
+
+        if action_idx is not None and 1 <= action_idx <= len(choices):
+            selected_map[str(action_idx)] = choices[action_idx - 1].get("text", "")
+
+        llm_payload: Dict[str, Any] = {}
+        if data.llm_response is not None:
+            if hasattr(data.llm_response, "to_dict"):
+                llm_payload = data.llm_response.to_dict()
+            elif isinstance(data.llm_response, dict):
+                llm_payload = data.llm_response
+
+        llm_decision = {
+            "analysis": llm_payload.get("analysis"),
+            "reasoning": llm_payload.get("reasoning"),
+            "is_default": bool(llm_payload.get("is_default", False)),
+            "parse_mode": llm_payload.get("parse_mode"),
+            "parse_fallback_used": bool(llm_payload.get("is_default", False)),
+            "choice": selected_map,
+        }
+        usage = {
+            "prompt_tokens": int(llm_payload.get("prompt_tokens") or 0),
+            "completion_tokens": int(llm_payload.get("completion_tokens") or 0),
+            "total_tokens": int(llm_payload.get("total_tokens") or 0),
+            "estimated_cost_usd": llm_payload.get("estimated_cost_usd"),
+        }
+        indexed_choices = {
+            str(i): c.get("text", "")
+            for i, c in enumerate(choices, start=1)
+        }
+        return {
+            "observation": data.observation,
+            "choices": indexed_choices,
+            "selected_action": action_idx,
+            "llm_decision": llm_decision,
+            "usage": usage,
+        }
+
     def step_callback(event: str, data: Any) -> None:
         """Callback for each step of the quest"""
         nonlocal timeout_occurred
@@ -60,6 +114,18 @@ def run_quest_with_db_logging(
             timeout_occurred = True
             if debug:
                 logger.debug("Timeout callback received")
+            with app.app_context():
+                try:
+                    timeout_event = RunEvent(
+                        run_id=run_record.id,
+                        event_type="timeout",
+                        payload={"message": f"Quest timed out after {timeout} seconds"},
+                    )
+                    db.session.add(timeout_event)
+                    db.session.commit()
+                except Exception as e:
+                    logger.error(f"Error logging timeout event: {e}")
+            _emit_event("timeout", {"run_id": run_record.id, "timeout": timeout})
             return
 
         if event == "game_state" and isinstance(data, AgentState):
@@ -77,7 +143,25 @@ def run_quest_with_db_logging(
                         llm_response=data.llm_response.to_dict() if data.llm_response else None
                     )
                     db.session.add(step)
+                    step_event_payload = _serialize_step_event(data)
+                    run_event = RunEvent(
+                        run_id=run_record.id,
+                        event_type="step",
+                        step=data.step,
+                        location_id=data.location_id,
+                        payload=step_event_payload,
+                    )
+                    db.session.add(run_event)
                     db.session.commit()
+                    _emit_event(
+                        "step",
+                        {
+                            "run_id": run_record.id,
+                            "event_id": run_event.id,
+                            "step": data.step,
+                            "location_id": data.location_id,
+                        },
+                    )
                 except Exception as e:
                     logger.error(f"Error in step callback: {e}")
                     logger.error(traceback.format_exc())
@@ -113,14 +197,53 @@ def run_quest_with_db_logging(
         run_record.end_time = datetime.utcnow()
         if outcome is None and timeout_occurred:
             run_record.outcome = 'TIMEOUT'
+            run_record.reward = 0.0
         elif outcome is not None:
-            run_record.outcome = 'SUCCESS' if outcome == QuestOutcome.SUCCESS else 'FAILURE'
+            if outcome == QuestOutcome.SUCCESS:
+                run_record.outcome = 'SUCCESS'
+            elif outcome == QuestOutcome.FAILURE:
+                run_record.outcome = 'FAILURE'
+            elif outcome == QuestOutcome.TIMEOUT:
+                run_record.outcome = 'TIMEOUT'
+            elif outcome == QuestOutcome.ERROR:
+                run_record.outcome = 'ERROR'
+            else:
+                run_record.outcome = 'FAILURE'
+            run_record.reward = 1.0 if run_record.outcome == 'SUCCESS' else 0.0
     else:
         # Explicitly set end_time to None for initialization
         run_record.end_time = None
 
     # Commit all database changes at once
     db.session.commit()
+
+    if not is_initialization:
+        with app.app_context():
+            try:
+                outcome_event = RunEvent(
+                    run_id=run_record.id,
+                    event_type="outcome",
+                    step=len(steps) if steps else None,
+                    location_id=steps[-1].location_id if steps else None,
+                    payload={
+                        "outcome": run_record.outcome,
+                        "step_count": len(steps),
+                        "timeout": bool(timeout_occurred),
+                    },
+                )
+                db.session.add(outcome_event)
+                db.session.commit()
+                _emit_event(
+                    "outcome",
+                    {
+                        "run_id": run_record.id,
+                        "event_id": outcome_event.id,
+                        "outcome": run_record.outcome,
+                        "step_count": len(steps),
+                    },
+                )
+            except Exception as e:
+                logger.error(f"Error logging outcome event: {e}")
 
     # Get the current state (first step) for the response
     current_state = steps[0].to_dict() if steps else None

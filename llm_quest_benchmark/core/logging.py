@@ -117,7 +117,9 @@ class QuestLogger:
         parsed_action_index = self._safe_int(action)
         analysis = None
         reasoning = None
+        subgoal = None
         is_default = True
+        parse_mode = None
         prompt_tokens = 0
         completion_tokens = 0
         total_tokens = 0
@@ -132,7 +134,9 @@ class QuestLogger:
             )
             analysis = llm_response.get("analysis")
             reasoning = llm_response.get("reasoning")
+            subgoal = llm_response.get("subgoal")
             is_default = bool(llm_response.get("is_default", False))
+            parse_mode = llm_response.get("parse_mode")
             prompt_tokens = int(llm_response.get("prompt_tokens") or 0)
             completion_tokens = int(llm_response.get("completion_tokens") or 0)
             total_tokens = int(
@@ -145,7 +149,9 @@ class QuestLogger:
         llm_decision = {
             "analysis": analysis,
             "reasoning": reasoning,
+            "subgoal": subgoal,
             "is_default": is_default,
+            "parse_mode": parse_mode,
             "choice": self._selected_choice_map(choices_map, parsed_action_index),
             "prompt_tokens": prompt_tokens,
             "completion_tokens": completion_tokens,

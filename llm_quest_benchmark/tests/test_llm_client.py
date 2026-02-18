@@ -44,6 +44,12 @@ def test_get_llm_client_anthropic():
     assert isinstance(client, AnthropicClient)
 
 
+def test_parse_model_name_haiku_alias():
+    spec = parse_model_name("claude-3-5-haiku-latest")
+    assert spec.provider == "anthropic"
+    assert spec.model_id == "claude-3-5-haiku-latest"
+
+
 @patch("llm_quest_benchmark.llm.client.OpenAI")
 def test_openai_gpt5_uses_max_completion_tokens(mock_openai_cls):
     mock_client = Mock()

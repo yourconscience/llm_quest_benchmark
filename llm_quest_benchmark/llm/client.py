@@ -62,6 +62,7 @@ DEFAULT_MODEL_PRICING_USD_PER_1M = {
     # Anthropic
     "anthropic:claude-sonnet-4-5": {"input": 3.0, "output": 15.0},
     "anthropic:claude-opus-4-1-20250805": {"input": 15.0, "output": 75.0},
+    "anthropic:claude-3-5-haiku-latest": {"input": 0.8, "output": 4.0},
     # Google Gemini
     "google:gemini-2.5-pro": {"input": 1.25, "output": 10.0},
     "google:gemini-2.5-flash": {"input": 0.3, "output": 2.5},
@@ -489,7 +490,13 @@ def get_llm_client(model_name: str, system_prompt: str = "", temperature: float 
             request_timeout=request_timeout,
         )
     if spec.provider in {"openai", "google", "openrouter", "deepseek"}:
-        max_tokens = 512 if spec.provider == "google" else 200
+        if spec.provider == "google":
+            max_tokens = 512
+        elif spec.provider == "openai":
+            # GPT-5/o models often require larger completion budgets for stable structured output.
+            max_tokens = 900
+        else:
+            max_tokens = 300
         return OpenAICompatibleClient(
             provider=spec.provider,
             model_id=spec.model_id,

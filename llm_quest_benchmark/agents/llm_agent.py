@@ -1,4 +1,5 @@
 """LLM agent for Space Rangers quests"""
+import hashlib
 import json
 import logging
 import re
@@ -44,45 +45,64 @@ SAFE_CHOICE_KEYWORDS = (
 )
 
 
-def _parse_json_response(response: str,
-                         debug: bool = False,
-                         logger: Optional[logging.Logger] = None) -> Optional[Dict[str, Any]]:
-    """Try to parse response as JSON, with repair attempt if needed"""
+def _parse_json_response(
+    response: str,
+    debug: bool = False,
+    logger: Optional[logging.Logger] = None,
+) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    """Try to parse response as JSON, with repair attempt if needed."""
+    cleaned_response = (response or "").strip()
+    if not cleaned_response:
+        return None, None
+
     try:
         # Extract JSON from response if there are backticks
-        if '```json' in response:
+        if '```json' in cleaned_response:
             # Find the start and end of the JSON block
-            start = response.find('```json') + 7
-            end = response.find('```', start)
+            start = cleaned_response.find('```json') + 7
+            end = cleaned_response.find('```', start)
             if end > start:
-                json_str = response[start:end].strip()
+                json_str = cleaned_response[start:end].strip()
                 if debug and logger:
                     logger.debug(f"Extracted JSON: {json_str}")
                 result = json.loads(json_str)
                 if debug and logger:
                     logger.debug(f"Parsed JSON: {result}")
-                return result
+                return result, "json_fenced"
+
+        # Extract a probable JSON object from free-form text.
+        embedded_json = re.search(r"\{[\s\S]*\}", cleaned_response)
+        if embedded_json:
+            candidate = embedded_json.group(0).strip()
+            if candidate and candidate != cleaned_response:
+                try:
+                    result = json.loads(candidate)
+                    if debug and logger:
+                        logger.debug(f"Parsed embedded JSON: {result}")
+                    return result, "json_embedded"
+                except json.JSONDecodeError:
+                    pass
 
         # Try to parse directly
-        result = json.loads(response)
+        result = json.loads(cleaned_response)
         if debug and logger:
             logger.debug(f"Direct JSON parse successful: {result}")
-        return result
+        return result, "json_direct"
     except json.JSONDecodeError:
         if debug and logger:
             logger.debug("Initial JSON parse failed, attempting repair")
         try:
-            repaired = repair_json(response)
+            repaired = repair_json(cleaned_response)
             if debug and logger:
                 logger.debug(f"Repaired JSON: {repaired}")
             result = json.loads(repaired)
             if debug and logger:
                 logger.debug(f"Parse of repaired JSON successful: {result}")
-            return result
+            return result, "json_repaired"
         except Exception as e:
             if debug and logger:
                 logger.error(f"JSON repair failed: {e}")
-            return None
+            return None, None
 
 
 def _validate_action_number(action: int,
@@ -177,7 +197,7 @@ def parse_llm_response(response: str,
     raw_reasoning = _raw_reasoning_fallback(response)
 
     # Try parsing as JSON first
-    response_json = _parse_json_response(response, debug, logger)
+    response_json, json_parse_mode = _parse_json_response(response, debug, logger)
     if response_json and isinstance(response_json, dict):
         analysis = response_json.get("analysis") or extracted_analysis
         reasoning = response_json.get("reasoning") or extracted_reasoning
@@ -196,10 +216,14 @@ def parse_llm_response(response: str,
             try:
                 action = int(action_value)
                 if _validate_action_number(action, num_choices, debug, logger):
-                    return LLMResponse(action=action,
-                                       reasoning=reasoning,
-                                       analysis=analysis,
-                                       is_default=False)
+                    return LLMResponse(
+                        action=action,
+                        reasoning=reasoning,
+                        analysis=analysis,
+                        subgoal=response_json.get('subgoal'),
+                        is_default=False,
+                        parse_mode=json_parse_mode or "json",
+                    )
             except (ValueError, TypeError):
                 if debug and logger:
                     logger.error(f"Invalid action value in JSON: {action_value}")
@@ -213,6 +237,7 @@ def parse_llm_response(response: str,
                 reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
                 analysis=extracted_analysis,
                 is_default=False,
+                parse_mode="number_only",
             )
     except ValueError:
         if debug and logger:
@@ -226,6 +251,7 @@ def parse_llm_response(response: str,
             reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
             analysis=extracted_analysis,
             is_default=False,
+            parse_mode="number_extracted",
         )
 
     # Default to first choice if all parsing attempts fail
@@ -238,6 +264,7 @@ def parse_llm_response(response: str,
         reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
         analysis=extracted_analysis,
         is_default=True,
+        parse_mode="default_first",
     )
 
 
@@ -288,11 +315,14 @@ class LLMAgent(QuestPlayer):
         self.llm = None
         self.history: List[LLMResponse] = []
         self._observation_history: List[str] = []
+        self._decision_history: List[Dict[str, Any]] = []
+        self._state_action_counts: Dict[str, Dict[int, int]] = {}
         self._context_window = 3
         self._context_chars = 220
+        self._decision_window = 5
+        self._loop_repetition_threshold = 1
+        self._max_state_signatures = 200
         self._use_safety_filter = True
-        self._decision_trace: List[Dict[str, Any]] = []
-        self._state_action_counts: Dict[str, Dict[int, int]] = {}
         self._last_response = LLMResponse(action=1,
                                           is_default=True)  # Initialize with default response
 
@@ -323,7 +353,7 @@ class LLMAgent(QuestPlayer):
             self._observation_history = self._observation_history[-20:]
 
     def _build_contextual_state(self, state: str) -> str:
-        """Add a compact previous-step context window for better local decisions."""
+        """Add compact state+decision memory for better local decisions."""
         blocks: List[str] = []
 
         if len(self._observation_history) > 1:
@@ -331,24 +361,133 @@ class LLMAgent(QuestPlayer):
             if previous:
                 snippets = []
                 for idx, text in enumerate(previous, start=1):
-                    clipped = text if len(text) <= self._context_chars else text[:self._context_chars] + "..."
+                    clipped = (
+                        text
+                        if len(text) <= self._context_chars
+                        else text[:self._context_chars] + "..."
+                    )
                     snippets.append(f"[Previous {idx}] {clipped}")
                 blocks.append("Recent context from previous steps:\n" + "\n\n".join(snippets))
 
-        if self._decision_trace:
-            decisions = self._decision_trace[-3:]
-            lines = []
-            for idx, entry in enumerate(decisions, start=1):
-                choice = (entry.get("choice_text") or "").strip()
-                choice = choice[:120] + ("..." if len(choice) > 120 else "")
-                reason = (entry.get("reasoning") or "").strip()
-                reason = reason[:90] + ("..." if len(reason) > 90 else "")
-                lines.append(f"[Decision {idx}] chose {entry.get('action')}: {choice}; why: {reason}")
-            blocks.append("Recent selected actions:\n" + "\n".join(lines))
+        if self._decision_history:
+            recent_subgoals = []
+            for item in self._decision_history[-self._decision_window:]:
+                subgoal = (item.get("subgoal") or "").strip()
+                if not subgoal:
+                    continue
+                if recent_subgoals and recent_subgoals[-1] == subgoal:
+                    continue
+                recent_subgoals.append(subgoal)
+            if recent_subgoals:
+                lines = [
+                    f"[Subgoal {idx}] {sg}"
+                    for idx, sg in enumerate(recent_subgoals, start=1)
+                ]
+                blocks.append(
+                    "Subgoal memory (recent short-term objectives):\n" + "\n".join(lines)
+                )
+
+            recent_decisions = self._decision_history[-self._decision_window:]
+            decision_lines = []
+            for idx, item in enumerate(recent_decisions, start=1):
+                choice = item.get("choice", "")
+                parse_mode = item.get("parse_mode", "unknown")
+                subgoal = item.get("subgoal")
+                subgoal_suffix = f" | subgoal: {subgoal}" if subgoal else ""
+                decision_lines.append(
+                    f"[Decision {idx}] action {item.get('action')}: {choice} (parse={parse_mode}){subgoal_suffix}"
+                )
+            blocks.append("Recent selected actions:\n" + "\n".join(decision_lines))
 
         if not blocks:
             return state
-        return "\n\n".join(blocks) + f"\n\n{state}"
+
+        return f"{'\n\n'.join(blocks)}\n\nCurrent story state:\n{state}"
+
+    @staticmethod
+    def _normalize_for_signature(value: str, max_len: int = 320) -> str:
+        text = (value or "").lower()
+        text = re.sub(r"\d+", "<num>", text)
+        text = re.sub(r"\s+", " ", text).strip()
+        if len(text) > max_len:
+            return text[:max_len]
+        return text
+
+    def _state_signature(self, state: str, choices: List[Dict[str, str]]) -> str:
+        normalized_state = self._normalize_for_signature(state, max_len=420)
+        normalized_choices = "|".join(
+            self._normalize_for_signature(choice.get("text", ""), max_len=110)
+            for choice in choices
+        )
+        raw_signature = f"{normalized_state}||{normalized_choices}"
+        return hashlib.sha1(raw_signature.encode("utf-8", errors="ignore")).hexdigest()[:20]
+
+    def _apply_loop_breaker(self, action: int, state_signature: str, choices: List[Dict[str, str]]) -> int:
+        """Avoid repeating the same action in repeated states."""
+        if len(choices) < 2:
+            return action
+
+        counts = self._state_action_counts.get(state_signature, {})
+        selected_count = counts.get(action, 0)
+        visits = sum(counts.values())
+        if visits < self._loop_repetition_threshold or selected_count < self._loop_repetition_threshold:
+            return action
+
+        ranked = []
+        for idx, choice in enumerate(choices, start=1):
+            ranked.append((counts.get(idx, 0), self._choice_risk_score(choice.get("text", "")), idx))
+        ranked.sort(key=lambda item: (item[0], item[1]))
+
+        replacement = action
+        for _, _, candidate in ranked:
+            if candidate != action:
+                replacement = candidate
+                break
+
+        if replacement != action and self.debug:
+            self.logger.debug(
+                "Loop breaker override: state=%s action %s -> %s (counts=%s)",
+                state_signature,
+                action,
+                replacement,
+                counts,
+            )
+        return replacement
+
+    def _remember_decision(
+        self,
+        state: str,
+        choices: List[Dict[str, str]],
+        state_signature: str,
+        response: LLMResponse,
+    ) -> None:
+        action = int(response.action)
+        counts = self._state_action_counts.setdefault(state_signature, {})
+        counts[action] = counts.get(action, 0) + 1
+
+        if len(self._state_action_counts) > self._max_state_signatures:
+            oldest_key = next(iter(self._state_action_counts.keys()))
+            if oldest_key != state_signature:
+                self._state_action_counts.pop(oldest_key, None)
+
+        selected_text = ""
+        if 1 <= action <= len(choices):
+            selected_text = choices[action - 1].get("text", "")
+        state_snippet = state.strip()
+        if len(state_snippet) > self._context_chars:
+            state_snippet = state_snippet[:self._context_chars] + "..."
+
+        self._decision_history.append(
+            {
+                "state": state_snippet,
+                "action": action,
+                "choice": selected_text,
+                "parse_mode": response.parse_mode or "unknown",
+                "subgoal": (response.subgoal or "").strip()[:160] or None,
+            }
+        )
+        if len(self._decision_history) > 40:
+            self._decision_history = self._decision_history[-40:]
 
     def _choice_risk_score(self, choice_text: str) -> int:
         text = (choice_text or "").lower()
@@ -505,6 +644,7 @@ class LLMAgent(QuestPlayer):
             for i, choice in enumerate(choices):
                 self.logger.debug(f"Choice {i+1}: {choice.get('text', 'NO TEXT')}")
         try:
+            state_signature = self._state_signature(state, choices)
             # Format prompt
             prompt = self._format_prompt(self._build_contextual_state(state), choices)
             if self.debug:
@@ -522,7 +662,6 @@ class LLMAgent(QuestPlayer):
                 self.logger.debug(f"Available choices: {choices_debug}")
 
             # Parse response
-            state_key = self._state_fingerprint(state)
             first_response = parse_llm_response(
                 llm_response,
                 len(choices),
@@ -538,6 +677,7 @@ class LLMAgent(QuestPlayer):
                 retry_parsed = parse_llm_response(retry_response, len(choices), self.debug,
                                                   self.logger)
                 if not retry_parsed.is_default:
+                    retry_parsed.parse_mode = f"retry_{retry_parsed.parse_mode or 'parsed'}"
                     parsed_response = retry_parsed
                 elif self._needs_force_numeric_retry():
                     # GPT-5/o models occasionally return empty visible text on long prompts.
@@ -554,8 +694,12 @@ class LLMAgent(QuestPlayer):
                         self.logger,
                     )
                     if not force_retry_parsed.is_default:
+                        force_retry_parsed.parse_mode = (
+                            f"force_retry_{force_retry_parsed.parse_mode or 'parsed'}"
+                        )
                         parsed_response = force_retry_parsed
 
+            action_before_policy = parsed_response.action
             if parsed_response is not first_response:
                 if parsed_response.analysis is None and first_response.analysis is not None:
                     parsed_response.analysis = first_response.analysis
@@ -572,16 +716,18 @@ class LLMAgent(QuestPlayer):
                             parsed_response.reasoning = first_raw_reasoning
 
             parsed_response.action = self._apply_safety_filter(parsed_response.action, choices)
-            escaped_action, escaped = self._apply_loop_escape(
-                state_key,
+            if parsed_response.action != action_before_policy and not parsed_response.reasoning:
+                parsed_response.reasoning = "policy_safety_override"
+            loop_adjusted_action = self._apply_loop_breaker(
                 parsed_response.action,
+                state_signature,
                 choices,
             )
-            if escaped:
-                parsed_response.action = escaped_action
+            if loop_adjusted_action != parsed_response.action:
+                parsed_response.action = loop_adjusted_action
                 parsed_response.reasoning = (
-                    (parsed_response.reasoning or "loop_escape")
-                    + "; loop_escape_diversify"
+                    (parsed_response.reasoning + "; " if parsed_response.reasoning else "")
+                    + "policy_loop_break_override"
                 )
             usage_payload = self._normalize_usage(llm_usage)
             parsed_response.prompt_tokens = usage_payload["prompt_tokens"]
@@ -596,6 +742,7 @@ class LLMAgent(QuestPlayer):
             # Store response in history
             self.history.append(parsed_response)
             self._last_response = parsed_response
+            self._remember_decision(state, choices, state_signature, parsed_response)
 
             # Check that action is within valid range before returning
             if parsed_response.action < 1 or parsed_response.action > len(choices):
@@ -606,16 +753,15 @@ class LLMAgent(QuestPlayer):
                 parsed_response.action = 1
                 self.logger.warning(f"Defaulting to action 1 instead")
 
-            self._record_decision(state, parsed_response.action, choices, parsed_response.reasoning)
             return parsed_response.action
 
         except Exception as e:
             self.logger.error(f"Error during LLM call: {e}")
-            error_reason = _raw_reasoning_fallback(f"llm_call_error: {e}")
             default_response = LLMResponse(
                 action=1,
-                reasoning=error_reason,
                 is_default=True,
+                parse_mode="error_default",
+                reasoning=_raw_reasoning_fallback(f"llm_call_error: {e}"),
             )
             self.history.append(default_response)
             self._last_response = default_response
@@ -625,7 +771,7 @@ class LLMAgent(QuestPlayer):
         """Reset agent state"""
         self.history = []
         self._observation_history = []
-        self._decision_trace = []
+        self._decision_history = []
         self._state_action_counts = {}
         self._last_response = LLMResponse(action=1, is_default=True)  # Reset to default response
 
@@ -633,7 +779,7 @@ class LLMAgent(QuestPlayer):
         """Called when game starts"""
         super().on_game_start()
         self._observation_history = []
-        self._decision_trace = []
+        self._decision_history = []
         self._state_action_counts = {}
         self._last_response = LLMResponse(action=1, is_default=True)  # Reset to default response
 
