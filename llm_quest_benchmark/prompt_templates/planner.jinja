@@ -1,0 +1,50 @@
+{% if prompt_kind == "plan" %}
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+{% if current_plan %}
+Current plan to review:
+{{ current_plan }}
+
+{% endif %}
+{% if replan_reason %}
+Why the plan needs review:
+{{ replan_reason }}
+
+{% endif %}
+Write a short plan in 3-5 sentences. Focus on the strategy, the next goal, and what to avoid.
+Return plain text only.
+{% else %}
+Current plan:
+{{ current_plan or "No plan available." }}
+
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+{% if recent_actions %}
+Recent actions:
+{% for action in recent_actions %}
+- {{ action }}
+{% endfor %}
+
+{% endif %}
+Goal: choose the action that best matches the current plan while keeping the mission alive.
+Guidelines:
+1. Follow the plan unless the latest text clearly contradicts it.
+2. Prefer actions that gather clues, preserve resources, or reduce obvious risk.
+3. Avoid repeating failed loop actions when a safer branch exists.
+4. If the plan is uncertain, pick the safest action that still advances the mission.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}
+{% endif %}
