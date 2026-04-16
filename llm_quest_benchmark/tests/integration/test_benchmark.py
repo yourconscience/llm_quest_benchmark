@@ -67,6 +67,7 @@ def test_benchmark_e2e(caplog, tmp_path):
         assert result['model'] == "random_choice"
         assert result['temperature'] == 0.0
         assert result['template'] == DEFAULT_TEMPLATE
+        assert result['attempt'] == 1
         assert 'agent_id' in result
         assert 'outcome' in result
 
@@ -78,3 +79,44 @@ def test_benchmark_e2e(caplog, tmp_path):
     except Exception as e:
         print(f"\nBenchmark failed with error: {str(e)}")
         raise e
+
+
+@pytest.mark.timeout(20)
+def test_benchmark_supports_multiple_runs_per_agent(tmp_path):
+    quest_path = tmp_path / "repeatable_quest.qm"
+    quest_path.write_text("""
+    [start]
+    text: You are in a room.
+    choices:
+        - Go north: room1
+        - Go south: room2
+
+    [room1]
+    text: You found the treasure!
+    success: true
+
+    [room2]
+    text: Dead end.
+    failure: true
+    """)
+
+    config = BenchmarkConfig(
+        quests=[str(quest_path)],
+        agents=[
+            AgentConfig(
+                model="random_choice",
+                action_template="reasoning",
+                temperature=0.0,
+                runs=2,
+                skip_single=True,
+            )
+        ],
+        quest_timeout=5,
+        max_workers=1,
+        output_dir=str(tmp_path),
+    )
+
+    results = run_benchmark(config)
+
+    assert len(results) == 2
+    assert [result["attempt"] for result in results] == [1, 2]

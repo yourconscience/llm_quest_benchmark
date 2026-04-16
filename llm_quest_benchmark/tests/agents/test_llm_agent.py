@@ -21,8 +21,9 @@ def example_choices():
 
 @pytest.mark.timeout(5)  # Quick unit test
 @patch('llm_quest_benchmark.llm.client.OpenAI')
-def test_agent_basic_flow(mock_openai):
+def test_agent_basic_flow(mock_openai, monkeypatch):
     """Test basic agent functionality with mocked LLM"""
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     # Setup mock
     mock_chat = Mock()
     mock_completion = Mock()
@@ -90,6 +91,13 @@ def test_non_gemini_prompt_uses_selected_template():
     agent = LLMAgent(model_name="gpt-5-mini", action_template="stub.jinja")
     prompt = agent._format_prompt("state", [{"text": "A"}, {"text": "B"}])
     assert "IMPORTANT: Please respond with ONLY a single number" in prompt
+
+
+def test_template_alias_without_suffix_is_supported():
+    agent = LLMAgent(model_name="gpt-5-mini", action_template="knowledge_light")
+    prompt = agent._format_prompt("state", [{"text": "A"}, {"text": "B"}])
+    assert "Space Rangers quest primer" in prompt
+    assert '"result"' in prompt
 
 
 def test_gpt5_force_numeric_retry_path():

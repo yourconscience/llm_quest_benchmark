@@ -4,9 +4,17 @@ from typing import Optional
 
 from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
+from llm_quest_benchmark.agents.planner_agent import PlannerAgent
 from llm_quest_benchmark.agents.random_agent import RandomAgent
+from llm_quest_benchmark.agents.tool_agent import ToolAgent
 from llm_quest_benchmark.agents.human_player import HumanPlayer
-from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_TEMPLATE, DEFAULT_TEMPERATURE, SYSTEM_ROLE_TEMPLATE
+from llm_quest_benchmark.constants import (
+    DEFAULT_MODEL,
+    DEFAULT_TEMPLATE,
+    DEFAULT_TEMPERATURE,
+    SYSTEM_ROLE_TEMPLATE,
+    normalize_template_name,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +46,7 @@ def create_agent(
         ValueError: If model type is not recognized
     """
     logger.debug(f"Creating agent for model: {model}")
+    resolved_action_template = normalize_template_name(action_template)
 
     # Human player
     if model == "human":
@@ -53,12 +62,32 @@ def create_agent(
                 pass
         return RandomAgent(seed=seed, debug=debug, skip_single=skip_single)
 
+    if resolved_action_template == "planner.jinja":
+        return PlannerAgent(
+            debug=debug,
+            model_name=model,
+            system_template=system_template,
+            action_template=resolved_action_template,
+            temperature=temperature,
+            skip_single=skip_single,
+        )
+
+    if resolved_action_template == "tool_augmented.jinja":
+        return ToolAgent(
+            debug=debug,
+            model_name=model,
+            system_template=system_template,
+            action_template=resolved_action_template,
+            temperature=temperature,
+            skip_single=skip_single,
+        )
+
     # Default to LLM agent
     return LLMAgent(
         debug=debug,
         model_name=model,
         system_template=system_template,
-        action_template=action_template,
+        action_template=resolved_action_template,
         temperature=temperature,
         skip_single=skip_single
     )

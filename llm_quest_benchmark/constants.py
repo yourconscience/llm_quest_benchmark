@@ -76,6 +76,16 @@ STUB_TEMPLATE = "stub.jinja"
 DEFAULT_TEMPLATE = "reasoning.jinja"
 SYSTEM_ROLE_TEMPLATE = "system_role.jinja"
 
+
+def normalize_template_name(template_name: str) -> str:
+    """Normalize template identifiers so CLI/YAML can omit the .jinja suffix."""
+    normalized = (template_name or "").strip()
+    if not normalized:
+        return normalized
+    if Path(normalized).suffix:
+        return normalized
+    return f"{normalized}.jinja"
+
 # Default temperature
 DEFAULT_TEMPERATURE = 0.4
 
