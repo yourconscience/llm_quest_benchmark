@@ -41,3 +41,4 @@ gunicorn.ctl
 # Database
 metrics.db
 instance/
+.omx/
