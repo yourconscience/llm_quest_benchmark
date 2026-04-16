@@ -86,10 +86,6 @@ DEFAULT_BENCHMARK_TIMEOUT_FACTOR = 1.5  # Safety factor for benchmark timeout ca
 MAX_BENCHMARK_TIMEOUT = 7200  # Maximum benchmark timeout (2 hours)
 INFINITE_TIMEOUT = 10**9  # Infinite timeout (used for interactive play)
 
-# Web server
-WEB_SERVER_HOST = "0.0.0.0"
-WEB_SERVER_PORT = 8011
-
 # Quest state detection patterns
 # Pattern to detect credit rewards in text (e.g., "10000 cr")
 CREDIT_REWARD_PATTERN = re.compile(r'(\d+)\s*cr\b')

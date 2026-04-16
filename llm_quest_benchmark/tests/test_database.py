@@ -214,6 +214,43 @@ def test_run_summary_export_is_compact_and_single_file(tmp_path, monkeypatch, qu
     assert exported["usage"]["completion_tokens"] == 5
     assert exported["usage"]["total_tokens"] == 17
     assert exported["usage"]["estimated_cost_usd"] is not None
+    assert exported["metrics"]["total_steps"] == 1
+    assert exported["metrics"]["repetition_count"] == 0
+    assert exported["metrics"]["repetition_rate"] == 0.0
+    assert exported["metrics"]["bad_decision_count"] == 1
+    assert exported["metrics"]["bad_decision_rate"] == 1.0
+
+
+def test_run_summary_export_tracks_repetition_rate(tmp_path, monkeypatch, quest_logger):
+    """Run summary export computes repetition rate from the last five actions."""
+    monkeypatch.setattr(logging_module, "RESULTS_DIR", tmp_path)
+
+    quest_logger.agent = "llm_test-agent"
+    quest_logger.set_quest_file("quests/kr_1_ru/Loop.qm")
+    run_id = quest_logger.current_run_id
+
+    for step_num, action in enumerate(["1", "2", "3", "4", "5", "1"], start=1):
+        quest_logger.log_step(
+            AgentState(
+                step=step_num,
+                location_id=f"room{step_num}",
+                observation=f"Step {step_num}",
+                choices=[{"id": "1", "text": "A"}, {"id": "2", "text": "B"}],
+                action=action,
+                llm_response=LLMResponse(action=int(action)),
+            )
+        )
+
+    quest_logger.set_quest_outcome("SUCCESS", reward=1.0)
+
+    summary_path = tmp_path / "llm_test-agent" / "Loop" / f"run_{run_id}" / "run_summary.json"
+    exported = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert exported["metrics"]["total_steps"] == 6
+    assert exported["metrics"]["repetition_window"] == 5
+    assert exported["metrics"]["repetition_count"] == 1
+    assert exported["metrics"]["repetition_rate"] == pytest.approx(1 / 6)
+    assert exported["metrics"]["bad_decision_count"] == 0
+    assert exported["metrics"]["bad_decision_rate"] == 0.0
 
 
 def test_random_agent_does_not_export_json(tmp_path, monkeypatch, quest_logger):

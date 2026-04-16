@@ -2,6 +2,7 @@
 import logging
 import json
 import sqlite3
+import subprocess
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import shutil
@@ -35,8 +36,6 @@ from llm_quest_benchmark.constants import (
     DEFAULT_TEMPERATURE,
     INFINITE_TIMEOUT,
     SYSTEM_ROLE_TEMPLATE,
-    WEB_SERVER_HOST,
-    WEB_SERVER_PORT,
 )
 from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 from llm_quest_benchmark.agents.human_player import HumanPlayer
@@ -67,6 +66,39 @@ def _parse_run_dir_id(path: Path) -> int:
 def _load_run_summary(path: Path) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def _count_quest_collections(quests_root: Path) -> List[Dict[str, Any]]:
+    """Count quest files in each normalized collection directory."""
+    if not quests_root.exists():
+        return []
+
+    collections = []
+    for collection_dir in sorted(path for path in quests_root.iterdir() if path.is_dir()):
+        count = sum(
+            1
+            for quest_file in collection_dir.rglob("*")
+            if quest_file.is_file() and quest_file.suffix.lower() in {".qm", ".qmm"}
+        )
+        collections.append(
+            {
+                "collection": collection_dir.name,
+                "language": "EN" if collection_dir.name.endswith("_eng") else "RU",
+                "count": count,
+            }
+        )
+    return collections
+
+
+def _summarize_quest_collections(collections: List[Dict[str, Any]]) -> Dict[str, int]:
+    """Aggregate quest counts by language."""
+    en_total = sum(item["count"] for item in collections if item["language"] == "EN")
+    ru_total = sum(item["count"] for item in collections if item["language"] == "RU")
+    return {
+        "EN": en_total,
+        "RU": ru_total,
+        "TOTAL": en_total + ru_total,
+    }
 
 
 def _coerce_choices(step: Dict[str, Any]) -> Dict[str, str]:
@@ -417,6 +449,50 @@ def play(
     except Exception as e:
         log.exception(f"Error during interactive play: {e}")
         raise typer.Exit(code=2)
+
+
+@app.command("download-quests")
+def download_quests() -> None:
+    """Download the upstream quest corpus and print per-collection counts."""
+    repo_root = Path(__file__).resolve().parents[3]
+    script_path = repo_root / "download_quests.sh"
+    quests_root = repo_root / "quests"
+
+    if not script_path.exists():
+        typer.echo(f"Quest download script not found: {script_path}", err=True)
+        raise typer.Exit(code=1)
+
+    try:
+        subprocess.run(["bash", str(script_path)], cwd=repo_root, check=True)
+    except subprocess.CalledProcessError as exc:
+        typer.echo(f"Quest download failed with exit code {exc.returncode}", err=True)
+        raise typer.Exit(code=exc.returncode) from exc
+
+    get_registry(reset_cache=True)
+
+    collections = _count_quest_collections(quests_root)
+    totals = _summarize_quest_collections(collections)
+
+    typer.echo("Quest counts by collection:")
+    for collection in collections:
+        typer.echo(
+            f"- {collection['collection']} ({collection['language']}): "
+            f"{collection['count']} .qm/.qmm files"
+        )
+
+    typer.echo(
+        f"Totals: EN={totals['EN']} RU={totals['RU']} TOTAL={totals['TOTAL']}"
+    )
+
+    english_collection = next(
+        (item for item in collections if item["collection"] == "sr_2_1_2121_eng"),
+        None,
+    )
+    if english_collection and english_collection["count"] < 35:
+        typer.echo(
+            "Blocker: sr_2_1_2121_eng has fewer than 35 English quests.",
+            err=True,
+        )
 
 @app.command()
 def analyze(
@@ -905,46 +981,6 @@ def benchmark(
     except Exception as e:
         typer.echo(f"Error during benchmark: {str(e)}", err=True)
         raise typer.Exit(code=2)
-
-@app.command()
-def server(
-    host: str = typer.Option(WEB_SERVER_HOST, help="Host to run the server on"),
-    port: int = typer.Option(WEB_SERVER_PORT, help="Port to run the server on (will auto-increment if taken)"),
-    debug: bool = typer.Option(False, help="Enable debug mode"),
-    workers: int = typer.Option(4, help="Number of worker processes (only used in production mode)"),
-    production: bool = typer.Option(False, help="Run in production mode using gunicorn")
-):
-    """Start the Flask web interface server.
-
-    This command starts the Flask web interface for running and analyzing quests.
-    It uses Flask's built-in server which is suitable for local development.
-
-    For production use, set the --production flag to use gunicorn with multiple workers.
-
-    Example:
-        llm-quest server  # Run server on default port (8000)
-        llm-quest server --port 5000  # Run on a different port
-        llm-quest server --debug  # Run with debug mode enabled
-        llm-quest server --production --workers 8  # Run in production mode with 8 workers
-    """
-    try:
-        # Setup logging
-        log_manager.setup(debug)
-        log.info("Starting web interface server")
-
-        print(f"Starting server on http://{host}:{port}")
-
-        # Use server_logic to start the server
-        from llm_quest_benchmark.executors.cli.logic.server_logic import start_server
-        success, message = start_server(host, port, debug, workers, production)
-
-        if not success:
-            raise Exception(message)
-
-    except Exception as e:
-        log.exception(f"Error starting server: {e}")
-        raise typer.Exit(code=1)
-
 
 if __name__ == "__main__":
     app()
