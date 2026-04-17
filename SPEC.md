@@ -51,7 +51,7 @@ Inspired by TextQuests (CAIS, 2025) and AgentQuest (NEC, NAACL 2024). See `docs/
 | Prompted | `B` | Existing reasoning/strategic/loop-aware templates. The agent analyzes options and reasons about consequences. |
 | Knowledge | `C` | Domain knowledge injected into context. See knowledge gradient below. Same decision loop as B. |
 | Planner | `D` | Multi-step planning agent. Maintains a plan, re-plans when the situation changes, then picks an action aligned with the plan. |
-| Tool-augmented | `E` | Agent has access to tools: math calculator, domain knowledge lookup, memory of past quest states within the same quest. |
+| Tool-augmented | `E` | Agent has access to tools: quest history (memory of past quest states within the same quest). Calculator and domain knowledge lookup deferred to future PRs. |
 
 ### Knowledge gradient (Mode C levels)
 
