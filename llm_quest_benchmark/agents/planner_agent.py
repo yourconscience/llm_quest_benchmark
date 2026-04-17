@@ -5,33 +5,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from llm_quest_benchmark.agents.llm_agent import LLMAgent, LLMResponse, parse_llm_response
 
-RESOURCE_CHANGE_PATTERN = re.compile(
-    r"\b\d+\s*(?:cr|credits|fuel|hp|health|ammo|energy|supplies)\b",
-    re.IGNORECASE,
-)
-UNEXPECTED_CHANGE_KEYWORDS = (
-    "new location",
-    "location",
-    "sector",
-    "planet",
-    "station",
-    "base",
-    "arrive",
-    "arrived",
-    "entered",
-    "failure",
-    "failed",
-    "alarm",
-    "damage",
-    "damaged",
-    "wounded",
-    "injured",
-    "fuel",
-    "credits",
-    "resource",
-    "supplies",
-)
-
 
 class PlannerAgent(LLMAgent):
     """LLM agent that maintains a short plan and re-plans on notable changes."""
@@ -85,21 +58,21 @@ class PlannerAgent(LLMAgent):
             recent_actions=self._recent_actions(),
         ).strip()
 
-    def _has_unexpected_change(self, observation: str) -> bool:
+    def _observation_changed_significantly(self, observation: str) -> bool:
+        """Check if the observation differs enough from the previous one to warrant re-planning.
+
+        Uses token-level overlap ratio: if less than 50% of tokens are shared,
+        the scene has changed significantly.
+        """
         if len(self._observation_history) < 2:
             return False
 
-        previous = self._observation_history[-2].lower()
-        current = (observation or "").lower()
-        current_resources = set(RESOURCE_CHANGE_PATTERN.findall(current))
-        previous_resources = set(RESOURCE_CHANGE_PATTERN.findall(previous))
-        if current_resources != previous_resources and current_resources:
+        prev_tokens = set(self._observation_history[-2].lower().split())
+        curr_tokens = set((observation or "").lower().split())
+        if not prev_tokens or not curr_tokens:
             return True
-
-        for keyword in UNEXPECTED_CHANGE_KEYWORDS:
-            if keyword in current and keyword not in previous:
-                return True
-        return False
+        overlap = len(prev_tokens & curr_tokens) / max(len(prev_tokens), len(curr_tokens))
+        return overlap < 0.5
 
     def _should_replan(self, observation: str, state_signature: str) -> Tuple[bool, Optional[str]]:
         if not self.current_plan:
@@ -108,8 +81,8 @@ class PlannerAgent(LLMAgent):
         if any(self._state_action_counts.get(state_signature, {}).values()):
             return True, "This state has repeated, so a previous action already failed to progress."
 
-        if self._has_unexpected_change(observation):
-            return True, "The observation introduced a new location, failure signal, or resource change."
+        if self._observation_changed_significantly(observation):
+            return True, "The scene changed significantly from the previous observation."
 
         return False, None
 

@@ -11,9 +11,9 @@ Available tools:
 - {{ tool }}
 {% endfor %}
 
-{% if recent_memory %}
-Recent quest memory:
-{% for item in recent_memory %}
+{% if recent_steps %}
+Recent quest history:
+{% for item in recent_steps %}
 - {{ item }}
 {% endfor %}
 
@@ -26,16 +26,16 @@ Tool results:
 
 {% endif %}
 {% if prompt_kind == "select" %}
-Decide whether you need 0-2 tools before choosing an action.
+Decide whether you need a tool before choosing an action.
 Use tools only when they will materially improve the choice.
 
 Return ONLY valid JSON (no markdown/code fences), exactly:
-{"analysis":"<max 25 words>","tool_calls":[{"tool":"<calculator|quest_memory|domain_lookup>","input":"<query>"}],"result":<action_number_or_null>}
+{"analysis":"<max 25 words>","tool_calls":[{"tool":"quest_history","input":"<query>"}],"result":<action_number_or_null>}
 
 Rules:
-- `tool_calls` may contain 0, 1, or 2 items.
+- `tool_calls` may contain 0 or 1 items.
 - If no tools are needed, set `tool_calls` to [] and provide `result`.
-- If tools are needed, set `result` to null.
+- If a tool is needed, set `result` to null.
 {% else %}
 Use the tool results if they help, but ignore them if they conflict with the story text.
 Choose the best action now.

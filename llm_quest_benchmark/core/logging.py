@@ -43,7 +43,7 @@ class LogManager:
 class QuestLogger:
     """Logs quest runs to SQLite database and exports to JSON when complete"""
 
-    REPETITION_WINDOW = 5
+    DEFAULT_REPETITION_WINDOW = 5
     
     @staticmethod
     def _safe_json_load(json_str, default=None):
@@ -104,31 +104,31 @@ class QuestLogger:
             return None
         return {key: choices_map[key]}
 
-    @classmethod
     def _calculate_run_metrics(
-        cls,
+        self,
         step_rows: List[Tuple[Any, ...]],
         outcome: Optional[str],
     ) -> Dict[str, Any]:
         """Compute simple run-level behavior metrics from raw step rows."""
         recent_actions: List[int] = []
         repetition_count = 0
+        window = self._repetition_window
 
         for _, _, _, _, action, _ in step_rows:
-            action_index = cls._safe_int(action)
+            action_index = self._safe_int(action)
             if action_index is None:
                 continue
             if action_index in recent_actions:
                 repetition_count += 1
             recent_actions.append(action_index)
-            recent_actions = recent_actions[-cls.REPETITION_WINDOW:]
+            recent_actions = recent_actions[-window:]
 
         total_steps = len(step_rows)
         bad_decision_count = 1 if outcome == "FAILURE" and total_steps > 0 else 0
 
         return {
             "total_steps": total_steps,
-            "repetition_window": cls.REPETITION_WINDOW,
+            "repetition_window": window,
             "repetition_count": repetition_count,
             "repetition_rate": (repetition_count / total_steps) if total_steps else 0.0,
             "bad_decision_count": bad_decision_count,
@@ -214,6 +214,7 @@ class QuestLogger:
         self.db_path = db_path
         self.debug = debug
         self.agent = agent
+        self._repetition_window = self.DEFAULT_REPETITION_WINDOW
         self.current_run_id = None
         self.quest_file = None
         self.steps = []

@@ -94,9 +94,8 @@ def test_non_gemini_prompt_uses_selected_template():
 
 
 def test_template_alias_without_suffix_is_supported():
-    agent = LLMAgent(model_name="gpt-5-mini", action_template="knowledge_light")
+    agent = LLMAgent(model_name="gpt-5-mini", action_template="reasoning")
     prompt = agent._format_prompt("state", [{"text": "A"}, {"text": "B"}])
-    assert "Space Rangers quest primer" in prompt
     assert '"result"' in prompt
 
 

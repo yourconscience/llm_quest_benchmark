@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.agents.planner_agent import PlannerAgent
-from llm_quest_benchmark.agents.tool_agent import ToolAgent, calculator, domain_lookup
+from llm_quest_benchmark.agents.tool_agent import ToolAgent
 
 
 def test_create_agent_uses_planner_template_alias():
@@ -58,9 +58,9 @@ def test_planner_agent_reuses_plan_when_state_is_stable():
     assert mocked_llm.get_completion.call_count == 1
 
 
-def test_tool_agent_can_use_tools_before_final_choice():
+def test_tool_agent_can_use_quest_history():
     agent = ToolAgent(model_name="gpt-5-mini")
-    agent._memory_entries = [
+    agent._step_log = [
         {
             "step": 1,
             "observation": "Merchant mentioned low fuel.",
@@ -70,7 +70,7 @@ def test_tool_agent_can_use_tools_before_final_choice():
     ]
     mocked_llm = Mock()
     mocked_llm.get_completion.side_effect = [
-        '{"analysis":"need memory and domain hint","tool_calls":[{"tool":"quest_memory","input":"fuel merchant"},{"tool":"domain_lookup","input":"resources"}],"result":null}',
+        '{"analysis":"need history","tool_calls":[{"tool":"quest_history","input":"fuel merchant"}],"result":null}',
         '{"analysis":"fuel clue matters","reasoning":"play safe","result":1}',
     ]
     mocked_llm.get_last_usage.side_effect = [
@@ -84,7 +84,7 @@ def test_tool_agent_can_use_tools_before_final_choice():
     assert action == 1
     assert mocked_llm.get_completion.call_count == 2
     assert agent.get_last_response().total_tokens == 65
-    assert len(agent._memory_entries) == 2
+    assert len(agent._step_log) == 2
 
 
 def test_tool_agent_can_finish_without_tools_in_one_call():
@@ -105,11 +105,3 @@ def test_tool_agent_can_finish_without_tools_in_one_call():
 
     assert action == 2
     assert mocked_llm.get_completion.call_count == 1
-
-
-def test_calculator_supports_basic_arithmetic():
-    assert calculator("2 + 3 * 4") == "14"
-
-
-def test_domain_lookup_returns_relevant_snippet():
-    assert "loop" in domain_lookup("how do I avoid loops").lower()

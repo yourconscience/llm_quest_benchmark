@@ -238,13 +238,6 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
                         agent_config=agent_config
                     )
                     outcome_name = outcome.name if outcome else QuestOutcome.TIMEOUT.name
-                    timeout_error = (
-                        f"Timed out after {config.quest_timeout} seconds"
-                        if outcome_name == QuestOutcome.TIMEOUT.name
-                        else None
-                    )
-
-                    outcome_name = outcome.name if outcome else QuestOutcome.TIMEOUT.name
                     timeout_error = None if outcome else f"Timed out after {config.quest_timeout} seconds"
 
                     # Create result entry

@@ -15,11 +15,6 @@ agents:
     runs: 3
     skip_single: true
   - model: gemini-2.5-flash-lite
-    template: knowledge_light
-    temperature: 0.2
-    runs: 3
-    skip_single: true
-  - model: gemini-2.5-flash-lite
     template: planner
     temperature: 0.2
     runs: 3
