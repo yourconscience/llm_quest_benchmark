@@ -2,8 +2,14 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional, Tuple
-import os
 import logging
+import os
+import re
+import selectors
+import shlex
+import shutil
+import subprocess
+import tempfile
 import time
 from pathlib import Path
 
@@ -222,22 +228,32 @@ class LLMClient(ABC):
         """Get a completion from the model."""
         return self.get_completion(prompt)
 
-    def _record_usage(self, prompt_tokens: int = 0, completion_tokens: int = 0) -> None:
-        total_tokens = int(prompt_tokens) + int(completion_tokens)
+    def _record_usage(
+        self,
+        prompt_tokens: int = 0,
+        completion_tokens: int = 0,
+        total_tokens: int | None = None,
+    ) -> None:
+        prompt_tokens = int(prompt_tokens)
+        completion_tokens = int(completion_tokens)
+        if total_tokens is not None:
+            total_tokens = int(total_tokens)
+        else:
+            total_tokens = prompt_tokens + completion_tokens
         estimated_cost_usd = _estimate_cost_usd(
             self.provider,
             self.model_id,
-            int(prompt_tokens),
-            int(completion_tokens),
+            prompt_tokens,
+            completion_tokens,
         )
         self._last_usage = UsageStats(
-            prompt_tokens=int(prompt_tokens),
-            completion_tokens=int(completion_tokens),
-            total_tokens=int(total_tokens),
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
             estimated_cost_usd=estimated_cost_usd,
         )
-        self._total_prompt_tokens += int(prompt_tokens)
-        self._total_completion_tokens += int(completion_tokens)
+        self._total_prompt_tokens += prompt_tokens
+        self._total_completion_tokens += completion_tokens
         if estimated_cost_usd is not None:
             self._total_estimated_cost_usd += float(estimated_cost_usd)
             self._priced_calls += 1
@@ -476,6 +492,234 @@ class AnthropicClient(LLMClient):
         return self._with_retries(_call)
 
 
+class ExecCLIClient(LLMClient):
+    """CLI-backed client for Codex/Claude subscription or OAuth auth."""
+
+    def __init__(
+        self,
+        provider: str,
+        model_id: str = "",
+        system_prompt: str = "",
+        temperature: float = DEFAULT_TEMPERATURE,
+        request_timeout: int = 30,
+    ):
+        super().__init__(
+            model_id=model_id,
+            provider=provider,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            request_timeout=request_timeout,
+        )
+
+    def _command_path(self) -> str:
+        env_var = (
+            "LLM_QUEST_CODEX_EXEC_PATH"
+            if self.provider == "codex_cli"
+            else "LLM_QUEST_CLAUDE_EXEC_PATH"
+        )
+        default = "codex" if self.provider == "codex_cli" else "claude"
+        configured = os.getenv(env_var, default).strip() or default
+        resolved = shutil.which(configured) if Path(configured).name == configured else configured
+        if not resolved:
+            raise RuntimeError(
+                f"Executable not found for provider '{self.provider}'. "
+                f"Set {env_var} or install {default}."
+            )
+        return resolved
+
+    def _configured_model(self) -> Optional[str]:
+        env_var = (
+            "LLM_QUEST_CODEX_EXEC_MODEL"
+            if self.provider == "codex_cli"
+            else "LLM_QUEST_CLAUDE_EXEC_MODEL"
+        )
+        value = os.getenv(env_var, "").strip()
+        return value or None
+
+    def _extra_args(self) -> list[str]:
+        env_var = (
+            "LLM_QUEST_CODEX_EXEC_ARGS"
+            if self.provider == "codex_cli"
+            else "LLM_QUEST_CLAUDE_EXEC_ARGS"
+        )
+        raw = os.getenv(env_var, "").strip()
+        return shlex.split(raw) if raw else []
+
+    def _compose_prompt(self, prompt: str) -> str:
+        if not self.system_prompt:
+            return prompt
+        return (
+            "System instructions:\n"
+            f"{self.system_prompt.strip()}\n\n"
+            "User prompt:\n"
+            f"{prompt}"
+        )
+
+    @staticmethod
+    def _extract_total_tokens(process: subprocess.CompletedProcess[str]) -> int:
+        combined = "\n".join(part for part in [process.stdout, process.stderr] if part)
+        for pattern in [r"tokens used\s+([\d,]+)", r'"total_tokens"\s*:\s*([\d,]+)']:
+            match = re.search(pattern, combined, re.IGNORECASE)
+            if match:
+                return int(match.group(1).replace(",", ""))
+        return 0
+
+    def _run_codex_exec(self, prompt: str) -> str:
+        command = [
+            self._command_path(),
+            "exec",
+            "--sandbox",
+            "read-only",
+            "--skip-git-repo-check",
+            "--color",
+            "never",
+        ]
+        model = self._configured_model()
+        if model:
+            command.extend(["--model", model])
+        command.extend(self._extra_args())
+
+        with tempfile.NamedTemporaryFile("r+", encoding="utf-8", suffix=".txt") as output_file:
+            command.extend(["--output-last-message", output_file.name, "-"])
+            process = subprocess.run(
+                command,
+                input=self._compose_prompt(prompt),
+                text=True,
+                capture_output=True,
+                timeout=self.request_timeout,
+                check=False,
+            )
+            if process.returncode != 0:
+                raise RuntimeError(
+                    "codex exec failed. "
+                    "Run `codex login` first if subscription/API auth is not configured.\n"
+                    f"stdout:\n{process.stdout}\n\nstderr:\n{process.stderr}"
+                )
+            output_file.seek(0)
+            result = output_file.read().strip()
+            self._record_usage(total_tokens=self._extract_total_tokens(process))
+            return result or process.stdout.strip()
+
+    def _run_claude_exec(self, prompt: str) -> str:
+        command = [
+            self._command_path(),
+            "-p",
+            "--output-format",
+            "text",
+            "--max-turns",
+            "1",
+            "--permission-mode",
+            "default",
+            "--tools",
+            "",
+            "--no-session-persistence",
+        ]
+        model = self._configured_model()
+        if model:
+            command.extend(["--model", model])
+        if self.system_prompt:
+            command.extend(["--system-prompt", self.system_prompt])
+        command.extend(self._extra_args())
+        command.append(prompt)
+
+        process = subprocess.Popen(
+            command,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=False,
+        )
+        assert process.stdout is not None
+        assert process.stderr is not None
+
+        selector = selectors.DefaultSelector()
+        selector.register(process.stdout, selectors.EVENT_READ, data="stdout")
+        selector.register(process.stderr, selectors.EVENT_READ, data="stderr")
+
+        stdout_chunks: list[bytes] = []
+        stderr_chunks: list[bytes] = []
+        deadline = time.time() + self.request_timeout
+        last_output_at: Optional[float] = None
+        idle_after_output_seconds = 5.0
+
+        try:
+            while time.time() < deadline:
+                if process.poll() is not None and not selector.get_map():
+                    break
+
+                events = selector.select(timeout=0.25)
+                if events:
+                    last_output_at = time.time()
+                for key, _ in events:
+                    chunk = os.read(key.fileobj.fileno(), 4096)
+                    if not chunk:
+                        selector.unregister(key.fileobj)
+                        continue
+                    if key.data == "stdout":
+                        stdout_chunks.append(chunk)
+                    else:
+                        stderr_chunks.append(chunk)
+
+                if process.poll() is not None and not selector.get_map():
+                    break
+
+                if last_output_at and (time.time() - last_output_at) >= idle_after_output_seconds:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=1)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                    break
+            else:
+                process.terminate()
+                try:
+                    process.wait(timeout=1)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+        finally:
+            selector.close()
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+
+        stdout = b"".join(stdout_chunks).decode("utf-8", errors="replace").strip()
+        stderr = b"".join(stderr_chunks).decode("utf-8", errors="replace").strip()
+
+        if process.returncode not in (0, -15, -9) and not stdout:
+            raise RuntimeError(
+                "claude print mode failed. "
+                "Run `claude auth login` (or `claude setup-token`) first if subscription auth is not configured.\n"
+                f"stdout:\n{stdout}\n\nstderr:\n{stderr}"
+            )
+
+        completed = subprocess.CompletedProcess(
+            args=command,
+            returncode=process.returncode or 0,
+            stdout=stdout,
+            stderr=stderr,
+        )
+        self._record_usage(total_tokens=self._extract_total_tokens(completed))
+        if not stdout:
+            raise RuntimeError(
+                "claude print mode produced no stdout before the process went idle.\n"
+                f"stderr:\n{stderr}"
+            )
+        return stdout
+
+    def get_completion(self, prompt: str) -> str:
+        def _call() -> str:
+            if self.provider == "codex_cli":
+                return self._run_codex_exec(prompt)
+            if self.provider == "claude_cli":
+                return self._run_claude_exec(prompt)
+            raise NotImplementedError(f"Unsupported exec provider: {self.provider}")
+
+        return self._with_retries(_call)
+
+
 def get_llm_client(model_name: str, system_prompt: str = "", temperature: float = DEFAULT_TEMPERATURE) -> LLMClient:
     """Factory function to get appropriate LLM client."""
     # Use a longer request timeout to prevent timeouts during quest execution
@@ -484,6 +728,14 @@ def get_llm_client(model_name: str, system_prompt: str = "", temperature: float 
 
     if spec.provider == "anthropic":
         return AnthropicClient(
+            model_id=spec.model_id,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            request_timeout=request_timeout,
+        )
+    if spec.provider in {"codex_cli", "claude_cli"}:
+        return ExecCLIClient(
+            provider=spec.provider,
             model_id=spec.model_id,
             system_prompt=system_prompt,
             temperature=temperature,

@@ -1,0 +1,18 @@
+General hints for this type of quest:
+- Read the scene literally. Win/loss constraints are usually stated directly in the text.
+- Preparation, study, negotiation, and reconnaissance are often safer than direct combat or bravado.
+- Prefer actions that gather clues or unlock safer options before committing to irreversible moves.
+- Avoid choices that abandon the mission, surrender, or waste scarce time/resources for no gain.
+- If a scene repeats, the last branch did not help - try a different action.
+- Prioritize the core objective over optional heroic detours.
+
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}

@@ -8,6 +8,8 @@ MODEL_PROVIDER_CONFIG = {
     "anthropic": {"models": ["claude-sonnet-4-5", "claude-opus-4-1", "claude-3-5-haiku-latest"]},
     "google": {"models": ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"]},
     "deepseek": {"models": ["deepseek-3.2-chat", "deepseek-reasoner"]},
+    "codex_cli": {"models": ["codex-exec"]},
+    "claude_cli": {"models": ["claude-exec"]},
     # Optional compatibility gateway (hidden from default UI model list).
     "openrouter": {"models": []},
 }
@@ -15,6 +17,8 @@ MODEL_PROVIDER_CONFIG = {
 # User-facing model choices (clean list, no duplicated provider prefixes).
 MODEL_CHOICES = [
     "random_choice",
+    "codex-exec",
+    "claude-exec",
     # OpenAI
     "gpt-5",
     "gpt-5-mini",
@@ -40,10 +44,14 @@ MODEL_ALIASES = {
     "gpt-5-mini": "openai:gpt-5-mini",
     "gpt-5-nano": "openai:gpt-5-nano",
     "o4-mini": "openai:o4-mini",
+    "codex-exec": "codex_cli:codex-exec",
+    "codex_exec": "codex_cli:codex-exec",
     # Anthropic
     "claude-sonnet-4-5": "anthropic:claude-sonnet-4-5",
     "claude-opus-4-1": "anthropic:claude-opus-4-1-20250805",
     "claude-3-5-haiku-latest": "anthropic:claude-3-5-haiku-latest",
+    "claude-exec": "claude_cli:claude-exec",
+    "claude_exec": "claude_cli:claude-exec",
     # Compatibility Anthropic aliases
     "claude-sonnet-4-0": "anthropic:claude-sonnet-4-20250514",
     "claude-sonnet-4-20250514": "anthropic:claude-sonnet-4-20250514",
