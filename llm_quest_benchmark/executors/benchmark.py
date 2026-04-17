@@ -111,6 +111,7 @@ def _write_benchmark_artifacts(config: BenchmarkConfig, results: List[Dict[str, 
                 "agent_id": agent.agent_id,
                 "model": agent.model,
                 "temperature": agent.temperature,
+                "runs": agent.runs,
                 "system_template": agent.system_template,
                 "action_template": agent.action_template,
             }
@@ -141,6 +142,7 @@ def _write_benchmark_artifacts(config: BenchmarkConfig, results: List[Dict[str, 
                 "system_template": agent.system_template,
                 "action_template": agent.action_template,
                 "temperature": agent.temperature,
+                "runs": agent.runs,
                 "skip_single": agent.skip_single,
                 "debug": agent.debug,
             }
@@ -183,116 +185,121 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> List[Dict[
     # Collect results for each agent x quest combination.
     results = []
 
-    total_runs = len(config.agents) * len(quest_files)
+    total_runs = len(quest_files) * sum(agent.runs for agent in config.agents)
     run_index = 0
 
     for agent_config in config.agents:
         for quest_file in quest_files:
-            run_index += 1
-            quest_str = str(quest_file)
-            quest_name = Path(quest_file).name
-            
-            logger.info(f"Agent {agent_config.agent_id} running quest {quest_name}")
-            _emit_progress(
-                progress_callback,
-                {
-                    "event": "pair_start",
-                    "run_index": run_index,
-                    "total_runs": total_runs,
-                    "quest": quest_str,
-                    "quest_name": quest_name,
-                    "agent_id": agent_config.agent_id,
-                    "model": agent_config.model,
-                },
-            )
-            
-            try:
-                # Set the benchmark_id in agent_config for database tracking
-                agent_config.benchmark_id = config.benchmark_id
-                
-                # Create agent
-                agent = create_agent(
-                    model=agent_config.model,
-                    temperature=agent_config.temperature,
-                    system_template=agent_config.system_template,
-                    action_template=agent_config.action_template,
-                    skip_single=agent_config.skip_single,
-                    debug=agent_config.debug
-                )
-                
-                # Run quest with timeout
-                outcome = run_quest_with_timeout(
-                    quest_str,
-                    agent,
-                    timeout=config.quest_timeout,
-                    agent_config=agent_config
-                )
-                outcome_name = outcome.name if outcome else QuestOutcome.TIMEOUT.name
-                timeout_error = (
-                    f"Timed out after {config.quest_timeout} seconds"
-                    if outcome_name == QuestOutcome.TIMEOUT.name
-                    else None
-                )
-                
-                outcome_name = outcome.name if outcome else QuestOutcome.TIMEOUT.name
-                timeout_error = None if outcome else f"Timed out after {config.quest_timeout} seconds"
+            for attempt in range(1, agent_config.runs + 1):
+                run_index += 1
+                quest_str = str(quest_file)
+                quest_name = Path(quest_file).name
 
-                # Create result entry
-                result = {
-                    'quest': quest_str,
-                    'model': agent_config.model,
-                    'temperature': agent_config.temperature,
-                    'template': agent_config.action_template,
-                    'agent_id': agent_config.agent_id,
-                    'outcome': outcome_name,
-                    'reward': getattr(outcome, 'reward', 0.0),
-                    'error': timeout_error
-                }
+                logger.info(
+                    "Agent %s running quest %s (attempt %s/%s)",
+                    agent_config.agent_id,
+                    quest_name,
+                    attempt,
+                    agent_config.runs,
+                )
                 _emit_progress(
                     progress_callback,
                     {
-                        "event": "pair_done",
+                        "event": "pair_start",
                         "run_index": run_index,
                         "total_runs": total_runs,
                         "quest": quest_str,
                         "quest_name": quest_name,
                         "agent_id": agent_config.agent_id,
                         "model": agent_config.model,
-                        "outcome": outcome_name,
-                        "error": timeout_error,
+                        "attempt": attempt,
                     },
                 )
-                
-            except Exception as e:
-                # Log the error but continue with other quests
-                logger.error(f"Error running quest {quest_file} with agent {agent_config.agent_id}: {e}")
-                
-                # Create error result
-                result = {
-                    'quest': quest_str,
-                    'model': agent_config.model,
-                    'temperature': agent_config.temperature,
-                    'template': agent_config.action_template,
-                    'agent_id': agent_config.agent_id,
-                    'outcome': QuestOutcome.ERROR.name,
-                    'reward': 0.0,
-                    'error': str(e)
-                }
-                _emit_progress(
-                    progress_callback,
-                    {
-                        "event": "pair_done",
-                        "run_index": run_index,
-                        "total_runs": total_runs,
-                        "quest": quest_str,
-                        "quest_name": quest_name,
-                        "agent_id": agent_config.agent_id,
-                        "model": agent_config.model,
-                        "outcome": QuestOutcome.ERROR.name,
-                        "error": str(e),
-                    },
-                )
-            results.append(result)
+
+                try:
+                    # Set the benchmark_id in agent_config for database tracking
+                    agent_config.benchmark_id = config.benchmark_id
+
+                    # Create agent
+                    agent = create_agent(
+                        model=agent_config.model,
+                        temperature=agent_config.temperature,
+                        system_template=agent_config.system_template,
+                        action_template=agent_config.action_template,
+                        skip_single=agent_config.skip_single,
+                        debug=agent_config.debug
+                    )
+
+                    # Run quest with timeout
+                    outcome = run_quest_with_timeout(
+                        quest_str,
+                        agent,
+                        timeout=config.quest_timeout,
+                        agent_config=agent_config
+                    )
+                    outcome_name = outcome.name if outcome else QuestOutcome.TIMEOUT.name
+                    timeout_error = None if outcome else f"Timed out after {config.quest_timeout} seconds"
+
+                    # Create result entry
+                    result = {
+                        'quest': quest_str,
+                        'model': agent_config.model,
+                        'temperature': agent_config.temperature,
+                        'template': agent_config.action_template,
+                        'agent_id': agent_config.agent_id,
+                        'attempt': attempt,
+                        'outcome': outcome_name,
+                        'reward': getattr(outcome, 'reward', 0.0),
+                        'error': timeout_error
+                    }
+                    _emit_progress(
+                        progress_callback,
+                        {
+                            "event": "pair_done",
+                            "run_index": run_index,
+                            "total_runs": total_runs,
+                            "quest": quest_str,
+                            "quest_name": quest_name,
+                            "agent_id": agent_config.agent_id,
+                            "model": agent_config.model,
+                            "attempt": attempt,
+                            "outcome": outcome_name,
+                            "error": timeout_error,
+                        },
+                    )
+
+                except Exception as e:
+                    # Log the error but continue with other quests
+                    logger.error(f"Error running quest {quest_file} with agent {agent_config.agent_id}: {e}")
+
+                    # Create error result
+                    result = {
+                        'quest': quest_str,
+                        'model': agent_config.model,
+                        'temperature': agent_config.temperature,
+                        'template': agent_config.action_template,
+                        'agent_id': agent_config.agent_id,
+                        'attempt': attempt,
+                        'outcome': QuestOutcome.ERROR.name,
+                        'reward': 0.0,
+                        'error': str(e)
+                    }
+                    _emit_progress(
+                        progress_callback,
+                        {
+                            "event": "pair_done",
+                            "run_index": run_index,
+                            "total_runs": total_runs,
+                            "quest": quest_str,
+                            "quest_name": quest_name,
+                            "agent_id": agent_config.agent_id,
+                            "model": agent_config.model,
+                            "attempt": attempt,
+                            "outcome": QuestOutcome.ERROR.name,
+                            "error": str(e),
+                        },
+                    )
+                results.append(result)
 
     artifact_dir = _write_benchmark_artifacts(config, results)
     if artifact_dir:

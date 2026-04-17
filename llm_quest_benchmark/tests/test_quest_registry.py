@@ -12,8 +12,7 @@ logger = logging.getLogger(__name__)
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from llm_quest_benchmark.core.quest_registry import get_registry, resolve_quest_paths
-from llm_quest_benchmark.web.utils.errors import validate_quest_file, QuestNotFoundError
+from llm_quest_benchmark.core.quest_registry import get_registry, resolve_quest_paths, validate_quest_path
 
 def test_registry():
     """Test the registry functionality"""
@@ -56,16 +55,9 @@ def test_registry():
         except Exception as e:
             logger.error(f"Path: {path} -> Error: {e}")
     
-    # Test web validation
-    logger.info("\nTesting web validation:")
+    logger.info("\nTesting path validation:")
     for path in test_paths:
-        try:
-            validate_quest_file(path)
-            logger.info(f"Path: {path} -> Valid")
-        except QuestNotFoundError as e:
-            logger.warning(f"Path: {path} -> Invalid: {e}")
-        except Exception as e:
-            logger.error(f"Path: {path} -> Error: {type(e).__name__}: {str(e)}")
+        logger.info("Path: %s -> %s", path, validate_quest_path(path))
 
 if __name__ == "__main__":
     test_registry()

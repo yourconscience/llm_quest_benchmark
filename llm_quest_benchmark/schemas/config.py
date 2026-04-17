@@ -10,7 +10,8 @@ from llm_quest_benchmark.constants import (
     DEFAULT_TEMPLATE,
     DEFAULT_TEMPERATURE,
     MODEL_CHOICES,
-    SYSTEM_ROLE_TEMPLATE
+    SYSTEM_ROLE_TEMPLATE,
+    normalize_template_name,
 )
 
 # Default benchmark configuration
@@ -70,11 +71,14 @@ class AgentConfig:
     system_template: str = SYSTEM_ROLE_TEMPLATE
     action_template: str = DEFAULT_TEMPLATE
     temperature: float = DEFAULT_TEMPERATURE
+    runs: int = 1
     skip_single: bool = False
     debug: bool = False
     benchmark_id: Optional[str] = None  # Added to link runs to benchmarks
 
     def __post_init__(self):
+        self.system_template = normalize_template_name(self.system_template)
+        self.action_template = normalize_template_name(self.action_template)
         if self.model not in ("random_choice", "human"):
             # Keep parser compatibility for legacy names while UI remains clean.
             from llm_quest_benchmark.llm.client import is_supported_model_name
@@ -83,6 +87,8 @@ class AgentConfig:
                 raise ValueError(f"Invalid model: {self.model}. Supported models: {MODEL_CHOICES}")
         if not (0.0 <= self.temperature <= 2.0):
             raise ValueError(f"Temperature must be between 0.0 and 2.0, got {self.temperature}")
+        if self.runs < 1:
+            raise ValueError(f"runs must be >= 1, got {self.runs}")
 
     @property
     def agent_id(self) -> str:

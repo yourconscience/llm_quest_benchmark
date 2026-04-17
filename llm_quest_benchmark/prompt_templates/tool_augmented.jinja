@@ -1,0 +1,45 @@
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Available tools:
+{% for tool in tool_descriptions %}
+- {{ tool }}
+{% endfor %}
+
+{% if recent_steps %}
+Recent quest history:
+{% for item in recent_steps %}
+- {{ item }}
+{% endfor %}
+
+{% endif %}
+{% if tool_results %}
+Tool results:
+{% for result in tool_results %}
+- {{ result }}
+{% endfor %}
+
+{% endif %}
+{% if prompt_kind == "select" %}
+Decide whether you need a tool before choosing an action.
+Use tools only when they will materially improve the choice.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"analysis":"<max 25 words>","tool_calls":[{"tool":"quest_history","input":"<query>"}],"result":<action_number_or_null>}
+
+Rules:
+- `tool_calls` may contain 0 or 1 items.
+- If no tools are needed, set `tool_calls` to [] and provide `result`.
+- If a tool is needed, set `result` to null.
+{% else %}
+Use the tool results if they help, but ignore them if they conflict with the story text.
+Choose the best action now.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}
+{% endif %}

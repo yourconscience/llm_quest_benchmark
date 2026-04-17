@@ -26,7 +26,7 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 RUN npm install -g ts-node
 
 # Clone repository with submodules
-RUN git clone --recursive https://github.com/your-username/llm_quest_benchmark.git .
+RUN git clone --recursive https://github.com/yourconscience/llm_quest_benchmark.git .
 
 # Setup environment
 RUN uv venv .venv
@@ -60,9 +60,6 @@ RUN echo "# Set your API keys here\n\
 # OPENAI_API_KEY=your-api-key\n\
 # ANTHROPIC_API_KEY=your-api-key" > .env
 
-# Expose port
-EXPOSE 8000
-
 # Set entrypoint
 ENTRYPOINT ["llm-quest"]
-CMD ["web", "--host", "0.0.0.0"]
+CMD ["--help"]

@@ -42,6 +42,8 @@ class LogManager:
 
 class QuestLogger:
     """Logs quest runs to SQLite database and exports to JSON when complete"""
+
+    DEFAULT_REPETITION_WINDOW = 5
     
     @staticmethod
     def _safe_json_load(json_str, default=None):
@@ -101,6 +103,37 @@ class QuestLogger:
         if key not in choices_map:
             return None
         return {key: choices_map[key]}
+
+    def _calculate_run_metrics(
+        self,
+        step_rows: List[Tuple[Any, ...]],
+        outcome: Optional[str],
+    ) -> Dict[str, Any]:
+        """Compute simple run-level behavior metrics from raw step rows."""
+        recent_actions: List[int] = []
+        repetition_count = 0
+        window = self._repetition_window
+
+        for _, _, _, _, action, _ in step_rows:
+            action_index = self._safe_int(action)
+            if action_index is None:
+                continue
+            if action_index in recent_actions:
+                repetition_count += 1
+            recent_actions.append(action_index)
+            recent_actions = recent_actions[-window:]
+
+        total_steps = len(step_rows)
+        bad_decision_count = 1 if outcome == "FAILURE" and total_steps > 0 else 0
+
+        return {
+            "total_steps": total_steps,
+            "repetition_window": window,
+            "repetition_count": repetition_count,
+            "repetition_rate": (repetition_count / total_steps) if total_steps else 0.0,
+            "bad_decision_count": bad_decision_count,
+            "bad_decision_rate": (bad_decision_count / total_steps) if total_steps else 0.0,
+        }
 
     def _format_step_export(
         self,
@@ -181,6 +214,7 @@ class QuestLogger:
         self.db_path = db_path
         self.debug = debug
         self.agent = agent
+        self._repetition_window = self.DEFAULT_REPETITION_WINDOW
         self.current_run_id = None
         self.quest_file = None
         self.steps = []
@@ -508,13 +542,14 @@ class QuestLogger:
             ORDER BY step
         ''', (self.current_run_id,))
         
+        step_rows = self._local.cursor.fetchall()
         steps = []
         usage_prompt_tokens = 0
         usage_completion_tokens = 0
         usage_total_tokens = 0
         usage_estimated_cost = 0.0
         usage_priced_steps = 0
-        for step_data in self._local.cursor.fetchall():
+        for step_data in step_rows:
             step_num, location_id, obs, choices_json, action, llm_response = step_data
             parsed_choices = self._safe_json_load(choices_json, [])
             parsed_response = self._safe_json_load(llm_response)
@@ -541,6 +576,8 @@ class QuestLogger:
                     llm_response=parsed_response if isinstance(parsed_response, dict) else None,
                 )
             )
+
+        metrics = self._calculate_run_metrics(step_rows, outcome)
         
         return {
             "run_id": self.current_run_id,
@@ -564,6 +601,7 @@ class QuestLogger:
                 ),
                 "priced_steps": usage_priced_steps,
             },
+            "metrics": metrics,
             "steps": steps
         }
 

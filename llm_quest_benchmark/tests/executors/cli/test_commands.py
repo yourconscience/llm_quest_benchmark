@@ -2,6 +2,8 @@
 import pytest
 from typer.testing import CliRunner
 from pathlib import Path
+from unittest.mock import Mock
+from llm_quest_benchmark.executors.cli import commands
 from llm_quest_benchmark.executors.cli.commands import app
 from llm_quest_benchmark.constants import DEFAULT_QUEST
 
@@ -52,19 +54,6 @@ def test_benchmark_missing_config():
     result = runner.invoke(app, ["benchmark", "--config", "nonexistent.yaml"])
     assert result.exit_code == 1
     assert "Config file does not exist" in result.stdout or "Config file does not exist" in result.stderr
-
-def test_server_command():
-    """Test server command options"""
-    # Test help output
-    result = runner.invoke(app, ["server", "--help"])
-    assert result.exit_code == 0
-    assert "Start the Flask web interface server" in result.stdout
-
-    # Test invalid host
-    result = runner.invoke(app, ["server", "--host", "invalid"])
-    assert result.exit_code == 1
-    assert "Starting server on http://invalid:8000" in result.stdout
-
 
 def test_analyze_run_with_run_summary_path(tmp_path):
     """Test analyze-run against explicit run_summary path."""
@@ -120,3 +109,25 @@ def test_analyze_run_autolocates_latest_run(monkeypatch, tmp_path):
     result = runner.invoke(app, ["analyze-run", "--agent", "llm_test", "--quest", "QuestA"])
     assert result.exit_code == 0
     assert "Outcome: SUCCESS" in result.stdout
+
+
+def test_download_quests_command_prints_summary(monkeypatch):
+    """Test quest downloader wrapper prints collection counts."""
+    fake_run = Mock()
+    fake_registry = Mock()
+    fake_collections = [
+        {"collection": "sr_2_1_2121_eng", "language": "EN", "count": 35},
+        {"collection": "sr_2_dominators_ru", "language": "RU", "count": 35},
+    ]
+
+    monkeypatch.setattr(commands.subprocess, "run", fake_run)
+    monkeypatch.setattr(commands, "get_registry", fake_registry)
+    monkeypatch.setattr(commands, "_count_quest_collections", lambda _: fake_collections)
+
+    result = runner.invoke(app, ["download-quests"])
+    assert result.exit_code == 0
+    fake_run.assert_called_once()
+    fake_registry.assert_called_once_with(reset_cache=True)
+    assert "Quest counts by collection:" in result.stdout
+    assert "sr_2_1_2121_eng (EN): 35 .qm/.qmm files" in result.stdout
+    assert "Totals: EN=35 RU=35 TOTAL=70" in result.stdout

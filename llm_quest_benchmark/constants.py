@@ -76,6 +76,16 @@ STUB_TEMPLATE = "stub.jinja"
 DEFAULT_TEMPLATE = "reasoning.jinja"
 SYSTEM_ROLE_TEMPLATE = "system_role.jinja"
 
+
+def normalize_template_name(template_name: str) -> str:
+    """Normalize template identifiers so CLI/YAML can omit the .jinja suffix."""
+    normalized = (template_name or "").strip()
+    if not normalized:
+        return normalized
+    if Path(normalized).suffix:
+        return normalized
+    return f"{normalized}.jinja"
+
 # Default temperature
 DEFAULT_TEMPERATURE = 0.4
 
@@ -85,10 +95,6 @@ DEFAULT_QUEST_TIMEOUT = 120  # Default timeout for single quest run
 DEFAULT_BENCHMARK_TIMEOUT_FACTOR = 1.5  # Safety factor for benchmark timeout calculation
 MAX_BENCHMARK_TIMEOUT = 7200  # Maximum benchmark timeout (2 hours)
 INFINITE_TIMEOUT = 10**9  # Infinite timeout (used for interactive play)
-
-# Web server
-WEB_SERVER_HOST = "0.0.0.0"
-WEB_SERVER_PORT = 8011
 
 # Quest state detection patterns
 # Pattern to detect credit rewards in text (e.g., "10000 cr")

@@ -14,6 +14,7 @@ from llm_quest_benchmark.constants import (
     DEFAULT_TEMPLATE,
     MODEL_CHOICES,
     SYSTEM_ROLE_TEMPLATE,
+    normalize_template_name,
 )
 from llm_quest_benchmark.llm.client import (
     get_llm_client,
@@ -285,8 +286,8 @@ class LLMAgent(QuestPlayer):
         super().__init__(skip_single=skip_single)
         self.debug = debug
         self.model_name = model_name.lower()
-        self.system_template = system_template
-        self.action_template = action_template
+        self.system_template = normalize_template_name(system_template)
+        self.action_template = normalize_template_name(action_template)
         self.temperature = temperature
         # Set agent_id for database records
         self.agent_id = f"llm_{self.model_name}"
@@ -308,8 +309,8 @@ class LLMAgent(QuestPlayer):
 
         # Initialize prompt renderer
         self.prompt_renderer = PromptRenderer(None,
-                                              system_template=system_template,
-                                              action_template=action_template)
+                                              system_template=self.system_template,
+                                              action_template=self.action_template)
 
         # Delay API client creation so template-only flows and tests do not require API keys.
         self.llm = None

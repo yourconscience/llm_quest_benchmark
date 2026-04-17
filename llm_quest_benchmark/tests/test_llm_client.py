@@ -51,7 +51,8 @@ def test_parse_model_name_haiku_alias():
 
 
 @patch("llm_quest_benchmark.llm.client.OpenAI")
-def test_openai_gpt5_uses_max_completion_tokens(mock_openai_cls):
+def test_openai_gpt5_uses_max_completion_tokens(mock_openai_cls, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     mock_client = Mock()
     mock_chat = Mock()
     mock_completion = Mock()
@@ -72,7 +73,8 @@ def test_openai_gpt5_uses_max_completion_tokens(mock_openai_cls):
 
 
 @patch("llm_quest_benchmark.llm.client.OpenAI")
-def test_openai_compatible_completion_extraction(mock_openai_cls):
+def test_openai_compatible_completion_extraction(mock_openai_cls, monkeypatch):
+    monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
     mock_client = Mock()
     mock_chat = Mock()
     mock_completion = Mock()
@@ -91,7 +93,8 @@ def test_openai_compatible_completion_extraction(mock_openai_cls):
 
 
 @patch("llm_quest_benchmark.llm.client.OpenAI")
-def test_openai_compatible_handles_missing_message_content(mock_openai_cls):
+def test_openai_compatible_handles_missing_message_content(mock_openai_cls, monkeypatch):
+    monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
     mock_client = Mock()
     mock_chat = Mock()
     mock_completion = Mock()
@@ -105,7 +108,8 @@ def test_openai_compatible_handles_missing_message_content(mock_openai_cls):
 
 
 @patch("llm_quest_benchmark.llm.client.OpenAI")
-def test_openai_usage_is_tracked(mock_openai_cls):
+def test_openai_usage_is_tracked(mock_openai_cls, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     mock_client = Mock()
     mock_chat = Mock()
     mock_completion = Mock()
@@ -127,7 +131,8 @@ def test_openai_usage_is_tracked(mock_openai_cls):
 
 
 @patch("llm_quest_benchmark.llm.client.OpenAI")
-def test_openai_usage_sums_fallback_calls(mock_openai_cls):
+def test_openai_usage_sums_fallback_calls(mock_openai_cls, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     mock_client = Mock()
     mock_chat = Mock()
     first = Mock()
@@ -149,7 +154,8 @@ def test_openai_usage_sums_fallback_calls(mock_openai_cls):
 
 
 @patch("llm_quest_benchmark.llm.client.OpenAI")
-def test_openai_gpt5_retries_empty_with_larger_budget(mock_openai_cls):
+def test_openai_gpt5_retries_empty_with_larger_budget(mock_openai_cls, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     mock_client = Mock()
     mock_chat = Mock()
     first = Mock()
