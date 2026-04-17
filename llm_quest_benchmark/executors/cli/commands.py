@@ -453,7 +453,10 @@ def play(
 
 @app.command("download-quests")
 def download_quests() -> None:
-    """Download the upstream quest corpus and print per-collection counts."""
+    """Download the upstream quest corpus and print per-collection counts.
+
+    TODO: rewrite download_quests.sh logic in Python to avoid subprocess shell call.
+    """
     repo_root = Path(__file__).resolve().parents[3]
     script_path = repo_root / "download_quests.sh"
     quests_root = repo_root / "quests"
