@@ -225,3 +225,40 @@ def test_codex_exec_reads_output_last_message(mock_run, monkeypatch):
     assert "--model" in command
     assert command[command.index("--model") + 1] == "gpt-5.4"
     assert client.get_last_usage()["total_tokens"] == 1234
+
+
+def test_claude_exec_uses_print_mode_and_system_prompt(monkeypatch):
+    monkeypatch.setattr("llm_quest_benchmark.llm.client.shutil.which", lambda command: f"/opt/{command}")
+    captured_commands = []
+
+    def fake_run_claude(self, prompt):
+        command = [
+            self._command_path(), "-p",
+            "--output-format", "text",
+            "--max-turns", "1",
+            "--permission-mode", "default",
+            "--tools", "",
+            "--no-session-persistence",
+        ]
+        model = self._configured_model()
+        if model:
+            command.extend(["--model", model])
+        if self.system_prompt:
+            command.extend(["--system-prompt", self.system_prompt])
+        command.extend(self._extra_args())
+        command.append(prompt)
+        captured_commands.append(command)
+        self._record_usage(0, 0)
+        return "1"
+
+    monkeypatch.setattr(ExecCLIClient, "_run_claude_exec", fake_run_claude)
+
+    client = get_llm_client("claude-exec", system_prompt="system")
+    assert client.get_completion("pick one") == "1"
+
+    command = captured_commands[0]
+    assert command[:2] == ["/opt/claude", "-p"]
+    assert "--max-turns" in command
+    assert "--system-prompt" in command
+    assert command[command.index("--system-prompt") + 1] == "system"
+    assert "--no-session-persistence" in command

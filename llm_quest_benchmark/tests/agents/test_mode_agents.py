@@ -28,9 +28,8 @@ def test_light_hints_template_injects_general_mechanics():
 
     prompt = agent._format_prompt("A sealed vault blocks the route.", [{"text": "Study the vault"}])
 
-    assert "Quest mechanics hints (static YAML)" in prompt
-    assert "quest_mechanics:" in prompt
-    assert "Preparation, study, negotiation, repair, and careful reconnaissance" in prompt
+    assert "General hints for this type of quest" in prompt
+    assert "Preparation, study, negotiation" in prompt
 
 
 def test_planner_agent_first_turn_generates_plan_then_acts():
