@@ -206,6 +206,8 @@ class QuestRunner:
         try:
             # Initialize environment and notify callbacks
             self.initialize(quest)
+            self.agent.reset()
+            self.agent.on_game_start()
             self._notify_callbacks("title")
             self._notify_callbacks("progress", {"step": 0, "message": "Starting quest..."})
 
