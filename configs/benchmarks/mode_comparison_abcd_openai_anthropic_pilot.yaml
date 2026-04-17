@@ -1,0 +1,52 @@
+name: mode_comparison_abcd_openai_anthropic_pilot
+quests:
+  - quests/Boat.qm
+  - quests/sr_2_1_2121_eng/Badday_eng.qm
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
+  - quests/sr_2_1_2121_eng/Borzukhan_eng.qm
+  - quests/sr_2_1_2121_eng/Codebox_eng.qm
+agents:
+  - model: gpt-5-mini
+    template: stub
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+  - model: gpt-5-mini
+    template: reasoning
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+  - model: gpt-5-mini
+    template: light_hints
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+  - model: gpt-5-mini
+    template: planner
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+  - model: claude-sonnet-4-5
+    template: stub
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+  - model: claude-sonnet-4-5
+    template: reasoning
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+  - model: claude-sonnet-4-5
+    template: light_hints
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+  - model: claude-sonnet-4-5
+    template: planner
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+debug: false
+quest_timeout: 60
+max_workers: 1
+output_dir: results/benchmarks

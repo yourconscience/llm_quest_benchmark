@@ -2,6 +2,7 @@
 from unittest.mock import Mock
 
 from llm_quest_benchmark.agents.agent_factory import create_agent
+from llm_quest_benchmark.agents.llm_agent import LLMAgent
 from llm_quest_benchmark.agents.planner_agent import PlannerAgent
 from llm_quest_benchmark.agents.tool_agent import ToolAgent
 
@@ -14,6 +15,22 @@ def test_create_agent_uses_planner_template_alias():
 def test_create_agent_uses_tool_template_alias():
     agent = create_agent(model="gpt-5-mini", action_template="tool_augmented")
     assert isinstance(agent, ToolAgent)
+
+
+def test_create_agent_uses_light_hints_template_with_standard_llm_agent():
+    agent = create_agent(model="gpt-5-mini", action_template="light_hints")
+    assert isinstance(agent, LLMAgent)
+    assert not isinstance(agent, (PlannerAgent, ToolAgent))
+
+
+def test_light_hints_template_injects_general_mechanics():
+    agent = LLMAgent(model_name="gpt-5-mini", action_template="light_hints")
+
+    prompt = agent._format_prompt("A sealed vault blocks the route.", [{"text": "Study the vault"}])
+
+    assert "Quest mechanics hints (static YAML)" in prompt
+    assert "quest_mechanics:" in prompt
+    assert "Preparation, study, negotiation, repair, and careful reconnaissance" in prompt
 
 
 def test_planner_agent_first_turn_generates_plan_then_acts():
