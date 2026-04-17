@@ -47,6 +47,6 @@ agents:
     runs: 1
     skip_single: true
 debug: false
-quest_timeout: 60
+quest_timeout: 120
 max_workers: 1
 output_dir: results/benchmarks

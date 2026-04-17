@@ -228,22 +228,32 @@ class LLMClient(ABC):
         """Get a completion from the model."""
         return self.get_completion(prompt)
 
-    def _record_usage(self, prompt_tokens: int = 0, completion_tokens: int = 0) -> None:
-        total_tokens = int(prompt_tokens) + int(completion_tokens)
+    def _record_usage(
+        self,
+        prompt_tokens: int = 0,
+        completion_tokens: int = 0,
+        total_tokens: int | None = None,
+    ) -> None:
+        prompt_tokens = int(prompt_tokens)
+        completion_tokens = int(completion_tokens)
+        if total_tokens is not None:
+            total_tokens = int(total_tokens)
+        else:
+            total_tokens = prompt_tokens + completion_tokens
         estimated_cost_usd = _estimate_cost_usd(
             self.provider,
             self.model_id,
-            int(prompt_tokens),
-            int(completion_tokens),
+            prompt_tokens,
+            completion_tokens,
         )
         self._last_usage = UsageStats(
-            prompt_tokens=int(prompt_tokens),
-            completion_tokens=int(completion_tokens),
-            total_tokens=int(total_tokens),
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
             estimated_cost_usd=estimated_cost_usd,
         )
-        self._total_prompt_tokens += int(prompt_tokens)
-        self._total_completion_tokens += int(completion_tokens)
+        self._total_prompt_tokens += prompt_tokens
+        self._total_completion_tokens += completion_tokens
         if estimated_cost_usd is not None:
             self._total_estimated_cost_usd += float(estimated_cost_usd)
             self._priced_calls += 1
@@ -587,7 +597,7 @@ class ExecCLIClient(LLMClient):
                 )
             output_file.seek(0)
             result = output_file.read().strip()
-            self._record_usage(0, self._extract_total_tokens(process))
+            self._record_usage(total_tokens=self._extract_total_tokens(process))
             return result or process.stdout.strip()
 
     def _run_claude_exec(self, prompt: str) -> str:
@@ -691,7 +701,7 @@ class ExecCLIClient(LLMClient):
             stdout=stdout,
             stderr=stderr,
         )
-        self._record_usage(0, self._extract_total_tokens(completed))
+        self._record_usage(total_tokens=self._extract_total_tokens(completed))
         if not stdout:
             raise RuntimeError(
                 "claude print mode produced no stdout before the process went idle.\n"

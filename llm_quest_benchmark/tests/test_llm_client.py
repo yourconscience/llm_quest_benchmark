@@ -224,7 +224,10 @@ def test_codex_exec_reads_output_last_message(mock_run, monkeypatch):
     assert command[:2] == ["/opt/codex", "exec"]
     assert "--model" in command
     assert command[command.index("--model") + 1] == "gpt-5.4"
-    assert client.get_last_usage()["total_tokens"] == 1234
+    usage = client.get_last_usage()
+    assert usage["total_tokens"] == 1234
+    assert usage["prompt_tokens"] == 0
+    assert usage["completion_tokens"] == 0
 
 
 def test_claude_exec_uses_print_mode_and_system_prompt(monkeypatch):
