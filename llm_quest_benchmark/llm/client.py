@@ -614,6 +614,7 @@ class ExecCLIClient(LLMClient):
 
         process = subprocess.Popen(
             command,
+            stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=False,
@@ -629,7 +630,7 @@ class ExecCLIClient(LLMClient):
         stderr_chunks: list[bytes] = []
         deadline = time.time() + self.request_timeout
         last_output_at: Optional[float] = None
-        idle_after_output_seconds = 1.0
+        idle_after_output_seconds = 5.0
 
         try:
             while time.time() < deadline:
@@ -667,6 +668,12 @@ class ExecCLIClient(LLMClient):
                     process.kill()
         finally:
             selector.close()
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    process.kill()
 
         stdout = b"".join(stdout_chunks).decode("utf-8", errors="replace").strip()
         stderr = b"".join(stderr_chunks).decode("utf-8", errors="replace").strip()
