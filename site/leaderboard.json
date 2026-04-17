@@ -1,0 +1,42 @@
+{
+  "generated": "2026-04-17T00:00:00Z",
+  "benchmark_id": "sample",
+  "models": [
+    {"id": "gemini-2.5-flash", "provider": "Google", "label": "Gemini 2.5 Flash"},
+    {"id": "gpt-5-mini", "provider": "OpenAI", "label": "GPT-5 Mini"},
+    {"id": "claude-sonnet-4-5", "provider": "Anthropic", "label": "Claude Sonnet 4.5"},
+    {"id": "deepseek-3.2-chat", "provider": "DeepSeek", "label": "DeepSeek 3.2"}
+  ],
+  "modes": [
+    {"id": "stub", "label": "Baseline (A)"},
+    {"id": "reasoning", "label": "Prompted (B)"},
+    {"id": "planner", "label": "Planner (D)"},
+    {"id": "tool_augmented", "label": "Tool-augmented (E)"}
+  ],
+  "quests": [
+    {"id": "Boat", "lang": "RU"},
+    {"id": "Badday_eng", "lang": "EN"},
+    {"id": "Banket_eng", "lang": "EN"}
+  ],
+  "results": [
+    {"model": "gemini-2.5-flash", "mode": "stub", "quest": "Boat", "runs": 3, "success_rate": 0.33, "avg_steps": 12, "avg_tokens": 850, "avg_cost_usd": 0.002, "repetition_rate": 0.15},
+    {"model": "gemini-2.5-flash", "mode": "reasoning", "quest": "Boat", "runs": 3, "success_rate": 0.67, "avg_steps": 14, "avg_tokens": 2100, "avg_cost_usd": 0.005, "repetition_rate": 0.08},
+    {"model": "gemini-2.5-flash", "mode": "planner", "quest": "Boat", "runs": 3, "success_rate": 0.67, "avg_steps": 13, "avg_tokens": 3200, "avg_cost_usd": 0.008, "repetition_rate": 0.05},
+    {"model": "gemini-2.5-flash", "mode": "tool_augmented", "quest": "Boat", "runs": 3, "success_rate": 1.0, "avg_steps": 11, "avg_tokens": 3800, "avg_cost_usd": 0.009, "repetition_rate": 0.03},
+
+    {"model": "gpt-5-mini", "mode": "stub", "quest": "Boat", "runs": 3, "success_rate": 0.0, "avg_steps": 10, "avg_tokens": 600, "avg_cost_usd": 0.003, "repetition_rate": 0.22},
+    {"model": "gpt-5-mini", "mode": "reasoning", "quest": "Boat", "runs": 3, "success_rate": 0.33, "avg_steps": 15, "avg_tokens": 1800, "avg_cost_usd": 0.008, "repetition_rate": 0.12},
+    {"model": "gpt-5-mini", "mode": "planner", "quest": "Boat", "runs": 3, "success_rate": 0.67, "avg_steps": 14, "avg_tokens": 2900, "avg_cost_usd": 0.013, "repetition_rate": 0.06},
+    {"model": "gpt-5-mini", "mode": "tool_augmented", "quest": "Boat", "runs": 3, "success_rate": 0.67, "avg_steps": 13, "avg_tokens": 3500, "avg_cost_usd": 0.015, "repetition_rate": 0.04},
+
+    {"model": "claude-sonnet-4-5", "mode": "stub", "quest": "Boat", "runs": 3, "success_rate": 0.33, "avg_steps": 11, "avg_tokens": 700, "avg_cost_usd": 0.005, "repetition_rate": 0.18},
+    {"model": "claude-sonnet-4-5", "mode": "reasoning", "quest": "Boat", "runs": 3, "success_rate": 0.67, "avg_steps": 13, "avg_tokens": 1950, "avg_cost_usd": 0.012, "repetition_rate": 0.09},
+    {"model": "claude-sonnet-4-5", "mode": "planner", "quest": "Boat", "runs": 3, "success_rate": 1.0, "avg_steps": 12, "avg_tokens": 3100, "avg_cost_usd": 0.019, "repetition_rate": 0.04},
+    {"model": "claude-sonnet-4-5", "mode": "tool_augmented", "quest": "Boat", "runs": 3, "success_rate": 1.0, "avg_steps": 11, "avg_tokens": 3600, "avg_cost_usd": 0.022, "repetition_rate": 0.02},
+
+    {"model": "deepseek-3.2-chat", "mode": "stub", "quest": "Boat", "runs": 3, "success_rate": 0.0, "avg_steps": 9, "avg_tokens": 500, "avg_cost_usd": 0.001, "repetition_rate": 0.25},
+    {"model": "deepseek-3.2-chat", "mode": "reasoning", "quest": "Boat", "runs": 3, "success_rate": 0.33, "avg_steps": 12, "avg_tokens": 1600, "avg_cost_usd": 0.002, "repetition_rate": 0.14},
+    {"model": "deepseek-3.2-chat", "mode": "planner", "quest": "Boat", "runs": 3, "success_rate": 0.33, "avg_steps": 13, "avg_tokens": 2700, "avg_cost_usd": 0.004, "repetition_rate": 0.08},
+    {"model": "deepseek-3.2-chat", "mode": "tool_augmented", "quest": "Boat", "runs": 3, "success_rate": 0.67, "avg_steps": 12, "avg_tokens": 3200, "avg_cost_usd": 0.005, "repetition_rate": 0.05}
+  ]
+}
