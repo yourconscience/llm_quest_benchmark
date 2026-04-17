@@ -1,8 +1,10 @@
 """Tests for provider-aware LLM client selection."""
+import subprocess
 from unittest.mock import Mock, patch
 
 from llm_quest_benchmark.llm.client import (
     AnthropicClient,
+    ExecCLIClient,
     OpenAICompatibleClient,
     get_llm_client,
     parse_model_name,
@@ -27,6 +29,18 @@ def test_parse_model_name_google_alias():
     assert spec.model_id == "gemini-2.5-flash"
 
 
+def test_parse_model_name_codex_exec_alias():
+    spec = parse_model_name("codex-exec")
+    assert spec.provider == "codex_cli"
+    assert spec.model_id == "codex-exec"
+
+
+def test_parse_model_name_claude_exec_alias():
+    spec = parse_model_name("claude-exec")
+    assert spec.provider == "claude_cli"
+    assert spec.model_id == "claude-exec"
+
+
 def test_get_llm_client_deepseek():
     client = get_llm_client("deepseek-3.2-chat")
     assert isinstance(client, OpenAICompatibleClient)
@@ -42,6 +56,18 @@ def test_get_llm_client_google():
 def test_get_llm_client_anthropic():
     client = get_llm_client("claude-sonnet-4-5")
     assert isinstance(client, AnthropicClient)
+
+
+def test_get_llm_client_codex_exec():
+    client = get_llm_client("codex-exec")
+    assert isinstance(client, ExecCLIClient)
+    assert client.provider == "codex_cli"
+
+
+def test_get_llm_client_claude_exec():
+    client = get_llm_client("claude-exec")
+    assert isinstance(client, ExecCLIClient)
+    assert client.provider == "claude_cli"
 
 
 def test_parse_model_name_haiku_alias():
@@ -171,3 +197,31 @@ def test_openai_gpt5_retries_empty_with_larger_budget(mock_openai_cls, monkeypat
     assert mock_chat.completions.create.call_count == 2
     second_kwargs = mock_chat.completions.create.call_args_list[1].kwargs
     assert second_kwargs["max_completion_tokens"] >= 800
+
+
+@patch("llm_quest_benchmark.llm.client.subprocess.run")
+def test_codex_exec_reads_output_last_message(mock_run, monkeypatch):
+    monkeypatch.setattr("llm_quest_benchmark.llm.client.shutil.which", lambda command: f"/opt/{command}")
+    monkeypatch.setenv("LLM_QUEST_CODEX_EXEC_MODEL", "gpt-5.4")
+
+    def fake_run(command, **kwargs):
+        output_path = command[command.index("--output-last-message") + 1]
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write("2")
+        return subprocess.CompletedProcess(
+            args=command,
+            returncode=0,
+            stdout="codex\n2\ntokens used\n1,234\n",
+            stderr="",
+        )
+
+    mock_run.side_effect = fake_run
+
+    client = get_llm_client("codex-exec", system_prompt="system")
+    assert client.get_completion("pick one") == "2"
+
+    command = mock_run.call_args.args[0]
+    assert command[:2] == ["/opt/codex", "exec"]
+    assert "--model" in command
+    assert command[command.index("--model") + 1] == "gpt-5.4"
+    assert client.get_last_usage()["total_tokens"] == 1234
