@@ -33,63 +33,6 @@ def _strip_template_suffix(template_name: str) -> str:
     return Path(template_name or "").stem
 
 
-def _fallback_model_from_agent_id(agent_id: Any) -> str:
-    value = str(agent_id or "")
-    if value.startswith("llm_"):
-        return value[len("llm_") :]
-    return value or "unknown"
-
-
-def _extract_agent_config(
-    run_row: Dict[str, Any],
-    agent_configs: Dict[str, Dict[str, Any]],
-) -> Dict[str, Any]:
-    raw_cfg = run_row.get("agent_config")
-    if isinstance(raw_cfg, dict):
-        return raw_cfg
-    if isinstance(raw_cfg, str):
-        try:
-            parsed = json.loads(raw_cfg)
-        except json.JSONDecodeError:
-            parsed = None
-        if isinstance(parsed, dict):
-            return parsed
-    return agent_configs.get(str(run_row.get("agent_id") or ""), {})
-
-
-def _resolve_run_summary_path(run_row: Dict[str, Any]) -> Optional[Path]:
-    run_id = run_row.get("id")
-    quest_name = run_row.get("quest_name")
-    agent_id = run_row.get("agent_id")
-    if run_id is None or not quest_name or not agent_id:
-        return None
-    return Path("results") / str(agent_id) / str(quest_name) / f"run_{run_id}" / "run_summary.json"
-
-
-def _quest_id(run_row: Dict[str, Any]) -> str:
-    quest_file = run_row.get("quest_file")
-    if quest_file:
-        return Path(str(quest_file)).stem
-    quest_name = run_row.get("quest_name")
-    if quest_name:
-        return str(quest_name)
-    return "unknown"
-
-
-def _detect_quest_lang(run_row: Dict[str, Any]) -> str:
-    quest_file = str(run_row.get("quest_file") or "")
-    if not quest_file:
-        return "EN"
-    quest_path = Path(quest_file)
-    if "_ru" in quest_path.stem.lower():
-        return "RU"
-    for part in quest_path.parts[:-1]:
-        lowered = part.lower()
-        if lowered == "ru" or lowered.endswith("_ru"):
-            return "RU"
-    return "EN"
-
-
 def _mode_from_template(template_name: str) -> Tuple[str, str]:
     template_id = _strip_template_suffix(template_name)
     return TEMPLATE_TO_MODE.get(template_id, (template_id or "unknown", template_id or "unknown"))
@@ -133,6 +76,25 @@ def _model_label(model_id: str) -> str:
     return " ".join(normalized)
 
 
+def _quest_id_from_path(quest_path: str) -> str:
+    if quest_path:
+        return Path(str(quest_path)).stem
+    return "unknown"
+
+
+def _detect_quest_lang(quest_path: str) -> str:
+    if not quest_path:
+        return "EN"
+    p = Path(quest_path)
+    if "_ru" in p.stem.lower():
+        return "RU"
+    for part in p.parts[:-1]:
+        lowered = part.lower()
+        if lowered == "ru" or lowered.endswith("_ru"):
+            return "RU"
+    return "EN"
+
+
 def _mean(values: Iterable[float]) -> float:
     materialized = list(values)
     if not materialized:
@@ -142,7 +104,7 @@ def _mean(values: Iterable[float]) -> float:
 
 def _resolve_benchmark_dirs(benchmark_dirs: List[str]) -> List[Path]:
     resolved: List[Path] = []
-    seen = set()
+    seen: set[str] = set()
 
     for raw in benchmark_dirs:
         matches = [Path(match) for match in glob.glob(raw)] if glob.has_magic(raw) else [Path(raw)]
@@ -191,33 +153,38 @@ def generate_leaderboard(benchmark_dirs: List[str], output_path: str) -> Dict[st
         if benchmark_id:
             benchmark_ids.append(str(benchmark_id))
 
-        summary_agents = summary.get("agents") if isinstance(summary.get("agents"), list) else []
-        agent_configs = {
-            str(agent.get("agent_id")): agent
-            for agent in summary_agents
-            if isinstance(agent, dict) and agent.get("agent_id")
-        }
+        results_list = summary.get("results") if isinstance(summary.get("results"), list) else []
         db_runs = summary.get("db_runs") if isinstance(summary.get("db_runs"), list) else []
 
-        for run_row in db_runs:
-            if not isinstance(run_row, dict):
+        for i, result_row in enumerate(results_list):
+            if not isinstance(result_row, dict):
                 continue
 
-            agent_config = _extract_agent_config(run_row, agent_configs)
-            model = str(agent_config.get("model") or _fallback_model_from_agent_id(run_row.get("agent_id")))
-            mode_id, mode_label = _mode_from_template(
-                str(agent_config.get("action_template") or agent_config.get("template") or "")
-            )
-            quest_id = _quest_id(run_row)
-            quest_lang = _detect_quest_lang(run_row)
+            model = str(result_row.get("model") or "unknown")
+            template = str(result_row.get("template") or "")
+            mode_id, mode_label = _mode_from_template(template)
+            quest_path = str(result_row.get("quest") or "")
+            quest_id = _quest_id_from_path(quest_path)
+            quest_lang = _detect_quest_lang(quest_path)
+            outcome = str(result_row.get("outcome") or "UNKNOWN")
 
-            run_summary = _load_json(_resolve_run_summary_path(run_row) or Path("__missing__")) or {}
-            usage = run_summary.get("usage") if isinstance(run_summary.get("usage"), dict) else {}
-            metrics = run_summary.get("metrics") if isinstance(run_summary.get("metrics"), dict) else {}
+            # Correlate with db_runs by index to get run ID for metrics
+            usage: Dict[str, Any] = {}
+            metrics: Dict[str, Any] = {}
+            if i < len(db_runs) and isinstance(db_runs[i], dict):
+                db_run = db_runs[i]
+                run_id = db_run.get("id")
+                quest_name = db_run.get("quest_name")
+                agent_id = db_run.get("agent_id")
+                if run_id is not None and quest_name and agent_id:
+                    run_path = Path("results") / str(agent_id) / str(quest_name) / f"run_{run_id}" / "run_summary.json"
+                    run_summary = _load_json(run_path) or {}
+                    usage = run_summary.get("usage") if isinstance(run_summary.get("usage"), dict) else {}
+                    metrics = run_summary.get("metrics") if isinstance(run_summary.get("metrics"), dict) else {}
 
             grouped_rows[(model, mode_id, quest_id)].append(
                 {
-                    "outcome": str(run_row.get("outcome") or "UNKNOWN"),
+                    "outcome": outcome,
                     "total_steps": float(metrics.get("total_steps") or 0),
                     "total_tokens": float(usage.get("total_tokens") or 0),
                     "estimated_cost_usd": float(usage.get("estimated_cost_usd") or 0),
@@ -240,11 +207,11 @@ def generate_leaderboard(benchmark_dirs: List[str], output_path: str) -> Dict[st
             mode_entries[mode_id] = {"id": mode_id, "label": mode_label}
             quest_entries[quest_id] = {"id": quest_id, "lang": quest_lang}
 
-    results = []
+    agg_results = []
     for (model, mode_id, quest_id), rows in sorted(grouped_rows.items()):
         run_count = len(rows)
         success_count = sum(1 for row in rows if row["outcome"] == "SUCCESS")
-        results.append(
+        agg_results.append(
             {
                 "model": model,
                 "mode": mode_id,
@@ -266,7 +233,7 @@ def generate_leaderboard(benchmark_dirs: List[str], output_path: str) -> Dict[st
         "modes": sorted(mode_entries.values(), key=lambda item: (mode_rank.get(item["id"], 999), item["id"])),
         "quests": sorted(quest_entries.values(), key=lambda item: item["id"]),
         "results": sorted(
-            results,
+            agg_results,
             key=lambda item: (item["model"], mode_rank.get(item["mode"], 999), item["mode"], item["quest"]),
         ),
     }

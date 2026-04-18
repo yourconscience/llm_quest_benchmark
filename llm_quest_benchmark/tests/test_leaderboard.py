@@ -12,18 +12,49 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
     benchmark_dir = Path("results/benchmarks/bench_1")
     benchmark_dir.mkdir(parents=True, exist_ok=True)
 
+    results = [
+        {
+            "quest": "quests/ru/Boat.qm",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.4,
+            "template": "stub.jinja",
+            "agent_id": "llm_gemini-2.5-flash",
+            "attempt": 1,
+            "outcome": "SUCCESS",
+            "reward": 1.0,
+            "error": None,
+        },
+        {
+            "quest": "quests/ru/Boat.qm",
+            "model": "gemini-2.5-flash",
+            "temperature": 0.4,
+            "template": "stub.jinja",
+            "agent_id": "llm_gemini-2.5-flash",
+            "attempt": 2,
+            "outcome": "FAILURE",
+            "reward": 0.0,
+            "error": None,
+        },
+        {
+            "quest": "quests/Scout.qm",
+            "model": "gpt-5-mini",
+            "temperature": 0.4,
+            "template": "planner.jinja",
+            "agent_id": "planner_gpt-5-mini",
+            "attempt": 1,
+            "outcome": "SUCCESS",
+            "reward": 1.0,
+            "error": None,
+        },
+    ]
+
     db_runs = [
         {
             "id": 1,
             "quest_file": "quests/ru/Boat.qm",
             "quest_name": "Boat",
             "agent_id": "llm_gemini-2.5-flash",
-            "agent_config": json.dumps(
-                {
-                    "model": "gemini-2.5-flash",
-                    "action_template": "stub.jinja",
-                }
-            ),
+            "agent_config": json.dumps({"model": "gemini-2.5-flash", "action_template": "stub.jinja"}),
             "outcome": "SUCCESS",
         },
         {
@@ -31,42 +62,25 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
             "quest_file": "quests/ru/Boat.qm",
             "quest_name": "Boat",
             "agent_id": "llm_gemini-2.5-flash",
-            "agent_config": json.dumps(
-                {
-                    "model": "gemini-2.5-flash",
-                    "action_template": "stub.jinja",
-                }
-            ),
+            "agent_config": None,
             "outcome": "FAILURE",
         },
         {
             "id": 3,
             "quest_file": "quests/Scout.qm",
             "quest_name": "Scout",
-            "agent_id": "llm_gpt-5-mini",
-            "agent_config": {
-                "model": "gpt-5-mini",
-                "action_template": "planner",
-            },
+            "agent_id": "planner_gpt-5-mini",
+            "agent_config": None,
             "outcome": "SUCCESS",
         },
     ]
+
     (benchmark_dir / "benchmark_summary.json").write_text(
         json.dumps(
             {
                 "benchmark_id": "bench_1",
-                "agents": [
-                    {
-                        "agent_id": "llm_gemini-2.5-flash",
-                        "model": "gemini-2.5-flash",
-                        "action_template": "stub.jinja",
-                    },
-                    {
-                        "agent_id": "llm_gpt-5-mini",
-                        "model": "gpt-5-mini",
-                        "action_template": "planner.jinja",
-                    },
-                ],
+                "agents": [],
+                "results": results,
                 "db_runs": db_runs,
             },
             ensure_ascii=False,
@@ -83,7 +97,7 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
             "usage": {"total_tokens": 600, "estimated_cost_usd": None},
             "metrics": {"total_steps": 18, "repetition_rate": 0.30},
         },
-        Path("results/llm_gpt-5-mini/Scout/run_3/run_summary.json"): {
+        Path("results/planner_gpt-5-mini/Scout/run_3/run_summary.json"): {
             "usage": {"total_tokens": 1200, "estimated_cost_usd": 0.006},
             "metrics": {"total_steps": 9, "repetition_rate": 0.0},
         },
@@ -98,9 +112,6 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
     assert output_path.exists()
     persisted = json.loads(output_path.read_text(encoding="utf-8"))
     assert persisted["benchmark_id"] == "bench_1"
-    assert persisted["models"] == leaderboard["models"]
-    assert persisted["modes"] == leaderboard["modes"]
-    assert persisted["quests"] == leaderboard["quests"]
 
     assert leaderboard["models"] == [
         {"id": "gemini-2.5-flash", "provider": "google", "label": "Gemini 2.5 Flash"},

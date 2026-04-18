@@ -1,0 +1,30 @@
+name: gemini_flash_pilot
+quests:
+  - quests/Boat.qm
+  - quests/sr_2_1_2121_eng/Badday_eng.qm
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
+agents:
+  - model: gemini-2.5-flash
+    template: stub
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+  - model: gemini-2.5-flash
+    template: reasoning
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+  - model: gemini-2.5-flash
+    template: light_hints
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+  - model: gemini-2.5-flash
+    template: planner
+    temperature: 0.4
+    runs: 1
+    skip_single: true
+debug: false
+quest_timeout: 120
+max_workers: 1
+output_dir: results/benchmarks
