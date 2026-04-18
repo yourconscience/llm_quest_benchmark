@@ -1,4 +1,5 @@
 """Tests for runner timeout handling."""
+
 from concurrent.futures import TimeoutError as FuturesTimeoutError
 from types import SimpleNamespace
 

@@ -1,7 +1,8 @@
 """Planner agent with a lightweight plan-maintain-act loop."""
+
 import logging
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from llm_quest_benchmark.agents.llm_agent import LLMAgent, LLMResponse, parse_llm_response
 
@@ -17,10 +18,10 @@ class PlannerAgent(LLMAgent):
     ):
         super().__init__(*args, action_template=action_template, **kwargs)
         self.agent_id = f"planner_{self.model_name}"
-        self.current_plan: Optional[str] = None
-        self._plan_history: List[str] = []
+        self.current_plan: str | None = None
+        self._plan_history: list[str] = []
 
-    def _recent_actions(self) -> List[str]:
+    def _recent_actions(self) -> list[str]:
         entries = []
         for item in self._decision_history[-3:]:
             choice = (item.get("choice") or "").strip()
@@ -44,9 +45,9 @@ class PlannerAgent(LLMAgent):
     def _build_planner_prompt(
         self,
         observation: str,
-        choices: List[Dict[str, str]],
+        choices: list[dict[str, str]],
         prompt_kind: str,
-        replan_reason: Optional[str] = None,
+        replan_reason: str | None = None,
     ) -> str:
         template = self.prompt_renderer.get_template(self.action_template)
         return template.render(
@@ -74,7 +75,7 @@ class PlannerAgent(LLMAgent):
         overlap = len(prev_tokens & curr_tokens) / max(len(prev_tokens), len(curr_tokens))
         return overlap < 0.5
 
-    def _should_replan(self, observation: str, state_signature: str) -> Tuple[bool, Optional[str]]:
+    def _should_replan(self, observation: str, state_signature: str) -> tuple[bool, str | None]:
         if not self.current_plan:
             return True, "No plan exists yet."
 
@@ -89,9 +90,9 @@ class PlannerAgent(LLMAgent):
     def _update_plan(
         self,
         observation: str,
-        choices: List[Dict[str, str]],
-        replan_reason: Optional[str],
-    ) -> Dict[str, Any]:
+        choices: list[dict[str, str]],
+        replan_reason: str | None,
+    ) -> dict[str, Any]:
         self._ensure_llm()
         prompt = self._build_planner_prompt(
             observation,
@@ -119,9 +120,9 @@ class PlannerAgent(LLMAgent):
     def _choose_action_with_plan(
         self,
         observation: str,
-        choices: List[Dict[str, str]],
-        replan_reason: Optional[str],
-    ) -> Tuple[LLMResponse, Dict[str, Any]]:
+        choices: list[dict[str, str]],
+        replan_reason: str | None,
+    ) -> tuple[LLMResponse, dict[str, Any]]:
         prompt = self._build_planner_prompt(
             observation,
             choices,
@@ -146,9 +147,7 @@ class PlannerAgent(LLMAgent):
                 retry_parsed.parse_mode = f"retry_{retry_parsed.parse_mode or 'parsed'}"
                 parsed_response = retry_parsed
             elif self._needs_force_numeric_retry():
-                force_retry_response = self.llm.get_completion(
-                    self._format_force_numeric_retry_prompt(choices)
-                )
+                force_retry_response = self.llm.get_completion(self._format_force_numeric_retry_prompt(choices))
                 force_retry_usage = self.llm.get_last_usage()
                 llm_usage = self._merge_usage(llm_usage, force_retry_usage)
                 force_retry_parsed = parse_llm_response(
@@ -158,14 +157,12 @@ class PlannerAgent(LLMAgent):
                     self.logger,
                 )
                 if not force_retry_parsed.is_default:
-                    force_retry_parsed.parse_mode = (
-                        f"force_retry_{force_retry_parsed.parse_mode or 'parsed'}"
-                    )
+                    force_retry_parsed.parse_mode = f"force_retry_{force_retry_parsed.parse_mode or 'parsed'}"
                     parsed_response = force_retry_parsed
 
         return parsed_response, llm_usage
 
-    def _get_action_impl(self, state: str, choices: List[Dict[str, str]]) -> int:
+    def _get_action_impl(self, state: str, choices: list[dict[str, str]]) -> int:
         if self.debug:
             self.logger.debug("PlannerAgent evaluating state with %s choices", len(choices))
         try:
@@ -193,9 +190,8 @@ class PlannerAgent(LLMAgent):
             if loop_adjusted_action != parsed_response.action:
                 parsed_response.action = loop_adjusted_action
                 parsed_response.reasoning = (
-                    (parsed_response.reasoning + "; " if parsed_response.reasoning else "")
-                    + "policy_loop_break_override"
-                )
+                    parsed_response.reasoning + "; " if parsed_response.reasoning else ""
+                ) + "policy_loop_break_override"
 
             total_usage = (
                 self._merge_usage(plan_usage, action_usage) if plan_usage else self._normalize_usage(action_usage)
@@ -243,9 +239,7 @@ class PlannerAgent(LLMAgent):
         self.current_plan = None
         self._plan_history = []
 
-    def on_game_end(self, final_state: Dict[str, Any]) -> None:
+    def on_game_end(self, final_state: dict[str, Any]) -> None:
         if self.debug:
-            logging.getLogger(self.__class__.__name__).debug(
-                "Planner finished with plan: %s", self.current_plan
-            )
+            logging.getLogger(self.__class__.__name__).debug("Planner finished with plan: %s", self.current_plan)
         super().on_game_end(final_state)

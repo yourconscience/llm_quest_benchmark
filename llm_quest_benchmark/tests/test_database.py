@@ -1,20 +1,20 @@
+import json
 import os
 import tempfile
+
 import pytest
-import json
-from pathlib import Path
-import sqlite3
-from datetime import datetime
-from llm_quest_benchmark.core.logging import QuestLogger
+
 from llm_quest_benchmark.core import logging as logging_module
-from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.core.logging import QuestLogger
 from llm_quest_benchmark.schemas.response import LLMResponse
+from llm_quest_benchmark.schemas.state import AgentState
+
 
 @pytest.fixture
 def quest_logger():
     """Create a temporary quest logger for testing"""
     # Create a temporary database file
-    fd, db_path = tempfile.mkstemp(suffix='.db')
+    fd, db_path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
 
     # Create logger with the temporary database
@@ -25,6 +25,7 @@ def quest_logger():
     # Clean up
     logger.close()
     os.unlink(db_path)
+
 
 def test_quest_logger_initialization(quest_logger):
     """Test quest logger initialization"""
@@ -41,6 +42,7 @@ def test_quest_logger_initialization(quest_logger):
     assert "runs" in table_names
     assert "steps" in table_names
 
+
 def test_quest_logger_log_step(quest_logger):
     """Test logging a single step"""
     # Set up quest file
@@ -51,16 +53,9 @@ def test_quest_logger_log_step(quest_logger):
         step=1,
         location_id="room1",
         observation="You are in a room",
-        choices=[
-            {"id": "1", "text": "Go north"},
-            {"id": "2", "text": "Go south"}
-        ],
+        choices=[{"id": "1", "text": "Go north"}, {"id": "2", "text": "Go south"}],
         action="1",
-        llm_response=LLMResponse(
-            action=1,
-            analysis="I should go north",
-            reasoning="The north path looks safer"
-        )
+        llm_response=LLMResponse(action=1, analysis="I should go north", reasoning="The north path looks safer"),
     )
 
     # Log the step
@@ -87,13 +82,13 @@ def test_quest_logger_log_step(quest_logger):
     assert step is not None
 
     # Get the indices for each column
-    run_id_idx = column_names.index('run_id')
-    step_idx = column_names.index('step')
-    location_id_idx = column_names.index('location_id')
-    observation_idx = column_names.index('observation')
-    choices_idx = column_names.index('choices')
-    action_idx = column_names.index('action')
-    llm_response_idx = column_names.index('llm_response')
+    run_id_idx = column_names.index("run_id")
+    step_idx = column_names.index("step")
+    location_id_idx = column_names.index("location_id")
+    observation_idx = column_names.index("observation")
+    choices_idx = column_names.index("choices")
+    action_idx = column_names.index("action")
+    llm_response_idx = column_names.index("llm_response")
 
     # Check values using column indices
     assert step[run_id_idx] == run[0]  # run_id
@@ -103,6 +98,7 @@ def test_quest_logger_log_step(quest_logger):
     assert "Go north" in step[choices_idx]  # choices
     assert step[action_idx] == "1"  # action
     assert "I should go north" in step[llm_response_idx]  # llm_response
+
 
 def test_quest_logger_multiple_steps(quest_logger):
     """Test logging multiple steps in sequence"""
@@ -118,7 +114,7 @@ def test_quest_logger_multiple_steps(quest_logger):
             observation="Room 1",
             choices=[{"id": "1", "text": "North"}, {"id": "2", "text": "South"}],
             action="1",
-            llm_response=LLMResponse(action=1)
+            llm_response=LLMResponse(action=1),
         ),
         AgentState(
             step=2,
@@ -126,7 +122,7 @@ def test_quest_logger_multiple_steps(quest_logger):
             observation="Room 2",
             choices=[{"id": "1", "text": "East"}, {"id": "2", "text": "West"}],
             action="2",
-            llm_response=LLMResponse(action=2)
+            llm_response=LLMResponse(action=2),
         ),
         AgentState(
             step=3,
@@ -134,8 +130,8 @@ def test_quest_logger_multiple_steps(quest_logger):
             observation="Room 3",
             choices=[{"id": "1", "text": "Up"}, {"id": "2", "text": "Down"}],
             action="1",
-            llm_response=LLMResponse(action=1)
-        )
+            llm_response=LLMResponse(action=1),
+        ),
     ]
 
     for step in steps:
@@ -150,8 +146,8 @@ def test_quest_logger_multiple_steps(quest_logger):
     column_names = [col[1] for col in columns]
 
     # Get the indices for each column
-    step_idx = column_names.index('step')
-    action_idx = column_names.index('action')
+    step_idx = column_names.index("step")
+    action_idx = column_names.index("action")
 
     # Check all steps were logged
     quest_logger._local.cursor.execute("SELECT * FROM steps WHERE run_id = ? ORDER BY step", (run_id,))

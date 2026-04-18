@@ -1,20 +1,19 @@
 """Time utilities for handling timeouts"""
+
+import math
 import signal
 import sys
-import math
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from contextlib import contextmanager
-from typing import Any, Callable
+from typing import Any
 
-from llm_quest_benchmark.constants import (
-    DEFAULT_QUEST_TIMEOUT,
-    DEFAULT_BENCHMARK_TIMEOUT_FACTOR,
-    MAX_BENCHMARK_TIMEOUT
-)
+from llm_quest_benchmark.constants import DEFAULT_BENCHMARK_TIMEOUT_FACTOR, DEFAULT_QUEST_TIMEOUT, MAX_BENCHMARK_TIMEOUT
 
 
 class CommandTimeout(Exception):
     """Raised when a command times out"""
+
     pass
 
 
@@ -23,7 +22,7 @@ def calculate_benchmark_timeout(
     num_agents: int,
     num_workers: int,
     quest_timeout: int = DEFAULT_QUEST_TIMEOUT,
-    safety_factor: float = DEFAULT_BENCHMARK_TIMEOUT_FACTOR
+    safety_factor: float = DEFAULT_BENCHMARK_TIMEOUT_FACTOR,
 ) -> int:
     """Calculate appropriate timeout for a benchmark run
 
@@ -88,7 +87,7 @@ def timeout(seconds: int):
     Note: This uses signal.SIGALRM which only works on Unix-like systems.
     For cross-platform support, use run_with_timeout instead.
     """
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         raise NotImplementedError("signal.SIGALRM is not supported on Windows")
 
     def handler(signum, frame):

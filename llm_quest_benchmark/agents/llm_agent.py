@@ -1,9 +1,10 @@
 """LLM agent for Space Rangers quests"""
+
 import hashlib
 import json
 import logging
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from json_repair import repair_json
 
@@ -49,8 +50,8 @@ SAFE_CHOICE_KEYWORDS = (
 def _parse_json_response(
     response: str,
     debug: bool = False,
-    logger: Optional[logging.Logger] = None,
-) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    logger: logging.Logger | None = None,
+) -> tuple[dict[str, Any] | None, str | None]:
     """Try to parse response as JSON, with repair attempt if needed."""
     cleaned_response = (response or "").strip()
     if not cleaned_response:
@@ -58,10 +59,10 @@ def _parse_json_response(
 
     try:
         # Extract JSON from response if there are backticks
-        if '```json' in cleaned_response:
+        if "```json" in cleaned_response:
             # Find the start and end of the JSON block
-            start = cleaned_response.find('```json') + 7
-            end = cleaned_response.find('```', start)
+            start = cleaned_response.find("```json") + 7
+            end = cleaned_response.find("```", start)
             if end > start:
                 json_str = cleaned_response[start:end].strip()
                 if debug and logger:
@@ -106,10 +107,9 @@ def _parse_json_response(
             return None, None
 
 
-def _validate_action_number(action: int,
-                            num_choices: int,
-                            debug: bool = False,
-                            logger: Optional[logging.Logger] = None) -> bool:
+def _validate_action_number(
+    action: int, num_choices: int, debug: bool = False, logger: logging.Logger | None = None
+) -> bool:
     """Validate that action number is within valid range"""
     if 1 <= action <= num_choices:
         return True
@@ -118,7 +118,7 @@ def _validate_action_number(action: int,
     return False
 
 
-def _extract_action_from_text(response: str, num_choices: int) -> Optional[int]:
+def _extract_action_from_text(response: str, num_choices: int) -> int | None:
     """Extract a candidate action from free-form text."""
     for match in re.finditer(r"\b(\d+)\b", response):
         action = int(match.group(1))
@@ -127,7 +127,7 @@ def _extract_action_from_text(response: str, num_choices: int) -> Optional[int]:
     return None
 
 
-def _extract_field_from_text(response: str, field: str) -> Optional[str]:
+def _extract_field_from_text(response: str, field: str) -> str | None:
     """Best-effort extraction of analysis/reasoning from loosely formatted output."""
     if not response:
         return None
@@ -167,7 +167,7 @@ def _extract_field_from_text(response: str, field: str) -> Optional[str]:
     return None
 
 
-def _raw_reasoning_fallback(response: str) -> Optional[str]:
+def _raw_reasoning_fallback(response: str) -> str | None:
     compact = " ".join((response or "").strip().split())
     if not compact:
         return None
@@ -176,7 +176,7 @@ def _raw_reasoning_fallback(response: str) -> Optional[str]:
     return f"raw_response: {compact}"
 
 
-def _is_numeric_raw_reasoning(reasoning: Optional[str]) -> bool:
+def _is_numeric_raw_reasoning(reasoning: str | None) -> bool:
     if not reasoning:
         return False
     if not reasoning.startswith("raw_response:"):
@@ -185,10 +185,9 @@ def _is_numeric_raw_reasoning(reasoning: Optional[str]) -> bool:
     return payload.isdigit()
 
 
-def parse_llm_response(response: str,
-                       num_choices: int,
-                       debug: bool = False,
-                       logger: Optional[logging.Logger] = None) -> LLMResponse:
+def parse_llm_response(
+    response: str, num_choices: int, debug: bool = False, logger: logging.Logger | None = None
+) -> LLMResponse:
     """Parse LLM response and return structured response object."""
     if debug and logger:
         logger.debug(f"Raw LLM response: {response}")
@@ -208,11 +207,7 @@ def parse_llm_response(response: str,
             reasoning = raw_reasoning
 
         # Check for either 'action' or 'result' field
-        action_value = (
-            response_json.get('action')
-            or response_json.get('result')
-            or response_json.get('choice')
-        )
+        action_value = response_json.get("action") or response_json.get("result") or response_json.get("choice")
         if action_value is not None:
             try:
                 action = int(action_value)
@@ -221,7 +216,7 @@ def parse_llm_response(response: str,
                         action=action,
                         reasoning=reasoning,
                         analysis=analysis,
-                        subgoal=response_json.get('subgoal'),
+                        subgoal=response_json.get("subgoal"),
                         is_default=False,
                         parse_mode=json_parse_mode or "json",
                     )
@@ -257,9 +252,7 @@ def parse_llm_response(response: str,
 
     # Default to first choice if all parsing attempts fail
     if debug and logger:
-        logger.error(
-            f"Error during response parsing, defaulting to first choice. Response: {response[:100]}..."
-        )
+        logger.error(f"Error during response parsing, defaulting to first choice. Response: {response[:100]}...")
     return LLMResponse(
         action=1,
         reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
@@ -293,8 +286,7 @@ class LLMAgent(QuestPlayer):
         self.agent_id = f"llm_{self.model_name}"
 
         if not is_supported_model_name(self.model_name):
-            raise ValueError(
-                f"Unsupported model: {model_name}. Supported models are: {self.SUPPORTED_MODELS}")
+            raise ValueError(f"Unsupported model: {model_name}. Supported models are: {self.SUPPORTED_MODELS}")
 
         self.model_spec = parse_model_name(self.model_name)
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -303,29 +295,28 @@ class LLMAgent(QuestPlayer):
             self.logger.propagate = False
             if not any(getattr(h, "_llm_quest_handler", False) for h in self.logger.handlers):
                 handler = logging.StreamHandler()
-                handler.setFormatter(logging.Formatter('%(name)s - %(message)s'))
+                handler.setFormatter(logging.Formatter("%(name)s - %(message)s"))
                 handler._llm_quest_handler = True
                 self.logger.addHandler(handler)
 
         # Initialize prompt renderer
-        self.prompt_renderer = PromptRenderer(None,
-                                              system_template=self.system_template,
-                                              action_template=self.action_template)
+        self.prompt_renderer = PromptRenderer(
+            None, system_template=self.system_template, action_template=self.action_template
+        )
 
         # Delay API client creation so template-only flows and tests do not require API keys.
         self.llm = None
-        self.history: List[LLMResponse] = []
-        self._observation_history: List[str] = []
-        self._decision_history: List[Dict[str, Any]] = []
-        self._state_action_counts: Dict[str, Dict[int, int]] = {}
+        self.history: list[LLMResponse] = []
+        self._observation_history: list[str] = []
+        self._decision_history: list[dict[str, Any]] = []
+        self._state_action_counts: dict[str, dict[int, int]] = {}
         self._context_window = 3
         self._context_chars = 220
         self._decision_window = 5
         self._loop_repetition_threshold = 1
         self._max_state_signatures = 200
         self._use_safety_filter = True
-        self._last_response = LLMResponse(action=1,
-                                          is_default=True)  # Initialize with default response
+        self._last_response = LLMResponse(action=1, is_default=True)  # Initialize with default response
 
     def _ensure_llm(self):
         """Lazily create the provider client only when inference is needed."""
@@ -336,11 +327,11 @@ class LLMAgent(QuestPlayer):
                 temperature=self.temperature,
             )
 
-    def get_last_response(self) -> Optional[LLMResponse]:
+    def get_last_response(self) -> LLMResponse | None:
         """Get the last LLM response from history"""
         return self._last_response
 
-    def get_action(self, observation: str, choices: List[Dict[str, str]]) -> int:
+    def get_action(self, observation: str, choices: list[dict[str, str]]) -> int:
         """Track observation history for context, then delegate base action flow."""
         self._remember_observation(observation)
         return super().get_action(observation, choices)
@@ -355,24 +346,20 @@ class LLMAgent(QuestPlayer):
 
     def _build_contextual_state(self, state: str) -> str:
         """Add compact state+decision memory for better local decisions."""
-        blocks: List[str] = []
+        blocks: list[str] = []
 
         if len(self._observation_history) > 1:
-            previous = self._observation_history[:-1][-self._context_window:]
+            previous = self._observation_history[:-1][-self._context_window :]
             if previous:
                 snippets = []
                 for idx, text in enumerate(previous, start=1):
-                    clipped = (
-                        text
-                        if len(text) <= self._context_chars
-                        else text[:self._context_chars] + "..."
-                    )
+                    clipped = text if len(text) <= self._context_chars else text[: self._context_chars] + "..."
                     snippets.append(f"[Previous {idx}] {clipped}")
                 blocks.append("Recent context from previous steps:\n" + "\n\n".join(snippets))
 
         if self._decision_history:
             recent_subgoals = []
-            for item in self._decision_history[-self._decision_window:]:
+            for item in self._decision_history[-self._decision_window :]:
                 subgoal = (item.get("subgoal") or "").strip()
                 if not subgoal:
                     continue
@@ -380,15 +367,10 @@ class LLMAgent(QuestPlayer):
                     continue
                 recent_subgoals.append(subgoal)
             if recent_subgoals:
-                lines = [
-                    f"[Subgoal {idx}] {sg}"
-                    for idx, sg in enumerate(recent_subgoals, start=1)
-                ]
-                blocks.append(
-                    "Subgoal memory (recent short-term objectives):\n" + "\n".join(lines)
-                )
+                lines = [f"[Subgoal {idx}] {sg}" for idx, sg in enumerate(recent_subgoals, start=1)]
+                blocks.append("Subgoal memory (recent short-term objectives):\n" + "\n".join(lines))
 
-            recent_decisions = self._decision_history[-self._decision_window:]
+            recent_decisions = self._decision_history[-self._decision_window :]
             decision_lines = []
             for idx, item in enumerate(recent_decisions, start=1):
                 choice = item.get("choice", "")
@@ -403,7 +385,8 @@ class LLMAgent(QuestPlayer):
         if not blocks:
             return state
 
-        return f"{'\n\n'.join(blocks)}\n\nCurrent story state:\n{state}"
+        sep = "\n\n"
+        return f"{sep.join(blocks)}\n\nCurrent story state:\n{state}"
 
     @staticmethod
     def _normalize_for_signature(value: str, max_len: int = 320) -> str:
@@ -414,16 +397,15 @@ class LLMAgent(QuestPlayer):
             return text[:max_len]
         return text
 
-    def _state_signature(self, state: str, choices: List[Dict[str, str]]) -> str:
+    def _state_signature(self, state: str, choices: list[dict[str, str]]) -> str:
         normalized_state = self._normalize_for_signature(state, max_len=420)
         normalized_choices = "|".join(
-            self._normalize_for_signature(choice.get("text", ""), max_len=110)
-            for choice in choices
+            self._normalize_for_signature(choice.get("text", ""), max_len=110) for choice in choices
         )
         raw_signature = f"{normalized_state}||{normalized_choices}"
         return hashlib.sha1(raw_signature.encode("utf-8", errors="ignore")).hexdigest()[:20]
 
-    def _apply_loop_breaker(self, action: int, state_signature: str, choices: List[Dict[str, str]]) -> int:
+    def _apply_loop_breaker(self, action: int, state_signature: str, choices: list[dict[str, str]]) -> int:
         """Avoid repeating the same action in repeated states."""
         if len(choices) < 2:
             return action
@@ -458,7 +440,7 @@ class LLMAgent(QuestPlayer):
     def _remember_decision(
         self,
         state: str,
-        choices: List[Dict[str, str]],
+        choices: list[dict[str, str]],
         state_signature: str,
         response: LLMResponse,
     ) -> None:
@@ -476,7 +458,7 @@ class LLMAgent(QuestPlayer):
             selected_text = choices[action - 1].get("text", "")
         state_snippet = state.strip()
         if len(state_snippet) > self._context_chars:
-            state_snippet = state_snippet[:self._context_chars] + "..."
+            state_snippet = state_snippet[: self._context_chars] + "..."
 
         self._decision_history.append(
             {
@@ -501,7 +483,7 @@ class LLMAgent(QuestPlayer):
                 score -= 1
         return score
 
-    def _apply_safety_filter(self, action: int, choices: List[Dict[str, str]]) -> int:
+    def _apply_safety_filter(self, action: int, choices: list[dict[str, str]]) -> int:
         """Replace obviously risky actions when a clearly safer alternative exists."""
         if not self._use_safety_filter or len(choices) < 2:
             return action
@@ -510,8 +492,7 @@ class LLMAgent(QuestPlayer):
         if current_idx < 0 or current_idx >= len(choices):
             return action
 
-        scored = [(idx + 1, self._choice_risk_score(c.get("text", "")))
-                  for idx, c in enumerate(choices)]
+        scored = [(idx + 1, self._choice_risk_score(c.get("text", ""))) for idx, c in enumerate(choices)]
         scored.sort(key=lambda item: item[1])
 
         best_action, best_score = scored[0]
@@ -542,8 +523,8 @@ class LLMAgent(QuestPlayer):
         self,
         state_key: str,
         action: int,
-        choices: List[Dict[str, str]],
-    ) -> Tuple[int, bool]:
+        choices: list[dict[str, str]],
+    ) -> tuple[int, bool]:
         """Diversify action when the same state repeats with no apparent progress."""
         if len(choices) <= 1:
             return action, False
@@ -576,8 +557,8 @@ class LLMAgent(QuestPlayer):
         self,
         state: str,
         action: int,
-        choices: List[Dict[str, str]],
-        reasoning: Optional[str],
+        choices: list[dict[str, str]],
+        reasoning: str | None,
     ) -> None:
         state_key = self._state_fingerprint(state)
         if state_key:
@@ -598,14 +579,11 @@ class LLMAgent(QuestPlayer):
             self._decision_trace = self._decision_trace[-30:]
 
     @staticmethod
-    def _normalize_usage(usage: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    def _normalize_usage(usage: dict[str, Any] | None) -> dict[str, Any]:
         usage = usage or {}
         prompt_tokens = int(usage.get("prompt_tokens") or 0)
         completion_tokens = int(usage.get("completion_tokens") or 0)
-        total_tokens = int(
-            usage.get("total_tokens")
-            or (prompt_tokens + completion_tokens)
-        )
+        total_tokens = int(usage.get("total_tokens") or (prompt_tokens + completion_tokens))
         estimated_cost_usd = usage.get("estimated_cost_usd")
         if estimated_cost_usd is not None:
             estimated_cost_usd = float(estimated_cost_usd)
@@ -617,7 +595,7 @@ class LLMAgent(QuestPlayer):
         }
 
     @classmethod
-    def _merge_usage(cls, first: Optional[Dict[str, Any]], second: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    def _merge_usage(cls, first: dict[str, Any] | None, second: dict[str, Any] | None) -> dict[str, Any]:
         a = cls._normalize_usage(first)
         b = cls._normalize_usage(second)
         merged_cost = None
@@ -630,7 +608,7 @@ class LLMAgent(QuestPlayer):
             "estimated_cost_usd": merged_cost,
         }
 
-    def _get_action_impl(self, state: str, choices: List[Dict[str, str]]) -> int:
+    def _get_action_impl(self, state: str, choices: list[dict[str, str]]) -> int:
         """Implementation of action selection logic.
 
         Args:
@@ -643,7 +621,7 @@ class LLMAgent(QuestPlayer):
         if self.debug:
             self.logger.debug(f"Getting action for state with {len(choices)} choices available")
             for i, choice in enumerate(choices):
-                self.logger.debug(f"Choice {i+1}: {choice.get('text', 'NO TEXT')}")
+                self.logger.debug(f"Choice {i + 1}: {choice.get('text', 'NO TEXT')}")
         try:
             state_signature = self._state_signature(state, choices)
             # Format prompt
@@ -659,7 +637,7 @@ class LLMAgent(QuestPlayer):
                 self.logger.debug(f"LLM response: {llm_response}")
                 choices_debug = []
                 for i, c in enumerate(choices):
-                    choices_debug.append(f"{i+1}: {c['text']}")
+                    choices_debug.append(f"{i + 1}: {c['text']}")
                 self.logger.debug(f"Available choices: {choices_debug}")
 
             # Parse response
@@ -675,17 +653,14 @@ class LLMAgent(QuestPlayer):
                 retry_response = self.llm.get_completion(self._format_retry_prompt(state, choices))
                 retry_usage = self.llm.get_last_usage()
                 llm_usage = self._merge_usage(llm_usage, retry_usage)
-                retry_parsed = parse_llm_response(retry_response, len(choices), self.debug,
-                                                  self.logger)
+                retry_parsed = parse_llm_response(retry_response, len(choices), self.debug, self.logger)
                 if not retry_parsed.is_default:
                     retry_parsed.parse_mode = f"retry_{retry_parsed.parse_mode or 'parsed'}"
                     parsed_response = retry_parsed
                 elif self._needs_force_numeric_retry():
                     # GPT-5/o models occasionally return empty visible text on long prompts.
                     # Use a tiny final retry that asks for number-only output.
-                    force_retry_response = self.llm.get_completion(
-                        self._format_force_numeric_retry_prompt(choices)
-                    )
+                    force_retry_response = self.llm.get_completion(self._format_force_numeric_retry_prompt(choices))
                     force_retry_usage = self.llm.get_last_usage()
                     llm_usage = self._merge_usage(llm_usage, force_retry_usage)
                     force_retry_parsed = parse_llm_response(
@@ -695,9 +670,7 @@ class LLMAgent(QuestPlayer):
                         self.logger,
                     )
                     if not force_retry_parsed.is_default:
-                        force_retry_parsed.parse_mode = (
-                            f"force_retry_{force_retry_parsed.parse_mode or 'parsed'}"
-                        )
+                        force_retry_parsed.parse_mode = f"force_retry_{force_retry_parsed.parse_mode or 'parsed'}"
                         parsed_response = force_retry_parsed
 
             action_before_policy = parsed_response.action
@@ -705,15 +678,11 @@ class LLMAgent(QuestPlayer):
                 if parsed_response.analysis is None and first_response.analysis is not None:
                     parsed_response.analysis = first_response.analysis
                 if _is_numeric_raw_reasoning(parsed_response.reasoning):
-                    if first_response.reasoning and not _is_numeric_raw_reasoning(
-                        first_response.reasoning
-                    ):
+                    if first_response.reasoning and not _is_numeric_raw_reasoning(first_response.reasoning):
                         parsed_response.reasoning = first_response.reasoning
                     else:
                         first_raw_reasoning = _raw_reasoning_fallback(llm_response)
-                        if first_raw_reasoning and not _is_numeric_raw_reasoning(
-                            first_raw_reasoning
-                        ):
+                        if first_raw_reasoning and not _is_numeric_raw_reasoning(first_raw_reasoning):
                             parsed_response.reasoning = first_raw_reasoning
 
             parsed_response.action = self._apply_safety_filter(parsed_response.action, choices)
@@ -727,9 +696,8 @@ class LLMAgent(QuestPlayer):
             if loop_adjusted_action != parsed_response.action:
                 parsed_response.action = loop_adjusted_action
                 parsed_response.reasoning = (
-                    (parsed_response.reasoning + "; " if parsed_response.reasoning else "")
-                    + "policy_loop_break_override"
-                )
+                    parsed_response.reasoning + "; " if parsed_response.reasoning else ""
+                ) + "policy_loop_break_override"
             usage_payload = self._normalize_usage(llm_usage)
             parsed_response.prompt_tokens = usage_payload["prompt_tokens"]
             parsed_response.completion_tokens = usage_payload["completion_tokens"]
@@ -747,12 +715,10 @@ class LLMAgent(QuestPlayer):
 
             # Check that action is within valid range before returning
             if parsed_response.action < 1 or parsed_response.action > len(choices):
-                self.logger.error(
-                    f"INVALID ACTION DETECTED: {parsed_response.action} not in range 1-{len(choices)}"
-                )
+                self.logger.error(f"INVALID ACTION DETECTED: {parsed_response.action} not in range 1-{len(choices)}")
                 # Use default first action instead
                 parsed_response.action = 1
-                self.logger.warning(f"Defaulting to action 1 instead")
+                self.logger.warning("Defaulting to action 1 instead")
 
             return parsed_response.action
 
@@ -784,7 +750,7 @@ class LLMAgent(QuestPlayer):
         self._state_action_counts = {}
         self._last_response = LLMResponse(action=1, is_default=True)  # Reset to default response
 
-    def on_game_end(self, final_state: Dict[str, Any]) -> None:
+    def on_game_end(self, final_state: dict[str, Any]) -> None:
         """Log final state for analysis"""
         if self.debug:
             self.logger.debug(f"Game ended with state: {final_state}")
@@ -793,19 +759,16 @@ class LLMAgent(QuestPlayer):
         """String representation of the agent"""
         return f"LLMAgent(model={self.model_name}, system_template={self.system_template}, action_template={self.action_template}, temperature={self.temperature})"
 
-    def _format_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
+    def _format_prompt(self, state: str, choices: list[dict[str, str]]) -> str:
         """Format the prompt for the LLM"""
         return self.prompt_renderer.render_action_prompt(state, choices).strip()
 
-    def _format_retry_prompt(self, state: str, choices: List[Dict[str, str]]) -> str:
+    def _format_retry_prompt(self, state: str, choices: list[dict[str, str]]) -> str:
         """Fallback prompt that still preserves reasoning for log analysis."""
         clipped_state = (state or "").strip()
         if len(clipped_state) > 500:
             clipped_state = clipped_state[:500] + "..."
-        choices_text = "\n".join([
-            f"{i+1}. {(c.get('text', '') or '')[:160]}"
-            for i, c in enumerate(choices)
-        ])
+        choices_text = "\n".join([f"{i + 1}. {(c.get('text', '') or '')[:160]}" for i, c in enumerate(choices)])
         return f"""Choose the best action.
 State: {clipped_state}
 Actions:
@@ -818,18 +781,14 @@ Return valid JSON only:
   "result": <integer from 1 to {len(choices)}>
 }}"""
 
-    def _format_force_numeric_retry_prompt(self, choices: List[Dict[str, str]]) -> str:
+    def _format_force_numeric_retry_prompt(self, choices: list[dict[str, str]]) -> str:
         """Very short retry prompt used for models that return empty visible output."""
-        choices_text = "\n".join([
-            f"{i+1}. {(c.get('text', '') or '')[:110]}"
-            for i, c in enumerate(choices)
-        ])
+        choices_text = "\n".join([f"{i + 1}. {(c.get('text', '') or '')[:110]}" for i, c in enumerate(choices)])
         return f"""Pick one action number.
 {choices_text}
 Reply with one integer only: 1 to {len(choices)}."""
 
     def _needs_force_numeric_retry(self) -> bool:
         return self.model_spec.provider == "openai" and (
-            self.model_spec.model_id.startswith("gpt-5")
-            or self.model_spec.model_id.startswith("o")
+            self.model_spec.model_id.startswith("gpt-5") or self.model_spec.model_id.startswith("o")
         )

@@ -1,6 +1,8 @@
 """Deterministic tests for Anthropic-backed agent behavior."""
-import pytest
+
 from unittest.mock import Mock, patch
+
+import pytest
 
 from llm_quest_benchmark.agents.agent_factory import create_agent
 

@@ -1,11 +1,13 @@
 """Terminal renderer for Space Rangers quests using rich"""
-from typing import Any, Dict, Optional
+
 from rich.console import Console
-from llm_quest_benchmark.renderers.base import BaseRenderer
-from llm_quest_benchmark.utils import choice_mapper, text_processor
+
 from llm_quest_benchmark.constants import READABILITY_DELAY
-from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.renderers.base import BaseRenderer
 from llm_quest_benchmark.schemas.response import LLMResponse
+from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.utils import choice_mapper, text_processor
+
 
 class NoRenderer:
     def render_game_state(self, state: AgentState):
@@ -51,7 +53,7 @@ class RichRenderer(BaseRenderer):
         self.choice_mapper = choice_mapper.ChoiceMapper(choices)
         self.console.print("\nChoices:", style="bold green")
         for i, choice in enumerate(choices, 1):
-            cleaned_text = text_processor.clean_qm_text(choice['text'])
+            cleaned_text = text_processor.clean_qm_text(choice["text"])
             self.console.print(f"{i}. {cleaned_text}", style="green")
 
     def render_error(self, message: str):
@@ -64,14 +66,14 @@ class RichRenderer(BaseRenderer):
         self.step_number = state.step
 
         # Print step separator
-        self.console.print(f"\n{'='*80}", style="blue")
+        self.console.print(f"\n{'=' * 80}", style="blue")
         self.console.print(f"Step {self.step_number}", style="bold blue")
-        self.console.print(f"{'='*80}\n", style="blue")
+        self.console.print(f"{'=' * 80}\n", style="blue")
 
         # Show LLM response first
         self.render_llm_response(state.llm_response)
         # Add separator after LLM response
-        self.console.print(f"\n{'-'*40}\n", style="dim")
+        self.console.print(f"\n{'-' * 40}\n", style="dim")
 
         self.render_quest_text(state.observation)
         self.render_choices(state.choices)
@@ -93,7 +95,7 @@ class RichRenderer(BaseRenderer):
         while True:
             try:
                 choice = self.console.input("\n[bold yellow]Enter choice number (or 'q' to quit): [/]")
-                if choice.lower() == 'q':
+                if choice.lower() == "q":
                     raise KeyboardInterrupt
                 if not choice.isdigit():
                     self.render_error("Please enter a valid number")

@@ -1,4 +1,5 @@
 """Integration tests for planner/tool modes on real quest execution loops."""
+
 import pytest
 
 from llm_quest_benchmark.agents.agent_factory import create_agent

@@ -56,7 +56,14 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 ignore = [
     "E501",   # line too long – handled by formatter
     "SIM108", # ternary operator – not always clearer
-    "B008",   # function call in default arg – common with typer/fastapi
+    "B008",   # function call in default arg – common in Typer/FastAPI
+    "B904",   # raise-without-from-inside-except – too many to fix now
+    "B027",   # empty-method-without-abstract-decorator – by design
+    "E402",   # module-import-not-at-top – sometimes needed for path setup
+    "W291",   # trailing-whitespace – ruff format handles this
+    "W293",   # blank-line-with-whitespace – ruff format handles this
+    "SIM102", # collapsible-if – readability preference
+    "SIM105", # suppressible-exception – readability preference
 ]
 
 [tool.ruff.lint.isort]

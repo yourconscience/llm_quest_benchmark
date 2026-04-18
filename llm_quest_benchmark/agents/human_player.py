@@ -1,12 +1,14 @@
 """Interactive console player for Space Rangers quests"""
+
 import logging
-from typing import List, Dict, Any
+from typing import Any
 
 from llm_quest_benchmark.agents.base import QuestPlayer
 
 
 class HumanPlayer(QuestPlayer):
     """Interactive console player that takes input from user"""
+
     def __init__(self, skip_single: bool = False, debug: bool = False):
         super().__init__(skip_single=skip_single)
         self.debug = debug
@@ -22,7 +24,7 @@ class HumanPlayer(QuestPlayer):
         while True:
             try:
                 choice = input()
-                if choice.lower() == 'q':
+                if choice.lower() == "q":
                     raise KeyboardInterrupt()
 
                 choice_num = int(choice)
@@ -42,6 +44,6 @@ class HumanPlayer(QuestPlayer):
         if self.debug:
             self.logger.debug("Starting new game")
 
-    def on_game_end(self, final_state: Dict[str, Any]) -> None:
+    def on_game_end(self, final_state: dict[str, Any]) -> None:
         """Called when game ends"""
         pass

@@ -1,9 +1,9 @@
 """Shared test fixtures"""
-import pytest
-from pathlib import Path
 
-from llm_quest_benchmark.core.logging import LogManager
+import pytest
+
 from llm_quest_benchmark.constants import DEFAULT_QUEST
+from llm_quest_benchmark.core.logging import LogManager
 
 
 @pytest.fixture

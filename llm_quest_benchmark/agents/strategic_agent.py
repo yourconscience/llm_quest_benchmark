@@ -1,10 +1,10 @@
 """Strategic agent decorator that adds analysis capabilities"""
+
 import logging
-from typing import Dict, Any
+from typing import Any
 
 from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.llm.prompt import PromptRenderer
-from llm_quest_benchmark.constants import DEFAULT_TEMPLATE
 
 
 class StrategicAgent(QuestPlayer):
@@ -28,7 +28,7 @@ class StrategicAgent(QuestPlayer):
         if self.debug:
             self.logger.setLevel(logging.DEBUG)
             handler = logging.StreamHandler()
-            handler.setFormatter(logging.Formatter('%(name)s - %(message)s'))
+            handler.setFormatter(logging.Formatter("%(name)s - %(message)s"))
             self.logger.addHandler(handler)
 
         # Initialize prompt renderer
@@ -36,23 +36,21 @@ class StrategicAgent(QuestPlayer):
 
     def _get_action_impl(self, observation: str, choices: list) -> str:
         """Implementation of action selection logic with strategic analysis"""
-        if hasattr(self.agent, 'llm'):
+        if hasattr(self.agent, "llm"):
             # First, get situation analysis
             if self.debug:
                 self.logger.debug(f"\nObservation:\n{observation}")
 
             analysis = self.agent.llm(
                 "Analyze this situation and explain your thinking step-by-step instead of choosing an action:\n"
-                + observation)
+                + observation
+            )
 
             if self.debug:
                 self.logger.debug(f"\nAnalysis:\n{analysis}")
 
             # Store analysis in history
-            self.history.append({
-                'observation': observation,
-                'analysis': analysis
-            })
+            self.history.append({"observation": observation, "analysis": analysis})
 
             # Get enhanced context with history
             enhanced_context = self.get_enhanced_context(observation, choices)
@@ -68,13 +66,11 @@ class StrategicAgent(QuestPlayer):
     def get_enhanced_context(self, observation: str, choices: list) -> str:
         """Build context for advanced prompt with historical analysis"""
         context = [
-            f"Turn {len(self.history)+1}: {entry['analysis']}"
+            f"Turn {len(self.history) + 1}: {entry['analysis']}"
             for entry in self.history[-3:]  # Last 3 analyses
         ]
         return self.prompt_renderer.render_action_prompt(
-            observation=observation,
-            choices=choices,
-            state_tracker=context
+            observation=observation, choices=choices, state_tracker=context
         )
 
     def reset(self) -> None:
@@ -88,7 +84,7 @@ class StrategicAgent(QuestPlayer):
             self.logger.debug("Starting new game with strategic analysis")
         self.agent.on_game_start()
 
-    def on_game_end(self, final_state: Dict[str, Any]) -> None:
+    def on_game_end(self, final_state: dict[str, Any]) -> None:
         """Pass through to base agent and log analysis history"""
         self.agent.on_game_end(final_state)
         if self.debug:

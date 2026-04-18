@@ -5,8 +5,9 @@ TODO (next PR):
 - Add domain knowledge lookup tool (needs curated Space Rangers knowledge base)
 - Add more tools as evaluation dimensions
 """
+
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from llm_quest_benchmark.agents.llm_agent import (
     LLMAgent,
@@ -25,23 +26,21 @@ class ToolAgent(LLMAgent):
         self,
         *args,
         action_template: str = "tool_augmented.jinja",
-        history_window: Optional[int] = None,
+        history_window: int | None = None,
         **kwargs,
     ):
         super().__init__(*args, action_template=action_template, **kwargs)
         self.agent_id = f"tool_{self.model_name}"
-        self._step_log: List[Dict[str, Any]] = []
+        self._step_log: list[dict[str, Any]] = []
         self._history_window = history_window or self.DEFAULT_HISTORY_WINDOW
 
-    def _recent_steps(self) -> List[str]:
+    def _recent_steps(self) -> list[str]:
         snippets = []
-        for entry in self._step_log[-self._history_window:]:
-            snippets.append(
-                f"Step {entry['step']}: {entry['observation']} -> {entry.get('selected_choice', 'n/a')}"
-            )
+        for entry in self._step_log[-self._history_window :]:
+            snippets.append(f"Step {entry['step']}: {entry['observation']} -> {entry.get('selected_choice', 'n/a')}")
         return snippets
 
-    def _tool_descriptions(self) -> List[str]:
+    def _tool_descriptions(self) -> list[str]:
         return [
             "quest_history(query): search earlier observations and chosen actions in this quest.",
         ]
@@ -54,18 +53,20 @@ class ToolAgent(LLMAgent):
         tokens = set(re.findall(r"[a-zA-Z\u0400-\u04ff0-9_]{3,}", (query or "").lower()))
         scored = []
         for entry in self._step_log:
-            haystack = " ".join([
-                entry.get("observation", ""),
-                " ".join(entry.get("choices", [])),
-                entry.get("selected_choice", ""),
-            ]).lower()
+            haystack = " ".join(
+                [
+                    entry.get("observation", ""),
+                    " ".join(entry.get("choices", [])),
+                    entry.get("selected_choice", ""),
+                ]
+            ).lower()
             score = sum(1 for token in tokens if token in haystack)
             scored.append((score, entry))
 
         scored.sort(key=lambda item: (item[0], item[1].get("step", 0)), reverse=True)
-        best = [entry for s, entry in scored if s > 0][:self._history_window]
+        best = [entry for s, entry in scored if s > 0][: self._history_window]
         if not best:
-            best = [entry for _, entry in scored[-self._history_window:]]
+            best = [entry for _, entry in scored[-self._history_window :]]
 
         lines = []
         for entry in best:
@@ -78,9 +79,9 @@ class ToolAgent(LLMAgent):
     def _build_tool_prompt(
         self,
         observation: str,
-        choices: List[Dict[str, str]],
+        choices: list[dict[str, str]],
         prompt_kind: str,
-        tool_results: Optional[List[str]] = None,
+        tool_results: list[str] | None = None,
     ) -> str:
         template = self.prompt_renderer.get_template(self.action_template)
         return template.render(
@@ -93,7 +94,7 @@ class ToolAgent(LLMAgent):
         ).strip()
 
     @staticmethod
-    def _extract_tool_calls(response: str) -> List[Dict[str, str]]:
+    def _extract_tool_calls(response: str) -> list[dict[str, str]]:
         payload, _ = _parse_json_response(response)
         if not isinstance(payload, dict):
             return []
@@ -112,7 +113,7 @@ class ToolAgent(LLMAgent):
                 normalized.append({"tool": tool_name, "input": tool_input})
         return normalized
 
-    def _execute_tool_calls(self, tool_calls: List[Dict[str, str]]) -> List[str]:
+    def _execute_tool_calls(self, tool_calls: list[dict[str, str]]) -> list[str]:
         results = []
         for tc in tool_calls[:2]:
             name, inp = tc["tool"], tc["input"]
@@ -126,11 +127,14 @@ class ToolAgent(LLMAgent):
     def _final_choice(
         self,
         observation: str,
-        choices: List[Dict[str, str]],
-        tool_results: Optional[List[str]] = None,
-    ) -> Tuple[LLMResponse, Dict[str, Any]]:
+        choices: list[dict[str, str]],
+        tool_results: list[str] | None = None,
+    ) -> tuple[LLMResponse, dict[str, Any]]:
         prompt = self._build_tool_prompt(
-            observation, choices, prompt_kind="final", tool_results=tool_results,
+            observation,
+            choices,
+            prompt_kind="final",
+            tool_results=tool_results,
         )
         llm_response = self.llm.get_completion(prompt)
         llm_usage = self.llm.get_last_usage()
@@ -155,7 +159,7 @@ class ToolAgent(LLMAgent):
 
         return parsed_response, llm_usage
 
-    def _log_step(self, observation: str, choices: List[Dict[str, str]], response: LLMResponse) -> None:
+    def _log_step(self, observation: str, choices: list[dict[str, str]], response: LLMResponse) -> None:
         selected = ""
         if 1 <= response.action <= len(choices):
             selected = choices[response.action - 1].get("text", "")
@@ -164,14 +168,16 @@ class ToolAgent(LLMAgent):
         if len(clipped) > 180:
             clipped = clipped[:180] + "..."
 
-        self._step_log.append({
-            "step": len(self._step_log) + 1,
-            "observation": clipped,
-            "choices": [c.get("text", "") for c in choices],
-            "selected_choice": selected,
-        })
+        self._step_log.append(
+            {
+                "step": len(self._step_log) + 1,
+                "observation": clipped,
+                "choices": [c.get("text", "") for c in choices],
+                "selected_choice": selected,
+            }
+        )
 
-    def _get_action_impl(self, state: str, choices: List[Dict[str, str]]) -> int:
+    def _get_action_impl(self, state: str, choices: list[dict[str, str]]) -> int:
         try:
             state_signature = self._state_signature(state, choices)
             self._ensure_llm()
@@ -200,9 +206,8 @@ class ToolAgent(LLMAgent):
             if loop_adjusted != parsed_response.action:
                 parsed_response.action = loop_adjusted
                 parsed_response.reasoning = (
-                    (parsed_response.reasoning + "; " if parsed_response.reasoning else "")
-                    + "policy_loop_break_override"
-                )
+                    parsed_response.reasoning + "; " if parsed_response.reasoning else ""
+                ) + "policy_loop_break_override"
 
             parsed_response.prompt_tokens = total_usage["prompt_tokens"]
             parsed_response.completion_tokens = total_usage["completion_tokens"]
@@ -217,7 +222,9 @@ class ToolAgent(LLMAgent):
         except Exception as exc:
             self.logger.error("Tool agent error during LLM call: %s", exc)
             default_response = LLMResponse(
-                action=1, is_default=True, parse_mode="error_default",
+                action=1,
+                is_default=True,
+                parse_mode="error_default",
                 reasoning=f"tool_agent_error: {exc}",
             )
             self.history.append(default_response)

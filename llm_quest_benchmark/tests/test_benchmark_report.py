@@ -1,4 +1,5 @@
 """Tests for benchmark markdown reporting."""
+
 import json
 from pathlib import Path
 

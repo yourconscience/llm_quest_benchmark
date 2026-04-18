@@ -1,8 +1,12 @@
 """Tests for QM environment"""
+
 import logging
+
 import pytest
-from llm_quest_benchmark.environments.qm import QMPlayerEnv
+
 from llm_quest_benchmark.constants import DEFAULT_QUEST
+from llm_quest_benchmark.environments.qm import QMPlayerEnv
+
 
 def test_qm_env_lifecycle():
     """Test QM environment lifecycle - initialization, reset, step, close"""
@@ -17,8 +21,8 @@ def test_qm_env_lifecycle():
         assert isinstance(observation, str)
         assert len(observation) > 0
         state = env.get_state()
-        assert 'choices' in state
-        assert len(state['choices']) > 0
+        assert "choices" in state
+        assert len(state["choices"]) > 0
 
         # Test step
         observation, done, success, info = env.step("1")
@@ -29,6 +33,7 @@ def test_qm_env_lifecycle():
 
     finally:
         env.close()
+
 
 def test_qm_env_error_handling():
     """Test QM environment error handling"""

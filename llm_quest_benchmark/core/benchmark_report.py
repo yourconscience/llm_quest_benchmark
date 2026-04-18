@@ -1,12 +1,13 @@
 """Markdown report generator for benchmark runs."""
+
 from __future__ import annotations
 
+import json
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 @dataclass
@@ -22,25 +23,25 @@ class RunInsight:
     prompt_tokens: int
     completion_tokens: int
     total_tokens: int
-    estimated_cost_usd: Optional[float]
+    estimated_cost_usd: float | None
     priced_steps: int
     decision_steps: int
     default_decision_steps: int
-    selected_choice: Optional[str]
-    selected_reasoning: Optional[str]
-    selected_analysis: Optional[str]
-    selected_observation: Optional[str]
-    summary_path: Optional[Path]
+    selected_choice: str | None
+    selected_reasoning: str | None
+    selected_analysis: str | None
+    selected_observation: str | None
+    summary_path: Path | None
 
 
-def _load_json(path: Path) -> Optional[Dict[str, Any]]:
+def _load_json(path: Path) -> dict[str, Any] | None:
     if not path.exists():
         return None
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
-def _shorten(text: Optional[str], limit: int = 180) -> Optional[str]:
+def _shorten(text: str | None, limit: int = 180) -> str | None:
     if not text:
         return text
     clean = " ".join(text.split())
@@ -49,7 +50,7 @@ def _shorten(text: Optional[str], limit: int = 180) -> Optional[str]:
     return clean[: limit - 3] + "..."
 
 
-def _extract_model(run_row: Dict[str, Any]) -> str:
+def _extract_model(run_row: dict[str, Any]) -> str:
     model = None
     raw_cfg = run_row.get("agent_config")
     if isinstance(raw_cfg, dict):
@@ -68,7 +69,9 @@ def _extract_model(run_row: Dict[str, Any]) -> str:
     return agent_id or "unknown"
 
 
-def _extract_last_decision(steps: List[Dict[str, Any]]) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], int, int]:
+def _extract_last_decision(
+    steps: list[dict[str, Any]],
+) -> tuple[str | None, str | None, str | None, str | None, int, int]:
     decision_steps = 0
     default_decisions = 0
     last_choice = None
@@ -108,7 +111,7 @@ def _extract_last_decision(steps: List[Dict[str, Any]]) -> Tuple[Optional[str], 
     )
 
 
-def _resolve_run_summary_path(run_row: Dict[str, Any]) -> Optional[Path]:
+def _resolve_run_summary_path(run_row: dict[str, Any]) -> Path | None:
     run_id = run_row.get("id")
     quest_name = run_row.get("quest_name")
     agent_id = run_row.get("agent_id")
@@ -117,7 +120,7 @@ def _resolve_run_summary_path(run_row: Dict[str, Any]) -> Optional[Path]:
     return Path("results") / str(agent_id) / str(quest_name) / f"run_{run_id}" / "run_summary.json"
 
 
-def _parse_run_insight(benchmark_id: str, run_row: Dict[str, Any]) -> RunInsight:
+def _parse_run_insight(benchmark_id: str, run_row: dict[str, Any]) -> RunInsight:
     summary_path = _resolve_run_summary_path(run_row)
     run_summary = _load_json(summary_path) if summary_path else None
 
@@ -127,7 +130,7 @@ def _parse_run_insight(benchmark_id: str, run_row: Dict[str, Any]) -> RunInsight
     outcome = str(run_row.get("outcome") or "UNKNOWN")
     duration = float(run_row.get("run_duration") or 0.0)
     usage = {}
-    steps: List[Dict[str, Any]] = []
+    steps: list[dict[str, Any]] = []
 
     if isinstance(run_summary, dict):
         usage = run_summary.get("usage") if isinstance(run_summary.get("usage"), dict) else {}
@@ -135,7 +138,9 @@ def _parse_run_insight(benchmark_id: str, run_row: Dict[str, Any]) -> RunInsight
         if isinstance(loaded_steps, list):
             steps = [s for s in loaded_steps if isinstance(s, dict)]
 
-    selected_choice, selected_reasoning, selected_analysis, selected_observation, decision_steps, default_decisions = _extract_last_decision(steps)
+    selected_choice, selected_reasoning, selected_analysis, selected_observation, decision_steps, default_decisions = (
+        _extract_last_decision(steps)
+    )
 
     prompt_tokens = int(usage.get("prompt_tokens") or 0)
     completion_tokens = int(usage.get("completion_tokens") or 0)
@@ -167,7 +172,7 @@ def _parse_run_insight(benchmark_id: str, run_row: Dict[str, Any]) -> RunInsight
     )
 
 
-def _latest_benchmark_ids(output_dir: Path, limit: int = 1) -> List[str]:
+def _latest_benchmark_ids(output_dir: Path, limit: int = 1) -> list[str]:
     if not output_dir.exists():
         return []
     benchmark_dirs = [p for p in output_dir.iterdir() if p.is_dir()]
@@ -175,7 +180,7 @@ def _latest_benchmark_ids(output_dir: Path, limit: int = 1) -> List[str]:
     return [p.name for p in benchmark_dirs[:limit]]
 
 
-def _collect_insights(benchmark_id: str, output_dir: Path) -> List[RunInsight]:
+def _collect_insights(benchmark_id: str, output_dir: Path) -> list[RunInsight]:
     summary_path = output_dir / benchmark_id / "benchmark_summary.json"
     benchmark_summary = _load_json(summary_path)
     if not benchmark_summary:
@@ -184,12 +189,12 @@ def _collect_insights(benchmark_id: str, output_dir: Path) -> List[RunInsight]:
     return [_parse_run_insight(benchmark_id, row) for row in db_runs if isinstance(row, dict)]
 
 
-def _load_benchmark_summary_doc(benchmark_id: str, output_dir: Path) -> Optional[Dict[str, Any]]:
+def _load_benchmark_summary_doc(benchmark_id: str, output_dir: Path) -> dict[str, Any] | None:
     summary_path = output_dir / benchmark_id / "benchmark_summary.json"
     return _load_json(summary_path)
 
 
-def _format_benchmark_summary(insights: List[RunInsight]) -> Dict[str, Any]:
+def _format_benchmark_summary(insights: list[RunInsight]) -> dict[str, Any]:
     outcomes = Counter(i.outcome for i in insights)
     total = len(insights)
     success = outcomes.get("SUCCESS", 0)
@@ -216,14 +221,14 @@ def _format_benchmark_summary(insights: List[RunInsight]) -> Dict[str, Any]:
 
 
 def _format_model_summary(
-    insights: List[RunInsight],
-    outcome_overrides: Optional[Dict[str, Dict[str, Any]]] = None,
-) -> Dict[str, Dict[str, Any]]:
-    grouped: Dict[str, List[RunInsight]] = defaultdict(list)
+    insights: list[RunInsight],
+    outcome_overrides: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, dict[str, Any]]:
+    grouped: dict[str, list[RunInsight]] = defaultdict(list)
     for insight in insights:
         grouped[insight.model].append(insight)
 
-    model_summary: Dict[str, Dict[str, Any]] = {}
+    model_summary: dict[str, dict[str, Any]] = {}
     for model, rows in sorted(grouped.items()):
         outcomes = Counter(r.outcome for r in rows)
         total = len(rows)
@@ -270,16 +275,16 @@ def _format_model_summary(
     return model_summary
 
 
-def _format_failure_rows(insights: List[RunInsight], limit: int = 12) -> List[RunInsight]:
+def _format_failure_rows(insights: list[RunInsight], limit: int = 12) -> list[RunInsight]:
     failed = [i for i in insights if i.outcome in {"FAILURE", "TIMEOUT", "ERROR"}]
     failed.sort(key=lambda row: (row.outcome, row.model, row.quest_name, row.run_id))
     return failed[:limit]
 
 
 def render_benchmark_report(
-    benchmark_ids: Optional[List[str]] = None,
+    benchmark_ids: list[str] | None = None,
     output_dir: str = "results/benchmarks",
-) -> Tuple[str, List[str]]:
+) -> tuple[str, list[str]]:
     """Render markdown report for one or multiple benchmark IDs."""
     output_root = Path(output_dir)
     selected_ids = benchmark_ids or _latest_benchmark_ids(output_root, limit=1)
@@ -287,13 +292,13 @@ def render_benchmark_report(
     if not selected_ids:
         raise ValueError(f"No benchmark directories found under {output_root}")
 
-    sections: List[str] = []
+    sections: list[str] = []
     sections.append("# Benchmark Report")
     sections.append("")
     sections.append(f"Generated: {datetime.now().isoformat(timespec='seconds')}")
     sections.append("")
 
-    all_insights: List[RunInsight] = []
+    all_insights: list[RunInsight] = []
     for benchmark_id in selected_ids:
         benchmark_doc = _load_benchmark_summary_doc(benchmark_id, output_root)
         insights = _collect_insights(benchmark_id, output_root)
@@ -317,11 +322,7 @@ def render_benchmark_report(
                 summary["error"] = int(summary_stats.get("total_errors", summary["error"]))
                 raw_success_rate = float(summary_stats.get("success_rate", summary["success_rate"] / 100.0))
                 summary["success_rate"] = raw_success_rate * 100.0 if raw_success_rate <= 1.0 else raw_success_rate
-                model_overrides = (
-                    summary_stats.get("models")
-                    if isinstance(summary_stats.get("models"), dict)
-                    else {}
-                )
+                model_overrides = summary_stats.get("models") if isinstance(summary_stats.get("models"), dict) else {}
 
         model_summary = _format_model_summary(insights, outcome_overrides=model_overrides)
         failure_rows = _format_failure_rows(insights)
@@ -346,7 +347,9 @@ def render_benchmark_report(
 
         sections.append("### Model Breakdown")
         sections.append("")
-        sections.append("| Model | Runs | Success | Failure | Timeout | Error | Success Rate | Tokens | Est. Cost (USD) | Default Decision Rate |")
+        sections.append(
+            "| Model | Runs | Success | Failure | Timeout | Error | Success Rate | Tokens | Est. Cost (USD) | Default Decision Rate |"
+        )
         sections.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
         for model, row in model_summary.items():
             cost = "n/a" if row["cost"] is None else f"{row['cost']:.6f}"

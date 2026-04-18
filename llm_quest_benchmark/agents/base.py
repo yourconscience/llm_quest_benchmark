@@ -1,6 +1,7 @@
 """Base classes for quest players (both human and LLM)"""
+
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Any
 
 from llm_quest_benchmark.schemas.response import LLMResponse
 
@@ -66,7 +67,7 @@ class QuestPlayer(ABC):
         """Called when game starts"""
         self._last_response = None
 
-    def on_game_end(self, final_state: Dict[str, Any]) -> None:
+    def on_game_end(self, final_state: dict[str, Any]) -> None:
         """Called when game ends"""
         pass
 

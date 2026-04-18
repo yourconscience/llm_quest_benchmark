@@ -1,10 +1,9 @@
 """Quest run analyzer for metrics analysis"""
+
 import json
-import logging
 import sqlite3
 from pathlib import Path
-from typing import Optional, Dict, Any, List
-from datetime import datetime
+from typing import Any
 
 from llm_quest_benchmark.core.logging import LogManager
 from llm_quest_benchmark.renderers.benchmark_result import BenchmarkResultRenderer
@@ -18,7 +17,7 @@ def analyze_quest_run(
     quest_name: str,
     db_path: Path,
     debug: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Analyze metrics for a specific quest from database.
 
     Args:
@@ -39,12 +38,15 @@ def analyze_quest_run(
         cursor = conn.cursor()
 
         # Get all runs for this quest
-        cursor.execute('''
+        cursor.execute(
+            """
             SELECT id, start_time, end_time, model, template, outcome, reward
             FROM runs
             WHERE quest_name = ?
             ORDER BY start_time DESC
-        ''', (quest_name,))
+        """,
+            (quest_name,),
+        )
         runs = cursor.fetchall()
 
         if not runs:
@@ -55,7 +57,7 @@ def analyze_quest_run(
             "quest_name": quest_name,
             "total_runs": len(runs),
             "outcomes": {"SUCCESS": 0, "FAILURE": 0},
-            "runs": []
+            "runs": [],
         }
 
         # Process each run
@@ -64,12 +66,15 @@ def analyze_quest_run(
             results["outcomes"][outcome] = results["outcomes"].get(outcome, 0) + 1
 
             # Get steps for this run
-            cursor.execute('''
+            cursor.execute(
+                """
                 SELECT step, observation, choices, action, reward, llm_response
                 FROM steps
                 WHERE run_id = ?
                 ORDER BY step
-            ''', (run_id,))
+            """,
+                (run_id,),
+            )
             steps = cursor.fetchall()
 
             run_data = {
@@ -79,20 +84,22 @@ def analyze_quest_run(
                 "template": template,
                 "outcome": outcome,
                 "reward": reward,
-                "steps": []
+                "steps": [],
             }
 
             for step in steps:
                 step_num, obs, choices_json, action, step_reward, llm_response = step
                 choices = json.loads(choices_json)
-                run_data["steps"].append({
-                    "step": step_num,
-                    "observation": obs,
-                    "choices": choices,
-                    "action": action,
-                    "reward": step_reward,
-                    "llm_response": llm_response
-                })
+                run_data["steps"].append(
+                    {
+                        "step": step_num,
+                        "observation": obs,
+                        "choices": choices,
+                        "action": action,
+                        "reward": step_reward,
+                        "llm_response": llm_response,
+                    }
+                )
 
             results["runs"].append(run_data)
 
@@ -106,9 +113,9 @@ def analyze_quest_run(
 
 def analyze_benchmark(
     db_path: Path,
-    benchmark_name: Optional[str] = None,
+    benchmark_name: str | None = None,
     debug: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Analyze benchmark results from database.
 
     Args:
@@ -136,7 +143,8 @@ def analyze_benchmark(
             params.append(benchmark_name)
 
         # Get overall statistics
-        cursor.execute(f'''
+        cursor.execute(
+            f"""
             SELECT
                 COUNT(*) as total_runs,
                 COUNT(CASE WHEN outcome = 'SUCCESS' THEN 1 END) as successes,
@@ -144,7 +152,9 @@ def analyze_benchmark(
                 AVG(CASE WHEN outcome = 'SUCCESS' THEN reward END) as avg_success_reward
             FROM runs
             {where_clause}
-        ''', params)
+        """,
+            params,
+        )
         stats = cursor.fetchone()
         total_runs, successes, failures, avg_success_reward = stats
 
@@ -152,7 +162,8 @@ def analyze_benchmark(
             raise ValueError(f"No benchmark data found{' for ' + benchmark_name if benchmark_name else ''}")
 
         # Get per-model statistics
-        cursor.execute(f'''
+        cursor.execute(
+            f"""
             SELECT
                 model,
                 COUNT(*) as runs,
@@ -161,11 +172,14 @@ def analyze_benchmark(
             FROM runs
             {where_clause}
             GROUP BY model
-        ''', params)
+        """,
+            params,
+        )
         model_stats = cursor.fetchall()
 
         # Get per-quest statistics
-        cursor.execute(f'''
+        cursor.execute(
+            f"""
             SELECT
                 quest_name,
                 COUNT(*) as runs,
@@ -173,7 +187,9 @@ def analyze_benchmark(
             FROM runs
             {where_clause}
             GROUP BY quest_name
-        ''', params)
+        """,
+            params,
+        )
         quest_stats = cursor.fetchall()
 
         # Prepare results
@@ -182,22 +198,21 @@ def analyze_benchmark(
                 "total_runs": total_runs,
                 "success_rate": (successes / total_runs * 100) if total_runs > 0 else 0,
                 "avg_success_reward": avg_success_reward or 0,
-                "outcomes": {
-                    "SUCCESS": successes,
-                    "FAILURE": failures
-                }
+                "outcomes": {"SUCCESS": successes, "FAILURE": failures},
             },
-            "models": [{
-                "name": model,
-                "runs": runs,
-                "success_rate": (successes / runs * 100) if runs > 0 else 0,
-                "avg_reward": avg_reward or 0
-            } for model, runs, successes, avg_reward in model_stats],
-            "quests": [{
-                "name": quest,
-                "runs": runs,
-                "success_rate": (successes / runs * 100) if runs > 0 else 0
-            } for quest, runs, successes in quest_stats]
+            "models": [
+                {
+                    "name": model,
+                    "runs": runs,
+                    "success_rate": (successes / runs * 100) if runs > 0 else 0,
+                    "avg_reward": avg_reward or 0,
+                }
+                for model, runs, successes, avg_reward in model_stats
+            ],
+            "quests": [
+                {"name": quest, "runs": runs, "success_rate": (successes / runs * 100) if runs > 0 else 0}
+                for quest, runs, successes in quest_stats
+            ],
         }
 
         if benchmark_name:

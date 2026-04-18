@@ -1,6 +1,7 @@
 """Constants for llm-quest-benchmark"""
-from pathlib import Path
+
 import re
+from pathlib import Path
 
 # Provider registry used by parser/client factory.
 MODEL_PROVIDER_CONFIG = {
@@ -94,6 +95,7 @@ def normalize_template_name(template_name: str) -> str:
         return normalized
     return f"{normalized}.jinja"
 
+
 # Default temperature
 DEFAULT_TEMPERATURE = 0.4
 
@@ -106,17 +108,17 @@ INFINITE_TIMEOUT = 10**9  # Infinite timeout (used for interactive play)
 
 # Quest state detection patterns
 # Pattern to detect credit rewards in text (e.g., "10000 cr")
-CREDIT_REWARD_PATTERN = re.compile(r'(\d+)\s*cr\b')
+CREDIT_REWARD_PATTERN = re.compile(r"(\d+)\s*cr\b")
 
 # Common success indicators in text for quest completion
 SUCCESS_INDICATORS = [
-    "mission complete", 
+    "mission complete",
     "mission accomplished",
-    "succeeded", 
-    "successful", 
-    "congratulations", 
+    "succeeded",
+    "successful",
+    "congratulations",
     "you won",
-    "you succeeded", 
+    "you succeeded",
     "victory",
     "mission success",
     "вы успешно",
@@ -125,7 +127,7 @@ SUCCESS_INDICATORS = [
     "награда",
     "спасибо",
     "поздравляем",
-    "успешно"
+    "успешно",
 ]
 
 # Common failure indicators in text
@@ -141,7 +143,7 @@ FAILURE_INDICATORS = [
     "вы погибли",
     "вы проиграли",
     "конец игры",
-    "неудача"
+    "неудача",
 ]
 
 # Special location IDs

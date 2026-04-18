@@ -1,12 +1,14 @@
 """Null renderer that does nothing - used for debug mode and when no rendering is needed"""
-from typing import Dict, Any
+
+from typing import Any
+
 from llm_quest_benchmark.renderers.base import BaseRenderer
 
 
 class NoRenderer(BaseRenderer):
     """Null renderer implementation that does nothing"""
 
-    def render_game_state(self, state: Dict[str, Any]) -> None:
+    def render_game_state(self, state: dict[str, Any]) -> None:
         """Do nothing implementation of game state rendering"""
         pass
 

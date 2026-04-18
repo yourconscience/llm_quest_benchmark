@@ -1,7 +1,7 @@
 """Random agent for testing quests"""
-import random
+
 import logging
-from typing import Dict, List
+import random
 
 from llm_quest_benchmark.agents.base import QuestPlayer
 
@@ -27,7 +27,7 @@ class RandomAgent(QuestPlayer):
         # Set agent_id for database records
         self.agent_id = f"random_{seed}" if seed is not None else "random"
 
-    def _get_action_impl(self, observation: str, choices: List[Dict[str, str]]) -> int:
+    def _get_action_impl(self, observation: str, choices: list[dict[str, str]]) -> int:
         """Return random choice from available options.
 
         Args:
