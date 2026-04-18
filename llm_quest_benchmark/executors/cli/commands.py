@@ -21,6 +21,7 @@ from llm_quest_benchmark.core.logging import LogManager
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.core.analyzer import analyze_quest_run, analyze_benchmark
 from llm_quest_benchmark.core.benchmark_report import render_benchmark_report
+from llm_quest_benchmark.core.leaderboard import generate_leaderboard
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.benchmark import (
     generate_benchmark_id,
@@ -294,6 +295,28 @@ def benchmark_report(
         )
     except Exception as e:
         typer.echo(f"Error creating benchmark report: {str(e)}", err=True)
+        raise typer.Exit(code=2)
+
+
+@app.command("leaderboard")
+def leaderboard(
+    benchmark_dir: Optional[List[str]] = typer.Option(
+        None,
+        "--benchmark-dir",
+        help="Benchmark directory, parent directory, or glob pattern. Repeat to combine multiple inputs.",
+    ),
+    output: Path = typer.Option(
+        Path("site/leaderboard.json"),
+        help="Output path for leaderboard JSON.",
+    ),
+):
+    """Generate leaderboard JSON from benchmark artifacts."""
+    try:
+        inputs = benchmark_dir or ["results/benchmarks"]
+        generate_leaderboard(benchmark_dirs=inputs, output_path=str(output))
+        typer.echo(f"Leaderboard written to {output}")
+    except Exception as e:
+        typer.echo(f"Error creating leaderboard: {str(e)}", err=True)
         raise typer.Exit(code=2)
 
 @app.callback()
