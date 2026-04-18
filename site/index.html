@@ -20,6 +20,7 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .badge-mode { font-size: 0.75rem; padding: 0.25em 0.6em; border-radius: 4px; }
 .mode-stub { background: var(--muted); color: var(--bg); }
 .mode-reasoning { background: var(--accent); color: var(--bg); }
+.mode-light_hints { background: #a371f7; color: var(--bg); }
 .mode-planner { background: var(--orange); color: var(--bg); }
 .mode-tool { background: var(--green); color: var(--bg); }
 .success-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; min-width: 60px; }
@@ -119,9 +120,9 @@ let sortAsc = false;
 let filterMode = 'all';
 let filterQuest = 'all';
 
-const MODE_LABELS = {stub:'Baseline (A)', reasoning:'Prompted (B)', planner:'Planner (D)', tool_augmented:'Tool-aug (E)'};
-const MODE_CLASSES = {stub:'mode-stub', reasoning:'mode-reasoning', planner:'mode-planner', tool_augmented:'mode-tool'};
-const COLORS = {stub:'#c9d1d9', reasoning:'#58a6ff', planner:'#d29922', tool_augmented:'#3fb950'};
+const MODE_LABELS = {stub:'Baseline (A)', reasoning:'Prompted (B)', light_hints:'Knowledge (C)', planner:'Planner (D)', tool_augmented:'Tool-aug (E)'};
+const MODE_CLASSES = {stub:'mode-stub', reasoning:'mode-reasoning', light_hints:'mode-light_hints', planner:'mode-planner', tool_augmented:'mode-tool'};
+const COLORS = {stub:'#c9d1d9', reasoning:'#58a6ff', light_hints:'#a371f7', planner:'#d29922', tool_augmented:'#3fb950'};
 const MODEL_SYMBOLS = ['circle','rect','triangle','diamond','pin','arrow'];
 
 function successColor(v) { return v >= 0.8 ? 'var(--green)' : v >= 0.4 ? 'var(--orange)' : 'var(--red)'; }
