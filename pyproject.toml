@@ -46,6 +46,21 @@ dev = [
 llm-quest = "llm_quest_benchmark.executors.cli.commands:app"
 
 
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = [
+    "E501",   # line too long – handled by formatter
+    "SIM108", # ternary operator – not always clearer
+    "B008",   # function call in default arg – common with typer/fastapi
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["llm_quest_benchmark"]
+
 [tool.setuptools]
 packages = ["llm_quest_benchmark"]
 
