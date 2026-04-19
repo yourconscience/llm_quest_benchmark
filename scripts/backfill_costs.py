@@ -18,7 +18,7 @@ from pathlib import Path
 repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root))
 
-from llm_quest_benchmark.llm.client import _estimate_cost_usd, parse_model_name  # noqa: E402
+from llm_quest_benchmark.llm.client import _estimate_cost_usd, parse_model_name  # noqa: E402, I001
 
 
 _AGENT_ID_PREFIXES = ("llm_", "planner_", "tool_")
