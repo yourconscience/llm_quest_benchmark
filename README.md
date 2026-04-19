@@ -27,10 +27,10 @@ Choices:
 ## What it does
 
 - Runs LLM agents through choice-based text quests (Space Rangers .qm format, 150 quests, RU/EN)
-- Compares agent modes: baseline, prompted reasoning, planner, tool-augmented
-- Tracks success rate, token cost, repetition rate, and decision quality per run
-- Supports OpenAI, Anthropic, Google Gemini, and DeepSeek providers
-- YAML-driven benchmark configs for model/template/temperature matrix sweeps
+- Compares 5 agent architectures: baseline, prompted reasoning, knowledge-augmented, planner, tool-augmented
+- Tracks success rate, exploration rate, repetition rate, and per-run token cost
+- Benchmarks 6 mid-tier production models at comparable price points ($0.01-0.04/run): DeepSeek V3.2, Qwen3.5 Plus, Kimi K2.5, Gemini 3 Flash, GLM-5, GPT-5.4 Mini
+- YAML-driven benchmark configs for model/mode/temperature matrix sweeps
 
 ## Quick Start (Docker)
 
@@ -42,7 +42,7 @@ cp .env.template .env
 # Add your API keys: OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY, DEEPSEEK_API_KEY
 
 # Run a single quest
-docker compose run llm-quest run --quest quests/Boat.qm --model gemini-2.5-flash
+docker compose run llm-quest run --quest quests/Boat.qm --model gemini-3-flash-preview
 
 # Run a benchmark matrix
 docker compose run llm-quest benchmark --config configs/benchmarks/mode_comparison_pilot.yaml
@@ -71,7 +71,7 @@ cp .env.template .env
 
 ```bash
 # Run one quest
-llm-quest run --quest quests/Boat.qm --model gemini-2.5-flash --timeout 120
+llm-quest run --quest quests/Boat.qm --model gemini-3-flash-preview --timeout 120
 
 # Run benchmark matrix
 llm-quest benchmark --config configs/benchmarks/mode_comparison_pilot.yaml
@@ -94,7 +94,8 @@ llm-quest play --quest quests/Boat.qm
 - `configs/benchmarks/` - YAML benchmark configurations
 - `quests/` - Quest files (downloaded via `download_quests.sh`)
 - `space-rangers-quest/` - TypeScript quest engine (submodule)
-- `docs/` - Architecture and competitive landscape
+- `docs/` - Dataset documentation (DATASHEET.md)
+- `research/` - Error analysis, landscape comparison, paper planning (gitignored)
 
 ## License
 MIT
