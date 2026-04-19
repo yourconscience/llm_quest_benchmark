@@ -236,7 +236,7 @@ def test_analyze_no_metrics_dir(tmp_path):
     with runner.isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--quest", "test1.qm"])
         assert result.exit_code == 1
-        assert "Database not found" in result.stdout
+        assert "Database not found" in result.output
 
 
 def test_analyze_empty_metrics_dir(tmp_path):
@@ -264,7 +264,7 @@ def test_analyze_empty_metrics_dir(tmp_path):
     with runner.isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--quest", "test1.qm", "--db", str(db_path)])
         assert result.exit_code == 1
-        assert "No runs found for quest" in result.stdout
+        assert "No runs found for quest" in result.output
 
 
 def test_analyze_invalid_file(tmp_path):
@@ -278,7 +278,7 @@ def test_analyze_invalid_file(tmp_path):
     with runner.isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--quest", "test1.qm", "--db", str(db_path)])
         assert result.exit_code == 1
-        assert "Error analyzing quest run" in result.stdout
+        assert "Error analyzing quest run" in result.output
 
 
 def test_analyze_invalid_benchmark_file(tmp_path):
@@ -291,7 +291,7 @@ def test_analyze_invalid_benchmark_file(tmp_path):
     with runner.isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--benchmark", "nonexistent", "--db", str(db_path)])
         assert result.exit_code == 1
-        assert "No benchmark data found for nonexistent" in result.stdout
+        assert "No benchmark data found for nonexistent" in result.output
 
 
 def test_analyze_benchmark_directory(tmp_path):

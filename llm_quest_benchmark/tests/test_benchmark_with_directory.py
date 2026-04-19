@@ -2,6 +2,9 @@
 
 import json
 import logging
+from pathlib import Path
+
+import pytest
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -24,6 +27,7 @@ def create_test_config():
     }
 
 
+@pytest.mark.skipif(not Path("quests/sr_2_1_2121_eng").exists(), reason="Quest files not downloaded")
 def test_benchmark_with_directory():
     """Test running a benchmark with a directory path"""
     # Create and validate config
