@@ -146,7 +146,6 @@ class QuestLogger:
         llm_response: dict[str, Any] | None,
     ) -> dict[str, Any]:
         """Format an exported step in compact analysis-friendly form."""
-        del location_id  # Not needed in exported run summaries.
         choices_map = self._choices_map(choices)
         parsed_action_index = self._safe_int(action)
         analysis = None
@@ -189,6 +188,7 @@ class QuestLogger:
 
         return {
             "step": step_num,
+            "location_id": location_id,
             "observation": observation,
             "choices": choices_map,
             "llm_decision": llm_decision,
