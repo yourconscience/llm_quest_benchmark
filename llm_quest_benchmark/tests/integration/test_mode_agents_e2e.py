@@ -37,7 +37,7 @@ class FakeLLM:
 
 
 @pytest.mark.timeout(15)
-@pytest.mark.skipif(not Path(QUEST_PATHS[0]).exists(), reason="Quest files not downloaded")
+@pytest.mark.skipif(not Path(QUEST_PATHS[1]).exists(), reason="Quest files not downloaded")
 def test_planner_agent_runs_three_quests_across_openai_and_anthropic_models(monkeypatch):
     requested_models = []
 
@@ -59,7 +59,7 @@ def test_planner_agent_runs_three_quests_across_openai_and_anthropic_models(monk
 
 
 @pytest.mark.timeout(15)
-@pytest.mark.skipif(not Path(QUEST_PATHS[0]).exists(), reason="Quest files not downloaded")
+@pytest.mark.skipif(not Path(QUEST_PATHS[1]).exists(), reason="Quest files not downloaded")
 def test_tool_agent_runs_three_quests(monkeypatch):
     monkeypatch.setattr(
         "llm_quest_benchmark.agents.llm_agent.get_llm_client",
@@ -74,7 +74,7 @@ def test_tool_agent_runs_three_quests(monkeypatch):
 
 
 @pytest.mark.timeout(15)
-@pytest.mark.skipif(not Path(QUEST_PATHS[0]).exists(), reason="Quest files not downloaded")
+@pytest.mark.skipif(not Path(QUEST_PATHS[1]).exists(), reason="Quest files not downloaded")
 def test_reused_mode_agents_reset_between_quest_runs():
     quest_path = "quests/sr_2_1_2121_eng/Borzukhan_eng.qm"
     planner_agent = create_agent(model="gpt-5-mini", action_template="planner", skip_single=True)
