@@ -1,12 +1,14 @@
 """Leaderboard JSON generator for benchmark runs."""
+
 from __future__ import annotations
 
-from collections import defaultdict
-from datetime import datetime
 import glob
 import json
+from collections import defaultdict
+from collections.abc import Iterable
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any
 
 from llm_quest_benchmark.llm.client import parse_model_name
 
@@ -22,10 +24,10 @@ TEMPLATE_TO_MODE = {
 MODE_ORDER = ["stub", "reasoning", "light_hints", "planner", "tool_augmented"]
 
 
-def _load_json(path: Path) -> Optional[Dict[str, Any]]:
+def _load_json(path: Path) -> dict[str, Any] | None:
     if not path.exists():
         return None
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -33,13 +35,13 @@ def _strip_template_suffix(template_name: str) -> str:
     return Path(template_name or "").stem
 
 
-def _mode_from_template(template_name: str) -> Tuple[str, str]:
+def _mode_from_template(template_name: str) -> tuple[str, str]:
     template_id = _strip_template_suffix(template_name)
     return TEMPLATE_TO_MODE.get(template_id, (template_id or "unknown", template_id or "unknown"))
 
 
-def _combine_numeric_tokens(parts: List[str]) -> List[str]:
-    combined: List[str] = []
+def _combine_numeric_tokens(parts: list[str]) -> list[str]:
+    combined: list[str] = []
     i = 0
     while i < len(parts):
         current = parts[i]
@@ -60,7 +62,7 @@ def _model_label(model_id: str) -> str:
     if len(parts) >= 2 and parts[0].lower() == "gpt":
         return " ".join([f"GPT-{parts[1]}"] + [part.title() for part in parts[2:]])
 
-    normalized: List[str] = []
+    normalized: list[str] = []
     for part in parts:
         lowered = part.lower()
         if lowered == "gpt":
@@ -102,23 +104,21 @@ def _mean(values: Iterable[float]) -> float:
     return sum(materialized) / len(materialized)
 
 
-def _resolve_benchmark_dirs(benchmark_dirs: List[str]) -> List[Path]:
-    resolved: List[Path] = []
+def _resolve_benchmark_dirs(benchmark_dirs: list[str]) -> list[Path]:
+    resolved: list[Path] = []
     seen: set[str] = set()
 
     for raw in benchmark_dirs:
         matches = [Path(match) for match in glob.glob(raw)] if glob.has_magic(raw) else [Path(raw)]
         for match in matches:
-            candidates: List[Path]
+            candidates: list[Path]
             if match.is_file() and match.name == "benchmark_summary.json":
                 candidates = [match.parent]
             elif match.is_dir() and (match / "benchmark_summary.json").exists():
                 candidates = [match]
             elif match.is_dir():
                 candidates = sorted(
-                    path
-                    for path in match.iterdir()
-                    if path.is_dir() and (path / "benchmark_summary.json").exists()
+                    path for path in match.iterdir() if path.is_dir() and (path / "benchmark_summary.json").exists()
                 )
             else:
                 candidates = []
@@ -135,14 +135,14 @@ def _resolve_benchmark_dirs(benchmark_dirs: List[str]) -> List[Path]:
     return sorted(resolved)
 
 
-def generate_leaderboard(benchmark_dirs: List[str], output_path: str) -> Dict[str, Any]:
+def generate_leaderboard(benchmark_dirs: list[str], output_path: str) -> dict[str, Any]:
     resolved_dirs = _resolve_benchmark_dirs(benchmark_dirs)
 
-    grouped_rows: Dict[Tuple[str, str, str], List[Dict[str, Any]]] = defaultdict(list)
-    model_entries: Dict[str, Dict[str, str]] = {}
-    mode_entries: Dict[str, Dict[str, str]] = {}
-    quest_entries: Dict[str, Dict[str, str]] = {}
-    benchmark_ids: List[str] = []
+    grouped_rows: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
+    model_entries: dict[str, dict[str, str]] = {}
+    mode_entries: dict[str, dict[str, str]] = {}
+    quest_entries: dict[str, dict[str, str]] = {}
+    benchmark_ids: list[str] = []
 
     for benchmark_dir in resolved_dirs:
         summary = _load_json(benchmark_dir / "benchmark_summary.json")
@@ -170,8 +170,8 @@ def generate_leaderboard(benchmark_dirs: List[str], output_path: str) -> Dict[st
 
             # TODO: cost tracking is broken - run_summary.json usage data is not populated by OpenRouter runs
             # Correlate with db_runs by index to get run ID for metrics
-            usage: Dict[str, Any] = {}
-            metrics: Dict[str, Any] = {}
+            usage: dict[str, Any] = {}
+            metrics: dict[str, Any] = {}
             if i < len(db_runs) and isinstance(db_runs[i], dict):
                 db_run = db_runs[i]
                 run_id = db_run.get("id")

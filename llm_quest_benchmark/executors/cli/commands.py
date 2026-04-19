@@ -31,11 +31,9 @@ from llm_quest_benchmark.constants import (
 )
 from llm_quest_benchmark.core.analyzer import analyze_benchmark, analyze_quest_run
 from llm_quest_benchmark.core.benchmark_report import render_benchmark_report
+from llm_quest_benchmark.core.leaderboard import generate_leaderboard
 from llm_quest_benchmark.core.logging import LogManager
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
-from llm_quest_benchmark.core.analyzer import analyze_quest_run, analyze_benchmark
-from llm_quest_benchmark.core.benchmark_report import render_benchmark_report
-from llm_quest_benchmark.core.leaderboard import generate_leaderboard
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.benchmark import (
     generate_benchmark_id,
@@ -304,7 +302,7 @@ def benchmark_report(
 
 @app.command("leaderboard")
 def leaderboard(
-    benchmark_dir: Optional[List[str]] = typer.Option(
+    benchmark_dir: list[str] | None = typer.Option(
         None,
         "--benchmark-dir",
         help="Benchmark directory, parent directory, or glob pattern. Repeat to combine multiple inputs.",
