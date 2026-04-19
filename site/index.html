@@ -129,30 +129,32 @@ function successColor(v) { return v >= 0.8 ? 'var(--green)' : v >= 0.4 ? 'var(--
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function filtered() {
-  return DATA.results.filter(r => (filterMode === 'all' || r.mode === filterMode) && (filterQuest === 'all' || r.quest === filterQuest));
+  const q = viewMode === 'summary' ? 'all' : filterQuest;
+  return DATA.results.filter(r => (filterMode === 'all' || r.mode === filterMode) && (q === 'all' || r.quest === q));
 }
 
 function aggregated() {
   const groups = {};
   filtered().forEach(r => {
     const key = `${r.model}|${r.mode}`;
-    if (!groups[key]) groups[key] = { model: r.model, mode: r.mode, rates: [], steps: [], tokens: [], reps: [], runs: 0 };
+    if (!groups[key]) groups[key] = { model: r.model, mode: r.mode, s: 0, st: 0, t: 0, rp: 0, runs: 0, q: 0 };
     const g = groups[key];
-    g.rates.push(r.success_rate);
-    g.steps.push(r.avg_steps);
-    g.tokens.push(r.avg_tokens);
-    g.reps.push(r.repetition_rate);
+    g.s += r.success_rate * r.runs;
+    g.st += r.avg_steps * r.runs;
+    g.t += r.avg_tokens * r.runs;
+    g.rp += r.repetition_rate * r.runs;
     g.runs += r.runs;
+    g.q += 1;
   });
   return Object.values(groups).map(g => ({
     model: g.model,
     mode: g.mode,
-    success_rate: g.rates.reduce((a,b)=>a+b,0) / g.rates.length,
-    avg_steps: g.steps.reduce((a,b)=>a+b,0) / g.steps.length,
-    avg_tokens: g.tokens.reduce((a,b)=>a+b,0) / g.tokens.length,
-    repetition_rate: g.reps.reduce((a,b)=>a+b,0) / g.reps.length,
+    success_rate: g.runs ? g.s / g.runs : 0,
+    avg_steps: g.runs ? g.st / g.runs : 0,
+    avg_tokens: g.runs ? g.t / g.runs : 0,
+    repetition_rate: g.runs ? g.rp / g.runs : 0,
     runs: g.runs,
-    quests: g.rates.length,
+    quests: g.q,
   }));
 }
 
@@ -181,7 +183,7 @@ async function init() {
     document.getElementById('quest-all-btn').style.display = showQuest ? '' : 'none';
     document.getElementById('quest-filters').style.display = showQuest ? '' : 'none';
     sortCol = 'success_rate'; sortAsc = false;
-    renderTable();
+    renderAll();
   });
   document.getElementById('quest-filter-label').style.display = 'none';
   document.getElementById('quest-all-btn').style.display = 'none';
@@ -215,12 +217,12 @@ function renderAll() {
 
 function renderStats() {
   const rows = viewMode === 'summary' ? aggregated() : filtered();
-  const avg = (arr, key) => arr.length ? arr.reduce((s, r) => s + r[key], 0) / arr.length : 0;
   const totalRuns = rows.reduce((s, r) => s + r.runs, 0);
+  const wAvg = (key) => totalRuns ? rows.reduce((s, r) => s + (r[key] * r.runs), 0) / totalRuns : 0;
   const stats = [
-    {value: (avg(rows,'success_rate')*100).toFixed(0)+'%', label: 'Avg Success Rate'},
-    {value: avg(rows,'avg_steps').toFixed(0), label: 'Avg Steps/Run'},
-    {value: avg(rows,'avg_tokens').toFixed(0), label: 'Avg Tokens/Run'},
+    {value: (wAvg('success_rate')*100).toFixed(0)+'%', label: 'Avg Success Rate'},
+    {value: wAvg('avg_steps').toFixed(0), label: 'Avg Steps/Run'},
+    {value: wAvg('avg_tokens').toFixed(0), label: 'Avg Tokens/Run'},
     {value: totalRuns.toLocaleString(), label: 'Total Runs'},
   ];
   document.getElementById('stats-row').innerHTML = stats.map(s => `<div class="col-6 col-md-3"><div class="card stat-card"><div class="stat-value">${s.value}</div><div class="stat-label">${s.label}</div></div></div>`).join('');
