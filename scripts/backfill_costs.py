@@ -11,6 +11,7 @@ Usage:
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -38,7 +39,11 @@ def backfill(results_dir: Path, dry_run: bool) -> None:
     updated = skipped_has_cost = skipped_no_tokens = skipped_no_model = skipped_no_price = 0
 
     for path in sorted(summaries):
-        data = json.loads(path.read_text(encoding="utf-8"))
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"  SKIP (unreadable: {exc}): {path}")
+            continue
         usage = data.get("usage") or {}
 
         if usage.get("estimated_cost_usd") is not None:
@@ -71,7 +76,7 @@ def backfill(results_dir: Path, dry_run: bool) -> None:
             print(f"  SKIP (no price for {spec.provider}:{spec.model_id}): {path.relative_to(results_dir)}")
             continue
 
-        total_steps = data.get("metrics", {}).get("total_steps") or 1
+        total_steps = (data.get("metrics") or {}).get("total_steps") or 1
         print(
             f"  {'[DRY]' if dry_run else 'UPDATE'} {path.relative_to(results_dir)}"
             f"  {spec.provider}:{spec.model_id}"
@@ -80,9 +85,13 @@ def backfill(results_dir: Path, dry_run: bool) -> None:
         )
 
         if not dry_run:
+            if data.get("usage") is None:
+                data["usage"] = {}
             data["usage"]["estimated_cost_usd"] = round(cost, 8)
             data["usage"]["priced_steps"] = int(total_steps)
-            path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+            tmp = path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+            os.replace(tmp, path)
 
         updated += 1
 
