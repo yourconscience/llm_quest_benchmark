@@ -12,10 +12,10 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .navbar { background: var(--surface); border-bottom: 1px solid var(--border); }
 .card { background: var(--surface); border: 1px solid var(--border); }
 .table { color: var(--text); --bs-table-bg: var(--surface); --bs-table-border-color: var(--border); }
-.table thead th { border-bottom: 2px solid var(--border); color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; user-select: none; }
-.table thead th:hover { color: var(--accent); }
-.table thead th.sorted-asc::after { content: ' \u25b2'; }
-.table thead th.sorted-desc::after { content: ' \u25bc'; }
+.table thead th { border-bottom: 2px solid var(--border); color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; user-select: none; }
+.table thead th[data-col] { cursor: pointer; }
+.table thead th[data-col]:hover { color: var(--accent); }
+.table thead th .sort-arrow { font-size: 0.7rem; margin-left: 0.3em; text-transform: none; }
 .table tbody tr:hover { background: rgba(88,166,255,0.05); }
 .badge-mode { font-size: 0.75rem; padding: 0.25em 0.6em; border-radius: 4px; }
 .mode-stub { background: var(--muted); color: var(--bg); }
@@ -33,6 +33,9 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 a { color: var(--accent); }
 .subtitle { color: var(--muted); font-size: 1rem; font-weight: 400; }
 .text-muted { color: var(--muted) !important; }
+.nav-pills .nav-link { color: var(--muted); border: 1px solid var(--border); margin-right: 0.5rem; }
+.nav-pills .nav-link.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.tooltip-icon { color: var(--muted); cursor: help; font-size: 0.75rem; border: 1px solid var(--muted); border-radius: 50%; width: 1.1em; height: 1.1em; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; margin-left: 0.3em; }
 </style>
 </head>
 <body>
@@ -54,29 +57,21 @@ a { color: var(--accent); }
 
   <div class="card mb-4">
     <div class="card-body">
+      <ul class="nav nav-pills mb-3" id="view-tabs">
+        <li class="nav-item"><a class="nav-link active" href="#" data-view="summary">Summary</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-view="quests">Per Quest</a></li>
+      </ul>
       <div class="d-flex flex-wrap gap-2 mb-3">
         <span class="text-muted me-2 align-self-center" style="font-size:0.85rem">Mode:</span>
         <button class="filter-btn active" data-filter="mode" data-value="all">All</button>
-        <div id="mode-filters"></div>
-        <span class="text-muted ms-3 me-2 align-self-center" style="font-size:0.85rem">Quest:</span>
-        <button class="filter-btn active" data-filter="quest" data-value="all">All</button>
-        <div id="quest-filters"></div>
+        <div id="mode-filters" class="d-flex flex-wrap gap-1"></div>
+        <span class="text-muted ms-3 me-2 align-self-center" style="font-size:0.85rem" id="quest-filter-label">Quest:</span>
+        <button class="filter-btn active" data-filter="quest" data-value="all" id="quest-all-btn">All</button>
+        <div id="quest-filters" class="d-flex flex-wrap gap-1"></div>
       </div>
       <div class="table-responsive">
         <table class="table table-sm mb-0" id="leaderboard">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th data-col="model">Model</th>
-              <th data-col="mode">Mode</th>
-              <th data-col="quest">Quest</th>
-              <th data-col="success_rate">Success Rate</th>
-              <th data-col="avg_steps">Steps</th>
-              <th data-col="avg_tokens">Tokens</th>
-              <th data-col="avg_cost_usd">Cost</th>
-              <th data-col="repetition_rate">Repetition</th>
-            </tr>
-          </thead>
+          <thead><tr id="table-header"></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -92,7 +87,7 @@ a { color: var(--accent); }
     </div>
     <div class="col-lg-6">
       <div class="card h-100"><div class="card-body">
-        <h6 class="text-muted mb-3">Cost vs Success Rate</h6>
+        <h6 class="text-muted mb-3">Steps vs Success Rate</h6>
         <div id="chart-scatter" style="height:360px"></div>
       </div></div>
     </div>
@@ -119,6 +114,7 @@ let sortCol = 'success_rate';
 let sortAsc = false;
 let filterMode = 'all';
 let filterQuest = 'all';
+let viewMode = 'summary';
 
 const MODE_LABELS = {stub:'Baseline (A)', reasoning:'Prompted (B)', light_hints:'Knowledge (C)', planner:'Planner (D)', tool_augmented:'Tool-aug (E)'};
 const MODE_CLASSES = {stub:'mode-stub', reasoning:'mode-reasoning', light_hints:'mode-light_hints', planner:'mode-planner', tool_augmented:'mode-tool'};
@@ -128,23 +124,64 @@ const MODEL_SYMBOLS = ['circle','rect','triangle','diamond','pin','arrow'];
 function successColor(v) { return v >= 0.8 ? 'var(--green)' : v >= 0.4 ? 'var(--orange)' : 'var(--red)'; }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+function filtered() {
+  return DATA.results.filter(r => (filterMode === 'all' || r.mode === filterMode) && (filterQuest === 'all' || r.quest === filterQuest));
+}
+
+function aggregated() {
+  const groups = {};
+  filtered().forEach(r => {
+    const key = `${r.model}|${r.mode}`;
+    if (!groups[key]) groups[key] = { model: r.model, mode: r.mode, rates: [], steps: [], tokens: [], reps: [], runs: 0 };
+    const g = groups[key];
+    g.rates.push(r.success_rate);
+    g.steps.push(r.avg_steps);
+    g.tokens.push(r.avg_tokens);
+    g.reps.push(r.repetition_rate);
+    g.runs += r.runs;
+  });
+  return Object.values(groups).map(g => ({
+    model: g.model,
+    mode: g.mode,
+    success_rate: g.rates.reduce((a,b)=>a+b,0) / g.rates.length,
+    avg_steps: g.steps.reduce((a,b)=>a+b,0) / g.steps.length,
+    avg_tokens: g.tokens.reduce((a,b)=>a+b,0) / g.tokens.length,
+    repetition_rate: g.reps.reduce((a,b)=>a+b,0) / g.reps.length,
+    runs: g.runs,
+    quests: g.rates.length,
+  }));
+}
+
 async function init() {
   const resp = await fetch('leaderboard.json');
   DATA = await resp.json();
   document.getElementById('footer-date').textContent = DATA.generated?.split('T')[0] || '';
   buildFilters();
-  renderStats();
-  renderTable();
-  renderBarChart();
-  renderScatterChart();
-  renderLiftChart();
-  document.querySelectorAll('#leaderboard thead th').forEach(th => {
-    th.addEventListener('click', () => {
-      const col = th.dataset.col;
-      if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = col === 'model' || col === 'mode' || col === 'quest'; }
-      renderTable();
-    });
+  renderAll();
+  document.getElementById('leaderboard').addEventListener('click', e => {
+    const th = e.target.closest('th[data-col]');
+    if (!th) return;
+    const col = th.dataset.col;
+    if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = col === 'model' || col === 'mode' || col === 'quest'; }
+    renderTable();
   });
+  document.getElementById('view-tabs').addEventListener('click', e => {
+    e.preventDefault();
+    const link = e.target.closest('[data-view]');
+    if (!link) return;
+    viewMode = link.dataset.view;
+    document.querySelectorAll('#view-tabs .nav-link').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+    const showQuest = viewMode === 'quests';
+    document.getElementById('quest-filter-label').style.display = showQuest ? '' : 'none';
+    document.getElementById('quest-all-btn').style.display = showQuest ? '' : 'none';
+    document.getElementById('quest-filters').style.display = showQuest ? '' : 'none';
+    sortCol = 'success_rate'; sortAsc = false;
+    renderTable();
+  });
+  document.getElementById('quest-filter-label').style.display = 'none';
+  document.getElementById('quest-all-btn').style.display = 'none';
+  document.getElementById('quest-filters').style.display = 'none';
 }
 
 function buildFilters() {
@@ -159,57 +196,98 @@ function buildFilters() {
       else filterQuest = btn.dataset.value;
       document.querySelectorAll(`.filter-btn[data-filter="${type}"]`).forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      renderTable();
-      renderStats();
-      renderBarChart();
-      renderScatterChart();
-      renderLiftChart();
+      renderAll();
     });
   });
 }
 
-function filtered() {
-  return DATA.results.filter(r => (filterMode === 'all' || r.mode === filterMode) && (filterQuest === 'all' || r.quest === filterQuest));
+function renderAll() {
+  renderStats();
+  renderTable();
+  renderBarChart();
+  renderScatterChart();
+  renderLiftChart();
 }
 
 function renderStats() {
-  const rows = filtered();
+  const rows = viewMode === 'summary' ? aggregated() : filtered();
   const avg = (arr, key) => arr.length ? arr.reduce((s, r) => s + r[key], 0) / arr.length : 0;
+  const totalRuns = rows.reduce((s, r) => s + r.runs, 0);
   const stats = [
     {value: (avg(rows,'success_rate')*100).toFixed(0)+'%', label: 'Avg Success Rate'},
+    {value: avg(rows,'avg_steps').toFixed(0), label: 'Avg Steps/Run'},
     {value: avg(rows,'avg_tokens').toFixed(0), label: 'Avg Tokens/Run'},
-    {value: '$'+avg(rows,'avg_cost_usd').toFixed(4), label: 'Avg Cost/Run'},
-    {value: (avg(rows,'repetition_rate')*100).toFixed(1)+'%', label: 'Avg Repetition'},
+    {value: totalRuns.toLocaleString(), label: 'Total Runs'},
   ];
   document.getElementById('stats-row').innerHTML = stats.map(s => `<div class="col-6 col-md-3"><div class="card stat-card"><div class="stat-value">${s.value}</div><div class="stat-label">${s.label}</div></div></div>`).join('');
 }
 
+function sortArrow(col) {
+  if (sortCol !== col) return '';
+  return `<span class="sort-arrow">${sortAsc ? '\u25B2' : '\u25BC'}</span>`;
+}
+
 function renderTable() {
-  const rows = filtered().slice().sort((a,b) => {
+  const header = document.getElementById('table-header');
+  if (viewMode === 'summary') {
+    header.innerHTML = `<th>#</th>
+      <th data-col="model">Model ${sortArrow('model')}</th>
+      <th data-col="mode">Mode ${sortArrow('mode')}</th>
+      <th data-col="quests">Quests ${sortArrow('quests')}</th>
+      <th data-col="runs">Runs ${sortArrow('runs')}</th>
+      <th data-col="success_rate">Success Rate ${sortArrow('success_rate')}</th>
+      <th data-col="avg_steps">Avg Steps ${sortArrow('avg_steps')}</th>
+      <th data-col="avg_tokens">Avg Tokens ${sortArrow('avg_tokens')}</th>
+      <th data-col="repetition_rate">Repetition <span class="tooltip-icon" title="Fraction of agent actions that repeat the immediately previous choice. High values indicate the agent is stuck in a loop.">?</span>${sortArrow('repetition_rate')}</th>`;
+  } else {
+    header.innerHTML = `<th>#</th>
+      <th data-col="model">Model ${sortArrow('model')}</th>
+      <th data-col="mode">Mode ${sortArrow('mode')}</th>
+      <th data-col="quest">Quest ${sortArrow('quest')}</th>
+      <th data-col="runs">Runs ${sortArrow('runs')}</th>
+      <th data-col="success_rate">Success Rate ${sortArrow('success_rate')}</th>
+      <th data-col="avg_steps">Steps ${sortArrow('avg_steps')}</th>
+      <th data-col="avg_tokens">Tokens ${sortArrow('avg_tokens')}</th>
+      <th data-col="repetition_rate">Repetition <span class="tooltip-icon" title="Fraction of agent actions that repeat the immediately previous choice. High values indicate the agent is stuck in a loop.">?</span>${sortArrow('repetition_rate')}</th>`;
+  }
+
+  const rows = (viewMode === 'summary' ? aggregated() : filtered()).slice().sort((a,b) => {
     let va = a[sortCol], vb = b[sortCol];
     if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
     return sortAsc ? va - vb : vb - va;
   });
-  document.querySelectorAll('#leaderboard thead th').forEach(th => {
-    th.classList.remove('sorted-asc','sorted-desc');
-    if (th.dataset.col === sortCol) th.classList.add(sortAsc ? 'sorted-asc' : 'sorted-desc');
-  });
+
   const tbody = document.querySelector('#leaderboard tbody');
-  tbody.innerHTML = rows.map((r,i) => `<tr>
-    <td>${i+1}</td>
-    <td><strong>${esc(r.model)}</strong></td>
-    <td><span class="badge badge-mode ${MODE_CLASSES[r.mode]||''}">${MODE_LABELS[r.mode]||esc(r.mode)}</span></td>
-    <td>${esc(r.quest)}</td>
-    <td><div class="d-flex align-items-center gap-2"><div class="success-bar"><div class="success-fill" style="width:${r.success_rate*100}%;background:${successColor(r.success_rate)}"></div></div><span>${(r.success_rate*100).toFixed(0)}%</span></div></td>
-    <td>${r.avg_steps}</td>
-    <td>${r.avg_tokens.toLocaleString()}</td>
-    <td>$${r.avg_cost_usd.toFixed(4)}</td>
-    <td>${(r.repetition_rate*100).toFixed(1)}%</td>
-  </tr>`).join('');
+  if (viewMode === 'summary') {
+    tbody.innerHTML = rows.map((r,i) => `<tr>
+      <td>${i+1}</td>
+      <td><strong>${esc(r.model)}</strong></td>
+      <td><span class="badge badge-mode ${MODE_CLASSES[r.mode]||''}">${MODE_LABELS[r.mode]||esc(r.mode)}</span></td>
+      <td>${r.quests}</td>
+      <td>${r.runs}</td>
+      <td><div class="d-flex align-items-center gap-2"><div class="success-bar"><div class="success-fill" style="width:${r.success_rate*100}%;background:${successColor(r.success_rate)}"></div></div><span>${(r.success_rate*100).toFixed(0)}%</span></div></td>
+      <td>${r.avg_steps.toFixed(1)}</td>
+      <td>${r.avg_tokens.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+      <td>${(r.repetition_rate*100).toFixed(1)}%</td>
+    </tr>`).join('');
+  } else {
+    tbody.innerHTML = rows.map((r,i) => `<tr>
+      <td>${i+1}</td>
+      <td><strong>${esc(r.model)}</strong></td>
+      <td><span class="badge badge-mode ${MODE_CLASSES[r.mode]||''}">${MODE_LABELS[r.mode]||esc(r.mode)}</span></td>
+      <td>${esc(r.quest)}</td>
+      <td>${r.runs}</td>
+      <td><div class="d-flex align-items-center gap-2"><div class="success-bar"><div class="success-fill" style="width:${r.success_rate*100}%;background:${successColor(r.success_rate)}"></div></div><span>${(r.success_rate*100).toFixed(0)}%</span></div></td>
+      <td>${r.avg_steps}</td>
+      <td>${r.avg_tokens.toLocaleString()}</td>
+      <td>${(r.repetition_rate*100).toFixed(1)}%</td>
+    </tr>`).join('');
+  }
 }
 
 function renderBarChart() {
-  const chart = echarts.init(document.getElementById('chart-bar'));
+  const el = document.getElementById('chart-bar');
+  const chart = echarts.getInstanceByDom(el) || echarts.init(el);
   const models = DATA.models.map(m => m.label);
   const series = DATA.modes.map(mode => ({
     name: MODE_LABELS[mode.id], type: 'bar',
@@ -227,34 +305,36 @@ function renderBarChart() {
     xAxis: {type:'category', data:models, axisLabel:{color:'#c9d1d9'}, axisLine:{lineStyle:{color:'#30363d'}}},
     yAxis: {type:'value', name:'Success %', nameTextStyle:{color:'#c9d1d9'}, axisLabel:{color:'#c9d1d9'}, splitLine:{lineStyle:{color:'#21262d'}}},
     series
-  });
+  }, true);
   window.addEventListener('resize', () => chart.resize());
 }
 
 function renderScatterChart() {
-  const chart = echarts.init(document.getElementById('chart-scatter'));
+  const el = document.getElementById('chart-scatter');
+  const chart = echarts.getInstanceByDom(el) || echarts.init(el);
   const series = DATA.modes.map((mode, mi) => ({
     name: MODE_LABELS[mode.id], type: 'scatter', symbolSize: 14, symbol: MODEL_SYMBOLS[mi] || 'circle',
     data: filtered().filter(r => r.mode === mode.id).map(r => ({
-      value: [r.avg_cost_usd, r.success_rate * 100],
+      value: [r.avg_steps, r.success_rate * 100],
       name: `${r.model} / ${r.quest}`
     })),
     itemStyle: {color: COLORS[mode.id]}
   }));
   chart.setOption({
     tooltip: {trigger:'item', backgroundColor:'#161b22', borderColor:'#30363d', textStyle:{color:'#e6edf3'},
-      formatter: p => `${p.seriesName}<br/>${p.data.name}<br/>Cost: $${p.value[0].toFixed(4)}<br/>Success: ${p.value[1].toFixed(0)}%`},
+      formatter: p => `${esc(p.seriesName)}<br/>${esc(p.data.name)}<br/>Steps: ${p.value[0]}<br/>Success: ${p.value[1].toFixed(0)}%`},
     legend: {textStyle:{color:'#c9d1d9'}, bottom: 0},
     grid: {left:'3%',right:'4%',bottom:'15%',containLabel:true},
-    xAxis: {name:'Avg Cost (USD)', nameTextStyle:{color:'#c9d1d9'}, axisLabel:{color:'#c9d1d9', formatter:v=>'$'+v}, splitLine:{lineStyle:{color:'#21262d'}}, axisLine:{lineStyle:{color:'#30363d'}}},
+    xAxis: {name:'Avg Steps', nameTextStyle:{color:'#c9d1d9'}, axisLabel:{color:'#c9d1d9'}, splitLine:{lineStyle:{color:'#21262d'}}, axisLine:{lineStyle:{color:'#30363d'}}},
     yAxis: {name:'Success %', nameTextStyle:{color:'#c9d1d9'}, axisLabel:{color:'#c9d1d9'}, splitLine:{lineStyle:{color:'#21262d'}}, max:105},
     series
-  });
+  }, true);
   window.addEventListener('resize', () => chart.resize());
 }
 
 function renderLiftChart() {
-  const chart = echarts.init(document.getElementById('chart-lift'));
+  const el = document.getElementById('chart-lift');
+  const chart = echarts.getInstanceByDom(el) || echarts.init(el);
   const models = DATA.models.map(m => m.label);
   const nonBaseline = DATA.modes.filter(m => m.id !== 'stub');
   const series = nonBaseline.map(mode => ({
@@ -277,7 +357,7 @@ function renderLiftChart() {
     xAxis: {type:'category', data:models, axisLabel:{color:'#c9d1d9'}, axisLine:{lineStyle:{color:'#30363d'}}},
     yAxis: {type:'value', name:'Lift (pp)', nameTextStyle:{color:'#c9d1d9'}, axisLabel:{color:'#c9d1d9', formatter:v=>(v>0?'+':'')+v+'pp'}, splitLine:{lineStyle:{color:'#21262d'}}},
     series
-  });
+  }, true);
   window.addEventListener('resize', () => chart.resize());
 }
 

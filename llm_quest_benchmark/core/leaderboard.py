@@ -168,6 +168,7 @@ def generate_leaderboard(benchmark_dirs: List[str], output_path: str) -> Dict[st
             quest_lang = _detect_quest_lang(quest_path)
             outcome = str(result_row.get("outcome") or "UNKNOWN")
 
+            # TODO: cost tracking is broken - run_summary.json usage data is not populated by OpenRouter runs
             # Correlate with db_runs by index to get run ID for metrics
             usage: Dict[str, Any] = {}
             metrics: Dict[str, Any] = {}
