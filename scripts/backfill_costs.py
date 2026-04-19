@@ -27,7 +27,7 @@ _AGENT_ID_PREFIXES = ("llm_", "planner_", "tool_")
 def _model_name_from_agent_id(agent_id: str) -> str | None:
     for prefix in _AGENT_ID_PREFIXES:
         if agent_id.startswith(prefix):
-            return agent_id[len(prefix):]
+            return agent_id[len(prefix) :]
     return None
 
 
@@ -87,11 +87,13 @@ def backfill(results_dir: Path, dry_run: bool) -> None:
         updated += 1
 
     print()
-    print(f"Results: {updated} {'would be ' if dry_run else ''}updated, "
-          f"{skipped_has_cost} already had cost, "
-          f"{skipped_no_tokens} had no tokens, "
-          f"{skipped_no_model} had unknown model, "
-          f"{skipped_no_price} had no price entry.")
+    print(
+        f"Results: {updated} {'would be ' if dry_run else ''}updated, "
+        f"{skipped_has_cost} already had cost, "
+        f"{skipped_no_tokens} had no tokens, "
+        f"{skipped_no_model} had unknown model, "
+        f"{skipped_no_price} had no price entry."
+    )
 
 
 def main() -> None:
