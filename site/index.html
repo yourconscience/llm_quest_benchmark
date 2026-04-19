@@ -284,8 +284,8 @@ function renderTable() {
       <td>${esc(r.quest)}</td>
       <td>${r.runs}</td>
       <td><div class="d-flex align-items-center gap-2"><div class="success-bar"><div class="success-fill" style="width:${r.success_rate*100}%;background:${successColor(r.success_rate)}"></div></div><span>${(r.success_rate*100).toFixed(0)}%</span></div></td>
-      <td>${r.avg_steps}</td>
-      <td>${r.avg_tokens.toLocaleString()}</td>
+      <td>${r.avg_steps.toFixed(1)}</td>
+      <td>${r.avg_tokens.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
       <td>${(r.repetition_rate*100).toFixed(1)}%</td>
     </tr>`).join('');
   }
