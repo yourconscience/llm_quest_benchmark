@@ -8,7 +8,7 @@ from llm_quest_benchmark.constants import DEFAULT_QUEST
 from llm_quest_benchmark.executors.cli import commands
 from llm_quest_benchmark.executors.cli.commands import app
 
-runner = CliRunner(mix_stderr=False)
+runner = CliRunner()
 
 
 def test_version():
@@ -39,14 +39,14 @@ def test_analyze_invalid_input():
     """Test analyze command with invalid input"""
     result = runner.invoke(app, ["analyze"])
     assert result.exit_code == 1
-    assert "Must specify one of: --quest, --benchmark, --run-id, or --last" in result.stderr
+    assert "Must specify one of: --quest, --benchmark, --run-id, or --last" in result.output
 
 
 def test_benchmark_missing_config():
     """Test benchmark command with missing config"""
     result = runner.invoke(app, ["benchmark", "--config", "nonexistent.yaml"])
     assert result.exit_code == 1
-    assert "Config file does not exist" in result.stdout or "Config file does not exist" in result.stderr
+    assert "Config file does not exist" in result.output
 
 
 def test_analyze_run_with_run_summary_path(tmp_path):
