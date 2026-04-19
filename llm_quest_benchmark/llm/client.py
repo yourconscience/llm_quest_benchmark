@@ -66,9 +66,12 @@ DEFAULT_MODEL_PRICING_USD_PER_1M = {
     "openai:gpt-5": {"input": 1.25, "output": 10.0},
     "openai:gpt-5-mini": {"input": 0.25, "output": 2.0},
     "openai:gpt-5-nano": {"input": 0.05, "output": 0.4},
+    "openai:gpt-5.4": {"input": 1.25, "output": 10.0},
+    "openai:gpt-5.4-mini": {"input": 0.25, "output": 2.0},
     "openai:o4-mini": {"input": 4.0, "output": 16.0},
     # Anthropic
     "anthropic:claude-sonnet-4-5": {"input": 3.0, "output": 15.0},
+    "anthropic:claude-sonnet-4-6": {"input": 3.0, "output": 15.0},
     "anthropic:claude-opus-4-1-20250805": {"input": 15.0, "output": 75.0},
     "anthropic:claude-3-5-haiku-latest": {"input": 0.8, "output": 4.0},
     # Google Gemini
@@ -77,6 +80,9 @@ DEFAULT_MODEL_PRICING_USD_PER_1M = {
     "google:gemini-2.5-flash-lite": {"input": 0.1, "output": 0.4},
     # DeepSeek
     "deepseek:deepseek-chat": {"input": 0.28, "output": 0.42},
+    # Qwen (via OpenRouter)
+    "qwen:qwen-2.5-72b-instruct": {"input": 0.4, "output": 0.4},
+    "qwen:qwen3-235b-a22b": {"input": 0.14, "output": 0.6},
 }
 
 
@@ -116,6 +122,14 @@ def _resolve_token_pricing(provider: str, model_id: str) -> tuple[float, float] 
     model_pricing = DEFAULT_MODEL_PRICING_USD_PER_1M.get(f"{provider}:{model_id}")
     if model_pricing:
         return float(model_pricing["input"]), float(model_pricing["output"])
+
+    # OpenRouter uses "sub_provider/sub_model" as model_id; normalize to "sub_provider:sub_model".
+    if provider == "openrouter" and "/" in model_id:
+        sub_provider, sub_model = model_id.split("/", 1)
+        model_pricing = DEFAULT_MODEL_PRICING_USD_PER_1M.get(f"{sub_provider}:{sub_model}")
+        if model_pricing:
+            return float(model_pricing["input"]), float(model_pricing["output"])
+
     return None
 
 

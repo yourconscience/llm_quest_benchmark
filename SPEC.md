@@ -8,7 +8,7 @@ Build a reproducible, multi-provider benchmark that measures how well LLM agents
 
 The benchmark compares five agent modes across providers and quest difficulty levels, measuring success rate, quest progress, and decision quality on structured text quests.
 
-Most agent benchmarks vary tasks and models but treat the agent as a black box. LLM-Quest adds agent architecture as a first-class evaluation dimension: the same model on the same quest produces different outcomes depending on whether it reasons step-by-step, plans ahead, has domain knowledge, or uses tools. The benchmark is a 3D matrix - models x quests x agent modes - across providers and languages. See `docs/LANDSCAPE.md` for competitive analysis.
+Most agent benchmarks vary tasks and models but treat the agent as a black box. LLM-Quest adds agent architecture as a first-class evaluation dimension: the same model on the same quest produces different outcomes depending on whether it reasons step-by-step, plans ahead, has domain knowledge, or uses tools. The benchmark is a 3D matrix - models x quests x agent modes - across providers and languages. See `research/LANDSCAPE.md` for competitive analysis.
 
 ## Non-goals
 
@@ -28,7 +28,7 @@ Most agent benchmarks vary tasks and models but treat the agent as a black box. 
 
 ### Evaluation metrics
 
-Inspired by TextQuests (CAIS, 2025) and AgentQuest (NEC, NAACL 2024). See `docs/LANDSCAPE.md`.
+Inspired by TextQuests (CAIS, 2025) and AgentQuest (NEC, NAACL 2024). See `research/LANDSCAPE.md`.
 
 **Primary metrics** (reported on leaderboard):
 - **Success rate** (%) = successful completions / total attempts per quest per agent config.

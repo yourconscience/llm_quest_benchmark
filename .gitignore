@@ -42,3 +42,6 @@ gunicorn.ctl
 metrics.db
 instance/
 .omx/
+
+# Research (intermediate results, drafts, notes)
+research/
