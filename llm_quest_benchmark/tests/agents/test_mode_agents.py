@@ -1,4 +1,5 @@
 """Tests for planner and tool-augmented agent modes."""
+
 from unittest.mock import Mock
 
 from llm_quest_benchmark.agents.agent_factory import create_agent

@@ -1,6 +1,8 @@
 """Unit tests for HumanPlayer"""
-import pytest
+
 from unittest.mock import patch
+
+import pytest
 
 from llm_quest_benchmark.agents.human_player import HumanPlayer
 
@@ -19,7 +21,7 @@ def test_human_player_single_choice_skipping():
     assert action == 1
 
 
-@patch('builtins.input', return_value='1')
+@patch("builtins.input", return_value="1")
 def test_human_player_valid_input(mock_input):
     """Test HumanPlayer with valid input"""
     player = HumanPlayer()
@@ -28,7 +30,7 @@ def test_human_player_valid_input(mock_input):
     assert action == 1
 
 
-@patch('builtins.input', side_effect=['invalid', 'abc', '2'])
+@patch("builtins.input", side_effect=["invalid", "abc", "2"])
 def test_human_player_invalid_input(mock_input):
     """Test HumanPlayer handles invalid input correctly"""
     player = HumanPlayer()

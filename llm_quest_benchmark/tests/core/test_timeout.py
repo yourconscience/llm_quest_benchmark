@@ -1,8 +1,10 @@
 """Tests for time module"""
-import pytest
+
 import time
 
-from llm_quest_benchmark.core.time import timeout, CommandTimeout
+import pytest
+
+from llm_quest_benchmark.core.time import CommandTimeout, timeout
 
 
 def test_timeout_context_manager():
@@ -12,6 +14,5 @@ def test_timeout_context_manager():
         time.sleep(0.1)  # Should complete successfully
 
     # Test timeout exception
-    with pytest.raises(CommandTimeout):
-        with timeout(1):
-            time.sleep(2)  # Should timeout
+    with pytest.raises(CommandTimeout), timeout(1):
+        time.sleep(2)  # Should timeout

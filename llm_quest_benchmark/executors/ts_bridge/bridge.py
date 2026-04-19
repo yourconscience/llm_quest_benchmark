@@ -1,12 +1,12 @@
 """TypeScript bridge for QM file parsing and execution"""
-import logging
+
 import json
+import logging
 import os
 import subprocess
 import time
-from copy import deepcopy
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple, Union
+from typing import Any
 
 from llm_quest_benchmark.schemas.bridge import QMBridgeState
 from llm_quest_benchmark.utils.text_processor import clean_qm_text
@@ -30,7 +30,7 @@ class QMBridge:
         self.debug = debug
         self.process = None
         self.parser_script = Path(__file__).parent / "consoleplayer.ts"
-        self.state_history: List[QMBridgeState] = []
+        self.state_history: list[QMBridgeState] = []
 
         # Validate quest file exists
         if not self.quest_file.exists():
@@ -41,7 +41,7 @@ class QMBridge:
             raise FileNotFoundError(f"Parser script not found: {self.parser_script}")
         self._validate_bridge_dependencies()
 
-    def _required_bridge_sources(self) -> List[Path]:
+    def _required_bridge_sources(self) -> list[Path]:
         """Return required TypeScript source files for bridge imports."""
         repo_root = self.parser_script.parents[3]
         return [
@@ -63,7 +63,7 @@ class QMBridge:
     def _submodule_help() -> str:
         return "Run: git submodule update --init --recursive"
 
-    def _build_node_env(self) -> Dict[str, str]:
+    def _build_node_env(self) -> dict[str, str]:
         """Build subprocess environment with Node compatibility defaults."""
         env = os.environ.copy()
         node_options = env.get("NODE_OPTIONS", "")
@@ -74,7 +74,7 @@ class QMBridge:
             env["QM_LANG"] = self.language
         return env
 
-    def _try_parse_json_object(self, line: str) -> Optional[Dict[str, Any]]:
+    def _try_parse_json_object(self, line: str) -> dict[str, Any] | None:
         """Parse a single stdout line into a protocol JSON object, if possible.
 
         The TypeScript side is expected to emit a single-line JSON object with keys:
@@ -122,7 +122,7 @@ class QMBridge:
         self,
         timeout: float = 10.0,
         max_noise_lines: int = 20,
-    ) -> Tuple[Dict[str, Any], List[str]]:
+    ) -> tuple[dict[str, Any], list[str]]:
         """Read stdout lines until a valid protocol JSON message is found.
 
         Returns:
@@ -132,7 +132,7 @@ class QMBridge:
             raise RuntimeError("Game process not started")
 
         deadline = time.monotonic() + max(timeout, 0.01)
-        noise: List[str] = []
+        noise: list[str] = []
 
         while True:
             remaining = deadline - time.monotonic()
@@ -185,7 +185,7 @@ class QMBridge:
 
         import select
 
-        lines: List[str] = []
+        lines: list[str] = []
         for _ in range(max_lines):
             ready, _, _ = select.select([self.process.stderr], [], [], timeout)
             if not ready:
@@ -202,6 +202,7 @@ class QMBridge:
             raise RuntimeError("Game process not started")
 
         import select
+
         if select.select([self.process.stdout], [], [], timeout)[0]:
             return self.process.stdout.readline()
         raise TimeoutError("Timeout waiting for response from TypeScript bridge")
@@ -211,7 +212,7 @@ class QMBridge:
         text = (raw or "").strip()
         return text.startswith("{") or text.startswith("[")
 
-    def _parse_response_json(self, raw: str) -> Optional[Dict[str, Any]]:
+    def _parse_response_json(self, raw: str) -> dict[str, Any] | None:
         """Parse one bridge line into JSON dict, returning None on non-JSON/noise lines."""
         text = (raw or "").strip()
         if not text or not self._is_probably_json(text):
@@ -225,13 +226,14 @@ class QMBridge:
 
         try:
             from json_repair import repair_json
+
             repaired = repair_json(text)
             parsed = json.loads(repaired)
             return parsed if isinstance(parsed, dict) else None
         except Exception:
             return None
 
-    def _read_response_json(self, timeout: int = 10, require_state: bool = True) -> Dict[str, Any]:
+    def _read_response_json(self, timeout: int = 10, require_state: bool = True) -> dict[str, Any]:
         """Read bridge stdout until we get a valid JSON response packet."""
         if not self.process:
             raise RuntimeError("Game process not started")
@@ -241,7 +243,7 @@ class QMBridge:
 
         deadline = time.monotonic() + timeout
         skipped_lines = 0
-        last_candidate: Optional[Dict[str, Any]] = None
+        last_candidate: dict[str, Any] | None = None
 
         while time.monotonic() < deadline:
             remaining = max(0.05, deadline - time.monotonic())
@@ -276,12 +278,10 @@ class QMBridge:
         details = f"Bridge stderr:\n{stderr_snapshot}\n" if stderr_snapshot else ""
         if last_candidate is not None:
             keys = ", ".join(sorted(last_candidate.keys()))
-            raise TimeoutError(
-                f"Timed out waiting for valid bridge state packet. Last JSON keys: [{keys}].\n{details}"
-            )
+            raise TimeoutError(f"Timed out waiting for valid bridge state packet. Last JSON keys: [{keys}].\n{details}")
         raise TimeoutError(f"Timeout waiting for JSON response from TypeScript bridge.\n{details}")
 
-    def parse_quest_locations(self) -> Dict[str, Any]:
+    def parse_quest_locations(self) -> dict[str, Any]:
         """Parse quest file and return metadata including locations and start location"""
         cmd = ["node", "-r", "ts-node/register", str(self.parser_script), str(self.quest_file), "--parse"]
 
@@ -301,34 +301,33 @@ class QMBridge:
 
             try:
                 from json_repair import repair_json
+
                 # Clean the output - remove any non-JSON text before/after
                 output = proc.stdout.strip()
-                if '{' in output:
-                    output = output[output.find('{'):output.rfind('}')+1]
+                if "{" in output:
+                    output = output[output.find("{") : output.rfind("}") + 1]
                 repaired_json = repair_json(output)
                 qm_data = json.loads(repaired_json)
             except ImportError:
                 # Fallback to direct JSON parsing if json-repair not available
                 qm_data = json.loads(proc.stdout)
 
-            metadata = qm_data.get('metadata', {})
-            total_locations = len(metadata.get('locations', []))
-            start_location = metadata.get('startLocationId', 0)
+            metadata = qm_data.get("metadata", {})
+            total_locations = len(metadata.get("locations", []))
+            start_location = metadata.get("startLocationId", 0)
 
             if self.debug:
                 logger.debug(f"Parsed metadata: start location {start_location}, total locations: {total_locations}")
 
             return {
-                'start_location_id': start_location,
-                'locations': metadata.get('locations', []),
-                'total_locations': total_locations if total_locations > 0 else 20  # Default fallback for progress bar
+                "start_location_id": start_location,
+                "locations": metadata.get("locations", []),
+                "total_locations": total_locations if total_locations > 0 else 20,  # Default fallback for progress bar
             }
 
         except subprocess.CalledProcessError as e:
             logger.error(f"Node parser error:\n{e.stderr}")
-            raise RuntimeError(
-                f"Failed to parse quest file: {e.stderr}\n{self._submodule_help()}"
-            )
+            raise RuntimeError(f"Failed to parse quest file: {e.stderr}\n{self._submodule_help()}")
         except Exception as e:
             logger.error(f"Failed to parse QM data: {str(e)}")
             raise RuntimeError(f"Failed to parse quest file: {str(e)}")
@@ -378,9 +377,7 @@ class QMBridge:
                 raise RuntimeError("Invalid response format: missing saving.locationId")
 
             params_state_raw = state.get("paramsState") or []
-            params_state = [
-                clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)
-            ]
+            params_state = [clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)]
             initial_state = QMBridgeState(
                 location_id=str(saving["locationId"]),
                 text=clean_qm_text(state.get("text", "")),
@@ -427,9 +424,7 @@ class QMBridge:
                 raise RuntimeError("Invalid response format: missing saving.locationId")
 
             params_state_raw = state.get("paramsState") or []
-            params_state = [
-                clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)
-            ]
+            params_state = [clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)]
             current_state = QMBridgeState(
                 location_id=str(saving["locationId"]),
                 text=clean_qm_text(state.get("text", "")),
@@ -453,7 +448,7 @@ class QMBridge:
             self.close()  # Clean up on error
             raise RuntimeError(f"Failed to get current state: {str(e)}")
 
-    def validate_choice(self, choice_num: int) -> Optional[str]:
+    def validate_choice(self, choice_num: int) -> str | None:
         """Validate choice number and return corresponding jump ID"""
         current_state = self.state_history[-1] if self.state_history else self.get_current_state()
 
@@ -471,7 +466,7 @@ class QMBridge:
                 f"Current state: {json.dumps(current_state.__dict__, indent=2)}"
             )
 
-        return current_state.choices[choice_num - 1]['id']
+        return current_state.choices[choice_num - 1]["id"]
 
     def step(self, choice_num: int) -> QMBridgeState:
         """Take a step in the game with choice number (1-based)"""
@@ -487,7 +482,7 @@ class QMBridge:
                 logger.debug(f"Step with choice_num: {choice_num}, jump_id: {jump_id}")
                 choices_debug = []
                 for i, c in enumerate(current_state.choices):
-                    choices_debug.append(f"{i+1}: {c['text']}")
+                    choices_debug.append(f"{i + 1}: {c['text']}")
                 logger.debug(f"Current choices: {choices_debug}")
                 logger.debug(f"Current choices raw: {current_state.choices}")
 
@@ -515,9 +510,7 @@ class QMBridge:
                 raise RuntimeError("Invalid response format: missing saving.locationId")
 
             params_state_raw = state.get("paramsState") or []
-            params_state = [
-                clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)
-            ]
+            params_state = [clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)]
 
             choices = [
                 {"id": str(c["jumpId"]), "text": clean_qm_text(c["text"])}
@@ -549,9 +542,8 @@ class QMBridge:
             f"Location: {current_state.location_id}\n"
             f"Game ended: {current_state.game_ended}\n"
             f"Reward: {current_state.reward}\n"
-            f"Choices:\n" +
-            "\n".join(f"{i+1}. {c['text']} (id: {c['id']})"
-                     for i, c in enumerate(current_state.choices))
+            f"Choices:\n"
+            + "\n".join(f"{i + 1}. {c['text']} (id: {c['id']})" for i, c in enumerate(current_state.choices))
         )
 
     def close(self):

@@ -1,7 +1,8 @@
 """Choice mapping utilities"""
-from typing import Dict, List, Any, Optional
+
 from llm_quest_benchmark.schemas.response import LLMResponse
 from llm_quest_benchmark.utils.text_processor import clean_qm_text
+
 
 class ChoiceMapper:
     """Maps between sequential choice numbers and choice IDs"""
@@ -12,7 +13,7 @@ class ChoiceMapper:
             choices: List of choices with 'id' fields
         """
         self.choices = choices
-        self.mapping = {i+1: choice['id'] for i, choice in enumerate(choices)}
+        self.mapping = {i + 1: choice["id"] for i, choice in enumerate(choices)}
         self.reverse_mapping = {v: k for k, v in self.mapping.items()}
 
     def get_choice_number(self, choice_id: str) -> int:
@@ -31,7 +32,7 @@ class ChoiceMapper:
         """Check if choice number is valid"""
         return choice_number in self.mapping
 
-    def get_numbered_choices(self) -> List[Dict[str, str]]:
+    def get_numbered_choices(self) -> list[dict[str, str]]:
         """Get choices with sequential numbers and cleaned text.
 
         Returns:
@@ -39,14 +40,13 @@ class ChoiceMapper:
         """
         formatted_choices = []
         for i, choice in enumerate(self.choices, 1):
-            formatted_choices.append({
-                'id': str(i),
-                'text': clean_qm_text(choice['text']) if choice.get('text') else choice.get('text', '')
-            })
+            formatted_choices.append(
+                {"id": str(i), "text": clean_qm_text(choice["text"]) if choice.get("text") else choice.get("text", "")}
+            )
         return formatted_choices
 
     @staticmethod
-    def format_agent_response(response: LLMResponse, choices: List[Dict[str, str]]) -> LLMResponse:
+    def format_agent_response(response: LLMResponse, choices: list[dict[str, str]]) -> LLMResponse:
         """Format agent response to ensure action is valid for given choices.
 
         Args:
@@ -59,10 +59,7 @@ class ChoiceMapper:
         # For single choice, always use action 1
         if len(choices) == 1:
             return LLMResponse(
-                action=1,
-                analysis=response.analysis,
-                reasoning=response.reasoning,
-                is_default=response.is_default
+                action=1, analysis=response.analysis, reasoning=response.reasoning, is_default=response.is_default
             )
 
         # Validate action is in range
@@ -71,13 +68,13 @@ class ChoiceMapper:
                 action=1,  # Default to first choice
                 analysis=response.analysis,
                 reasoning=response.reasoning,
-                is_default=True  # Mark as default since action was invalid
+                is_default=True,  # Mark as default since action was invalid
             )
 
         return response
 
     @staticmethod
-    def format_choices_for_display(choices: List[Dict[str, str]]) -> List[str]:
+    def format_choices_for_display(choices: list[dict[str, str]]) -> list[str]:
         """Format choices for display with cleaned text.
 
         Args:
@@ -86,4 +83,4 @@ class ChoiceMapper:
         Returns:
             List of formatted choice strings with cleaned text
         """
-        return [f"{i+1}. {clean_qm_text(choice['text'])}" for i, choice in enumerate(choices)]
+        return [f"{i + 1}. {clean_qm_text(choice['text'])}" for i, choice in enumerate(choices)]

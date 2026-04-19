@@ -1,4 +1,5 @@
 """Tests for provider-aware LLM client selection."""
+
 import subprocess
 from unittest.mock import Mock, patch
 
@@ -236,11 +237,16 @@ def test_claude_exec_uses_print_mode_and_system_prompt(monkeypatch):
 
     def fake_run_claude(self, prompt):
         command = [
-            self._command_path(), "-p",
-            "--output-format", "text",
-            "--max-turns", "1",
-            "--permission-mode", "default",
-            "--tools", "",
+            self._command_path(),
+            "-p",
+            "--output-format",
+            "text",
+            "--max-turns",
+            "1",
+            "--permission-mode",
+            "default",
+            "--tools",
+            "",
             "--no-session-persistence",
         ]
         model = self._configured_model()

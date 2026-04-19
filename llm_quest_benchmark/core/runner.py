@@ -1,44 +1,43 @@
 """Quest runner implementation with improved logging and error handling"""
-from copy import deepcopy
+
 import json
 import logging
 import sqlite3
 import threading
-import warnings
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
-from datetime import datetime
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeoutError
+from copy import deepcopy
+from typing import Any
 
 from llm_quest_benchmark.agents.base import QuestPlayer
-from llm_quest_benchmark.agents.llm_agent import LLMAgent
 from llm_quest_benchmark.constants import DEFAULT_QUEST_TIMEOUT
 from llm_quest_benchmark.core.logging import LogManager, QuestLogger
-from llm_quest_benchmark.core.time import CommandTimeout, run_with_timeout
 from llm_quest_benchmark.environments.qm import QMPlayerEnv as QuestEnvironment
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.schemas.config import AgentConfig
 from llm_quest_benchmark.schemas.state import AgentState
 
 # Configure logging
-logging.getLogger('quest').setLevel(logging.WARNING)
-logging.getLogger('LLMAgent').setLevel(logging.WARNING)
+logging.getLogger("quest").setLevel(logging.WARNING)
+logging.getLogger("LLMAgent").setLevel(logging.WARNING)
 
 
 def run_quest_with_timeout(
-        quest_path: str,
-        agent: QuestPlayer,
-        timeout: int = DEFAULT_QUEST_TIMEOUT,
-        agent_config: Optional[AgentConfig] = None,
-        debug: bool = False,
-        callbacks: List[Callable[[str, Any], None]] = None) -> Optional[QuestOutcome]:
+    quest_path: str,
+    agent: QuestPlayer,
+    timeout: int = DEFAULT_QUEST_TIMEOUT,
+    agent_config: AgentConfig | None = None,
+    debug: bool = False,
+    callbacks: list[Callable[[str, Any], None]] = None,
+) -> QuestOutcome | None:
     """Run quest with timeout."""
-    logger: Optional[QuestLogger] = None
-    executor: Optional[ThreadPoolExecutor] = None
+    logger: QuestLogger | None = None
+    executor: ThreadPoolExecutor | None = None
     benchmark_id = getattr(agent_config, "benchmark_id", None) if agent_config else None
     try:
         # Get agent_id from agent itself if available, or from config
-        agent_id = getattr(agent, 'agent_id', None)
+        agent_id = getattr(agent, "agent_id", None)
         if agent_id is None and agent_config:
             agent_id = agent_config.agent_id
 
@@ -47,12 +46,10 @@ def run_quest_with_timeout(
         logger.set_quest_file(quest_path)
 
         # Create quest environment and runner
-        env = QuestEnvironment(quest_path)
-        runner = QuestRunner(agent=agent,
-                             debug=debug,
-                             callbacks=callbacks or [],
-                             quest_logger=logger,
-                             agent_config=agent_config)
+        QuestEnvironment(quest_path)  # validates quest path
+        runner = QuestRunner(
+            agent=agent, debug=debug, callbacks=callbacks or [], quest_logger=logger, agent_config=agent_config
+        )
 
         # Run quest with timeout
         executor = ThreadPoolExecutor(max_workers=1)
@@ -73,24 +70,27 @@ def run_quest_with_timeout(
                     if benchmark_id:
                         # Include benchmark_id in the update if available
                         logger._local.cursor.execute(
-                            '''
+                            """
                             UPDATE runs
                             SET agent_id = ?, agent_config = ?, benchmark_id = ?
                             WHERE id = ?
-                        ''', (agent_id, agent_config_json, benchmark_id, logger.current_run_id))
+                        """,
+                            (agent_id, agent_config_json, benchmark_id, logger.current_run_id),
+                        )
                         logger.logger.info(f"Updated run {logger.current_run_id} with benchmark_id {benchmark_id}")
                     else:
                         logger._local.cursor.execute(
-                            '''
+                            """
                             UPDATE runs
                             SET agent_id = ?, agent_config = ?
                             WHERE id = ?
-                        ''', (agent_id, agent_config_json, logger.current_run_id))
+                        """,
+                            (agent_id, agent_config_json, logger.current_run_id),
+                        )
                     logger._local.conn.commit()
                 except sqlite3.OperationalError as e:
                     if "no such column: agent_id" in str(e):
-                        logger.logger.warning(
-                            "agent_id column not found in database, skipping update")
+                        logger.logger.warning("agent_id column not found in database, skipping update")
                     else:
                         raise
 
@@ -113,8 +113,7 @@ def run_quest_with_timeout(
             if callbacks:
                 for callback in callbacks:
                     try:
-                        callback("timeout",
-                                 {"message": f"Quest timed out after {timeout} seconds"})
+                        callback("timeout", {"message": f"Quest timed out after {timeout} seconds"})
                     except Exception as e:
                         logger.logger.error(f"Error in timeout callback: {e}")
 
@@ -134,12 +133,14 @@ def run_quest_with_timeout(
 class QuestRunner:
     """Manages quest execution with logging and metrics"""
 
-    def __init__(self,
-                 agent: QuestPlayer,
-                 debug: bool = False,
-                 callbacks: List[Callable[[str, Any], None]] = None,
-                 quest_logger: QuestLogger = None,
-                 agent_config = None):
+    def __init__(
+        self,
+        agent: QuestPlayer,
+        debug: bool = False,
+        callbacks: list[Callable[[str, Any], None]] = None,
+        quest_logger: QuestLogger = None,
+        agent_config=None,
+    ):
         """Initialize components needed for quest execution"""
         self.agent = agent
         self.debug = debug
@@ -168,7 +169,7 @@ class QuestRunner:
         self._stop_reason = reason
         self._stop_requested.set()
 
-    def snapshot_state(self) -> Optional[Dict[str, Any]]:
+    def snapshot_state(self) -> dict[str, Any] | None:
         """Best-effort snapshot of current environment state."""
         if not self.env:
             return None
@@ -220,20 +221,18 @@ class QuestRunner:
                     return QuestOutcome.TIMEOUT
 
                 self.step_count += 1
-                self._notify_callbacks("progress", {
-                    "step": self.step_count,
-                    "message": f"Processing step {self.step_count}..."
-                })
+                self._notify_callbacks(
+                    "progress", {"step": self.step_count, "message": f"Processing step {self.step_count}..."}
+                )
 
                 # Check if there are any choices available
-                if not self.env.state['choices']:
+                if not self.env.state["choices"]:
                     if self.env and self.env.state:
                         self.agent.on_game_end(self.env.state)
 
                     # Log quest outcome
                     outcome = QuestOutcome.FAILURE
-                    reward = self.env.state.get('reward',
-                                                0.0) if self.env and self.env.state else 0.0
+                    reward = self.env.state.get("reward", 0.0) if self.env and self.env.state else 0.0
                     if self.quest_logger:
                         self.quest_logger.set_quest_outcome(
                             outcome.name,
@@ -243,9 +242,9 @@ class QuestRunner:
 
                     return outcome
 
-                current_location_id = self.env.state['location_id']
+                current_location_id = self.env.state["location_id"]
                 current_observation = observation
-                current_choices = deepcopy(self.env.state['choices'])
+                current_choices = deepcopy(self.env.state["choices"])
 
                 # Get agent's action and take step
                 action = self.agent.get_action(current_observation, current_choices)
@@ -254,15 +253,14 @@ class QuestRunner:
                     self.logger.debug(f"Agent selected action: {action}")
                     choices_debug = []
                     for i, c in enumerate(current_choices):
-                        choices_debug.append(f"{i+1}: {c['text']}")
+                        choices_debug.append(f"{i + 1}: {c['text']}")
                     self.logger.debug(f"Available choices: {choices_debug}")
 
                 # Validate action is within range (extra safety check)
                 num_choices = len(current_choices)
                 if action < 1 or action > num_choices:
-                    self.logger.error(
-                        f"RUNNER ERROR - Action {action} out of range 1-{num_choices}")
-                    self.logger.error(f"Defaulting to action 1")
+                    self.logger.error(f"RUNNER ERROR - Action {action} out of range 1-{num_choices}")
+                    self.logger.error("Defaulting to action 1")
                     action = 1
 
                 if self._stop_requested.is_set():
@@ -293,14 +291,17 @@ class QuestRunner:
 
                         # Log quest outcome
                         outcome = QuestOutcome.SUCCESS if success else QuestOutcome.FAILURE
-                        reward = self.env.state.get('reward',
-                                                    0.0) if self.env and self.env.state else 0.0
+                        reward = self.env.state.get("reward", 0.0) if self.env and self.env.state else 0.0
                         if self.quest_logger:
                             # Get benchmark_id from the agent_config parameter if available
                             benchmark_id = None
-                            if hasattr(self, 'agent_config') and self.agent_config and hasattr(self.agent_config, 'benchmark_id'):
+                            if (
+                                hasattr(self, "agent_config")
+                                and self.agent_config
+                                and hasattr(self.agent_config, "benchmark_id")
+                            ):
                                 benchmark_id = self.agent_config.benchmark_id
-                            
+
                             self.quest_logger.set_quest_outcome(
                                 outcome.name,
                                 reward,
@@ -321,9 +322,13 @@ class QuestRunner:
                     if self.quest_logger:
                         # Get benchmark_id from the agent_config parameter if available
                         benchmark_id = None
-                        if hasattr(self, 'agent_config') and self.agent_config and hasattr(self.agent_config, 'benchmark_id'):
+                        if (
+                            hasattr(self, "agent_config")
+                            and self.agent_config
+                            and hasattr(self.agent_config, "benchmark_id")
+                        ):
                             benchmark_id = self.agent_config.benchmark_id
-                        
+
                         self.quest_logger.set_quest_outcome(
                             QuestOutcome.ERROR.name,
                             0.0,
@@ -346,9 +351,9 @@ class QuestRunner:
             if self.quest_logger:
                 # Get benchmark_id from the agent_config parameter if available
                 benchmark_id = None
-                if hasattr(self, 'agent_config') and self.agent_config and hasattr(self.agent_config, 'benchmark_id'):
+                if hasattr(self, "agent_config") and self.agent_config and hasattr(self.agent_config, "benchmark_id"):
                     benchmark_id = self.agent_config.benchmark_id
-                
+
                 self.quest_logger.set_quest_outcome(
                     QuestOutcome.ERROR.name,
                     0.0,

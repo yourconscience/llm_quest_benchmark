@@ -1,21 +1,22 @@
 """Agent dataclasses for LLM interactions"""
-from dataclasses import dataclass, asdict
-from typing import Optional
+
+from dataclasses import asdict, dataclass
 
 
 @dataclass
 class LLMResponse:
     """Structured response from any agent (LLM or not)"""
+
     action: int  # The chosen action number (1-based)
-    analysis: Optional[str] = None  # Optional analysis of the choice
-    reasoning: Optional[str] = None  # Optional explanation for the choice
-    subgoal: Optional[str] = None  # Optional short-term objective for next turns
+    analysis: str | None = None  # Optional analysis of the choice
+    reasoning: str | None = None  # Optional explanation for the choice
+    subgoal: str | None = None  # Optional short-term objective for next turns
     is_default: bool = False  # Whether this is a default value due to parsing error
-    parse_mode: Optional[str] = None  # How the output was parsed (json/number/default/etc)
-    prompt_tokens: Optional[int] = None
-    completion_tokens: Optional[int] = None
-    total_tokens: Optional[int] = None
-    estimated_cost_usd: Optional[float] = None
+    parse_mode: str | None = None  # How the output was parsed (json/number/default/etc)
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
+    estimated_cost_usd: float | None = None
 
     def to_choice_string(self) -> str:
         """Convert to choice string (1-based action number)"""

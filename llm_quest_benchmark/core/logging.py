@@ -1,30 +1,29 @@
 """Unified logging module for LLM Quest Benchmark"""
+
 import json
 import logging
-import sqlite3
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, Any, Optional, List, Tuple
 import os
+import sqlite3
 import threading
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
-from rich.logging import RichHandler
 from llm_quest_benchmark.schemas import AgentState
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 # Constants
 DEFAULT_DB_PATH = "metrics.db"
 RESULTS_DIR = Path("results")
 
+
 class LogManager:
     """Manages logging configuration"""
+
     def __init__(self):
-        self.logger = logging.getLogger('llm_quest')
+        self.logger = logging.getLogger("llm_quest")
 
     def setup(self, debug: bool = False):
         """Setup logging configuration"""
@@ -32,8 +31,8 @@ class LogManager:
         self.logger.setLevel(level)
 
         # Configure other loggers
-        logging.getLogger('httpx').setLevel(logging.WARNING)
-        logging.getLogger('httpcore').setLevel(logging.WARNING)
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger("httpcore").setLevel(logging.WARNING)
 
     def get_logger(self):
         """Get the logger"""
@@ -44,41 +43,45 @@ class QuestLogger:
     """Logs quest runs to SQLite database and exports to JSON when complete"""
 
     DEFAULT_REPETITION_WINDOW = 5
-    
+
     @staticmethod
     def _safe_json_load(json_str, default=None):
         """Safely load JSON with error handling and repair attempts"""
         if not json_str:
             return default
-            
+
         try:
             return json.loads(json_str)
         except json.JSONDecodeError:
             # Try to repair damaged JSON
             try:
                 from json_repair import repair_json
+
                 repaired = repair_json(json_str)
                 return json.loads(repaired)
             except ImportError:
                 # Log warning about missing json-repair
                 import logging
-                logging.getLogger('quest_logger').warning("json-repair module not available - some JSON may not parse correctly")
-                
+
+                logging.getLogger("quest_logger").warning(
+                    "json-repair module not available - some JSON may not parse correctly"
+                )
+
                 # Manual repair attempt
                 try:
                     # If it starts with a string that looks like a dict
-                    if json_str.strip().startswith('{'):
+                    if json_str.strip().startswith("{"):
                         # Extract everything between the first { and the last }
-                        clean_str = json_str[json_str.find('{'):json_str.rfind('}')+1]
+                        clean_str = json_str[json_str.find("{") : json_str.rfind("}") + 1]
                         return json.loads(clean_str)
-                except:
+                except Exception:
                     pass
-            
+
             # Return default if all repair attempts failed
             return default
 
     @staticmethod
-    def _safe_int(value) -> Optional[int]:
+    def _safe_int(value) -> int | None:
         """Best-effort conversion to int."""
         try:
             if value is None:
@@ -88,14 +91,12 @@ class QuestLogger:
             return None
 
     @staticmethod
-    def _choices_map(choices: List[Dict[str, Any]]) -> Dict[str, str]:
+    def _choices_map(choices: list[dict[str, Any]]) -> dict[str, str]:
         """Map quest choices to a compact indexed text dictionary."""
         return {str(idx): choice.get("text", "") for idx, choice in enumerate(choices, start=1)}
 
     @staticmethod
-    def _selected_choice_map(
-        choices_map: Dict[str, str], action_index: Optional[int]
-    ) -> Optional[Dict[str, str]]:
+    def _selected_choice_map(choices_map: dict[str, str], action_index: int | None) -> dict[str, str] | None:
         """Return selected choice as {index: text} if action is valid."""
         if action_index is None:
             return None
@@ -106,11 +107,11 @@ class QuestLogger:
 
     def _calculate_run_metrics(
         self,
-        step_rows: List[Tuple[Any, ...]],
-        outcome: Optional[str],
-    ) -> Dict[str, Any]:
+        step_rows: list[tuple[Any, ...]],
+        outcome: str | None,
+    ) -> dict[str, Any]:
         """Compute simple run-level behavior metrics from raw step rows."""
-        recent_actions: List[int] = []
+        recent_actions: list[int] = []
         repetition_count = 0
         window = self._repetition_window
 
@@ -140,10 +141,10 @@ class QuestLogger:
         step_num: int,
         location_id: str,
         observation: str,
-        choices: List[Dict[str, Any]],
+        choices: list[dict[str, Any]],
         action: Any,
-        llm_response: Optional[Dict[str, Any]],
-    ) -> Dict[str, Any]:
+        llm_response: dict[str, Any] | None,
+    ) -> dict[str, Any]:
         """Format an exported step in compact analysis-friendly form."""
         del location_id  # Not needed in exported run summaries.
         choices_map = self._choices_map(choices)
@@ -160,10 +161,7 @@ class QuestLogger:
 
         if isinstance(llm_response, dict):
             parsed_action_index = self._safe_int(
-                llm_response.get("action")
-                or llm_response.get("result")
-                or llm_response.get("choice")
-                or action
+                llm_response.get("action") or llm_response.get("result") or llm_response.get("choice") or action
             )
             analysis = llm_response.get("analysis")
             reasoning = llm_response.get("reasoning")
@@ -172,10 +170,7 @@ class QuestLogger:
             parse_mode = llm_response.get("parse_mode")
             prompt_tokens = int(llm_response.get("prompt_tokens") or 0)
             completion_tokens = int(llm_response.get("completion_tokens") or 0)
-            total_tokens = int(
-                llm_response.get("total_tokens")
-                or (prompt_tokens + completion_tokens)
-            )
+            total_tokens = int(llm_response.get("total_tokens") or (prompt_tokens + completion_tokens))
             if llm_response.get("estimated_cost_usd") is not None:
                 estimated_cost_usd = float(llm_response.get("estimated_cost_usd"))
 
@@ -198,12 +193,13 @@ class QuestLogger:
             "choices": choices_map,
             "llm_decision": llm_decision,
         }
+
     # Thread-local storage for database connections
     _local = threading.local()
     # Track all instances for cleanup
     _instances = []
 
-    def __init__(self, db_path: str = DEFAULT_DB_PATH, debug: bool = False, agent: Optional[str] = None):
+    def __init__(self, db_path: str = DEFAULT_DB_PATH, debug: bool = False, agent: str | None = None):
         """Initialize the quest logger.
 
         Args:
@@ -225,32 +221,33 @@ class QuestLogger:
         self._finalized = False
 
         # Setup logger
-        self.logger = logging.getLogger('quest_logger')
+        self.logger = logging.getLogger("quest_logger")
         self.logger.setLevel(logging.DEBUG if debug else logging.INFO)
 
         # Initialize connection for this thread
         self._init_connection()
-        
+
         # Add this instance to the list of all instances
         QuestLogger._instances.append(self)
-        
+
         # Setup exit handler if this is the first instance
         if len(QuestLogger._instances) == 1:
             import atexit
             import signal
+
             is_pytest = bool(os.getenv("PYTEST_CURRENT_TEST"))
-            
+
             # Define shutdown handler
             def _shutdown_handler(signal=None, frame=None):
                 self.logger.info("Shutting down gracefully - closing database connections")
                 for instance in QuestLogger._instances:
                     instance.close()
                 QuestLogger._instances.clear()
-            
+
             if not is_pytest:
                 # Register shutdown handlers
                 atexit.register(_shutdown_handler)
-                
+
                 # Only register signal handlers in the main thread
                 if threading.current_thread() is threading.main_thread():
                     try:
@@ -263,7 +260,7 @@ class QuestLogger:
     def _init_connection(self):
         """Initialize a thread-local database connection"""
         # Create a new connection for this thread if it doesn't exist
-        if not hasattr(self._local, 'conn') or self._local.conn is None:
+        if not hasattr(self._local, "conn") or self._local.conn is None:
             # Reducing debug logging
             pass  # Skip thread connection logging
             self._local.conn = sqlite3.connect(self.db_path)
@@ -277,24 +274,24 @@ class QuestLogger:
         # Check if the runs table already exists
         self._local.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='runs'")
         table_exists = self._local.cursor.fetchone() is not None
-        
+
         if table_exists:
             # Check if we need to add columns to existing table
             self._local.cursor.execute("PRAGMA table_info(runs)")
             columns = [column[1] for column in self._local.cursor.fetchall()]
-            
+
             # Add missing columns
-            if 'outcome' not in columns:
+            if "outcome" not in columns:
                 self._local.cursor.execute("ALTER TABLE runs ADD COLUMN outcome TEXT")
-            if 'reward' not in columns:
+            if "reward" not in columns:
                 self._local.cursor.execute("ALTER TABLE runs ADD COLUMN reward REAL")
-            if 'run_duration' not in columns:
+            if "run_duration" not in columns:
                 self._local.cursor.execute("ALTER TABLE runs ADD COLUMN run_duration REAL")
-            if 'benchmark_id' not in columns:
+            if "benchmark_id" not in columns:
                 self._local.cursor.execute("ALTER TABLE runs ADD COLUMN benchmark_id TEXT")
         else:
             # Create the runs table if it doesn't exist
-            self._local.cursor.execute('''
+            self._local.cursor.execute("""
                 CREATE TABLE IF NOT EXISTS runs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     quest_file TEXT,
@@ -308,10 +305,10 @@ class QuestLogger:
                     run_duration REAL,
                     benchmark_id TEXT
                 )
-            ''')
+            """)
 
         # Create steps table
-        self._local.cursor.execute('''
+        self._local.cursor.execute("""
             CREATE TABLE IF NOT EXISTS steps (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 run_id INTEGER,
@@ -323,7 +320,7 @@ class QuestLogger:
                 llm_response TEXT,
                 FOREIGN KEY (run_id) REFERENCES runs (id)
             )
-        ''')
+        """)
 
         self._local.conn.commit()
 
@@ -349,10 +346,13 @@ class QuestLogger:
             quest_name = Path(quest_file).stem
 
             # Create run record with both quest_file and quest_name
-            self._local.cursor.execute('''
+            self._local.cursor.execute(
+                """
                 INSERT INTO runs (quest_file, quest_name, start_time, agent_id)
                 VALUES (?, ?, ?, ?)
-            ''', (quest_file, quest_name, self.start_time, self.agent))
+            """,
+                (quest_file, quest_name, self.start_time, self.agent),
+            )
             self._local.conn.commit()
         except sqlite3.OperationalError as e:
             if "no such column: quest_file" in str(e):
@@ -362,10 +362,13 @@ class QuestLogger:
                 # Extract quest name from path (filename without extension)
                 quest_name = Path(quest_file).stem
 
-                self._local.cursor.execute('''
+                self._local.cursor.execute(
+                    """
                     INSERT INTO runs (quest_name, start_time, agent_id)
                     VALUES (?, ?, ?)
-                ''', (quest_name, self.start_time, self.agent))
+                """,
+                    (quest_name, self.start_time, self.agent),
+                )
                 self._local.conn.commit()
             else:
                 raise
@@ -402,18 +405,21 @@ class QuestLogger:
                         ensure_ascii=False,
                     )
 
-                self._local.cursor.execute('''
+                self._local.cursor.execute(
+                    """
                     INSERT INTO steps (run_id, step, location_id, observation, choices, action, llm_response)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    self.current_run_id,
-                    agent_state.step,
-                    agent_state.location_id,
-                    agent_state.observation,
-                    choices_json,
-                    agent_state.action,
-                    llm_response_json
-                ))
+                """,
+                    (
+                        self.current_run_id,
+                        agent_state.step,
+                        agent_state.location_id,
+                        agent_state.observation,
+                        choices_json,
+                        agent_state.action,
+                        llm_response_json,
+                    ),
+                )
                 self._local.conn.commit()
 
         except Exception as e:
@@ -424,7 +430,7 @@ class QuestLogger:
         outcome: str,
         reward: float = 0.0,
         benchmark_id: str = None,
-        final_state: Optional[Dict[str, Any]] = None,
+        final_state: dict[str, Any] | None = None,
     ):
         """Set the quest outcome and finalize the run.
 
@@ -456,17 +462,23 @@ class QuestLogger:
                 # Update the run record with outcome and end time
                 if benchmark_id:
                     self.logger.debug(f"Setting quest outcome with benchmark_id: {benchmark_id}")
-                    self._local.cursor.execute('''
+                    self._local.cursor.execute(
+                        """
                         UPDATE runs 
                         SET outcome = ?, end_time = ?, reward = ?, run_duration = ?, benchmark_id = ?
                         WHERE id = ?
-                    ''', (outcome, self.end_time, reward, run_duration, benchmark_id, self.current_run_id))
+                    """,
+                        (outcome, self.end_time, reward, run_duration, benchmark_id, self.current_run_id),
+                    )
                 else:
-                    self._local.cursor.execute('''
+                    self._local.cursor.execute(
+                        """
                         UPDATE runs 
                         SET outcome = ?, end_time = ?, reward = ?, run_duration = ?
                         WHERE id = ?
-                    ''', (outcome, self.end_time, reward, run_duration, self.current_run_id))
+                    """,
+                        (outcome, self.end_time, reward, run_duration, self.current_run_id),
+                    )
                 self._local.conn.commit()
 
                 # Export the run to JSON
@@ -500,10 +512,10 @@ class QuestLogger:
 
             # Fetch complete run data from database
             run_data = self._get_run_data()
-            
+
             # Save complete run summary
             run_summary_file = run_dir / "run_summary.json"
-            with open(run_summary_file, 'w', encoding='utf-8') as f:
+            with open(run_summary_file, "w", encoding="utf-8") as f:
                 json.dump(run_data, f, indent=2, ensure_ascii=False)
 
             self.logger.debug(f"Exported run data to {run_summary_file}")
@@ -511,37 +523,54 @@ class QuestLogger:
         except Exception as e:
             self.logger.error(f"Error exporting run to JSON: {e}")
 
-    def _get_run_data(self) -> Dict[str, Any]:
+    def _get_run_data(self) -> dict[str, Any]:
         """Get complete run data from the database for the current run.
-        
+
         Returns:
             Dict containing run and step data
         """
         # Ensure we have a connection for this thread
         self._init_connection()
-        
+
         # Get run data
-        self._local.cursor.execute('''
+        self._local.cursor.execute(
+            """
             SELECT quest_file, quest_name, start_time, end_time, agent_id, 
                    agent_config, outcome, reward, run_duration, benchmark_id
             FROM runs
             WHERE id = ?
-        ''', (self.current_run_id,))
-        
+        """,
+            (self.current_run_id,),
+        )
+
         run = self._local.cursor.fetchone()
         if not run:
             return {"error": f"Run with ID {self.current_run_id} not found"}
-            
-        quest_file, quest_name, start_time, end_time, agent_id, agent_config, outcome, reward, run_duration, benchmark_id = run
-        
+
+        (
+            quest_file,
+            quest_name,
+            start_time,
+            end_time,
+            agent_id,
+            agent_config,
+            outcome,
+            reward,
+            run_duration,
+            benchmark_id,
+        ) = run
+
         # Get steps for this run
-        self._local.cursor.execute('''
+        self._local.cursor.execute(
+            """
             SELECT step, location_id, observation, choices, action, llm_response
             FROM steps
             WHERE run_id = ?
             ORDER BY step
-        ''', (self.current_run_id,))
-        
+        """,
+            (self.current_run_id,),
+        )
+
         step_rows = self._local.cursor.fetchall()
         steps = []
         usage_prompt_tokens = 0
@@ -556,10 +585,7 @@ class QuestLogger:
             if isinstance(parsed_response, dict):
                 prompt_tokens = int(parsed_response.get("prompt_tokens") or 0)
                 completion_tokens = int(parsed_response.get("completion_tokens") or 0)
-                total_tokens = int(
-                    parsed_response.get("total_tokens")
-                    or (prompt_tokens + completion_tokens)
-                )
+                total_tokens = int(parsed_response.get("total_tokens") or (prompt_tokens + completion_tokens))
                 usage_prompt_tokens += prompt_tokens
                 usage_completion_tokens += completion_tokens
                 usage_total_tokens += total_tokens
@@ -578,7 +604,7 @@ class QuestLogger:
             )
 
         metrics = self._calculate_run_metrics(step_rows, outcome)
-        
+
         return {
             "run_id": self.current_run_id,
             "quest_file": quest_file,
@@ -596,13 +622,11 @@ class QuestLogger:
                 "prompt_tokens": usage_prompt_tokens,
                 "completion_tokens": usage_completion_tokens,
                 "total_tokens": usage_total_tokens,
-                "estimated_cost_usd": (
-                    round(usage_estimated_cost, 8) if usage_priced_steps > 0 else None
-                ),
+                "estimated_cost_usd": (round(usage_estimated_cost, 8) if usage_priced_steps > 0 else None),
                 "priced_steps": usage_priced_steps,
             },
             "metrics": metrics,
-            "steps": steps
+            "steps": steps,
         }
 
     def format_step_for_console(self, agent_state: AgentState) -> str:
@@ -614,12 +638,12 @@ class QuestLogger:
         Returns:
             Formatted step string
         """
-        choices_str = "\n".join([f"{i+1}. {choice['text']}" for i, choice in enumerate(agent_state.choices)])
+        choices_str = "\n".join([f"{i + 1}. {choice['text']}" for i, choice in enumerate(agent_state.choices)])
         return f"Step {agent_state.step}:\nObservation: {agent_state.observation}\nChoices:\n{choices_str}\nAction: {agent_state.action}"
 
     def close(self):
         """Close the database connection for this thread"""
-        if hasattr(self._local, 'conn') and self._local.conn:
+        if hasattr(self._local, "conn") and self._local.conn:
             self._local.conn.close()
             self._local.conn = None
             self._local.cursor = None

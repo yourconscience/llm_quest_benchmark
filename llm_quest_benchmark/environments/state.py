@@ -1,9 +1,11 @@
 """State definitions for quest environments"""
+
 from enum import Enum
 
 
 class QuestOutcome(Enum):
     """Possible quest outcomes"""
+
     SUCCESS = 1
     FAILURE = 0
     ERROR = -1

@@ -1,7 +1,7 @@
 """Base interface for all renderers"""
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List
+
 import time
+from abc import ABC, abstractmethod
 
 from llm_quest_benchmark.schemas.state import AgentState
 
@@ -38,7 +38,7 @@ class BaseRenderer(ABC):
         """
         pass
 
-    def render_choices(self, choices: List[Dict[str, str]]) -> None:
+    def render_choices(self, choices: list[dict[str, str]]) -> None:
         """Optional: Render available choices
 
         Args:

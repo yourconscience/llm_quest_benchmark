@@ -2,11 +2,11 @@
 
 from .logging import QuestLogger
 from .runner import QuestRunner
-from .time import timeout, run_with_timeout
+from .time import run_with_timeout, timeout
 
 __all__ = [
-    'QuestRunner',
-    'QuestLogger',
-    'timeout',
-    'run_with_timeout',
+    "QuestRunner",
+    "QuestLogger",
+    "timeout",
+    "run_with_timeout",
 ]

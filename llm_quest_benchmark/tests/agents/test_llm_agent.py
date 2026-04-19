@@ -1,6 +1,8 @@
 """Tests for LLM agent"""
-import pytest
+
 from unittest.mock import Mock, patch
+
+import pytest
 
 from llm_quest_benchmark.agents.llm_agent import LLMAgent, parse_llm_response
 from llm_quest_benchmark.schemas.response import LLMResponse
@@ -13,14 +15,11 @@ def example_observation():
 
 @pytest.fixture
 def example_choices():
-    return [
-        {"id": "1", "text": "Talk to merchant"},
-        {"id": "2", "text": "Leave station"}
-    ]
+    return [{"id": "1", "text": "Talk to merchant"}, {"id": "2", "text": "Leave station"}]
 
 
 @pytest.mark.timeout(5)  # Quick unit test
-@patch('llm_quest_benchmark.llm.client.OpenAI')
+@patch("llm_quest_benchmark.llm.client.OpenAI")
 def test_agent_basic_flow(mock_openai, monkeypatch):
     """Test basic agent functionality with mocked LLM"""
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
@@ -40,10 +39,7 @@ def test_agent_basic_flow(mock_openai, monkeypatch):
 
     # Test data
     observation = "You are at a trading station."
-    choices = [
-        {"id": "1", "text": "Talk to merchant"},
-        {"id": "2", "text": "Leave station"}
-    ]
+    choices = [{"id": "1", "text": "Talk to merchant"}, {"id": "2", "text": "Leave station"}]
 
     # Create agent and test
     agent = LLMAgent(model_name="gpt-5-mini")

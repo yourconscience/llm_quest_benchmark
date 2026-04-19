@@ -1,34 +1,35 @@
 """Test the new quest registry system"""
+
 import logging
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, 
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Add the project root to Python path to ensure imports work
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from llm_quest_benchmark.core.quest_registry import get_registry, resolve_quest_paths, validate_quest_path
+from llm_quest_benchmark.core.quest_registry import get_registry, validate_quest_path
+
 
 def test_registry():
     """Test the registry functionality"""
     # Initialize registry
     logger.info("Initializing quest registry...")
     registry = get_registry(reset_cache=True)
-    
+
     # Get all quests
     all_quests = registry.get_all_quests()
     logger.info(f"Found {len(all_quests)} quest files")
     logger.info(f"First few quests: {all_quests[:3]}")
-    
+
     # Get unique quests
     unique_quests = registry.get_unique_quests()
     logger.info(f"Found {len(unique_quests)} unique quest files")
-    
+
     # Check duplicates
     duplicates = [q for q in all_quests if q.is_duplicate]
     logger.info(f"Found {len(duplicates)} duplicate quest files")
@@ -44,7 +45,7 @@ def test_registry():
         "quests/*.qm",
         "nonexistent_dir",
     ]
-    
+
     logger.info("\nTesting path resolution:")
     for path in test_paths:
         try:
@@ -54,10 +55,11 @@ def test_registry():
                 logger.info(f"  First resolved: {resolved[0]}")
         except Exception as e:
             logger.error(f"Path: {path} -> Error: {e}")
-    
+
     logger.info("\nTesting path validation:")
     for path in test_paths:
         logger.info("Path: %s -> %s", path, validate_quest_path(path))
+
 
 if __name__ == "__main__":
     test_registry()

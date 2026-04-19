@@ -1,7 +1,5 @@
 """LLM client interface for different model providers"""
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional, Tuple
+
 import logging
 import os
 import re
@@ -11,16 +9,20 @@ import shutil
 import subprocess
 import tempfile
 import time
+from abc import ABC, abstractmethod
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import anthropic
 from dotenv import load_dotenv
-
 from openai import OpenAI
+
 from llm_quest_benchmark.constants import (
+    DEFAULT_TEMPERATURE,
     MODEL_ALIASES,
     MODEL_PROVIDER_CONFIG,
-    DEFAULT_TEMPERATURE,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,9 +48,9 @@ class UsageStats:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
-    estimated_cost_usd: Optional[float] = None
+    estimated_cost_usd: float | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "prompt_tokens": self.prompt_tokens,
             "completion_tokens": self.completion_tokens,
@@ -97,7 +99,7 @@ def _sanitize_env_key_fragment(raw: str) -> str:
     return "".join(ch if ch.isalnum() else "_" for ch in raw.upper()).strip("_")
 
 
-def _resolve_token_pricing(provider: str, model_id: str) -> Optional[Tuple[float, float]]:
+def _resolve_token_pricing(provider: str, model_id: str) -> tuple[float, float] | None:
     provider_key = _sanitize_env_key_fragment(provider)
     model_key = _sanitize_env_key_fragment(model_id)
 
@@ -122,7 +124,7 @@ def _estimate_cost_usd(
     model_id: str,
     prompt_tokens: int,
     completion_tokens: int,
-) -> Optional[float]:
+) -> float | None:
     pricing = _resolve_token_pricing(provider, model_id)
     if pricing is None:
         return None
@@ -143,9 +145,7 @@ def parse_model_name(model_name: str) -> ModelSpec:
         provider, model_id = "google", normalized
     elif normalized.startswith("deepseek"):
         provider, model_id = "deepseek", normalized
-    elif normalized.startswith("o"):
-        provider, model_id = "openai", normalized
-    elif normalized.startswith("gpt"):
+    elif normalized.startswith("o") or normalized.startswith("gpt"):
         provider, model_id = "openai", normalized
     else:
         raise NotImplementedError(f"Model {model_name} is not supported")
@@ -203,7 +203,7 @@ class LLMClient(ABC):
 
     def _with_retries(self, fn: Callable[[], str]) -> str:
         """Run an LLM request function with bounded retries and backoff."""
-        last_error: Optional[Exception] = None
+        last_error: Exception | None = None
         for attempt in range(self.max_retries + 1):
             try:
                 return fn()
@@ -220,9 +220,7 @@ class LLMClient(ABC):
                     sleep_time,
                 )
                 time.sleep(sleep_time)
-        raise RuntimeError(
-            f"LLM request failed after {self.max_retries + 1} attempts: {last_error}"
-        ) from last_error
+        raise RuntimeError(f"LLM request failed after {self.max_retries + 1} attempts: {last_error}") from last_error
 
     def __call__(self, prompt: str) -> str:
         """Get a completion from the model."""
@@ -258,16 +256,14 @@ class LLMClient(ABC):
             self._total_estimated_cost_usd += float(estimated_cost_usd)
             self._priced_calls += 1
 
-    def get_last_usage(self) -> Dict[str, Any]:
+    def get_last_usage(self) -> dict[str, Any]:
         """Get usage from the most recent completion call."""
         return self._last_usage.to_dict()
 
-    def get_total_usage(self) -> Dict[str, Any]:
+    def get_total_usage(self) -> dict[str, Any]:
         """Get accumulated usage for all completion calls."""
         total_tokens = self._total_prompt_tokens + self._total_completion_tokens
-        estimated_cost = (
-            self._total_estimated_cost_usd if self._priced_calls > 0 else None
-        )
+        estimated_cost = self._total_estimated_cost_usd if self._priced_calls > 0 else None
         return {
             "prompt_tokens": self._total_prompt_tokens,
             "completion_tokens": self._total_completion_tokens,
@@ -297,7 +293,7 @@ class OpenAICompatibleClient(LLMClient):
         )
         self.provider = provider
         self.max_tokens = max_tokens
-        self._client: Optional[OpenAI] = None
+        self._client: OpenAI | None = None
         self._temperature_warning_emitted = False
 
     def _require_api_key(self, env_var: str) -> str:
@@ -305,11 +301,10 @@ class OpenAICompatibleClient(LLMClient):
         if value:
             return value
         raise RuntimeError(
-            f"Missing API key for provider '{self.provider}'. "
-            f"Set {env_var} in your environment or .env file."
+            f"Missing API key for provider '{self.provider}'. Set {env_var} in your environment or .env file."
         )
 
-    def _provider_settings(self) -> Tuple[Optional[str], Optional[str]]:
+    def _provider_settings(self) -> tuple[str | None, str | None]:
         if self.provider == "openai":
             return self._require_api_key("OPENAI_API_KEY"), None
         if self.provider == "google":
@@ -364,7 +359,7 @@ class OpenAICompatibleClient(LLMClient):
         return str(content).strip()
 
     @staticmethod
-    def _extract_usage(response: Any) -> Tuple[int, int]:
+    def _extract_usage(response: Any) -> tuple[int, int]:
         usage = _get_attr_or_key(response, "usage")
         prompt_tokens = _get_attr_or_key(usage, "prompt_tokens", 0)
         completion_tokens = _get_attr_or_key(usage, "completion_tokens", 0)
@@ -402,12 +397,11 @@ class OpenAICompatibleClient(LLMClient):
         return kwargs
 
     def _is_openai_gpt5_or_o(self) -> bool:
-        return self.provider == "openai" and (
-            self.model_id.startswith("gpt-5") or self.model_id.startswith("o")
-        )
+        return self.provider == "openai" and (self.model_id.startswith("gpt-5") or self.model_id.startswith("o"))
 
     def get_completion(self, prompt: str) -> str:
         """Get a completion from the model."""
+
         def _call() -> str:
             prompt_tokens_total = 0
             completion_tokens_total = 0
@@ -461,7 +455,7 @@ class AnthropicClient(LLMClient):
             temperature=temperature,
             request_timeout=request_timeout,
         )
-        self._client: Optional[anthropic.Anthropic] = None
+        self._client: anthropic.Anthropic | None = None
 
     def _get_client(self) -> anthropic.Anthropic:
         if self._client is None:
@@ -470,6 +464,7 @@ class AnthropicClient(LLMClient):
 
     def get_completion(self, prompt: str) -> str:
         """Get a completion from the model."""
+
         def _call() -> str:
             response = self._get_client().messages.create(
                 model=self.model_id,
@@ -485,9 +480,7 @@ class AnthropicClient(LLMClient):
             self._record_usage(prompt_tokens, completion_tokens)
             if not response.content:
                 return ""
-            return "\n".join(
-                block.text for block in response.content if getattr(block, "text", None)
-            ).strip()
+            return "\n".join(block.text for block in response.content if getattr(block, "text", None)).strip()
 
         return self._with_retries(_call)
 
@@ -512,48 +505,30 @@ class ExecCLIClient(LLMClient):
         )
 
     def _command_path(self) -> str:
-        env_var = (
-            "LLM_QUEST_CODEX_EXEC_PATH"
-            if self.provider == "codex_cli"
-            else "LLM_QUEST_CLAUDE_EXEC_PATH"
-        )
+        env_var = "LLM_QUEST_CODEX_EXEC_PATH" if self.provider == "codex_cli" else "LLM_QUEST_CLAUDE_EXEC_PATH"
         default = "codex" if self.provider == "codex_cli" else "claude"
         configured = os.getenv(env_var, default).strip() or default
         resolved = shutil.which(configured) if Path(configured).name == configured else configured
         if not resolved:
             raise RuntimeError(
-                f"Executable not found for provider '{self.provider}'. "
-                f"Set {env_var} or install {default}."
+                f"Executable not found for provider '{self.provider}'. Set {env_var} or install {default}."
             )
         return resolved
 
-    def _configured_model(self) -> Optional[str]:
-        env_var = (
-            "LLM_QUEST_CODEX_EXEC_MODEL"
-            if self.provider == "codex_cli"
-            else "LLM_QUEST_CLAUDE_EXEC_MODEL"
-        )
+    def _configured_model(self) -> str | None:
+        env_var = "LLM_QUEST_CODEX_EXEC_MODEL" if self.provider == "codex_cli" else "LLM_QUEST_CLAUDE_EXEC_MODEL"
         value = os.getenv(env_var, "").strip()
         return value or None
 
     def _extra_args(self) -> list[str]:
-        env_var = (
-            "LLM_QUEST_CODEX_EXEC_ARGS"
-            if self.provider == "codex_cli"
-            else "LLM_QUEST_CLAUDE_EXEC_ARGS"
-        )
+        env_var = "LLM_QUEST_CODEX_EXEC_ARGS" if self.provider == "codex_cli" else "LLM_QUEST_CLAUDE_EXEC_ARGS"
         raw = os.getenv(env_var, "").strip()
         return shlex.split(raw) if raw else []
 
     def _compose_prompt(self, prompt: str) -> str:
         if not self.system_prompt:
             return prompt
-        return (
-            "System instructions:\n"
-            f"{self.system_prompt.strip()}\n\n"
-            "User prompt:\n"
-            f"{prompt}"
-        )
+        return f"System instructions:\n{self.system_prompt.strip()}\n\nUser prompt:\n{prompt}"
 
     @staticmethod
     def _extract_total_tokens(process: subprocess.CompletedProcess[str]) -> int:
@@ -639,7 +614,7 @@ class ExecCLIClient(LLMClient):
         stdout_chunks: list[bytes] = []
         stderr_chunks: list[bytes] = []
         deadline = time.time() + self.request_timeout
-        last_output_at: Optional[float] = None
+        last_output_at: float | None = None
         idle_after_output_seconds = 5.0
 
         try:
@@ -703,10 +678,7 @@ class ExecCLIClient(LLMClient):
         )
         self._record_usage(total_tokens=self._extract_total_tokens(completed))
         if not stdout:
-            raise RuntimeError(
-                "claude print mode produced no stdout before the process went idle.\n"
-                f"stderr:\n{stderr}"
-            )
+            raise RuntimeError(f"claude print mode produced no stdout before the process went idle.\nstderr:\n{stderr}")
         return stdout
 
     def get_completion(self, prompt: str) -> str:

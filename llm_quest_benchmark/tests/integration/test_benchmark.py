@@ -1,16 +1,12 @@
 """End-to-end tests for benchmark functionality"""
 
 import logging
-from pathlib import Path
 
 import pytest
 
+from llm_quest_benchmark.constants import DEFAULT_TEMPLATE, SYSTEM_ROLE_TEMPLATE
 from llm_quest_benchmark.executors.benchmark import run_benchmark
-from llm_quest_benchmark.schemas.config import BenchmarkConfig, AgentConfig
-from llm_quest_benchmark.constants import (
-    SYSTEM_ROLE_TEMPLATE,
-    DEFAULT_TEMPLATE
-)
+from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 
 
 @pytest.mark.timeout(20)  # 20 seconds timeout for benchmark test
@@ -44,13 +40,13 @@ def test_benchmark_e2e(caplog, tmp_path):
                 system_template=SYSTEM_ROLE_TEMPLATE,
                 action_template=DEFAULT_TEMPLATE,
                 temperature=0.0,
-                skip_single=True
+                skip_single=True,
             )
         ],
         quest_timeout=5,
         max_workers=1,
         debug=True,
-        output_dir=str(tmp_path)
+        output_dir=str(tmp_path),
     )
 
     try:
@@ -63,13 +59,13 @@ def test_benchmark_e2e(caplog, tmp_path):
 
         # Check first result
         result = results[0]
-        assert result['quest'] == str(quest_path)
-        assert result['model'] == "random_choice"
-        assert result['temperature'] == 0.0
-        assert result['template'] == DEFAULT_TEMPLATE
-        assert result['attempt'] == 1
-        assert 'agent_id' in result
-        assert 'outcome' in result
+        assert result["quest"] == str(quest_path)
+        assert result["model"] == "random_choice"
+        assert result["temperature"] == 0.0
+        assert result["template"] == DEFAULT_TEMPLATE
+        assert result["attempt"] == 1
+        assert "agent_id" in result
+        assert "outcome" in result
 
         # Check benchmark artifact files were created.
         benchmark_dir = tmp_path / config.benchmark_id

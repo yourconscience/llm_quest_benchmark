@@ -1,14 +1,17 @@
 """Test running a benchmark with the directory path"""
-import logging
+
 import json
+import logging
+from pathlib import Path
+
+import pytest
 
 # Configure logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 from llm_quest_benchmark.executors.benchmark import run_benchmark
-from llm_quest_benchmark.schemas.config import BenchmarkConfig, AgentConfig
+from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 
 
 def create_test_config():
@@ -16,20 +19,15 @@ def create_test_config():
     return {
         "name": "Directory Benchmark Test",
         "quests": ["quests/sr_2_1_2121_eng"],
-        "agents": [
-            {
-                "model": "random_choice",
-                "skip_single": True,
-                "temperature": 0.7
-            }
-        ],
+        "agents": [{"model": "random_choice", "skip_single": True, "temperature": 0.7}],
         "quest_timeout": 4,  # Keep runtime below pytest global timeout
         "max_quests": 1,
         "debug": True,
-        "output_dir": "results/benchmarks"
+        "output_dir": "results/benchmarks",
     }
 
 
+@pytest.mark.skipif(not Path("quests/sr_2_1_2121_eng").exists(), reason="Quest files not downloaded")
 def test_benchmark_with_directory():
     """Test running a benchmark with a directory path"""
     # Create and validate config
@@ -46,7 +44,7 @@ def test_benchmark_with_directory():
     results = run_benchmark(config)
 
     assert results, "Expected at least one benchmark result"
-    successes = len([r for r in results if r.get('outcome') == 'SUCCESS'])
+    successes = len([r for r in results if r.get("outcome") == "SUCCESS"])
     success_rate = successes / len(results)
 
     logger.info(f"Benchmark completed with {len(results)} quests")

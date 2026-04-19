@@ -1,4 +1,5 @@
 """Tests for quest run analyzer"""
+
 import json
 import sqlite3
 from datetime import datetime, timedelta
@@ -6,7 +7,7 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from llm_quest_benchmark.core.analyzer import analyze_benchmark, analyze_quest_run
+from llm_quest_benchmark.core.analyzer import analyze_quest_run
 from llm_quest_benchmark.executors.cli.commands import app
 
 
@@ -16,7 +17,7 @@ def setup_test_db(db_path: Path):
     cursor = conn.cursor()
 
     # Create tables
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS runs (
             id INTEGER PRIMARY KEY,
             quest_name TEXT,
@@ -27,9 +28,9 @@ def setup_test_db(db_path: Path):
             outcome TEXT,
             reward REAL,
             benchmark_name TEXT
-        )''')
+        )""")
 
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS steps (
             run_id INTEGER,
             step INTEGER,
@@ -39,72 +40,86 @@ def setup_test_db(db_path: Path):
             reward REAL,
             llm_response TEXT,
             FOREIGN KEY(run_id) REFERENCES runs(id)
-        )''')
+        )""")
 
     # Insert test data
     now = datetime.now()
     cursor.execute(
-        '''
+        """
         INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ('test1.qm', now - timedelta(hours=1), now, 'test-model', 'test-template', 'SUCCESS', 1.0,
-          'baseline'))
+    """,
+        ("test1.qm", now - timedelta(hours=1), now, "test-model", "test-template", "SUCCESS", 1.0, "baseline"),
+    )
     run1_id = cursor.lastrowid
 
     cursor.execute(
-        '''
+        """
         INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ('test1.qm', now - timedelta(minutes=30), now, 'test-model', 'test-template', 'FAILURE',
-          0.0, 'baseline'))
+    """,
+        ("test1.qm", now - timedelta(minutes=30), now, "test-model", "test-template", "FAILURE", 0.0, "baseline"),
+    )
     run2_id = cursor.lastrowid
 
     # Insert another run with different benchmark
     cursor.execute(
-        '''
+        """
         INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', ('test2.qm', now, now + timedelta(minutes=30), 'test-model', 'test-template', 'SUCCESS',
-          0.8, 'experimental'))
-    run3_id = cursor.lastrowid
+    """,
+        ("test2.qm", now, now + timedelta(minutes=30), "test-model", "test-template", "SUCCESS", 0.8, "experimental"),
+    )
+    _ = cursor.lastrowid
 
     # Insert steps for first run
-    steps1 = [(run1_id, 1, "You are at a trading station.",
-               json.dumps([{
-                   "id": "1",
-                   "text": "Talk to merchant"
-               }, {
-                   "id": "2",
-                   "text": "Leave station"
-               }]), 1, 0.0, '{"action": 1, "reasoning": "Should talk to merchant"}'),
-              (run1_id, 2, "The merchant greets you.",
-               json.dumps([{
-                   "id": "1",
-                   "text": "Buy"
-               }, {
-                   "id": "2",
-                   "text": "Sell"
-               }]), 2, 1.0, '{"action": 2, "reasoning": "Better to sell"}')]
+    steps1 = [
+        (
+            run1_id,
+            1,
+            "You are at a trading station.",
+            json.dumps([{"id": "1", "text": "Talk to merchant"}, {"id": "2", "text": "Leave station"}]),
+            1,
+            0.0,
+            '{"action": 1, "reasoning": "Should talk to merchant"}',
+        ),
+        (
+            run1_id,
+            2,
+            "The merchant greets you.",
+            json.dumps([{"id": "1", "text": "Buy"}, {"id": "2", "text": "Sell"}]),
+            2,
+            1.0,
+            '{"action": 2, "reasoning": "Better to sell"}',
+        ),
+    ]
     cursor.executemany(
-        '''
+        """
         INSERT INTO steps (run_id, step, observation, choices, action, reward, llm_response)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', steps1)
+    """,
+        steps1,
+    )
 
     # Insert steps for second run
-    steps2 = [(run2_id, 1, "You are at a trading station.",
-               json.dumps([{
-                   "id": "1",
-                   "text": "Talk to merchant"
-               }, {
-                   "id": "2",
-                   "text": "Leave station"
-               }]), 2, 0.0, '{"action": 2, "reasoning": "Should leave"}')]
+    steps2 = [
+        (
+            run2_id,
+            1,
+            "You are at a trading station.",
+            json.dumps([{"id": "1", "text": "Talk to merchant"}, {"id": "2", "text": "Leave station"}]),
+            2,
+            0.0,
+            '{"action": 2, "reasoning": "Should leave"}',
+        )
+    ]
     cursor.executemany(
-        '''
+        """
         INSERT INTO steps (run_id, step, observation, choices, action, reward, llm_response)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', steps2)
+    """,
+        steps2,
+    )
 
     conn.commit()
     conn.close()
@@ -118,9 +133,7 @@ def test_analyze_quest_run(tmp_path):
     # Test CLI command
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(app,
-                               ["analyze", "--quest", "test1.qm", "--db",
-                                str(db_path), "--debug"])
+        result = runner.invoke(app, ["analyze", "--quest", "test1.qm", "--db", str(db_path), "--debug"])
         assert result.exit_code == 0
 
         # Check that summary info is present
@@ -171,9 +184,7 @@ def test_analyze_specific_benchmark(tmp_path):
     # Test CLI command for specific benchmark
     runner = CliRunner()
     with runner.isolated_filesystem():
-        result = runner.invoke(app,
-                               ["analyze", "--benchmark", "experimental", "--db",
-                                str(db_path)])
+        result = runner.invoke(app, ["analyze", "--benchmark", "experimental", "--db", str(db_path)])
         assert result.exit_code == 0
 
         # Check that summary info is present
@@ -225,7 +236,7 @@ def test_analyze_no_metrics_dir(tmp_path):
     with runner.isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--quest", "test1.qm"])
         assert result.exit_code == 1
-        assert "Database not found" in result.stdout
+        assert "Database not found" in result.output
 
 
 def test_analyze_empty_metrics_dir(tmp_path):
@@ -234,7 +245,7 @@ def test_analyze_empty_metrics_dir(tmp_path):
     db_path = tmp_path / "metrics.db"
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS runs (
             id INTEGER PRIMARY KEY,
             quest_name TEXT,
@@ -245,7 +256,7 @@ def test_analyze_empty_metrics_dir(tmp_path):
             outcome TEXT,
             reward REAL,
             benchmark_name TEXT
-        )''')
+        )""")
     conn.commit()
     conn.close()
 
@@ -253,7 +264,7 @@ def test_analyze_empty_metrics_dir(tmp_path):
     with runner.isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--quest", "test1.qm", "--db", str(db_path)])
         assert result.exit_code == 1
-        assert "No runs found for quest" in result.stdout
+        assert "No runs found for quest" in result.output
 
 
 def test_analyze_invalid_file(tmp_path):
@@ -267,7 +278,7 @@ def test_analyze_invalid_file(tmp_path):
     with runner.isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--quest", "test1.qm", "--db", str(db_path)])
         assert result.exit_code == 1
-        assert "Error analyzing quest run" in result.stdout
+        assert "Error analyzing quest run" in result.output
 
 
 def test_analyze_invalid_benchmark_file(tmp_path):
@@ -280,7 +291,7 @@ def test_analyze_invalid_benchmark_file(tmp_path):
     with runner.isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--benchmark", "nonexistent", "--db", str(db_path)])
         assert result.exit_code == 1
-        assert "No benchmark data found for nonexistent" in result.stdout
+        assert "No benchmark data found for nonexistent" in result.output
 
 
 def test_analyze_benchmark_directory(tmp_path):
@@ -291,7 +302,7 @@ def test_analyze_benchmark_directory(tmp_path):
     cursor = conn.cursor()
 
     # Create tables
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS runs (
             id INTEGER PRIMARY KEY,
             quest_name TEXT,
@@ -302,20 +313,24 @@ def test_analyze_benchmark_directory(tmp_path):
             outcome TEXT,
             reward REAL,
             benchmark_name TEXT
-        )''')
+        )""")
 
     # Insert test data for multiple benchmarks
     now = datetime.now()
-    test_data = [('test1.qm', now, 'test-model', 'test-template', 'SUCCESS', 1.0, 'benchmark1'),
-                 ('test2.qm', now, 'test-model', 'test-template', 'FAILURE', 0.0, 'benchmark1'),
-                 ('test3.qm', now, 'test-model', 'test-template', 'SUCCESS', 0.5, 'benchmark2')]
+    test_data = [
+        ("test1.qm", now, "test-model", "test-template", "SUCCESS", 1.0, "benchmark1"),
+        ("test2.qm", now, "test-model", "test-template", "FAILURE", 0.0, "benchmark1"),
+        ("test3.qm", now, "test-model", "test-template", "SUCCESS", 0.5, "benchmark2"),
+    ]
 
     for quest, time, model, template, outcome, reward, benchmark in test_data:
         cursor.execute(
-            '''
+            """
             INSERT INTO runs (quest_name, start_time, end_time, model, template, outcome, reward, benchmark_name)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (quest, time, time, model, template, outcome, reward, benchmark))
+        """,
+            (quest, time, time, model, template, outcome, reward, benchmark),
+        )
 
     conn.commit()
     conn.close()
