@@ -182,7 +182,19 @@ def generate_leaderboard(benchmark_dirs: List[str], output_path: str) -> Dict[st
                     usage = run_summary.get("usage") if isinstance(run_summary.get("usage"), dict) else {}
                     metrics = run_summary.get("metrics") if isinstance(run_summary.get("metrics"), dict) else {}
 
-            grouped_rows[(model, mode_id, quest_id)].append(
+            try:
+                spec = parse_model_name(model)
+                provider = spec.provider
+                label_source = spec.model_id
+                if provider == "openrouter" and "/" in label_source:
+                    provider = label_source.split("/", 1)[0]
+                    label_source = label_source.split("/", 1)[1]
+            except Exception:
+                provider = "unknown"
+                label_source = model
+            display_id = label_source if model.startswith("openrouter:") else model
+
+            grouped_rows[(display_id, mode_id, quest_id)].append(
                 {
                     "outcome": outcome,
                     "total_steps": float(metrics.get("total_steps") or 0),
@@ -191,16 +203,8 @@ def generate_leaderboard(benchmark_dirs: List[str], output_path: str) -> Dict[st
                     "repetition_rate": float(metrics.get("repetition_rate") or 0),
                 }
             )
-
-            try:
-                spec = parse_model_name(model)
-                provider = spec.provider
-                label_source = spec.model_id
-            except Exception:
-                provider = "unknown"
-                label_source = model
-            model_entries[model] = {
-                "id": model,
+            model_entries[display_id] = {
+                "id": display_id,
                 "provider": provider,
                 "label": _model_label(label_source),
             }
