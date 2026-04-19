@@ -66,7 +66,7 @@ a { color: var(--accent); }
         <table class="table table-sm mb-0" id="leaderboard">
           <thead>
             <tr>
-              <th data-col="rank">#</th>
+              <th>#</th>
               <th data-col="model">Model</th>
               <th data-col="mode">Mode</th>
               <th data-col="quest">Quest</th>
@@ -126,6 +126,7 @@ const COLORS = {stub:'#c9d1d9', reasoning:'#58a6ff', light_hints:'#a371f7', plan
 const MODEL_SYMBOLS = ['circle','rect','triangle','diamond','pin','arrow'];
 
 function successColor(v) { return v >= 0.8 ? 'var(--green)' : v >= 0.4 ? 'var(--orange)' : 'var(--red)'; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 async function init() {
   const resp = await fetch('leaderboard.json');
@@ -160,6 +161,9 @@ function buildFilters() {
       btn.classList.add('active');
       renderTable();
       renderStats();
+      renderBarChart();
+      renderScatterChart();
+      renderLiftChart();
     });
   });
 }
@@ -193,9 +197,9 @@ function renderTable() {
   const tbody = document.querySelector('#leaderboard tbody');
   tbody.innerHTML = rows.map((r,i) => `<tr>
     <td>${i+1}</td>
-    <td><strong>${r.model}</strong></td>
-    <td><span class="badge badge-mode ${MODE_CLASSES[r.mode]||''}">${MODE_LABELS[r.mode]||r.mode}</span></td>
-    <td>${r.quest}</td>
+    <td><strong>${esc(r.model)}</strong></td>
+    <td><span class="badge badge-mode ${MODE_CLASSES[r.mode]||''}">${MODE_LABELS[r.mode]||esc(r.mode)}</span></td>
+    <td>${esc(r.quest)}</td>
     <td><div class="d-flex align-items-center gap-2"><div class="success-bar"><div class="success-fill" style="width:${r.success_rate*100}%;background:${successColor(r.success_rate)}"></div></div><span>${(r.success_rate*100).toFixed(0)}%</span></div></td>
     <td>${r.avg_steps}</td>
     <td>${r.avg_tokens.toLocaleString()}</td>
@@ -211,7 +215,7 @@ function renderBarChart() {
     name: MODE_LABELS[mode.id], type: 'bar',
     data: models.map(ml => {
       const m = DATA.models.find(x => x.label === ml);
-      const rows = DATA.results.filter(r => r.model === m.id && r.mode === mode.id);
+      const rows = filtered().filter(r => r.model === m.id && r.mode === mode.id);
       return rows.length ? +(rows.reduce((s,r) => s+r.success_rate, 0) / rows.length * 100).toFixed(1) : 0;
     }),
     itemStyle: {color: COLORS[mode.id]}
@@ -231,7 +235,7 @@ function renderScatterChart() {
   const chart = echarts.init(document.getElementById('chart-scatter'));
   const series = DATA.modes.map((mode, mi) => ({
     name: MODE_LABELS[mode.id], type: 'scatter', symbolSize: 14, symbol: MODEL_SYMBOLS[mi] || 'circle',
-    data: DATA.results.filter(r => r.mode === mode.id).map(r => ({
+    data: filtered().filter(r => r.mode === mode.id).map(r => ({
       value: [r.avg_cost_usd, r.success_rate * 100],
       name: `${r.model} / ${r.quest}`
     })),
@@ -257,8 +261,8 @@ function renderLiftChart() {
     name: MODE_LABELS[mode.id], type: 'bar',
     data: models.map(ml => {
       const m = DATA.models.find(x => x.label === ml);
-      const base = DATA.results.filter(r => r.model === m.id && r.mode === 'stub');
-      const curr = DATA.results.filter(r => r.model === m.id && r.mode === mode.id);
+      const base = filtered().filter(r => r.model === m.id && r.mode === 'stub');
+      const curr = filtered().filter(r => r.model === m.id && r.mode === mode.id);
       if (!base.length || !curr.length) return 0;
       const bsr = base.reduce((s,r) => s+r.success_rate,0)/base.length;
       const csr = curr.reduce((s,r) => s+r.success_rate,0)/curr.length;
