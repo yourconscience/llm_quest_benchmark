@@ -240,21 +240,8 @@ YAML Config                    Quest Engine (TypeScript)
 <p class="text-muted" style="font-size: 0.9rem;">High-tier follow-up (Claude Sonnet 4.6, GPT-5.4, Gemini 3 Pro) planned separately.</p>
 
 <h2>Reproducing results</h2>
-
-<div class="card" style="padding: 1.25rem; margin: 1rem 0;">
-<pre style="margin:0; color: var(--text); font-size: 0.9rem;"><code>git clone --recursive https://github.com/yourconscience/llm_quest_benchmark.git
-cd llm_quest_benchmark
-uv sync --extra dev && npm install
-
-cp .env.template .env   # add API keys
-
-./download_quests.sh --refresh
-llm-quest benchmark --config configs/benchmarks/mode_comparison_pilot.yaml
-llm-quest benchmark-report --benchmark-dir results/&lt;run&gt; -o site/leaderboard.json</code></pre>
-</div>
-
 <p>
-  Supports OpenAI, Anthropic, Google, DeepSeek APIs directly, or <a href="https://openrouter.ai">OpenRouter</a> as a unified proxy. Adding a new model requires only a YAML config change.
+  See the <a href="https://github.com/yourconscience/llm_quest_benchmark#quick-start-docker">README</a> for setup and usage instructions. Supports Docker and local dev with <code>uv</code>. Adding a new model requires only a YAML config change.
 </p>
 
 <p class="text-muted" style="font-size: 0.8rem; margin-top: 3rem;">
