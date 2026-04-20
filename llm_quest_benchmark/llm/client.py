@@ -78,11 +78,20 @@ DEFAULT_MODEL_PRICING_USD_PER_1M = {
     "google:gemini-2.5-pro": {"input": 1.25, "output": 10.0},
     "google:gemini-2.5-flash": {"input": 0.3, "output": 2.5},
     "google:gemini-2.5-flash-lite": {"input": 0.1, "output": 0.4},
+    # Google Gemini 3
+    "google:gemini-3-flash-preview": {"input": 0.5, "output": 3.0},
+    "google:gemini-3.1-flash-lite-preview": {"input": 0.25, "output": 1.5},
     # DeepSeek
     "deepseek:deepseek-chat": {"input": 0.28, "output": 0.42},
+    "deepseek:deepseek-v3.2": {"input": 0.259, "output": 0.42},
     # Qwen (via OpenRouter)
     "qwen:qwen-2.5-72b-instruct": {"input": 0.4, "output": 0.4},
     "qwen:qwen3-235b-a22b": {"input": 0.14, "output": 0.6},
+    "qwen:qwen3.5-plus-02-15": {"input": 0.26, "output": 1.56},
+    # Moonshot / Kimi
+    "moonshotai:kimi-k2.5": {"input": 0.38, "output": 1.72},
+    # Z.ai / GLM
+    "z-ai:glm-5": {"input": 0.72, "output": 2.3},
 }
 
 

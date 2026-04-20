@@ -203,7 +203,7 @@ def test_run_summary_export_is_compact_and_single_file(tmp_path, monkeypatch, qu
 
     exported = json.loads(summary_path.read_text(encoding="utf-8"))
     exported_step = exported["steps"][0]
-    assert set(exported_step.keys()) == {"step", "observation", "choices", "llm_decision"}
+    assert set(exported_step.keys()) == {"step", "location_id", "observation", "choices", "llm_decision"}
     assert exported_step["choices"] == {"1": "Go north", "2": "Go south"}
     assert exported_step["llm_decision"]["choice"] == {"2": "Go south"}
     assert exported["usage"]["prompt_tokens"] == 12

@@ -70,13 +70,32 @@ The C1-vs-C0 delta is the "does knowledge help?" finding. The C2-vs-C1 delta mea
 
 ### Provider matrix
 
-Required providers for the leaderboard (one model per family minimum):
-- OpenAI (GPT-5 or GPT-5-mini)
-- Anthropic (Claude Sonnet 4.5 or later)
-- Google (Gemini 2.5 Flash or Pro)
-- DeepSeek (deepseek-3.2-chat or reasoner)
+Mid-tier models: we benchmark the "Sonnet-equivalent" production tier for each provider - the models most developers actually use. This keeps per-run cost in the $0.01-0.04 range and makes the comparison fair (similar capability/price class). High-tier comparison (Claude Sonnet, GPT-5.4, Gemini Pro) is a planned follow-up.
 
-Optional (stretch): Qwen, GLM.
+**Primary (7 models, all via OpenRouter):**
+
+| Provider | Model | OpenRouter ID | In $/1M | Out $/1M |
+|---|---|---|---|---|
+| DeepSeek | V3.2 | `deepseek/deepseek-v3.2` | $0.26 | $0.42 |
+| Qwen | Qwen3.5 Plus | `qwen/qwen3.5-plus-02-15` | $0.26 | $1.56 |
+| Moonshot | Kimi K2.5 | `moonshotai/kimi-k2.5` | $0.38 | $1.72 |
+| Google | Gemini 3 Flash | `google/gemini-3-flash-preview` | $0.50 | $3.00 |
+| Z.ai (GLM) | GLM-5 | `z-ai/glm-5` | $0.72 | $2.30 |
+| OpenAI | GPT-5.4 Mini | `openai/gpt-5.4-mini` | $0.75 | $4.50 |
+
+**Excluded from main benchmark (high-tier, follow-up):**
+- Anthropic Claude Sonnet 4.6 ($3/$15) - 10-35x output price of mid-tier
+- OpenAI GPT-5.4 ($1.25/$10) - frontier tier
+- Google Gemini 3 Pro - frontier tier
+
+### Run budget
+
+3 runs per cell (model x quest x mode). Comparable papers use 3-5: TextQuests used 3, AgentQuest used 5. Binary outcomes don't need large N per cell - breadth across quests and modes matters more than depth per combination. Targeted 10-run follow-ups on specific cells where tighter confidence intervals are needed.
+
+**Phase 1 (baseline re-run with telemetry):** 17 quests x 6 models x 2 modes (A+B) x 3 runs = ~612 runs, ~$14
+**Phase 2 (intervention runs):** 10 hard quests x 3 best models x 3 modes (C/D/E) x 3 runs = ~270 runs, ~$6
+**Phase 3 (new quests):** 18 untested EN quests x 4 models x mode B x 3 runs = ~216 runs, ~$5
+**Total: ~1100 runs, ~$25**
 
 ## Architecture changes
 
@@ -126,10 +145,10 @@ llm-quest leaderboard --output site/data/leaderboard.json
 
 All criteria must be met for the spec to be considered complete:
 
-1. **Leaderboard deployed**: Static site on GitHub Pages showing results from at least 4 provider families (OpenAI, Anthropic, Google, DeepSeek).
-2. **Mode comparison**: Results table comparing all 5 agent modes (A-E) across providers.
+1. **Leaderboard deployed**: Static site on GitHub Pages showing results from at least 6 provider families.
+2. **Mode comparison**: Results table comparing agent modes A-B (all quests) and C/D/E (hard quests) across providers.
 3. **Performance bar**: Best model + agent mode combination achieves >= 80% success rate on at least 10 different quests. If no config hits 80% success, report progress % as the primary metric and explain the ceiling (TextQuests found zero models completing any game without clues - an honest null result is still publishable).
-4. **Corpus scale**: 50+ working quests in the corpus, each with >= 20 non-zero completion attempts in published results.
+4. **Corpus scale**: 35+ working EN quests in the corpus, each with >= 3 completion attempts per model in published results.
 5. **Reproducibility**: Full benchmark can be reproduced from a clean clone with `uv` or Docker via a single documented command.
 6. **Blog post**: Published on the project site with method, results, and discussion sections.
 7. **Flask removed**: No Flask dependencies remain in the project.
@@ -137,7 +156,7 @@ All criteria must be met for the spec to be considered complete:
 ## Constraints
 
 - **Runtime**: Python 3.11+, managed with `uv`. TypeScript quest engine via existing bridge.
-- **Cost**: LLM API calls cost real money. The full matrix (5 modes x 4+ providers x 50+ quests x 20+ runs) is expensive. Design configs for incremental runs: single-quest smoke test, single-provider sweep, full matrix.
+- **Cost**: LLM API calls cost real money. The full matrix (~1100 runs across 6 mid-tier models) is estimated at ~$25. Design configs for incremental runs: single-quest smoke test, single-provider sweep, full matrix.
 - **Quest files**: Not committed to repo. Downloaded via `download_quests.sh`. CI/CD must handle this.
 - **Determinism**: LLM outputs are non-deterministic. Success rates are statistical. Report confidence intervals or at minimum the number of attempts.
 
@@ -153,7 +172,7 @@ All criteria must be met for the spec to be considered complete:
 1. **English quest count**: Need to verify that `download_quests.sh` yields 35+ distinct working English quests. If not, options: translate Russian quests, source additional IF quests, or lower the threshold.
 2. **Quest success detection**: Some quests may have ambiguous endings. Need a human pass to label which endings count as success vs failure for edge cases.
 3. **Checkpoint labeling for progress %**: Progress metric requires defining intermediate checkpoints per quest. The .qm format has location/state data that may be extractable, but manual validation is needed. Start with 10 quests, then scale.
-4. **Cost of full matrix**: 5 modes x 4 providers x 50 quests x 20 runs = 20,000 LLM calls minimum. With knowledge gradient sub-levels (C0-C3), the full matrix is larger. Estimate cost before committing. Run cheapest models/modes first.
+4. **Cost of full matrix**: ~1200 runs at ~$27 for 7 mid-tier models. High-tier follow-up (Claude Sonnet, GPT-5.4, Gemini Pro) adds ~$50-100 depending on scope.
 5. **Mode D/E complexity**: Planner and tool-augmented agents are new code. Scope creep risk - keep implementations shallow and iterate.
 6. **Models may not complete quests at all**: TextQuests (2025) found zero models completing any Infocom game without clues. Our quests are shorter and choice-based (easier), but the same ceiling effect is possible. Progress % and the knowledge gradient provide a publishable story even if success rates are low.
 7. **TextQuests differentiation**: HuggingFace's TextQuests (2025) is the closest competitor. Key differentiators: agent architecture comparison (5 modes vs 1), bilingual RU/EN, choice-based vs parser-based IF, knowledge gradient experiment. Lead with "vary the agent, not the task" framing.
