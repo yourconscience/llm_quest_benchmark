@@ -1,4 +1,4 @@
-name: phase1_mistral_large
+name: phase1_mistral_medium
 quests:
 - quests/Boat.qm
 - quests/sr_2_1_2121_eng/Badday_eng.qm

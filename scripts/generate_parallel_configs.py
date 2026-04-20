@@ -26,7 +26,7 @@ MODELS = [
     ("google/gemini-3-flash-preview", "gemini3_flash"),
     ("openai/gpt-5.4-mini", "gpt54_mini"),
     ("deepseek/deepseek-v3.2", "deepseek_v3"),
-    ("mistralai/mistral-large-2512", "mistral_large"),
+    ("mistralai/mistral-medium-3.1", "mistral_medium"),
     ("anthropic/claude-haiku-4.5", "haiku45"),
     ("minimax/minimax-m2.5", "minimax_m25"),
 ]
@@ -37,7 +37,7 @@ TEMPERATURE = 0.4
 QUEST_TIMEOUT = 600
 
 output_dir = Path("configs/benchmarks/phase1")
-output_dir.mkdir(exist_ok=True)
+output_dir.mkdir(parents=True, exist_ok=True)
 
 for model_id, short_name in MODELS:
     config = {
