@@ -42,8 +42,6 @@ class ModelSpec:
     model_id: str
 
 
-
-
 def _get_attr_or_key(value: Any, key: str, default: Any = None) -> Any:
     if value is None:
         return default
@@ -57,8 +55,6 @@ def _coerce_int(value: Any, default: int = 0) -> int:
         return int(value)
     except (TypeError, ValueError):
         return default
-
-
 
 
 def parse_model_name(model_name: str) -> ModelSpec:
