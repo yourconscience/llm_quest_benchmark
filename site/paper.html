@@ -115,7 +115,7 @@ table th, table td { padding: 0.5rem 0.75rem; }
 
 <h3>3.1 Task environment</h3>
 <p>
-  We use interactive fiction quests in the .qm format, originally created for the Space Rangers video game series. Each quest is a finite-state machine with text descriptions at each node and numbered action choices as edges. Quests terminate in binary outcomes (success or failure) after 10-50+ decision steps.
+  We use interactive fiction quests in the .qm format, originally created for the Space Rangers video game series. Each quest is a finite-state machine with text descriptions at each node and numbered action choices as edges. Quests terminate in binary outcomes (success or failure) after 10-50+ decision steps. The quest engine is <a href="https://github.com/roginvs/space-rangers-quest">space-rangers-quest</a>, a TypeScript interpreter for the .qm format; quests can also be <a href="https://spacerangers.gitlab.io/#/quests">played in a browser</a>.
 </p>
 <p>
   The quest corpus contains approximately 150 scenarios. We select a subset of 35 English-language quests that span four difficulty categories identified through error analysis:

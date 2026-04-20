@@ -123,6 +123,10 @@ Choices:
 </ul>
 <p>
   The quest corpus contains hundreds of scenarios. The benchmark selects a balanced subset covering four difficulty categories: spatial/grid puzzles, combinatorial optimization, long-horizon navigation, and domain-specific scoring.
+  You can <a href="https://spacerangers.gitlab.io/#/quests">try the quests yourself</a> in a browser.
+</p>
+<p>
+  The quest engine used in this benchmark is <a href="https://github.com/roginvs/space-rangers-quest">space-rangers-quest</a> by roginvs, a TypeScript interpreter for the .qm quest format.
 </p>
 
 <h2>Agent modes</h2>
@@ -253,7 +257,11 @@ llm-quest benchmark-report --benchmark-dir results/&lt;run&gt; -o site/leaderboa
   Supports OpenAI, Anthropic, Google, DeepSeek APIs directly, or <a href="https://openrouter.ai">OpenRouter</a> as a unified proxy. Adding a new model requires only a YAML config change.
 </p>
 
-<footer class="text-center py-5 text-muted" style="font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 3rem;">
+<p class="text-muted" style="font-size: 0.8rem; margin-top: 3rem;">
+  This project is not affiliated with Elemental Games, SNK-Games, 1C Company, or the Space Rangers franchise. The quest files are community-authored content distributed separately from this benchmark.
+</p>
+
+<footer class="text-center py-5 text-muted" style="font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 1rem;">
   <p>
     <a href="index.html">Leaderboard</a> |
     <a href="paper.html">Paper</a> |
