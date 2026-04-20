@@ -1,5 +1,6 @@
 """LLM client interface for different model providers"""
 
+import json
 import logging
 import os
 import re
@@ -9,6 +10,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import urllib.request
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -122,10 +124,46 @@ def _sanitize_env_key_fragment(raw: str) -> str:
     return "".join(ch if ch.isalnum() else "_" for ch in raw.upper()).strip("_")
 
 
+_openrouter_pricing_cache: dict[str, tuple[float, float]] | None = None
+
+
+def _fetch_openrouter_pricing() -> dict[str, tuple[float, float]]:
+    """Fetch per-model pricing from OpenRouter API. Returns {model_id: (input_per_M, output_per_M)}."""
+    global _openrouter_pricing_cache
+    if _openrouter_pricing_cache is not None:
+        return _openrouter_pricing_cache
+
+    try:
+        req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/models",
+            headers={"User-Agent": "llm-quest-benchmark"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+        result: dict[str, tuple[float, float]] = {}
+        for model in data.get("data", []):
+            pricing = model.get("pricing") or {}
+            prompt = pricing.get("prompt")
+            completion = pricing.get("completion")
+            if prompt is not None and completion is not None:
+                result[model["id"]] = (
+                    float(prompt) * 1_000_000,
+                    float(completion) * 1_000_000,
+                )
+        _openrouter_pricing_cache = result
+        logger.debug("Fetched pricing for %d models from OpenRouter", len(result))
+        return result
+    except Exception:
+        logger.debug("Failed to fetch OpenRouter pricing, using static fallback")
+        _openrouter_pricing_cache = {}
+        return {}
+
+
 def _resolve_token_pricing(provider: str, model_id: str) -> tuple[float, float] | None:
     provider_key = _sanitize_env_key_fragment(provider)
     model_key = _sanitize_env_key_fragment(model_id)
 
+    # 1. Env var overrides (highest priority)
     model_input = os.getenv(f"LLM_PRICE_{provider_key}_{model_key}_INPUT_PER_M")
     model_output = os.getenv(f"LLM_PRICE_{provider_key}_{model_key}_OUTPUT_PER_M")
     if model_input is not None and model_output is not None:
@@ -136,11 +174,21 @@ def _resolve_token_pricing(provider: str, model_id: str) -> tuple[float, float] 
     if default_input is not None and default_output is not None:
         return float(default_input), float(default_output)
 
+    # 2. OpenRouter live pricing (covers all our benchmark models)
+    or_pricing = _fetch_openrouter_pricing()
+    or_key = model_id if "/" in model_id else None
+    if provider == "openrouter" and or_key and or_key in or_pricing:
+        return or_pricing[or_key]
+    # Direct provider models: try "provider/model_id" as OpenRouter key
+    or_key_direct = f"{provider}/{model_id}"
+    if or_key_direct in or_pricing:
+        return or_pricing[or_key_direct]
+
+    # 3. Static fallback table
     model_pricing = DEFAULT_MODEL_PRICING_USD_PER_1M.get(f"{provider}:{model_id}")
     if model_pricing:
         return float(model_pricing["input"]), float(model_pricing["output"])
 
-    # OpenRouter uses "sub_provider/sub_model" as model_id; normalize to "sub_provider:sub_model".
     if provider == "openrouter" and "/" in model_id:
         sub_provider, sub_model = model_id.split("/", 1)
         model_pricing = DEFAULT_MODEL_PRICING_USD_PER_1M.get(f"{sub_provider}:{sub_model}")
