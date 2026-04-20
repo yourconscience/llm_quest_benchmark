@@ -19,7 +19,8 @@ from pathlib import Path
 repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root))
 
-from llm_quest_benchmark.llm.client import _estimate_cost_usd, parse_model_name  # noqa: E402, I001
+from llm_quest_benchmark.llm.client import parse_model_name  # noqa: E402, I001
+from llm_quest_benchmark.llm.cost import estimate_cost_usd  # noqa: E402
 
 
 _AGENT_ID_PREFIXES = ("llm_", "planner_", "tool_")
@@ -70,7 +71,7 @@ def backfill(results_dir: Path, dry_run: bool) -> None:
             print(f"  SKIP (unparseable model '{model_name}'): {path.relative_to(results_dir)}")
             continue
 
-        cost = _estimate_cost_usd(spec.provider, spec.model_id, prompt_tokens, completion_tokens)
+        cost = estimate_cost_usd(spec.provider, spec.model_id, prompt_tokens, completion_tokens)
         if cost is None:
             skipped_no_price += 1
             print(f"  SKIP (no price for {spec.provider}:{spec.model_id}): {path.relative_to(results_dir)}")
