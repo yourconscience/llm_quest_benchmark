@@ -161,7 +161,7 @@ table th, table td { padding: 0.5rem 0.75rem; }
 <ul>
   <li><strong>Success rate</strong>: fraction of runs ending in quest success (binary, per run)</li>
   <li><strong>Exploration rate</strong>: unique locations visited / total locations in quest graph</li>
-  <li><strong>Repetition rate</strong>: fraction of steps visiting an already-visited location</li>
+  <li><strong>Repetition rate</strong>: fraction of steps where the agent repeats an action from the last 5 steps</li>
   <li><strong>Cost per run</strong>: total token cost (input + output) in USD</li>
 </ul>
 <p>
@@ -243,7 +243,7 @@ table th, table td { padding: 0.5rem 0.75rem; }
 
 <h2>References</h2>
 <ul style="font-size: 0.9rem; color: var(--muted);">
-  <li>Bakaeva, M. et al. (2025). TextQuests: Evaluating LLM Agents on Text Adventure Games. CAIS.</li>
+  <li>Phan, L. et al. (2025). TextQuests: Benchmarking LLM Agents on Text Adventure Games. arXiv:2507.23701.</li>
   <li>Cote, M.-A. et al. (2019). TextWorld: A Learning Environment for Text-Based Games. CGW@IJCAI.</li>
   <li>Gioacchini, L. et al. (2024). AgentQuest: A Modular Benchmark Framework to Measure Progress and Improve LLM Agents. NAACL.</li>
   <li>Jimenez, C. E. et al. (2024). SWE-bench: Can Language Models Resolve Real-World GitHub Issues? ICLR.</li>
