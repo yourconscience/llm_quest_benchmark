@@ -67,13 +67,14 @@ DEFAULT_MODEL_PRICING_USD_PER_1M = {
     "openai:gpt-5-mini": {"input": 0.25, "output": 2.0},
     "openai:gpt-5-nano": {"input": 0.05, "output": 0.4},
     "openai:gpt-5.4": {"input": 1.25, "output": 10.0},
-    "openai:gpt-5.4-mini": {"input": 0.25, "output": 2.0},
+    "openai:gpt-5.4-mini": {"input": 0.75, "output": 4.5},
     "openai:o4-mini": {"input": 4.0, "output": 16.0},
     # Anthropic
     "anthropic:claude-sonnet-4-5": {"input": 3.0, "output": 15.0},
     "anthropic:claude-sonnet-4-6": {"input": 3.0, "output": 15.0},
     "anthropic:claude-opus-4-1-20250805": {"input": 15.0, "output": 75.0},
     "anthropic:claude-3-5-haiku-latest": {"input": 0.8, "output": 4.0},
+    "anthropic:claude-haiku-4.5": {"input": 1.0, "output": 5.0},
     # Google Gemini
     "google:gemini-2.5-pro": {"input": 1.25, "output": 10.0},
     "google:gemini-2.5-flash": {"input": 0.3, "output": 2.5},
@@ -87,7 +88,14 @@ DEFAULT_MODEL_PRICING_USD_PER_1M = {
     # Qwen (via OpenRouter)
     "qwen:qwen-2.5-72b-instruct": {"input": 0.4, "output": 0.4},
     "qwen:qwen3-235b-a22b": {"input": 0.14, "output": 0.6},
+    "qwen:qwen3-235b-a22b-2507": {"input": 0.071, "output": 0.10},
+    "qwen:qwen3.5-flash-02-23": {"input": 0.065, "output": 0.26},
     "qwen:qwen3.5-plus-02-15": {"input": 0.26, "output": 1.56},
+    # Mistral
+    "mistralai:mistral-large-2512": {"input": 0.5, "output": 1.5},
+    "mistralai:mistral-medium-3.1": {"input": 0.4, "output": 2.0},
+    # Minimax
+    "minimax:minimax-m2.5": {"input": 0.118, "output": 0.99},
     # Moonshot / Kimi
     "moonshotai:kimi-k2.5": {"input": 0.38, "output": 1.72},
     # Z.ai / GLM

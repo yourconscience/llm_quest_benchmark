@@ -1,0 +1,30 @@
+name: phase1_mistral_large
+quests:
+- quests/Boat.qm
+- quests/sr_2_1_2121_eng/Badday_eng.qm
+- quests/sr_2_1_2121_eng/Banket_eng.qm
+- quests/sr_2_1_2121_eng/Codebox_eng.qm
+- quests/sr_2_1_2121_eng/Depth_eng.qm
+- quests/sr_2_1_2121_eng/Driver_eng.qm
+- quests/sr_2_1_2121_eng/Edelweiss_eng.qm
+- quests/sr_2_1_2121_eng/Election_eng.qm
+- quests/sr_2_1_2121_eng/Foncers_eng.qm
+- quests/sr_2_1_2121_eng/Leonardo_eng.qm
+- quests/sr_2_1_2121_eng/Ministry_eng.qm
+- quests/sr_2_1_2121_eng/Pizza_eng.qm
+- quests/sr_2_1_2121_eng/Prison_eng.qm
+- quests/sr_2_1_2121_eng/Robots_eng.qm
+- quests/sr_2_1_2121_eng/Ski_eng.qm
+agents:
+- model: openrouter:mistralai/mistral-medium-3.1
+  template: stub
+  temperature: 0.4
+  runs: 3
+- model: openrouter:mistralai/mistral-medium-3.1
+  template: reasoning
+  temperature: 0.4
+  runs: 3
+debug: false
+quest_timeout: 600
+max_workers: 1
+output_dir: results/benchmarks
