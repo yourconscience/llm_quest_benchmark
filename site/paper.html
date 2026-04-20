@@ -145,9 +145,17 @@ table th, table td { padding: 0.5rem 0.75rem; }
   We evaluate six mid-tier production models from different providers, selected to represent the capability tier that developers typically deploy in production (as opposed to frontier flagships). All models are accessed through OpenRouter for consistent API interface and billing.
 </p>
 
-<div class="placeholder">
-  [Table: Model list with provider, model name, OpenRouter ID, approximate cost per run. See About page for current list.]
-</div>
+<table class="table table-sm table-bordered" style="font-size: 0.9rem;">
+  <thead><tr><th>Provider</th><th>Model</th><th>OpenRouter ID</th><th>ELO</th><th>In $/M</th><th>Out $/M</th></tr></thead>
+  <tbody>
+    <tr><td>Google</td><td>Gemini 3 Flash</td><td>google/gemini-3-flash-preview</td><td>1474</td><td>$0.50</td><td>$3.00</td></tr>
+    <tr><td>OpenAI</td><td>GPT-5.4 Mini</td><td>openai/gpt-5.4-mini</td><td>1458</td><td>$0.75</td><td>$4.50</td></tr>
+    <tr><td>DeepSeek</td><td>V3.2</td><td>deepseek/deepseek-v3.2</td><td>1424</td><td>$0.26</td><td>$0.42</td></tr>
+    <tr><td>Mistral</td><td>Mistral Large 2512</td><td>mistralai/mistral-large-2512</td><td>1415</td><td>$0.50</td><td>$1.50</td></tr>
+    <tr><td>Anthropic</td><td>Claude Haiku 4.5</td><td>anthropic/claude-haiku-4.5</td><td>1408</td><td>$1.00</td><td>$5.00</td></tr>
+    <tr><td>Minimax</td><td>M2.5</td><td>minimax/minimax-m2.5</td><td>1403</td><td>$0.12</td><td>$0.99</td></tr>
+  </tbody>
+</table>
 
 <h3>3.4 Metrics</h3>
 <ul>

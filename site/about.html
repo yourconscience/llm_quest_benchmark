@@ -225,19 +225,19 @@ YAML Config                    Quest Engine (TypeScript)
 </div>
 
 <h2>Models</h2>
-<p>The benchmark targets mid-tier production models: the tier developers actually deploy, not frontier flagships. This keeps comparison fair (similar capability class) and the full benchmark reproducible for under $25.</p>
-<table class="table table-sm" style="max-width: 600px;">
-  <thead><tr><th>Provider</th><th>Model</th><th>~$/run</th></tr></thead>
+<p>The benchmark targets mid-tier production models: the tier developers actually deploy, not frontier flagships. Six providers, ELO 1400-1475 range, keeping comparison fair within a capability class.</p>
+<table class="table table-sm" style="max-width: 700px;">
+  <thead><tr><th>Provider</th><th>Model</th><th>ELO</th><th>Input $/M</th><th>Output $/M</th></tr></thead>
   <tbody>
-    <tr><td>DeepSeek</td><td>V3.2</td><td>$0.013</td></tr>
-    <tr><td>Qwen</td><td>3.5 Plus</td><td>$0.015</td></tr>
-    <tr><td>Moonshot</td><td>Kimi K2.5</td><td>$0.020</td></tr>
-    <tr><td>Z.ai</td><td>GLM-5</td><td>$0.025</td></tr>
-    <tr><td>Google</td><td>Gemini 3 Flash</td><td>$0.030</td></tr>
-    <tr><td>OpenAI</td><td>GPT-5.4 Mini</td><td>$0.040</td></tr>
+    <tr><td>Google</td><td>Gemini 3 Flash</td><td>1474</td><td>$0.50</td><td>$3.00</td></tr>
+    <tr><td>OpenAI</td><td>GPT-5.4 Mini</td><td>1458</td><td>$0.75</td><td>$4.50</td></tr>
+    <tr><td>DeepSeek</td><td>V3.2</td><td>1424</td><td>$0.26</td><td>$0.42</td></tr>
+    <tr><td>Mistral</td><td>Mistral Large 2512</td><td>1415</td><td>$0.50</td><td>$1.50</td></tr>
+    <tr><td>Anthropic</td><td>Claude Haiku 4.5</td><td>1408</td><td>$1.00</td><td>$5.00</td></tr>
+    <tr><td>Minimax</td><td>M2.5</td><td>1403</td><td>$0.12</td><td>$0.99</td></tr>
   </tbody>
 </table>
-<p class="text-muted" style="font-size: 0.9rem;">High-tier follow-up (Claude Sonnet 4.6, GPT-5.4, Gemini 3 Pro) planned separately.</p>
+<p class="text-muted" style="font-size: 0.9rem;">All accessed via <a href="https://openrouter.ai">OpenRouter</a>. High-tier follow-up (Claude Sonnet 4.6, GPT-5.4, Gemini 3 Pro) planned separately.</p>
 
 <h2>Reproducing results</h2>
 <p>
