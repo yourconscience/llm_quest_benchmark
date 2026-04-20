@@ -33,6 +33,11 @@ h3 { margin-top: 2rem; color: var(--muted); font-size: 1.1rem; text-transform: u
 .metric-name { font-weight: 600; color: var(--text); }
 .metric-desc { font-size: 0.9rem; color: var(--muted); }
 .text-muted { color: var(--muted) !important; }
+figure { margin: 2rem 0; }
+figure img { border-radius: 8px; border: 1px solid var(--border); }
+figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent); padding: 1rem 1.25rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; }
+.callout p { margin-bottom: 0; }
 </style>
 </head>
 <body>
@@ -43,6 +48,7 @@ h3 { margin-top: 2rem; color: var(--muted); font-size: 1.1rem; text-transform: u
     <div>
       <a href="about.html" class="nav-link-custom active">About</a>
       <a href="index.html" class="nav-link-custom">Leaderboard</a>
+      <a href="paper.html" class="nav-link-custom">Paper</a>
       <a href="https://github.com/yourconscience/llm_quest_benchmark" class="nav-link-custom">GitHub</a>
     </div>
   </div>
@@ -52,108 +58,143 @@ h3 { margin-top: 2rem; color: var(--muted); font-size: 1.1rem; text-transform: u
 
 <div class="hero">
   <h1>LLM-Quest Benchmark</h1>
-  <p>Evaluating how cognitive scaffolding - prompting strategies, planning, and tool use - affects LLM decision-making in complex interactive environments.</p>
+  <p>How much does the wrapper around a language model matter? We test five agent architectures on the same set of text-based decision tasks to find out.</p>
 </div>
 
-<h2>What is this?</h2>
+<h2>The idea in 30 seconds</h2>
 <p>
-  LLM-Quest is a benchmark for measuring LLM agent performance in text-based decision environments.
-  Each evaluation episode presents the model with a branching narrative where it must read a situation description, weigh available actions, and choose one. The outcome (success or failure) depends on a chain of decisions across multiple turns.
+  Take a language model. Give it a text-based quest: read a situation, pick an action from a list, repeat for 10-50 turns until you win or lose. Now do the same thing five different ways: bare prompt, chain-of-thought reasoning, injected domain knowledge, a planning loop, and tool access. Does the scaffolding around the model change outcomes more than swapping the model itself?
 </p>
 <p>
-  The core question is not "which model is smartest" but rather <strong>how much does the cognitive architecture around the model matter?</strong>
-  The same model can be evaluated with a bare prompt, a reasoning scaffold, domain knowledge injection, multi-step planning, or access to tools - and the results are often dramatically different.
+  That is what this benchmark measures. We run each model through the same quests with each architecture, and compare success rates, exploration patterns, and cost.
 </p>
 
-<h2>Evaluation Domain</h2>
+<div class="callout">
+  <p>Most LLM benchmarks compare models on the same task. We compare <em>agent architectures</em> on the same model: five modes, six models, dozens of quests.</p>
+</div>
+
+<h2>What the agent sees</h2>
 <p>
-  The benchmark uses interactive fiction quests originally created for the Space Rangers universe - a large corpus of community-authored text adventures with branching narratives, resource management, and non-obvious optimal paths.
-  These quests serve as a challenging evaluation domain because they require:
+  Each turn, the agent receives a text description of the current situation and a numbered list of possible actions. It must pick one. The quest engine advances the state, and the agent gets the next situation. This continues until the quest ends in success or failure.
+</p>
+<p>
+  Here is what a typical turn looks like:
+</p>
+
+<div class="diagram">
+<pre style="margin:0; color: var(--muted);">
+Step 7
+================================================================================
+You enter the trading post. Three merchants eye you from behind their
+stalls. A posted notice reads: "Warning: fuel prices fluctuate hourly."
+
+Status: Credits: 1,200 | Fuel: 40% | Reputation: Neutral
+
+Choices:
+  1. Buy fuel at current prices (580 cr)
+  2. Ask the merchants about cheaper fuel sources
+  3. Check the notice board for trade opportunities
+  4. Leave and try the next settlement
+</pre>
+</div>
+
+<p class="mt-3">
+  The quests range from straightforward (gather information, make safe choices) to adversarial (sliding puzzles, resource optimization under constraints, multi-step navigation with dead ends). Some require domain knowledge the model was never trained on. Some are solvable by any model with decent reading comprehension. The spread is what makes the benchmark useful.
+</p>
+
+<figure>
+  <img src="img/early_benchmark.jpg" alt="Early version of the LLM Quest Benchmark, March 2025" class="img-fluid" style="max-width: 100%;">
+  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests, ten total runs. GPT-4o-mini was the only model to complete both quests. The benchmark has since grown to 6 models, 15+ quests, 360+ runs, and five agent architectures.</figcaption>
+</figure>
+
+<h2>Evaluation domain</h2>
+<p>
+  The tasks are interactive fiction quests from the Space Rangers universe: a large corpus of community-authored text adventures with branching narratives, resource management, and non-obvious optimal paths. They were not designed for LLM evaluation, which is part of why they work well as one: the difficulty distribution is organic, not synthetic.
+</p>
+<p>
+  Properties that make these quests a challenging evaluation domain:
 </p>
 <ul>
-  <li>Reading comprehension across multi-paragraph descriptions</li>
-  <li>Multi-step sequential decision-making (10-50+ turns per quest)</li>
-  <li>Reasoning under uncertainty with incomplete information</li>
-  <li>Avoiding repetitive loops and dead ends</li>
-  <li>Balancing exploration vs. exploitation</li>
+  <li><strong>Sequential decision-making</strong> over 10-50+ turns with delayed consequences</li>
+  <li><strong>Incomplete information</strong>: optimal paths are not obvious from the initial state</li>
+  <li><strong>Repetition traps</strong>: models frequently get stuck in loops, revisiting the same locations</li>
+  <li><strong>Domain-specific mechanics</strong>: scoring systems, resource budgets, and spatial puzzles that require knowledge the model may lack</li>
+  <li><strong>Reading comprehension</strong>: multi-paragraph descriptions with decision-relevant details buried in flavor text</li>
 </ul>
 <p>
-  The quest corpus contains hundreds of scenarios ranging from straightforward to extremely difficult.
-  The benchmark selects a balanced subset for evaluation.
+  The quest corpus contains hundreds of scenarios. The benchmark selects a balanced subset covering four difficulty categories: spatial/grid puzzles, combinatorial optimization, long-horizon navigation, and domain-specific scoring.
 </p>
 
-<h2>Agent Modes</h2>
-<p>Each model is evaluated across multiple agent architectures that add increasing cognitive scaffolding:</p>
+<h2>Agent modes</h2>
+<p>The benchmark's core contribution: each model is evaluated with five different cognitive architectures, from minimal to fully augmented.</p>
 
 <div class="row g-3 my-3">
   <div class="col-md-6">
     <div class="card mode-card">
       <h5><span class="mode-letter mode-a">A</span> Baseline</h5>
-      <p>Minimal prompt. The model sees the situation and action list, returns a single number. No reasoning, no context, no guidance. This is the control condition.</p>
+      <p>Minimal prompt. The model sees the situation and action list, returns a number. No reasoning, no context. The control condition.</p>
     </div>
   </div>
   <div class="col-md-6">
     <div class="card mode-card">
-      <h5><span class="mode-letter mode-b">B</span> Prompted</h5>
-      <p>Structured reasoning prompt with guidelines: avoid abandonment, gather information, reuse hints. The model returns analysis, reasoning, and a choice in JSON format.</p>
+      <h5><span class="mode-letter mode-b">B</span> Prompted reasoning</h5>
+      <p>Structured reasoning scaffold: analyze the situation, weigh options, avoid common failure patterns. Returns analysis + choice in JSON.</p>
     </div>
   </div>
   <div class="col-md-6">
     <div class="card mode-card">
-      <h5><span class="mode-letter mode-c">C</span> Knowledge</h5>
-      <p>Reasoning prompt augmented with domain-specific hints about quest mechanics: read descriptions literally, prefer preparation over confrontation, avoid premature exits.</p>
+      <h5><span class="mode-letter mode-c">C</span> Knowledge-augmented</h5>
+      <p>Reasoning prompt plus domain knowledge: quest mechanics, common traps, strategy hints. Tests whether the right information unlocks otherwise-impossible quests.</p>
     </div>
   </div>
   <div class="col-md-6">
     <div class="card mode-card">
       <h5><span class="mode-letter mode-d">D</span> Planner</h5>
-      <p>Multi-turn planning agent. First generates a 3-5 sentence strategy, then executes it. Replans when the situation changes significantly. Maintains strategic coherence across turns.</p>
+      <p>Multi-turn planning agent. Generates a strategy, executes it, replans when circumstances change. Maintains strategic coherence across turns.</p>
     </div>
   </div>
   <div class="col-md-6">
     <div class="card mode-card">
       <h5><span class="mode-letter mode-e">E</span> Tool-augmented</h5>
-      <p>Agent with access to tools: quest history queries, state tracking. Can gather information before committing to an action. Two-phase select-then-execute loop.</p>
+      <p>Agent with access to tools: state tracker, calculator, quest history. Can reason over structured data before committing to an action.</p>
     </div>
   </div>
 </div>
 
-<h2>How It Works</h2>
+<h2>Architecture</h2>
 
 <div class="diagram">
 <pre style="margin:0; color: var(--muted);">
 YAML Config                    Quest Engine (TypeScript)
 +-----------------------+      +-------------------------+
 | models:               |      |  .qm quest file         |
-|   - claude-sonnet-4   |      |  branching narrative     |
-|   - gpt-5.4-mini      | &rarr; |  state machine          |
-|   - gemini-2.5-flash  |      |  success/failure outcome |
-| modes: [A, B, C, D]   |      +-------------------------+
-| quests: [15 selected]  |                |
-| runs_per_config: 1     |                v
+|   - deepseek-v3.2     |      |  branching narrative     |
+|   - gpt-5.4-mini      | --&gt; |  state machine          |
+|   - gemini-3-flash    |      |  success/failure outcome |
+| modes: [A, B, C, D, E]|      +-------------------------+
+| quests: [35 selected]  |                |
+| runs_per_config: 3     |                v
 +-----------------------+      +-------------------------+
                                | Agent (Python)          |
                                |  prompt template        |
                                |  LLM API call           |
                                |  action selection       |
-                               |  per-run metrics        |
+                               |  per-run telemetry      |
                                +-------------------------+
                                           |
                                           v
                                +-------------------------+
                                | Leaderboard (JSON)      |
                                |  success rates          |
-                               |  token usage            |
-                               |  repetition rates       |
-                               |  aggregated by model    |
-                               |    and mode             |
+                               |  exploration rate       |
+                               |  repetition rate        |
+                               |  cost per run           |
                                +-------------------------+
 </pre>
 </div>
 
 <p class="mt-3">
-  The benchmark is configured via YAML files that define the cross-product of models, prompt templates, and quests to evaluate.
-  Each configuration runs through the quest engine, which presents situations and actions to the LLM agent, records the agent's choices, and determines the final outcome.
+  Everything is configured via YAML: model list, prompt templates, quest selection, runs per cell. A single command runs the full matrix and exports results as JSON for the leaderboard.
 </p>
 
 <h2>Metrics</h2>
@@ -161,63 +202,64 @@ YAML Config                    Quest Engine (TypeScript)
 <div class="metric-row">
   <div class="metric-item">
     <div class="metric-name">Success Rate</div>
-    <div class="metric-desc">Fraction of quest runs that end in a successful outcome. The primary metric. Aggregated across quests per model-mode pair.</div>
+    <div class="metric-desc">Fraction of runs ending in quest success. The primary metric. Binary outcome per run, aggregated per model-mode pair.</div>
   </div>
   <div class="metric-item">
-    <div class="metric-name">Average Steps</div>
-    <div class="metric-desc">Mean number of decision turns per quest run. Fewer steps can indicate efficiency or premature termination.</div>
+    <div class="metric-name">Exploration Rate</div>
+    <div class="metric-desc">Unique locations visited / total locations available. Measures how thoroughly the agent explores the quest state space.</div>
   </div>
 </div>
 <div class="metric-row">
   <div class="metric-item">
-    <div class="metric-name">Average Tokens</div>
-    <div class="metric-desc">Mean total tokens (input + output) consumed per run. Proxy for computational cost.</div>
+    <div class="metric-name">Repetition Rate</div>
+    <div class="metric-desc">Fraction of steps where the agent revisits an already-visited location. High values indicate the agent is stuck in a decision loop. Rep rate &gt;0.6 predicts 0% success.</div>
   </div>
   <div class="metric-item">
-    <div class="metric-name">Repetition Rate</div>
-    <div class="metric-desc">Fraction of agent actions that repeat the immediately previous choice. High values indicate the agent is stuck in a decision loop.</div>
+    <div class="metric-name">Cost per Run</div>
+    <div class="metric-desc">Total token cost (input + output) in USD. Enables cost-performance Pareto analysis across models and modes.</div>
   </div>
 </div>
 
-<h2>Reproducing Results</h2>
+<h2>Models</h2>
+<p>The benchmark targets mid-tier production models: the tier developers actually deploy, not frontier flagships. This keeps comparison fair (similar capability class) and the full benchmark reproducible for under $25.</p>
+<table class="table table-sm" style="max-width: 600px;">
+  <thead><tr><th>Provider</th><th>Model</th><th>~$/run</th></tr></thead>
+  <tbody>
+    <tr><td>DeepSeek</td><td>V3.2</td><td>$0.013</td></tr>
+    <tr><td>Qwen</td><td>3.5 Plus</td><td>$0.015</td></tr>
+    <tr><td>Moonshot</td><td>Kimi K2.5</td><td>$0.020</td></tr>
+    <tr><td>Z.ai</td><td>GLM-5</td><td>$0.025</td></tr>
+    <tr><td>Google</td><td>Gemini 3 Flash</td><td>$0.030</td></tr>
+    <tr><td>OpenAI</td><td>GPT-5.4 Mini</td><td>$0.040</td></tr>
+  </tbody>
+</table>
+<p class="text-muted" style="font-size: 0.9rem;">High-tier follow-up (Claude Sonnet 4.6, GPT-5.4, Gemini 3 Pro) planned separately.</p>
+
+<h2>Reproducing results</h2>
 
 <div class="card" style="padding: 1.25rem; margin: 1rem 0;">
-<pre style="margin:0; color: var(--text); font-size: 0.9rem;"><code># Clone and setup
-git clone https://github.com/yourconscience/llm_quest_benchmark.git
+<pre style="margin:0; color: var(--text); font-size: 0.9rem;"><code>git clone --recursive https://github.com/yourconscience/llm_quest_benchmark.git
 cd llm_quest_benchmark
-uv sync
+uv sync --extra dev && npm install
 
-# Download quest files
-./scripts/download_quests.sh
+cp .env.template .env   # add API keys
 
-# Run a benchmark
-uv run benchmark --config configs/benchmarks/your_config.yaml
-
-# Generate leaderboard
-uv run benchmark-report --benchmark-dir results/your_run -o site/leaderboard.json</code></pre>
+./download_quests.sh --refresh
+llm-quest benchmark --config configs/benchmarks/mode_comparison_pilot.yaml
+llm-quest benchmark-report --benchmark-dir results/&lt;run&gt; -o site/leaderboard.json</code></pre>
 </div>
 
 <p>
-  Configure your API keys in <code>.env</code> (supports OpenAI, Anthropic, Google, DeepSeek, or <a href="https://openrouter.ai">OpenRouter</a> as a unified proxy).
-  Write a YAML config specifying the model-mode-quest matrix, and the benchmark handles the rest.
-</p>
-
-<h2>Models Evaluated</h2>
-<p>Current leaderboard includes results from:</p>
-<ul>
-  <li><strong>Anthropic</strong> - Claude Sonnet 4.6</li>
-  <li><strong>OpenAI</strong> - GPT-5.4, GPT-5.4 Mini</li>
-  <li><strong>Google</strong> - Gemini 2.5 Flash</li>
-  <li><strong>DeepSeek</strong> - DeepSeek Chat (V3)</li>
-  <li><strong>Alibaba</strong> - Qwen 2.5 72B Instruct</li>
-</ul>
-<p>
-  All models are accessed through <a href="https://openrouter.ai">OpenRouter</a> for unified billing and consistent API interface.
-  Adding new models requires only a config change.
+  Supports OpenAI, Anthropic, Google, DeepSeek APIs directly, or <a href="https://openrouter.ai">OpenRouter</a> as a unified proxy. Adding a new model requires only a YAML config change.
 </p>
 
 <footer class="text-center py-5 text-muted" style="font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 3rem;">
-  <p><a href="index.html">View Leaderboard</a> | <a href="leaderboard.json">Raw JSON</a> | <a href="https://github.com/yourconscience/llm_quest_benchmark">Source Code</a></p>
+  <p>
+    <a href="index.html">Leaderboard</a> |
+    <a href="paper.html">Paper</a> |
+    <a href="leaderboard.json">Raw JSON</a> |
+    <a href="https://github.com/yourconscience/llm_quest_benchmark">Source Code</a>
+  </p>
 </footer>
 
 </div>

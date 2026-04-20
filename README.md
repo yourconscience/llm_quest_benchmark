@@ -2,8 +2,11 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Leaderboard](https://img.shields.io/badge/Leaderboard-Live-green.svg)](https://yourconscience.github.io/llm_quest_benchmark/)
+[![Paper](https://img.shields.io/badge/Paper-Draft-orange.svg)](https://yourconscience.github.io/llm_quest_benchmark/paper.html)
 
 Benchmark for evaluating LLM agent architectures on interactive fiction quests. Measures how planning, tool use, and prompt design affect decision-making quality across models and tasks.
+
+**[Project Site](https://yourconscience.github.io/llm_quest_benchmark/)** | **[Leaderboard](https://yourconscience.github.io/llm_quest_benchmark/index.html)** | **[Paper (draft)](https://yourconscience.github.io/llm_quest_benchmark/paper.html)**
 
 ```
 ================================================================================
