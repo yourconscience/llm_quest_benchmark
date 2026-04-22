@@ -8,7 +8,10 @@
     "planetRace": 64,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "medium",
+    "empirical_success_rate": 0.5854545454545454,
+    "empirical_runs": 275
   },
   "quests/kr_1_ru/Bank.qm": {
     "hardness": 88,
@@ -30,7 +33,10 @@
     "planetRace": 64,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "medium",
+    "empirical_success_rate": 0.5854545454545454,
+    "empirical_runs": 275
   },
   "quests/kr_1_ru/Bondiana.qm": {
     "hardness": 50,
@@ -96,7 +102,10 @@
     "planetRace": 16,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "trivial",
+    "empirical_success_rate": 1.0,
+    "empirical_runs": 3
   },
   "quests/kr_1_ru/Energy.qm": {
     "hardness": 73,
@@ -162,7 +171,10 @@
     "planetRace": 64,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 3
   },
   "quests/kr_1_ru/Hachball.qm": {
     "hardness": 20,
@@ -173,7 +185,10 @@
     "planetRace": 2,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 3
   },
   "quests/kr_1_ru/Ikebana.qm": {
     "hardness": 60,
@@ -261,7 +276,10 @@
     "planetRace": 4,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 3
   },
   "quests/kr_1_ru/Siege.qm": {
     "hardness": 50,
@@ -283,7 +301,10 @@
     "planetRace": 4,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 3
   },
   "quests/kr_1_ru/Tomb.qm": {
     "hardness": 20,
@@ -294,7 +315,10 @@
     "planetRace": 64,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 3
   },
   "quests/sr_2_1_2121_eng/Badday_eng.qm": {
     "hardness": 50,
@@ -305,7 +329,10 @@
     "planetRace": 4,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "medium"
+    "tier": "medium",
+    "empirical_tier": "medium",
+    "empirical_success_rate": 0.6491228070175439,
+    "empirical_runs": 114
   },
   "quests/sr_2_1_2121_eng/Banket_eng.qm": {
     "hardness": 70,
@@ -316,7 +343,10 @@
     "planetRace": 30,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "hard"
+    "tier": "hard",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 154
   },
   "quests/sr_2_1_2121_eng/Borzukhan_eng.qm": {
     "hardness": 30,
@@ -327,7 +357,10 @@
     "planetRace": 64,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "medium",
+    "empirical_success_rate": 0.22929936305732485,
+    "empirical_runs": 157
   },
   "quests/sr_2_1_2121_eng/Codebox_eng.qm": {
     "hardness": 65,
@@ -338,7 +371,10 @@
     "planetRace": 1,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "hard"
+    "tier": "hard",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 82
   },
   "quests/sr_2_1_2121_eng/Depth_eng.qm": {
     "hardness": 90,
@@ -349,7 +385,10 @@
     "planetRace": 4,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "hard"
+    "tier": "hard",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 82
   },
   "quests/sr_2_1_2121_eng/Disk_eng.qm": {
     "hardness": 50,
@@ -360,7 +399,10 @@
     "planetRace": 0,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "medium"
+    "tier": "medium",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 2
   },
   "quests/sr_2_1_2121_eng/Driver_eng.qm": {
     "hardness": 50,
@@ -371,7 +413,10 @@
     "planetRace": 4,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "medium"
+    "tier": "medium",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 82
   },
   "quests/sr_2_1_2121_eng/Edelweiss_eng.qm": {
     "hardness": 35,
@@ -382,7 +427,10 @@
     "planetRace": 64,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 83
   },
   "quests/sr_2_1_2121_eng/Election_eng.qm": {
     "hardness": 30,
@@ -393,7 +441,10 @@
     "planetRace": 64,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 84
   },
   "quests/sr_2_1_2121_eng/Elus_eng.qm": {
     "hardness": 60,
@@ -437,7 +488,10 @@
     "planetRace": 4,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 82
   },
   "quests/sr_2_1_2121_eng/Jumper_eng.qm": {
     "hardness": 80,
@@ -459,7 +513,10 @@
     "planetRace": 20,
     "playerCareer": 5,
     "defaultJumpCountLimit": 1,
-    "tier": "hard"
+    "tier": "hard",
+    "empirical_tier": "hard",
+    "empirical_success_rate": 0.012658227848101266,
+    "empirical_runs": 79
   },
   "quests/sr_2_1_2121_eng/Logic_eng.qm": {
     "hardness": 30,
@@ -470,7 +527,10 @@
     "planetRace": 1,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 3
   },
   "quests/sr_2_1_2121_eng/Ministry_eng.qm": {
     "hardness": 20,
@@ -481,7 +541,10 @@
     "planetRace": 4,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 82
   },
   "quests/sr_2_1_2121_eng/Muzon_eng.qm": {
     "hardness": 20,
@@ -492,7 +555,10 @@
     "planetRace": 4,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 3
   },
   "quests/sr_2_1_2121_eng/Olympiada_eng.qm": {
     "hardness": 60,
@@ -525,7 +591,10 @@
     "planetRace": 8,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "medium",
+    "empirical_success_rate": 0.3333333333333333,
+    "empirical_runs": 3
   },
   "quests/sr_2_1_2121_eng/PirateClanPrison_eng.qm": {
     "hardness": 50,
@@ -547,7 +616,10 @@
     "planetRace": 31,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "medium"
+    "tier": "medium",
+    "empirical_tier": "medium",
+    "empirical_success_rate": 0.5375,
+    "empirical_runs": 80
   },
   "quests/sr_2_1_2121_eng/Player_eng.qm": {
     "hardness": 20,
@@ -558,7 +630,10 @@
     "planetRace": 8,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 3
   },
   "quests/sr_2_1_2121_eng/Prison_eng.qm": {
     "hardness": 50,
@@ -569,7 +644,10 @@
     "planetRace": 64,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "medium"
+    "tier": "medium",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 79
   },
   "quests/sr_2_1_2121_eng/Rally_eng.qm": {
     "hardness": 50,
@@ -591,7 +669,10 @@
     "planetRace": 1,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "hard",
+    "empirical_success_rate": 0.012195121951219513,
+    "empirical_runs": 82
   },
   "quests/sr_2_1_2121_eng/Shashki_eng.qm": {
     "hardness": 30,
@@ -602,7 +683,10 @@
     "planetRace": 4,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 3
   },
   "quests/sr_2_1_2121_eng/Sibolusovt_eng.qm": {
     "hardness": 50,
@@ -624,7 +708,10 @@
     "planetRace": 31,
     "playerCareer": 5,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "medium",
+    "empirical_success_rate": 0.2073170731707317,
+    "empirical_runs": 82
   },
   "quests/sr_2_1_2121_eng/Sortirovka1_eng.qm": {
     "hardness": 40,
@@ -635,7 +722,10 @@
     "planetRace": 2,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 3
   },
   "quests/sr_2_1_2121_eng/SpaceLines_eng.qm": {
     "hardness": 50,
@@ -657,7 +747,10 @@
     "planetRace": 1,
     "playerCareer": 7,
     "defaultJumpCountLimit": 1,
-    "tier": "easy"
+    "tier": "easy",
+    "empirical_tier": "impossible",
+    "empirical_success_rate": 0.0,
+    "empirical_runs": 3
   },
   "quests/sr_2_1_2121_eng/Xenopark_eng.qm": {
     "hardness": 60,
