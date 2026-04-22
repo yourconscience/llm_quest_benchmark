@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trace Viewer - LLM-Quest Benchmark</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+:root { --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --muted: #c9d1d9; --accent: #58a6ff; --green: #3fb950; --orange: #d29922; --red: #f85149; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+.navbar { background: var(--surface); border-bottom: 1px solid var(--border); }
+.nav-link-custom { color: var(--muted); text-decoration: none; margin-left: 1.5rem; }
+.nav-link-custom:hover, .nav-link-custom.active { color: var(--accent); }
+.card { background: var(--surface); border: 1px solid var(--border); }
+a { color: var(--accent); }
+
+/* Drop zone */
+#drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: var(--surface);
+}
+#drop-zone:hover, #drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.05);
+}
+#drop-zone .drop-icon { font-size: 2.5rem; margin-bottom: 1rem; color: var(--muted); }
+#drop-zone p { color: var(--muted); margin: 0; }
+#drop-zone p strong { color: var(--text); }
+#file-input { display: none; }
+
+/* Header section */
+#run-header { display: none; }
+.outcome-badge {
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.35em 0.9em;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+}
+.outcome-SUCCESS { background: var(--green); color: #0d1117; }
+.outcome-FAILURE { background: var(--red); color: #fff; }
+.outcome-TIMEOUT { background: var(--orange); color: #0d1117; }
+
+/* Summary stats */
+.stat-pill {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.stat-pill strong { color: var(--text); display: block; font-size: 1.05rem; }
+
+/* Step timeline */
+#timeline { display: none; }
+
+.step-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  background: var(--surface);
+  overflow: hidden;
+}
+.step-item.step-repeated {
+  border-color: var(--red);
+}
+.step-item.step-repeated .step-header {
+  background: rgba(248,81,73,0.08);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.step-header:hover { background: rgba(88,166,255,0.05); }
+.step-item.step-repeated .step-header:hover { background: rgba(248,81,73,0.12); }
+
+.step-num {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  min-width: 2.2rem;
+  text-align: right;
+}
+.step-action-preview {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.step-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.repeat-badge {
+  background: var(--red);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+}
+.error-badge {
+  background: var(--orange);
+  color: #0d1117;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+}
+.chevron {
+  font-size: 0.65rem;
+  color: var(--muted);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.step-item.open .chevron { transform: rotate(90deg); }
+
+/* Step detail panel */
+.step-detail {
+  display: none;
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.step-item.open .step-detail { display: block; }
+
+.detail-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+.observation-text {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.choices-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.choices-list li {
+  font-size: 0.88rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 5px;
+  margin-bottom: 0.3rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  display: flex;
+  gap: 0.6rem;
+}
+.choices-list li.chosen {
+  border-color: var(--accent);
+  background: rgba(88,166,255,0.1);
+  color: var(--accent);
+  font-weight: 600;
+}
+.choice-key {
+  font-weight: 700;
+  min-width: 1.5rem;
+  color: var(--muted);
+}
+.choices-list li.chosen .choice-key { color: var(--accent); }
+
+.reasoning-text {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.parse-mode-tag {
+  font-size: 0.72rem;
+  padding: 0.2em 0.6em;
+  border-radius: 4px;
+  background: var(--border);
+  color: var(--muted);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+.parse-mode-error_default { background: rgba(210,153,34,0.3); color: var(--orange); }
+.parse-mode-json_parsed { background: rgba(63,185,80,0.2); color: var(--green); }
+.token-info { font-size: 0.8rem; color: var(--muted); }
+
+/* Expand/collapse all */
+.controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.ctrl-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.3em 0.8em;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.text-muted { color: var(--muted) !important; }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark py-3">
+  <div class="container d-flex align-items-center">
+    <span class="navbar-brand mb-0 h1">LLM-Quest Benchmark</span>
+    <div>
+      <a href="about.html" class="nav-link-custom">About</a>
+      <a href="index.html" class="nav-link-custom">Leaderboard</a>
+      <a href="traces.html" class="nav-link-custom active">Traces</a>
+      <a href="https://github.com/yourconscience/llm_quest_benchmark" class="nav-link-custom">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-4" style="max-width: 900px;">
+
+  <!-- Drop zone -->
+  <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <div class="drop-icon">&#128196;</div>
+    <p><strong>Drop run_summary.json here</strong></p>
+    <p style="margin-top:0.4rem; font-size:0.88rem">or click to select a file</p>
+    <input type="file" id="file-input" accept=".json,application/json">
+  </div>
+
+  <!-- Run header -->
+  <div id="run-header" class="mt-4">
+    <div class="d-flex flex-wrap align-items-start gap-3 mb-3">
+      <div>
+        <h3 class="mb-1" id="hdr-quest" style="font-size:1.5rem"></h3>
+        <div id="hdr-agent" style="font-size:0.88rem; color:var(--muted); font-family:'SF Mono','Fira Code',monospace"></div>
+      </div>
+      <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
+        <span id="hdr-outcome" class="outcome-badge"></span>
+      </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mb-4" id="stat-pills"></div>
+  </div>
+
+  <!-- Timeline -->
+  <div id="timeline">
+    <div class="controls-bar">
+      <span style="font-size:0.85rem; color:var(--muted); margin-right:auto" id="steps-label"></span>
+      <button class="ctrl-btn" id="btn-expand-all">Expand all</button>
+      <button class="ctrl-btn" id="btn-collapse-all">Collapse all</button>
+    </div>
+    <div id="steps-container"></div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Drag-drop setup
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input');
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) loadFile(file);
+  });
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) loadFile(e.target.files[0]);
+  });
+
+  function loadFile(file) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        render(data);
+      } catch (err) {
+        alert('Failed to parse JSON: ' + err.message);
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  function fmt(n, digits) {
+    if (n == null || n === undefined) return '-';
+    return Number(n).toLocaleString('en-US', { maximumFractionDigits: digits != null ? digits : 2 });
+  }
+
+  function fmtDur(secs) {
+    if (secs == null) return '-';
+    if (secs < 60) return secs.toFixed(1) + 's';
+    return (secs / 60).toFixed(1) + 'min';
+  }
+
+  function getChosenKey(choice) {
+    if (!choice || typeof choice !== 'object') return null;
+    return Object.keys(choice)[0] || null;
+  }
+
+  // Repetition detection: mark step if same action chosen within last 5 steps
+  function computeRepetitions(steps, window) {
+    const actions = [];
+    return steps.map((step, i) => {
+      const chosenKey = getChosenKey(step.llm_decision && step.llm_decision.choice);
+      const chosenText = chosenKey ? (step.llm_decision.choice[chosenKey] || '') : '';
+      const token = chosenText.trim().toLowerCase();
+      const windowSlice = actions.slice(Math.max(0, i - window), i);
+      const repeated = token.length > 0 && windowSlice.includes(token);
+      actions.push(token);
+      return repeated;
+    });
+  }
+
+  function render(data) {
+    const steps = data.steps || [];
+    const metrics = data.metrics || {};
+    const usage = data.usage || {};
+    const WINDOW = metrics.repetition_window || 5;
+
+    // Show header
+    document.getElementById('run-header').style.display = '';
+    document.getElementById('hdr-quest').textContent = data.quest_name || data.quest_file || 'Unknown Quest';
+    document.getElementById('hdr-agent').textContent = data.agent_id || '';
+
+    const outcome = (data.outcome || '').toUpperCase();
+    const outcomeBadge = document.getElementById('hdr-outcome');
+    outcomeBadge.textContent = outcome || 'UNKNOWN';
+    outcomeBadge.className = 'outcome-badge outcome-' + (outcome || 'UNKNOWN');
+
+    // Stats pills
+    const totalTokens = usage.total_tokens || (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
+    const cost = usage.estimated_cost_usd;
+    const repRate = metrics.repetition_rate;
+    const pills = [
+      { label: 'Steps', value: metrics.total_steps != null ? metrics.total_steps : steps.length },
+      { label: 'Reward', value: data.reward != null ? fmt(data.reward, 0) : '-' },
+      { label: 'Duration', value: fmtDur(data.run_duration) },
+      { label: 'Total Tokens', value: totalTokens ? fmt(totalTokens, 0) : '-' },
+      { label: 'Cost', value: cost != null ? ('$' + cost.toFixed(4)) : '-' },
+      { label: 'Repetition Rate', value: repRate != null ? (repRate * 100).toFixed(1) + '%' : '-' },
+    ];
+    document.getElementById('stat-pills').innerHTML = pills.map(p =>
+      `<div class="stat-pill"><strong>${esc(String(p.value))}</strong>${esc(p.label)}</div>`
+    ).join('');
+
+    // Timeline
+    document.getElementById('timeline').style.display = '';
+    document.getElementById('steps-label').textContent = steps.length + ' steps';
+
+    const repeated = computeRepetitions(steps, WINDOW);
+    const container = document.getElementById('steps-container');
+    container.innerHTML = '';
+
+    steps.forEach((step, idx) => {
+      const dec = step.llm_decision || {};
+      const chosenKey = getChosenKey(dec.choice);
+      const chosenText = chosenKey ? (dec.choice[chosenKey] || '') : '';
+      const isRepeated = repeated[idx];
+      const isError = dec.parse_mode === 'error_default';
+      const isSingleAuto = dec.reasoning === 'auto_single_choice';
+
+      // Collapsed preview: chosen action or error label
+      const previewText = chosenText || (chosenKey ? 'Choice ' + chosenKey : 'No choice');
+
+      // Tokens
+      const pt = dec.prompt_tokens || 0;
+      const ct = dec.completion_tokens || 0;
+      const stepTokens = pt + ct;
+
+      const item = document.createElement('div');
+      item.className = 'step-item' + (isRepeated ? ' step-repeated' : '');
+
+      // Build choices HTML
+      const choices = step.choices || {};
+      const choicesHtml = Object.keys(choices).length === 0 ? '<span style="color:var(--muted);font-size:0.85rem">No choices available</span>' :
+        '<ul class="choices-list">' +
+        Object.entries(choices).map(([k, v]) =>
+          `<li class="${k === chosenKey ? 'chosen' : ''}"><span class="choice-key">${esc(k)}.</span><span>${esc(v)}</span></li>`
+        ).join('') +
+        '</ul>';
+
+      // Parse mode tag
+      const pm = dec.parse_mode;
+      const pmHtml = pm ? `<span class="parse-mode-tag parse-mode-${esc(pm)}">${esc(pm)}</span>` : '';
+
+      // Reasoning / analysis
+      const reasoning = dec.reasoning && dec.reasoning !== 'auto_single_choice' ? dec.reasoning : null;
+      const analysis = dec.analysis || null;
+      const subgoal = dec.subgoal || null;
+      let reasoningHtml = '';
+      if (analysis) {
+        reasoningHtml += `<div class="detail-label mt-3">Analysis</div><div class="reasoning-text">${esc(analysis)}</div>`;
+      }
+      if (reasoning) {
+        reasoningHtml += `<div class="detail-label mt-3">Reasoning</div><div class="reasoning-text">${esc(reasoning)}</div>`;
+      }
+      if (subgoal) {
+        reasoningHtml += `<div class="detail-label mt-3">Subgoal</div><div class="reasoning-text">${esc(subgoal)}</div>`;
+      }
+
+      item.innerHTML = `
+        <div class="step-header">
+          <span class="step-num">#${step.step}</span>
+          <span class="step-action-preview">${esc(previewText)}</span>
+          <span class="step-meta">
+            ${isRepeated ? '<span class="repeat-badge">REPEAT</span>' : ''}
+            ${isError ? '<span class="error-badge">ERROR</span>' : ''}
+            ${isSingleAuto ? '<span style="font-size:0.72rem;color:var(--muted)">auto</span>' : ''}
+            ${stepTokens > 0 ? `<span>${fmt(stepTokens, 0)} tok</span>` : ''}
+          </span>
+          <span class="chevron">&#9654;</span>
+        </div>
+        <div class="step-detail">
+          <div class="detail-label">Observation</div>
+          <div class="observation-text">${esc(step.observation || '')}</div>
+
+          <div class="detail-label mt-3">Choices</div>
+          ${choicesHtml}
+
+          ${reasoningHtml}
+
+          <div class="d-flex align-items-center gap-2 mt-3 flex-wrap">
+            ${pmHtml}
+            ${stepTokens > 0
+              ? `<span class="token-info">prompt: ${fmt(pt, 0)} + completion: ${fmt(ct, 0)} = ${fmt(stepTokens, 0)} tokens</span>`
+              : ''}
+          </div>
+        </div>
+      `;
+
+      item.querySelector('.step-header').addEventListener('click', () => {
+        item.classList.toggle('open');
+      });
+
+      container.appendChild(item);
+    });
+
+    // Expand/collapse all
+    document.getElementById('btn-expand-all').onclick = () => {
+      container.querySelectorAll('.step-item').forEach(el => el.classList.add('open'));
+    };
+    document.getElementById('btn-collapse-all').onclick = () => {
+      container.querySelectorAll('.step-item').forEach(el => el.classList.remove('open'));
+    };
+
+    // Scroll to timeline
+    document.getElementById('drop-zone').style.display = 'none';
+    document.getElementById('timeline').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+})();
+</script>
+</body>
+</html>
