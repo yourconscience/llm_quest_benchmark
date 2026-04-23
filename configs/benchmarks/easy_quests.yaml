@@ -1,9 +1,8 @@
 name: easy_quests
 # Easy-tier quests (hardness <= 40, p33 of the full distribution).
-# 22 quests: 8 Russian (kr_1_ru + top-level) and 14 English (sr_2_1_2121_eng).
+# 21 quests: 7 Russian (kr_1_ru) and 14 English (sr_2_1_2121_eng).
 # Generated from configs/quest_metadata.json tier analysis.
 quests:
-  - quests/Boat.qm
   - quests/kr_1_ru/Boat.qm
   - quests/kr_1_ru/Diehard.qm
   - quests/kr_1_ru/Gobsaur.qm
