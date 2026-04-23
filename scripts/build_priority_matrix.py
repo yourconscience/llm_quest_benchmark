@@ -146,7 +146,9 @@ def format_markdown(matrix: dict) -> str:
         if avg > 2.5:
             high_sev.append((quest, avg))
     if high_sev:
-        lines.append(f"3. **High-severity quests** (avg severity > 2.5): {', '.join(q for q, _ in sorted(high_sev, key=lambda x: -x[1]))}")
+        lines.append(
+            f"3. **High-severity quests** (avg severity > 2.5): {', '.join(q for q, _ in sorted(high_sev, key=lambda x: -x[1]))}"
+        )
 
     return "\n".join(lines)
 

@@ -14,14 +14,13 @@ import json
 import sqlite3
 from pathlib import Path
 
-
 JUNK_QUESTS = {"test_quest", "quest_1", "repeatable_quest", "repeatable", "nonexistent"}
 
 # Tier boundaries based on LLM success rate
 TIER_BOUNDARIES = {
-    "trivial": 0.66,    # >66% success
-    "medium": 0.10,     # 10-66% success
-    "hard": 0.01,       # 1-10% success
+    "trivial": 0.66,  # >66% success
+    "medium": 0.10,  # 10-66% success
+    "hard": 0.01,  # 1-10% success
     "impossible": 0.0,  # 0% success
 }
 
@@ -30,7 +29,8 @@ def compute_tiers(db_path: Path) -> list[dict]:
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
 
-    rows = conn.execute("""
+    rows = conn.execute(
+        """
         SELECT
             quest_name,
             COUNT(*) as total_runs,
@@ -43,7 +43,8 @@ def compute_tiers(db_path: Path) -> list[dict]:
           AND outcome != ''
         GROUP BY quest_name
         ORDER BY success_pct DESC
-    """.format(",".join(f"'{q}'" for q in JUNK_QUESTS)))
+    """.format(",".join(f"'{q}'" for q in JUNK_QUESTS))
+    )
 
     results = []
     for row in rows:
@@ -57,15 +58,17 @@ def compute_tiers(db_path: Path) -> list[dict]:
         else:
             tier = "impossible"
 
-        results.append({
-            "quest_name": row["quest_name"],
-            "total_runs": row["total_runs"],
-            "successes": row["successes"],
-            "success_rate": rate,
-            "success_pct": row["success_pct"],
-            "agent_count": row["agent_count"],
-            "empirical_tier": tier,
-        })
+        results.append(
+            {
+                "quest_name": row["quest_name"],
+                "total_runs": row["total_runs"],
+                "successes": row["successes"],
+                "success_rate": rate,
+                "success_pct": row["success_pct"],
+                "agent_count": row["agent_count"],
+                "empirical_tier": tier,
+            }
+        )
 
     conn.close()
     return results
@@ -117,10 +120,12 @@ def main():
     tier_counts = {"trivial": 0, "medium": 0, "hard": 0, "impossible": 0}
     for t in tiers:
         tier_counts[t["empirical_tier"]] += 1
-        print(f"{t['quest_name']:<25} {t['total_runs']:>5} {t['successes']:>8} {t['success_pct']:>6.1f}% {t['empirical_tier']:<12}")
+        print(
+            f"{t['quest_name']:<25} {t['total_runs']:>5} {t['successes']:>8} {t['success_pct']:>6.1f}% {t['empirical_tier']:<12}"
+        )
 
     print("-" * 65)
-    print(f"\nTier distribution:")
+    print("\nTier distribution:")
     for tier, count in tier_counts.items():
         print(f"  {tier}: {count} quests")
 

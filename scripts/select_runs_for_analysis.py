@@ -16,12 +16,10 @@ Usage:
 """
 
 import argparse
-import json
 import glob
-import os
+import json
 from collections import defaultdict
 from pathlib import Path
-
 
 JUNK_QUESTS = {"test_quest", "quest_1", "repeatable_quest", "repeatable", "nonexistent"}
 ANALYSIS_OUTCOMES = {"FAILURE", "TIMEOUT"}
@@ -74,15 +72,17 @@ def select_runs(results_dir: Path) -> list[dict]:
             skipped_outcome += 1
             continue
 
-        by_quest[quest].append({
-            "path": path,
-            "quest": quest,
-            "agent": run.get("agent_id", ""),
-            "outcome": outcome,
-            "steps": len(run.get("steps", [])),
-            "has_reasoning": has_reasoning(run),
-            "run_id": run.get("run_id", 0),
-        })
+        by_quest[quest].append(
+            {
+                "path": path,
+                "quest": quest,
+                "agent": run.get("agent_id", ""),
+                "outcome": outcome,
+                "steps": len(run.get("steps", [])),
+                "has_reasoning": has_reasoning(run),
+                "run_id": run.get("run_id", 0),
+            }
+        )
 
     print(f"Skipped: {skipped_junk} junk, {skipped_outcome} non-failure outcomes, {skipped_error} errors")
     print(f"Quests with failures: {len(by_quest)}")
@@ -152,7 +152,10 @@ def main():
         "total_runs": len(selected),
         "quests": len(set(r["quest"] for r in selected)),
         "agents": len(set(r["agent"] for r in selected)),
-        "runs": [{"path": r["path"], "quest": r["quest"], "agent": r["agent"], "outcome": r["outcome"], "steps": r["steps"]} for r in selected],
+        "runs": [
+            {"path": r["path"], "quest": r["quest"], "agent": r["agent"], "outcome": r["outcome"], "steps": r["steps"]}
+            for r in selected
+        ],
     }
     output_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"Manifest written to {output_path}")

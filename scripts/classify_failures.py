@@ -10,9 +10,7 @@ Usage:
 
 import argparse
 import json
-import os
 import subprocess
-import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -61,7 +59,13 @@ def condense_trace(run: dict) -> str:
         show_steps = steps
     else:
         middle_idx = len(steps) // 2
-        show_steps = steps[:5] + [{"_marker": f"... ({len(steps) - 10} steps omitted) ..."}] + steps[middle_idx - 1 : middle_idx + 2] + [{"_marker": "..."}] + steps[-5:]
+        show_steps = (
+            steps[:5]
+            + [{"_marker": f"... ({len(steps) - 10} steps omitted) ..."}]
+            + steps[middle_idx - 1 : middle_idx + 2]
+            + [{"_marker": "..."}]
+            + steps[-5:]
+        )
 
     for s in show_steps:
         if "_marker" in s:
@@ -99,6 +103,7 @@ def condense_trace(run: dict) -> str:
 
     if len(actions) > 5:
         from collections import Counter
+
         action_counts = Counter(actions)
         most_common = action_counts.most_common(3)
         rep_str = ", ".join(f"'{a[:40]}' x{c}" for a, c in most_common)
@@ -223,6 +228,7 @@ def main():
 
     # Print summary
     from collections import Counter
+
     modes = Counter(r.get("failure_mode") for r in results if "error" not in r)
     print("\nFailure mode distribution:")
     for mode, count in modes.most_common():
