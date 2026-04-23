@@ -24,6 +24,7 @@ from llm_quest_benchmark.constants import (
     MODEL_ALIASES,
     MODEL_PROVIDER_CONFIG,
 )
+from llm_quest_benchmark.llm.cost import UsageStats, estimate_cost_usd
 
 logger = logging.getLogger(__name__)
 # Configure httpx logger to only show in debug mode
@@ -41,60 +42,6 @@ class ModelSpec:
     model_id: str
 
 
-@dataclass
-class UsageStats:
-    """Token/cost usage metadata for one request or aggregated session."""
-
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    total_tokens: int = 0
-    estimated_cost_usd: float | None = None
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "prompt_tokens": self.prompt_tokens,
-            "completion_tokens": self.completion_tokens,
-            "total_tokens": self.total_tokens,
-            "estimated_cost_usd": self.estimated_cost_usd,
-        }
-
-
-# Default price table (USD per 1M tokens), overridable via environment.
-# NOTE: these are estimates; set env vars for your exact billing terms.
-DEFAULT_MODEL_PRICING_USD_PER_1M = {
-    # OpenAI
-    "openai:gpt-5": {"input": 1.25, "output": 10.0},
-    "openai:gpt-5-mini": {"input": 0.25, "output": 2.0},
-    "openai:gpt-5-nano": {"input": 0.05, "output": 0.4},
-    "openai:gpt-5.4": {"input": 1.25, "output": 10.0},
-    "openai:gpt-5.4-mini": {"input": 0.25, "output": 2.0},
-    "openai:o4-mini": {"input": 4.0, "output": 16.0},
-    # Anthropic
-    "anthropic:claude-sonnet-4-5": {"input": 3.0, "output": 15.0},
-    "anthropic:claude-sonnet-4-6": {"input": 3.0, "output": 15.0},
-    "anthropic:claude-opus-4-1-20250805": {"input": 15.0, "output": 75.0},
-    "anthropic:claude-3-5-haiku-latest": {"input": 0.8, "output": 4.0},
-    # Google Gemini
-    "google:gemini-2.5-pro": {"input": 1.25, "output": 10.0},
-    "google:gemini-2.5-flash": {"input": 0.3, "output": 2.5},
-    "google:gemini-2.5-flash-lite": {"input": 0.1, "output": 0.4},
-    # Google Gemini 3
-    "google:gemini-3-flash-preview": {"input": 0.5, "output": 3.0},
-    "google:gemini-3.1-flash-lite-preview": {"input": 0.25, "output": 1.5},
-    # DeepSeek
-    "deepseek:deepseek-chat": {"input": 0.28, "output": 0.42},
-    "deepseek:deepseek-v3.2": {"input": 0.259, "output": 0.42},
-    # Qwen (via OpenRouter)
-    "qwen:qwen-2.5-72b-instruct": {"input": 0.4, "output": 0.4},
-    "qwen:qwen3-235b-a22b": {"input": 0.14, "output": 0.6},
-    "qwen:qwen3.5-plus-02-15": {"input": 0.26, "output": 1.56},
-    # Moonshot / Kimi
-    "moonshotai:kimi-k2.5": {"input": 0.38, "output": 1.72},
-    # Z.ai / GLM
-    "z-ai:glm-5": {"input": 0.72, "output": 2.3},
-}
-
-
 def _get_attr_or_key(value: Any, key: str, default: Any = None) -> Any:
     if value is None:
         return default
@@ -108,53 +55,6 @@ def _coerce_int(value: Any, default: int = 0) -> int:
         return int(value)
     except (TypeError, ValueError):
         return default
-
-
-def _sanitize_env_key_fragment(raw: str) -> str:
-    return "".join(ch if ch.isalnum() else "_" for ch in raw.upper()).strip("_")
-
-
-def _resolve_token_pricing(provider: str, model_id: str) -> tuple[float, float] | None:
-    provider_key = _sanitize_env_key_fragment(provider)
-    model_key = _sanitize_env_key_fragment(model_id)
-
-    model_input = os.getenv(f"LLM_PRICE_{provider_key}_{model_key}_INPUT_PER_M")
-    model_output = os.getenv(f"LLM_PRICE_{provider_key}_{model_key}_OUTPUT_PER_M")
-    if model_input is not None and model_output is not None:
-        return float(model_input), float(model_output)
-
-    default_input = os.getenv(f"LLM_PRICE_{provider_key}_DEFAULT_INPUT_PER_M")
-    default_output = os.getenv(f"LLM_PRICE_{provider_key}_DEFAULT_OUTPUT_PER_M")
-    if default_input is not None and default_output is not None:
-        return float(default_input), float(default_output)
-
-    model_pricing = DEFAULT_MODEL_PRICING_USD_PER_1M.get(f"{provider}:{model_id}")
-    if model_pricing:
-        return float(model_pricing["input"]), float(model_pricing["output"])
-
-    # OpenRouter uses "sub_provider/sub_model" as model_id; normalize to "sub_provider:sub_model".
-    if provider == "openrouter" and "/" in model_id:
-        sub_provider, sub_model = model_id.split("/", 1)
-        model_pricing = DEFAULT_MODEL_PRICING_USD_PER_1M.get(f"{sub_provider}:{sub_model}")
-        if model_pricing:
-            return float(model_pricing["input"]), float(model_pricing["output"])
-
-    return None
-
-
-def _estimate_cost_usd(
-    provider: str,
-    model_id: str,
-    prompt_tokens: int,
-    completion_tokens: int,
-) -> float | None:
-    pricing = _resolve_token_pricing(provider, model_id)
-    if pricing is None:
-        return None
-    input_per_m, output_per_m = pricing
-    input_cost = (prompt_tokens / 1_000_000) * input_per_m
-    output_cost = (completion_tokens / 1_000_000) * output_per_m
-    return input_cost + output_cost
 
 
 def parse_model_name(model_name: str) -> ModelSpec:
@@ -261,7 +161,7 @@ class LLMClient(ABC):
             total_tokens = int(total_tokens)
         else:
             total_tokens = prompt_tokens + completion_tokens
-        estimated_cost_usd = _estimate_cost_usd(
+        estimated_cost_usd = estimate_cost_usd(
             self.provider,
             self.model_id,
             prompt_tokens,

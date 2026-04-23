@@ -2,35 +2,13 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Leaderboard](https://img.shields.io/badge/Leaderboard-Live-green.svg)](https://yourconscience.github.io/llm_quest_benchmark/)
+[![Paper](https://img.shields.io/badge/Paper-Draft-orange.svg)](https://yourconscience.github.io/llm_quest_benchmark/paper.html)
 
 Benchmark for evaluating LLM agent architectures on interactive fiction quests. Measures how planning, tool use, and prompt design affect decision-making quality across models and tasks.
 
-```
-================================================================================
-Step 2
-================================================================================
-Agent's Thoughts:
-{"analysis":"need to find escorts","reasoning":"spaceport is the logical place","result":1}
-----------------------------------------
-You leave the ship, squinting your eyes from the bright light of the star
-Procyon. You look around for the attendants. There's nobody on the airfield.
+**[Project Site](https://yourconscience.github.io/llm_quest_benchmark/)** | **[Leaderboard](https://yourconscience.github.io/llm_quest_benchmark/index.html)** | **[Paper (draft)](https://yourconscience.github.io/llm_quest_benchmark/paper.html)**
 
-Status:
-Your money: 2000 cr.
-You are absolutely calm.
-
-Choices:
-1. Wander over to the spaceport to look for your escorts.
-2. Chat with the bartender.
-```
-
-## What it does
-
-- Runs LLM agents through choice-based text quests (Space Rangers .qm format, 150 quests, RU/EN)
-- Compares 5 agent architectures: baseline, prompted reasoning, knowledge-augmented, planner, tool-augmented
-- Tracks success rate, exploration rate, repetition rate, and per-run token cost
-- Benchmarks 6 mid-tier production models at comparable price points ($0.01-0.04/run): DeepSeek V3.2, Qwen3.5 Plus, Kimi K2.5, Gemini 3 Flash, GLM-5, GPT-5.4 Mini
-- YAML-driven benchmark configs for model/mode/temperature matrix sweeps
+See the [About page](https://yourconscience.github.io/llm_quest_benchmark/about.html) for benchmark design, agent modes, metrics, and model selection rationale.
 
 ## Quick Start (Docker)
 

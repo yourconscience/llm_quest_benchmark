@@ -72,19 +72,21 @@ The C1-vs-C0 delta is the "does knowledge help?" finding. The C2-vs-C1 delta mea
 
 Mid-tier models: we benchmark the "Sonnet-equivalent" production tier for each provider - the models most developers actually use. This keeps per-run cost in the $0.01-0.04 range and makes the comparison fair (similar capability/price class). High-tier comparison (Claude Sonnet, GPT-5.4, Gemini Pro) is a planned follow-up.
 
-**Primary (7 models, all via OpenRouter):**
+**Primary (6 models, all via OpenRouter, Arena ELO 1403-1474):**
 
-| Provider | Model | OpenRouter ID | In $/1M | Out $/1M |
-|---|---|---|---|---|
-| DeepSeek | V3.2 | `deepseek/deepseek-v3.2` | $0.26 | $0.42 |
-| Qwen | Qwen3.5 Plus | `qwen/qwen3.5-plus-02-15` | $0.26 | $1.56 |
-| Moonshot | Kimi K2.5 | `moonshotai/kimi-k2.5` | $0.38 | $1.72 |
-| Google | Gemini 3 Flash | `google/gemini-3-flash-preview` | $0.50 | $3.00 |
-| Z.ai (GLM) | GLM-5 | `z-ai/glm-5` | $0.72 | $2.30 |
-| OpenAI | GPT-5.4 Mini | `openai/gpt-5.4-mini` | $0.75 | $4.50 |
+| Provider | Model | OpenRouter ID | In $/1M | Out $/1M | Arena ELO |
+|---|---|---|---|---|---|
+| Google | Gemini 3 Flash | `google/gemini-3-flash-preview` | $0.50 | $3.00 | 1474 |
+| OpenAI | GPT-5.4 Mini | `openai/gpt-5.4-mini` | $0.75 | $4.50 | 1458 |
+| DeepSeek | V3.2 | `deepseek/deepseek-v3.2` | $0.26 | $0.42 | 1424 |
+| Mistral | Medium 3.1 | `mistralai/mistral-medium-3.1` | $0.40 | $2.00 | 1410 |
+| Anthropic | Claude Haiku 4.5 | `anthropic/claude-haiku-4.5` | $1.00 | $5.00 | 1408 |
+| Minimax | M2.5 | `minimax/minimax-m2.5` | $0.12 | $0.99 | 1403 |
+
+Selection rationale: one model per major provider, mid-tier production class (ELO 1400-1475), all tested for speed and reliability via OpenRouter. Qwen excluded (all recent models too slow on OpenRouter routing). Kimi K2.5 and GLM-5 excluded (latency and parse reliability issues on OpenRouter).
 
 **Excluded from main benchmark (high-tier, follow-up):**
-- Anthropic Claude Sonnet 4.6 ($3/$15) - 10-35x output price of mid-tier
+- Anthropic Claude Sonnet 4.6 ($3/$15) - frontier tier
 - OpenAI GPT-5.4 ($1.25/$10) - frontier tier
 - Google Gemini 3 Pro - frontier tier
 

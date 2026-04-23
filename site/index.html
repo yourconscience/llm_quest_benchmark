@@ -47,6 +47,7 @@ a { color: var(--accent); }
       <a href="about.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">About</a>
       <a href="index.html" class="text-decoration-none" style="color:var(--accent); margin-left:1.5rem">Leaderboard</a>
       <a href="traces.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">Traces</a>
+      <a href="paper.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">Paper</a>
       <a href="https://github.com/yourconscience/llm_quest_benchmark" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">GitHub</a>
     </div>
   </div>
@@ -245,7 +246,7 @@ function renderTable() {
       <th data-col="success_rate">Success Rate ${sortArrow('success_rate')}</th>
       <th data-col="avg_steps">Avg Steps ${sortArrow('avg_steps')}</th>
       <th data-col="avg_tokens">Avg Tokens ${sortArrow('avg_tokens')}</th>
-      <th data-col="repetition_rate">Repetition <span class="tooltip-icon" title="Fraction of agent actions that repeat the immediately previous choice. High values indicate the agent is stuck in a loop.">?</span>${sortArrow('repetition_rate')}</th>`;
+      <th data-col="repetition_rate">Repetition <span class="tooltip-icon" title="Fraction of steps where the agent repeats an action from the last 5 steps. High values indicate the agent is stuck in a loop.">?</span>${sortArrow('repetition_rate')}</th>`;
   } else {
     header.innerHTML = `<th>#</th>
       <th data-col="model">Model ${sortArrow('model')}</th>
@@ -255,7 +256,7 @@ function renderTable() {
       <th data-col="success_rate">Success Rate ${sortArrow('success_rate')}</th>
       <th data-col="avg_steps">Steps ${sortArrow('avg_steps')}</th>
       <th data-col="avg_tokens">Tokens ${sortArrow('avg_tokens')}</th>
-      <th data-col="repetition_rate">Repetition <span class="tooltip-icon" title="Fraction of agent actions that repeat the immediately previous choice. High values indicate the agent is stuck in a loop.">?</span>${sortArrow('repetition_rate')}</th>`;
+      <th data-col="repetition_rate">Repetition <span class="tooltip-icon" title="Fraction of steps where the agent repeats an action from the last 5 steps. High values indicate the agent is stuck in a loop.">?</span>${sortArrow('repetition_rate')}</th>`;
   }
 
   const rows = (viewMode === 'summary' ? aggregated() : filtered()).slice().sort((a,b) => {

@@ -1,19 +1,7 @@
 repos:
-  - repo: local
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.11
     hooks:
-      - id: yapf
-        name: yapf
-        entry: yapf
-        language: system
-        types: [python]
-        args:
-          - '-i'
-          - '--style=./.style.yapf'
-      - id: isort
-        name: isort
-        entry: isort
-        language: system
-        types: [python]
-        args:
-          - '--sp'
-          - './.isort.cfg'
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
