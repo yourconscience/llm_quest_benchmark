@@ -4,8 +4,8 @@
 Rules:
 - Exclude junk quests (test_quest, quest_1, repeatable*, nonexistent)
 - Exclude ERROR outcome (infra failures, not agent failures)
-- Include ALL runs from quests with <100 total runs
-- For quests with >=100 runs, take up to 100 failures+timeouts:
+- Include ALL runs from quests with <=50 total failures
+- For quests with >50 failures, take up to 50:
   - Diverse agents (round-robin across distinct agent_ids)
   - Prefer runs with reasoning (has llm_decision.reasoning)
   - Prefer recent runs (higher run_id)
@@ -66,12 +66,12 @@ def select_runs(results_dir: Path) -> list[dict]:
             continue
 
         outcome = run.get("outcome", "")
-        if outcome not in ANALYSIS_OUTCOMES:
-            skipped_outcome += 1
-            continue
-
         if outcome == "ERROR":
             skipped_error += 1
+            continue
+
+        if outcome not in ANALYSIS_OUTCOMES:
+            skipped_outcome += 1
             continue
 
         by_quest[quest].append({
@@ -141,8 +141,7 @@ def main():
 
     results_dir = Path(args.results_dir)
     if not results_dir.is_dir():
-        print(f"Error: {results_dir} not found")
-        return
+        parser.error(f"--results-dir not found: {results_dir}")
 
     selected = select_runs(results_dir)
 

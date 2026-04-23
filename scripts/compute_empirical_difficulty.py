@@ -84,7 +84,7 @@ def update_metadata(metadata_path: Path, tiers: list[dict]) -> int:
         # Match by quest name (filename without extension and path)
         quest_name = Path(quest_path).stem
         # Strip _eng suffix for matching
-        base_name = quest_name.replace("_eng", "")
+        base_name = quest_name.removesuffix("_eng")
 
         tier_data = tier_lookup.get(quest_name) or tier_lookup.get(base_name)
         if tier_data:

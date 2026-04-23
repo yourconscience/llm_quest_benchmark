@@ -127,6 +127,10 @@ def classify_run(run_path: str, model: str) -> dict:
             text=True,
             timeout=120,
         )
+        if result.returncode != 0:
+            stderr = result.stderr.strip() or result.stdout.strip()
+            return {"path": run_path, "error": f"claude exited {result.returncode}: {stderr[:500]}"}
+
         response = result.stdout.strip()
 
         # Try to parse JSON from response

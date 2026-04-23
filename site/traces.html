@@ -313,6 +313,7 @@ a { color: var(--accent); }
   });
   fileInput.addEventListener('change', e => {
     if (e.target.files[0]) loadFile(e.target.files[0]);
+    e.target.value = '';
   });
 
   function loadFile(file) {
@@ -490,8 +491,6 @@ a { color: var(--accent); }
       container.querySelectorAll('.step-item').forEach(el => el.classList.remove('open'));
     };
 
-    // Scroll to timeline
-    document.getElementById('drop-zone').style.display = 'none';
     document.getElementById('timeline').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 })();

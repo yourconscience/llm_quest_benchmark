@@ -33,11 +33,8 @@ def build_matrix(classifications: list[dict]) -> dict:
     # Per-agent breakdown
     agent_modes = defaultdict(lambda: Counter())
     for c in valid:
-        agent = c.get("agent", "unknown")
-        # Simplify agent name: extract model name
-        if ":" in agent:
-            parts = agent.split(":")
-            agent = parts[-1].split("/")[-1] if "/" in parts[-1] else parts[-1]
+        agent = c.get("agent") or "unknown"
+        agent = agent.split(":")[-1].split("/")[-1] or "unknown"
         agent_modes[agent][c["failure_mode"]] += 1
 
     return {
@@ -64,6 +61,10 @@ def format_markdown(matrix: dict) -> str:
     lines.append("|------|-------|---|-------------|----------------|")
 
     total = matrix["total"]
+    if total == 0:
+        lines.append("No valid classifications found.")
+        return "\n".join(lines)
+
     priorities = {}
     for mode, count in sorted(matrix["mode_counts"].items(), key=lambda x: -x[1]):
         pct = 100 * count / total
@@ -137,7 +138,11 @@ def format_markdown(matrix: dict) -> str:
     # High-severity quests
     high_sev = []
     for quest, modes in matrix["quest_severity"].items():
-        avg = sum(modes.values()) / len(modes)
+        counts = matrix["quest_modes"].get(quest, {})
+        total_count = sum(counts.values())
+        if not total_count:
+            continue
+        avg = sum(avg_sev * counts.get(mode, 0) for mode, avg_sev in modes.items()) / total_count
         if avg > 2.5:
             high_sev.append((quest, avg))
     if high_sev:
