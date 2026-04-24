@@ -378,6 +378,7 @@ class QMBridge:
 
             params_state_raw = state.get("paramsState") or []
             params_state = [clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)]
+            game_state_raw = state.get("gameState", "running")
             initial_state = QMBridgeState(
                 location_id=str(saving["locationId"]),
                 text=clean_qm_text(state.get("text", "")),
@@ -387,8 +388,9 @@ class QMBridge:
                     for c in (state.get("choices") or [])
                     if isinstance(c, dict) and c.get("active", False)
                 ],
-                reward=0.0,  # UI state does not provide reward directly
-                game_ended=state.get("gameState") != "running",
+                reward=0.0,
+                game_ended=game_state_raw != "running",
+                game_state=game_state_raw,
             )
 
             if not initial_state.choices and not initial_state.game_ended:
@@ -425,6 +427,7 @@ class QMBridge:
 
             params_state_raw = state.get("paramsState") or []
             params_state = [clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)]
+            game_state_raw = state.get("gameState", "running")
             current_state = QMBridgeState(
                 location_id=str(saving["locationId"]),
                 text=clean_qm_text(state.get("text", "")),
@@ -434,8 +437,9 @@ class QMBridge:
                     for c in (state.get("choices") or [])
                     if isinstance(c, dict) and c.get("active", False)
                 ],
-                reward=0.0,  # UI state does not provide reward directly
-                game_ended=state.get("gameState") != "running",
+                reward=0.0,
+                game_ended=game_state_raw != "running",
+                game_state=game_state_raw,
             )
 
             if not current_state.choices and not current_state.game_ended:
@@ -518,13 +522,15 @@ class QMBridge:
                 if isinstance(c, dict) and c.get("active", False)
             ]
 
+            game_state_raw = state.get("gameState", "running")
             new_state = QMBridgeState(
                 location_id=str(saving["locationId"]),
                 text=clean_qm_text(state.get("text", "")),
                 params_state=params_state,
                 choices=choices,
-                reward=0.0,  # UI state does not provide reward directly
-                game_ended=state.get("gameState") != "running",
+                reward=0.0,
+                game_ended=game_state_raw != "running",
+                game_state=game_state_raw,
             )
 
             self.state_history.append(new_state)
