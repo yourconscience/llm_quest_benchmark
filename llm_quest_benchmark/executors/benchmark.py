@@ -12,6 +12,7 @@ from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.core.logging import DEFAULT_DB_PATH
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.environments.state import QuestOutcome
+from llm_quest_benchmark.llm import tracing
 from llm_quest_benchmark.schemas.config import BenchmarkConfig
 
 # Configure logging
@@ -304,6 +305,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
     if artifact_dir:
         logger.info("Benchmark artifacts saved to %s", artifact_dir)
 
+    tracing.flush()
     return results
 
 

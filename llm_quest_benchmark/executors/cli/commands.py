@@ -40,6 +40,7 @@ from llm_quest_benchmark.executors.benchmark import (
     print_summary,
     run_benchmark,
 )
+from llm_quest_benchmark.llm import tracing
 from llm_quest_benchmark.renderers.terminal import RichRenderer
 from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 
@@ -433,6 +434,8 @@ def run(
     except Exception as e:
         log.exception(f"Error during quest run: {e}")
         raise typer.Exit(code=2)
+    finally:
+        tracing.flush()
 
 
 @app.command()

@@ -17,21 +17,34 @@ from typing import Any
 
 import anthropic
 from dotenv import load_dotenv
-from openai import OpenAI
 
-from llm_quest_benchmark.constants import (
+# Load .env BEFORE checking Langfuse (needs LANGFUSE_SECRET_KEY from .env).
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env", override=False)
+
+from llm_quest_benchmark.llm.tracing import is_enabled as _langfuse_enabled  # noqa: E402
+
+if _langfuse_enabled():
+    from langfuse.decorators import observe  # noqa: E402
+    from langfuse.openai import OpenAI  # noqa: E402
+else:
+    from openai import OpenAI  # noqa: E402
+
+    def observe(**_kwargs):  # type: ignore[misc]
+        def _noop(fn):
+            return fn
+
+        return _noop
+
+
+from llm_quest_benchmark.constants import (  # noqa: E402
     DEFAULT_TEMPERATURE,
     MODEL_ALIASES,
     MODEL_PROVIDER_CONFIG,
 )
-from llm_quest_benchmark.llm.cost import UsageStats, estimate_cost_usd
+from llm_quest_benchmark.llm.cost import UsageStats, estimate_cost_usd  # noqa: E402
 
 logger = logging.getLogger(__name__)
-# Configure httpx logger to only show in debug mode
 logging.getLogger("httpx").setLevel(logging.WARNING)
-
-# Load local .env when running directly from repository root.
-load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env", override=False)
 
 
 @dataclass(frozen=True)
@@ -385,6 +398,7 @@ class AnthropicClient(LLMClient):
             self._client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         return self._client
 
+    @observe(as_type="generation", name="anthropic-completion")
     def get_completion(self, prompt: str) -> str:
         """Get a completion from the model."""
 
