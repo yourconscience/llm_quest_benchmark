@@ -65,7 +65,9 @@ class AgentConfig:
     runs: int = 1
     skip_single: bool = False
     debug: bool = False
-    benchmark_id: str | None = None  # Added to link runs to benchmarks
+    benchmark_id: str | None = None
+    memory_mode: str = "default"
+    compaction_interval: int = 10
 
     def __post_init__(self):
         self.system_template = normalize_template_name(self.system_template)
@@ -80,17 +82,16 @@ class AgentConfig:
             raise ValueError(f"Temperature must be between 0.0 and 2.0, got {self.temperature}")
         if self.runs < 1:
             raise ValueError(f"runs must be >= 1, got {self.runs}")
+        if self.memory_mode not in ("default", "full_transcript", "compaction"):
+            raise ValueError(f"Invalid memory_mode: {self.memory_mode}")
 
     @property
     def agent_id(self) -> str:
         """Generate a unique agent ID based on configuration values"""
         import hashlib
 
-        # Create a string with the key configuration values
-        config_str = f"{self.model}_{self.temperature}_{self.system_template}_{self.action_template}"
-        # Generate a short hash (first 8 characters)
+        config_str = f"{self.model}_{self.temperature}_{self.system_template}_{self.action_template}_{self.memory_mode}"
         hash_val = hashlib.md5(config_str.encode()).hexdigest()[:8]
-        # Include model and temperature in the ID for better readability
         return f"{self.model}_t{self.temperature}_{hash_val}"
 
 

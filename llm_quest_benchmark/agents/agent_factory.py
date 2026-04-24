@@ -26,6 +26,8 @@ def create_agent(
     temperature: float = DEFAULT_TEMPERATURE,
     skip_single: bool = False,
     debug: bool = False,
+    memory_mode: str = "default",
+    compaction_interval: int = 10,
 ) -> QuestPlayer:
     """Create a quest agent based on model name and parameters.
 
@@ -91,4 +93,6 @@ def create_agent(
         action_template=resolved_action_template,
         temperature=temperature,
         skip_single=skip_single,
+        memory_mode=memory_mode,
+        compaction_interval=compaction_interval,
     )

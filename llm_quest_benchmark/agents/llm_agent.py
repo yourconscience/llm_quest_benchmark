@@ -275,6 +275,8 @@ class LLMAgent(QuestPlayer):
         temperature: float = DEFAULT_TEMPERATURE,
         skip_single: bool = False,
         debug: bool = False,
+        memory_mode: str = "default",
+        compaction_interval: int = 10,
     ):
         super().__init__(skip_single=skip_single)
         self.debug = debug
@@ -316,7 +318,20 @@ class LLMAgent(QuestPlayer):
         self._loop_repetition_threshold = 1
         self._max_state_signatures = 200
         self._use_safety_filter = True
-        self._last_response = LLMResponse(action=1, is_default=True)  # Initialize with default response
+        self._last_response = LLMResponse(action=1, is_default=True)
+
+        # Quest briefing: pinned first observation (mission goal)
+        self._quest_briefing: str | None = None
+
+        # Memory mode: "default", "full_transcript", "compaction"
+        if memory_mode not in ("default", "full_transcript", "compaction"):
+            raise ValueError(f"Invalid memory_mode: {memory_mode}")
+        self._memory_mode = memory_mode
+        self._transcript: list[dict[str, Any]] = []
+        self._compaction_interval = compaction_interval
+        self._compaction_summary: str | None = None
+        self._steps_since_compaction = 0
+        self._step_count = 0
 
     def _ensure_llm(self):
         """Lazily create the provider client only when inference is needed."""
@@ -340,13 +355,38 @@ class LLMAgent(QuestPlayer):
         clean = (observation or "").strip()
         if not clean:
             return
+        if self._quest_briefing is None:
+            self._quest_briefing = clean
         self._observation_history.append(clean)
         if len(self._observation_history) > 20:
             self._observation_history = self._observation_history[-20:]
 
     def _build_contextual_state(self, state: str) -> str:
-        """Add compact state+decision memory for better local decisions."""
+        """Build context-augmented state based on memory mode."""
+        if self._memory_mode == "full_transcript":
+            return self._build_full_transcript_state(state)
+        if self._memory_mode == "compaction":
+            return self._build_compaction_state(state)
+        return self._build_default_state(state)
+
+    def _briefing_block(self, state: str) -> str | None:
+        """Return quest briefing block if available and not redundant with current state."""
+        if not self._quest_briefing:
+            return None
+        if state.strip() == self._quest_briefing:
+            return None
+        briefing = self._quest_briefing
+        if len(briefing) > 800:
+            briefing = briefing[:800] + "..."
+        return f"Quest briefing (your mission):\n{briefing}"
+
+    def _build_default_state(self, state: str) -> str:
+        """Original sliding-window context, now with pinned briefing."""
         blocks: list[str] = []
+
+        briefing = self._briefing_block(state)
+        if briefing:
+            blocks.append(briefing)
 
         if len(self._observation_history) > 1:
             previous = self._observation_history[:-1][-self._context_window :]
@@ -387,6 +427,163 @@ class LLMAgent(QuestPlayer):
 
         sep = "\n\n"
         return f"{sep.join(blocks)}\n\nCurrent story state:\n{state}"
+
+    def _build_full_transcript_state(self, state: str) -> str:
+        """Full decision transcript with pinned briefing."""
+        blocks: list[str] = []
+
+        briefing = self._briefing_block(state)
+        if briefing:
+            blocks.append(briefing)
+
+        if self._transcript:
+            lines = []
+            entries = self._transcript
+            # Budget: keep first 3 + last N that fit under ~40 entries total
+            if len(entries) > 40:
+                entries = entries[:3] + [{"_gap": len(entries) - 40}] + entries[-(40 - 3) :]
+            for entry in entries:
+                if "_gap" in entry:
+                    lines.append(f"  ... ({entry['_gap']} steps omitted) ...")
+                    continue
+                step = entry.get("step", "?")
+                obs = entry.get("observation", "")
+                if len(obs) > 400:
+                    obs = obs[:400] + "..."
+                chosen = entry.get("choice_text", "")
+                reasoning = entry.get("reasoning", "")
+                line = f"Step {step}: {obs}"
+                if chosen:
+                    line += f"\n  You chose: {chosen}"
+                if reasoning:
+                    line += f"\n  Reasoning: {reasoning[:150]}"
+                lines.append(line)
+            blocks.append("=== QUEST TRANSCRIPT ===\n" + "\n\n".join(lines))
+
+        blocks.append(f"Step {self._step_count} (CURRENT):\n{state}")
+        return "\n\n".join(blocks)
+
+    def _build_compaction_state(self, state: str) -> str:
+        """Compacted memory summary + recent steps since last compaction."""
+        blocks: list[str] = []
+
+        briefing = self._briefing_block(state)
+        if briefing:
+            blocks.append(briefing)
+
+        if self._compaction_summary:
+            blocks.append(
+                f"=== QUEST MEMORY (compacted at step {self._step_count - self._steps_since_compaction}) ===\n{self._compaction_summary}"
+            )
+
+        if self._transcript:
+            recent = self._transcript[-self._steps_since_compaction :] if self._steps_since_compaction > 0 else []
+            if recent:
+                lines = []
+                for entry in recent:
+                    step = entry.get("step", "?")
+                    obs = entry.get("observation", "")
+                    if len(obs) > 400:
+                        obs = obs[:400] + "..."
+                    chosen = entry.get("choice_text", "")
+                    line = f"Step {step}: {obs}"
+                    if chosen:
+                        line += f"\n  You chose: {chosen}"
+                    lines.append(line)
+                blocks.append("=== RECENT STEPS ===\n" + "\n\n".join(lines))
+
+        blocks.append(f"Step {self._step_count} (CURRENT):\n{state}")
+        return "\n\n".join(blocks)
+
+    def _maybe_compact(self) -> None:
+        """Run compaction if interval reached. Called after recording a decision."""
+        if self._memory_mode != "compaction":
+            return
+        if self._steps_since_compaction < self._compaction_interval:
+            return
+
+        transcript_text = self._format_transcript_for_compaction()
+        if not transcript_text:
+            return
+
+        prompt_parts = []
+        prompt_parts.append("You are summarizing an agent's progress through a text quest.")
+        if self._quest_briefing:
+            prompt_parts.append(f"\nQUEST BRIEFING (the original mission):\n{self._quest_briefing}")
+        if self._compaction_summary:
+            prompt_parts.append(f"\nPREVIOUS SUMMARY:\n{self._compaction_summary}")
+        prompt_parts.append(f"\nTRANSCRIPT OF LAST {self._steps_since_compaction} STEPS:\n{transcript_text}")
+        prompt_parts.append(
+            "\nSummarize the agent's progress. Include:\n"
+            "- Current objective (what the agent should do next)\n"
+            "- Progress so far (what has been accomplished)\n"
+            "- Key facts (NPCs, items, locations, deadlines discovered)\n"
+            "- Failed approaches (actions/paths that didn't work)\n"
+            "- Map knowledge (locations visited and connections)\n\n"
+            "Write a concise summary in plain text, max 300 words."
+        )
+
+        compaction_prompt = "\n".join(prompt_parts)
+        try:
+            self._ensure_llm()
+            summary = self.llm.get_completion(compaction_prompt)
+            compaction_usage = self.llm.get_last_usage() or {}
+            if compaction_usage:
+                pt = int(
+                    compaction_usage.get("prompt_tokens", 0)
+                    if isinstance(compaction_usage, dict)
+                    else getattr(compaction_usage, "prompt_tokens", 0)
+                )
+                ct = int(
+                    compaction_usage.get("completion_tokens", 0)
+                    if isinstance(compaction_usage, dict)
+                    else getattr(compaction_usage, "completion_tokens", 0)
+                )
+                self._record_compaction_usage(pt, ct)
+            self._compaction_summary = summary.strip()
+            self._steps_since_compaction = 0
+            if self.debug:
+                self.logger.debug(
+                    "Compaction completed at step %d: %s", self._step_count, self._compaction_summary[:200]
+                )
+        except Exception as e:
+            if self.debug:
+                self.logger.warning("Compaction failed at step %d: %s", self._step_count, e)
+
+    def _record_compaction_usage(self, prompt_tokens: int, completion_tokens: int) -> None:
+        """Record token usage from compaction calls into agent history."""
+        compaction_response = LLMResponse(
+            action=0,
+            is_default=True,
+            parse_mode="compaction",
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=prompt_tokens + completion_tokens,
+        )
+        self.history.append(compaction_response)
+
+    def _format_transcript_for_compaction(self) -> str:
+        """Format recent transcript entries for the compaction prompt."""
+        recent = (
+            self._transcript[-self._steps_since_compaction :]
+            if self._steps_since_compaction > 0
+            else self._transcript[-self._compaction_interval :]
+        )
+        lines = []
+        for entry in recent:
+            step = entry.get("step", "?")
+            obs = entry.get("observation", "")
+            if len(obs) > 400:
+                obs = obs[:400] + "..."
+            chosen = entry.get("choice_text", "")
+            reasoning = entry.get("reasoning", "")
+            line = f"Step {step}: {obs}"
+            if chosen:
+                line += f"\n  Chose: {chosen}"
+            if reasoning:
+                line += f"\n  Reasoning: {reasoning[:100]}"
+            lines.append(line)
+        return "\n\n".join(lines)
 
     @staticmethod
     def _normalize_for_signature(value: str, max_len: int = 320) -> str:
@@ -471,6 +668,21 @@ class LLMAgent(QuestPlayer):
         )
         if len(self._decision_history) > 40:
             self._decision_history = self._decision_history[-40:]
+
+        # Transcript for full_transcript and compaction modes
+        if self._memory_mode in ("full_transcript", "compaction"):
+            self._step_count += 1
+            self._steps_since_compaction += 1
+            self._transcript.append(
+                {
+                    "step": self._step_count,
+                    "observation": state_snippet if self._memory_mode == "compaction" else state.strip()[:400],
+                    "choice_text": selected_text,
+                    "reasoning": (response.reasoning or "")[:150],
+                    "action": action,
+                }
+            )
+            self._maybe_compact()
 
     def _choice_risk_score(self, choice_text: str) -> int:
         text = (choice_text or "").lower()
@@ -740,7 +952,12 @@ class LLMAgent(QuestPlayer):
         self._observation_history = []
         self._decision_history = []
         self._state_action_counts = {}
-        self._last_response = LLMResponse(action=1, is_default=True)  # Reset to default response
+        self._last_response = LLMResponse(action=1, is_default=True)
+        self._quest_briefing = None
+        self._transcript = []
+        self._compaction_summary = None
+        self._steps_since_compaction = 0
+        self._step_count = 0
 
     def on_game_start(self) -> None:
         """Called when game starts"""
@@ -748,7 +965,12 @@ class LLMAgent(QuestPlayer):
         self._observation_history = []
         self._decision_history = []
         self._state_action_counts = {}
-        self._last_response = LLMResponse(action=1, is_default=True)  # Reset to default response
+        self._last_response = LLMResponse(action=1, is_default=True)
+        self._quest_briefing = None
+        self._transcript = []
+        self._compaction_summary = None
+        self._steps_since_compaction = 0
+        self._step_count = 0
 
     def on_game_end(self, final_state: dict[str, Any]) -> None:
         """Log final state for analysis"""
