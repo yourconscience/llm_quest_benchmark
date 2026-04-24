@@ -3,11 +3,9 @@
 import logging
 from typing import Any
 
-from llm_quest_benchmark.constants import SYNTHETIC_SUCCESS_LOCATION
 from llm_quest_benchmark.executors.ts_bridge.bridge import QMBridge
 from llm_quest_benchmark.schemas.state import QMState
 from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
-from llm_quest_benchmark.utils.text_processor import detect_quest_outcome
 
 
 def find_quest_file(quest_path: str) -> str:
@@ -244,35 +242,15 @@ class QMPlayerEnv:
                 "info": {},
             }
 
-            # Determine success based on multiple factors
-            success = False
-
-            # Handle special case for synthetic success location
-            if new_bridge_state.location_id == SYNTHETIC_SUCCESS_LOCATION and new_bridge_state.game_ended:
-                success = True
-                self.logger.info("Quest ended successfully with synthetic success marker")
-
-            # Check if there's a positive reward value
-            elif new_bridge_state.game_ended and new_bridge_state.reward > 0:
-                success = True
-                self.logger.info("Quest ended successfully based on reward value")
-
-            # If the quest ended but wasn't determined successful yet, check text content using our utility
-            elif new_bridge_state.game_ended and new_bridge_state.text:
-                # Use our dedicated outcome detection utility
-                success, reward, reason = detect_quest_outcome(new_bridge_state.text)
-
-                # Log the result
-                if success:
-                    self.logger.info(f"Quest ended successfully based on {reason}")
-                    if reward > 0:
-                        self.logger.info(f"Detected reward: {reward}")
-                elif reason != "no_indicators":
-                    self.logger.info(f"Quest failed based on {reason}")
+            # Determine success from the TS engine's authoritative gameState.
+            # "win" = success, "fail"/"dead" = failure, "running" = not ended yet.
+            success = new_bridge_state.game_state == "win"
 
             if new_bridge_state.game_ended:
-                # Just log the essential info at INFO level for better visibility
-                self.logger.info(f"Game ended with reward: {new_bridge_state.reward}, success: {success}")
+                self.logger.info(
+                    f"Game ended: game_state={new_bridge_state.game_state}, "
+                    f"location={new_bridge_state.location_id}, success={success}"
+                )
 
             return (
                 self._compose_observation_text(self._current_state["text"], self._current_state.get("params_state")),

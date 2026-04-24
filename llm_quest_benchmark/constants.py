@@ -107,13 +107,15 @@ MAX_BENCHMARK_TIMEOUT = 7200  # Maximum benchmark timeout (2 hours)
 INFINITE_TIMEOUT = 10**9  # Infinite timeout (used for interactive play)
 
 # Quest state detection patterns
-# Pattern to detect credit rewards in text (e.g., "10000 cr")
-CREDIT_REWARD_PATTERN = re.compile(r"(\d+)\s*cr\b")
+# Pattern to detect credit rewards in text (e.g., "10000 cr", "10000 credits")
+CREDIT_REWARD_PATTERN = re.compile(r"(\d+)\s*(?:cr(?:edits?)?)\b")
 
 # Common success indicators in text for quest completion
+# NOTE: order matters - failure indicators are checked first in detect_quest_outcome
+# to avoid false positives like "mission completely failed" matching "mission complete"
 SUCCESS_INDICATORS = [
-    "mission complete",
     "mission accomplished",
+    "mission is complete",
     "succeeded",
     "successful",
     "congratulations",
@@ -133,9 +135,11 @@ SUCCESS_INDICATORS = [
 # Common failure indicators in text
 FAILURE_INDICATORS = [
     "mission failed",
+    "mission completely",
     "you died",
     "game over",
     "you lost",
+    "you failed",
     "failure",
     "failed",
     "провал",

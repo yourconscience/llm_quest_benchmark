@@ -1,0 +1,38 @@
+name: memory_modes_pilot
+quests:
+- quests/sr_2_1_2121_eng/Pizza_eng.qm
+- quests/sr_2_1_2121_eng/Ski_eng.qm
+agents:
+# A: Baseline - default memory (3 obs, 5 decisions)
+- model: openrouter:google/gemini-3-flash-preview
+  template: reasoning
+  temperature: 0.4
+  runs: 3
+  memory_mode: default
+
+# B: Loop-aware template - default memory
+- model: openrouter:google/gemini-3-flash-preview
+  template: loop_aware_reasoning
+  temperature: 0.4
+  runs: 3
+  memory_mode: default
+
+# C: Full transcript memory
+- model: openrouter:google/gemini-3-flash-preview
+  template: reasoning
+  temperature: 0.4
+  runs: 3
+  memory_mode: full_transcript
+
+# D: Compaction memory (compact every 10 steps)
+- model: openrouter:google/gemini-3-flash-preview
+  template: reasoning
+  temperature: 0.4
+  runs: 3
+  memory_mode: compaction
+  compaction_interval: 10
+
+debug: false
+quest_timeout: 600
+max_workers: 1
+output_dir: results/benchmarks

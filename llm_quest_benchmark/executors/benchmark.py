@@ -231,6 +231,8 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                         action_template=agent_config.action_template,
                         skip_single=agent_config.skip_single,
                         debug=agent_config.debug,
+                        memory_mode=agent_config.memory_mode,
+                        compaction_interval=agent_config.compaction_interval,
                     )
 
                     # Run quest with timeout
