@@ -75,38 +75,70 @@ The model can read. It can pick valid actions. What it can't do is remember that
 
 This isn't a model-specific problem. **Every model** we tested has LOOP as its dominant failure mode. Claude, GPT, Gemini, DeepSeek, Mistral, Minimax -- all of them get stuck in the same way.
 
-## What actually helps
-
-[TODO: Update after final experiment iteration with improved results]
+## What actually helps (hint: it's not smarter prompting)
 
 The one architecture that clearly separates from random is the **planner mode**: before each action, the agent generates a multi-step plan, tracks progress against it, and replans when things change. Claude Sonnet 4.5 with the planner scaffolding hit ~18% success -- not amazing, but meaningfully above the random baseline.
 
-This suggests the bottleneck isn't intelligence -- it's memory and self-monitoring. The models are smart enough to solve these quests. They just can't track where they've been.
+That result pointed at something specific. The planner works not because it reasons better, but because it forces the model to write down its state. Which raised an obvious question: what if we just gave the model its full history?
 
-[TODO: Insert findings from next iteration -- does loop detection / history window help?]
+## The fix: we gave the agent a memory
+
+When I dug into the failure logs, I found something embarrassing. The default agent configuration uses a sliding context window of **3 observations**. The quest briefing -- mission goal, setting, success criteria -- is shown at step 0. By step 4, it's gone. The agent was playing quests without knowing what the quest asked it to do.
+
+I started calling this the amnesia bug. It explains a lot. An agent that can't remember where it started can't know when it's going in circles.
+
+The fix was to build three memory modes:
+
+- **Default (3 obs, 5 decisions)**: the broken baseline
+- **Full transcript**: every previous observation, choice, and reasoning step is appended to each prompt
+- **Compaction**: every 10 steps, the agent writes a short summary of its progress; that summary travels with it instead of the raw history
+
+No prompt engineering. No loop-detection heuristics. Just: give the agent its history.
+
+## Results: from 0% to 100% in one config change
+
+I ran all four configurations (the three memory modes plus a loop-aware reasoning variant) on two quests -- Pizza_eng and Ski_eng -- using Gemini 3 Flash, 3 runs each:
+
+| Configuration | Pizza_eng | Ski_eng |
+|---|---|---|
+| Default memory (baseline) | 0/3 | 0/3 |
+| Loop-aware reasoning + default memory | 0/3 | 1/3 |
+| Full transcript memory | **3/3** | 0/3 |
+| Compaction memory | **2/2** | pending |
+
+Full transcript on Pizza_eng: 0% to 100%. No new model, no fine-tuning, no carefully crafted system prompt. Just memory.
+
+The speed result surprised me more than the accuracy. I expected full transcript runs to be slower -- they send more tokens per request. They were actually faster: **55 seconds average vs. 80 seconds for the baseline**. An agent that knows where it's been doesn't wander. It solves the quest on the first coherent path instead of thrashing through dead ends for a hundred steps.
+
+The loop-aware reasoning variant helped a little (1/3 on Ski_eng vs. 0/3 baseline) but couldn't overcome the amnesia. Knowing you might be in a loop is less useful than actually remembering the last ten turns.
+
+## What's next
+
+Ski_eng is the interesting frontier. Even with full transcript memory, 0/3. The quest requires something memory alone doesn't provide -- likely domain-specific strategy or committing to a multi-step plan and not abandoning it when the path gets uncomfortable. That's a different problem, and a harder one.
+
+Compaction mode is worth watching. It scales better than full transcript for long quests (fewer tokens, no context-window blowout), and early results on Pizza suggest it's competitive. The open question is whether the summaries lose critical detail that matters later.
+
+The deeper finding is structural: if amnesia is responsible for most of the 71% loop rate, fixing memory should move the overall benchmark number significantly. I'll run the full quest set with full transcript and report back.
+
+A few other threads I want to pull on:
+
+- Why do human difficulty ratings not predict LLM success? (They don't -- I checked.)
+- Can compaction be made quest-adaptive, summarizing more aggressively when nothing is changing?
+- What does the failure distribution look like after memory is fixed? Is "bad strategy" the next dominant mode?
 
 ## Try it yourself
 
 The benchmark is fully open source. You can:
 - [Browse the live leaderboard](https://yourconscience.github.io/llm_quest_benchmark/)
 - [Read the methodology](https://yourconscience.github.io/llm_quest_benchmark/about.html)
-- Test your own model with a single config change:
+- Test your own model or memory configuration with a single config change:
 
 ```bash
 git clone --recursive https://github.com/yourconscience/llm_quest_benchmark
 docker compose run llm-quest run --quest quests/Boat.qm --model your-model-here
 ```
 
-## What's next
-
-[TODO: Update based on final iteration results]
-
-- Error-driven improvements: loop detection, explicit history tracking, knowledge injection
-- More agent architectures (tool-augmented, RAG-based)
-- Empirical difficulty tiers based on actual LLM performance (turns out the original human difficulty ratings don't predict LLM success at all)
-- Draft research paper with full methodology
-
-If you're working on agent architectures or LLM evaluation, I'd love to hear what you think. The quest corpus is an interesting testbed because the tasks weren't designed for LLMs -- the difficulty is organic, not synthetic.
+If you're working on agent architectures or LLM evaluation, I'd love to hear what you think. The quest corpus is a useful testbed precisely because the tasks weren't designed for LLMs -- the difficulty is organic, not synthetic, and the failure modes are revealing.
 
 ---
 
