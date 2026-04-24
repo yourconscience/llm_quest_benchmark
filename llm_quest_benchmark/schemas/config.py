@@ -84,13 +84,16 @@ class AgentConfig:
             raise ValueError(f"runs must be >= 1, got {self.runs}")
         if self.memory_mode not in ("default", "full_transcript", "compaction"):
             raise ValueError(f"Invalid memory_mode: {self.memory_mode}")
+        if self.memory_mode == "compaction" and self.compaction_interval < 1:
+            raise ValueError(f"compaction_interval must be >= 1, got {self.compaction_interval}")
 
     @property
     def agent_id(self) -> str:
         """Generate a unique agent ID based on configuration values"""
         import hashlib
 
-        config_str = f"{self.model}_{self.temperature}_{self.system_template}_{self.action_template}_{self.memory_mode}"
+        interval_tag = f"_ci{self.compaction_interval}" if self.memory_mode == "compaction" else ""
+        config_str = f"{self.model}_{self.temperature}_{self.system_template}_{self.action_template}_{self.memory_mode}{interval_tag}"
         hash_val = hashlib.md5(config_str.encode()).hexdigest()[:8]
         return f"{self.model}_t{self.temperature}_{hash_val}"
 

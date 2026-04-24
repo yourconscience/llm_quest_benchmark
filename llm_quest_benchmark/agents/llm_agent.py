@@ -540,7 +540,14 @@ class LLMAgent(QuestPlayer):
                     else getattr(compaction_usage, "completion_tokens", 0)
                 )
                 self._record_compaction_usage(pt, ct)
-            self._compaction_summary = summary.strip()
+            stripped = (summary or "").strip()
+            if not stripped:
+                if self.debug:
+                    self.logger.warning("Compaction returned empty summary at step %d", self._step_count)
+                self._steps_since_compaction = max(0, self._compaction_interval // 2)
+                return
+            self._compaction_summary = stripped
+            self._transcript = []
             self._steps_since_compaction = 0
             if self.debug:
                 self.logger.debug(
@@ -549,6 +556,7 @@ class LLMAgent(QuestPlayer):
         except Exception as e:
             if self.debug:
                 self.logger.warning("Compaction failed at step %d: %s", self._step_count, e)
+            self._steps_since_compaction = max(0, self._compaction_interval // 2)
 
     def _record_compaction_usage(self, prompt_tokens: int, completion_tokens: int) -> None:
         """Record token usage from compaction calls into agent history."""
