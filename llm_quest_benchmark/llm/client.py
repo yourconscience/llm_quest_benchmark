@@ -24,7 +24,7 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env", override=F
 from llm_quest_benchmark.llm.tracing import is_enabled as _langfuse_enabled  # noqa: E402
 
 if _langfuse_enabled():
-    from langfuse.decorators import observe  # noqa: E402
+    from langfuse import observe  # noqa: E402
     from langfuse.openai import OpenAI  # noqa: E402
 else:
     from openai import OpenAI  # noqa: E402

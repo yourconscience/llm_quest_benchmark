@@ -564,7 +564,7 @@ requires-dist = [
     { name = "anthropic", specifier = ">=0.18.0" },
     { name = "jinja2", specifier = ">=3.1.2" },
     { name = "json-repair", specifier = ">=0.8.0" },
-    { name = "langfuse", specifier = ">=2.0.0" },
+    { name = "langfuse", specifier = ">=3.0.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0" },
     { name = "openai", specifier = ">=1.12.0" },
     { name = "openrouter", specifier = ">=0.5.0" },
