@@ -42,9 +42,7 @@ class TestQMBridgeStateGameState:
         assert state.game_state == "running"
 
     def test_default_game_state(self):
-        state = QMBridgeState(
-            location_id="1", text="", choices=[], reward=0.0, game_ended=False
-        )
+        state = QMBridgeState(location_id="1", text="", choices=[], reward=0.0, game_ended=False)
         assert state.game_state == "running"
 
 
