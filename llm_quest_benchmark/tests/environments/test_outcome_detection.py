@@ -6,8 +6,6 @@ The environment must use this directly, not text heuristics.
 
 import logging
 
-import pytest
-
 from llm_quest_benchmark.schemas.bridge import QMBridgeState
 
 
