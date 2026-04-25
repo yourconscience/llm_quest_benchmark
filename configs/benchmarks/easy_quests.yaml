@@ -1,0 +1,35 @@
+name: easy_quests
+# Easy-tier quests (hardness <= 40, p33 of the full distribution).
+# 21 quests: 7 Russian (kr_1_ru) and 14 English (sr_2_1_2121_eng).
+# Generated from configs/quest_metadata.json tier analysis.
+quests:
+  - quests/kr_1_ru/Boat.qm
+  - quests/kr_1_ru/Diehard.qm
+  - quests/kr_1_ru/Gobsaur.qm
+  - quests/kr_1_ru/Hachball.qm
+  - quests/kr_1_ru/Rush.qm
+  - quests/kr_1_ru/Spy.qm
+  - quests/kr_1_ru/Tomb.qm
+  - quests/sr_2_1_2121_eng/Borzukhan_eng.qm
+  - quests/sr_2_1_2121_eng/Edelweiss_eng.qm
+  - quests/sr_2_1_2121_eng/Election_eng.qm
+  - quests/sr_2_1_2121_eng/Foncers_eng.qm
+  - quests/sr_2_1_2121_eng/Logic_eng.qm
+  - quests/sr_2_1_2121_eng/Ministry_eng.qm
+  - quests/sr_2_1_2121_eng/Muzon_eng.qm
+  - quests/sr_2_1_2121_eng/Pilot_eng.qm
+  - quests/sr_2_1_2121_eng/Player_eng.qm
+  - quests/sr_2_1_2121_eng/Robots_eng.qm
+  - quests/sr_2_1_2121_eng/Shashki_eng.qm
+  - quests/sr_2_1_2121_eng/Ski_eng.qm
+  - quests/sr_2_1_2121_eng/Sortirovka1_eng.qm
+  - quests/sr_2_1_2121_eng/Svarokok_eng.qm
+agents:
+  - model: "openrouter:google/gemini-3-flash-preview"
+    template: reasoning
+    temperature: 0.4
+    runs: 3
+debug: false
+quest_timeout: 600
+max_workers: 6
+output_dir: results/benchmarks
