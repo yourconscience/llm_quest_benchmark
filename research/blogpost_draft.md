@@ -30,7 +30,7 @@ Choices:
   4. Leave the building
 ```
 
-The quests range from straightforward (gather items, talk to NPCs) to genuinely hard (sliding puzzles, resource optimization, bureaucratic mazes with dead ends). There are about 90 available in English and Russian.
+The quests range from straightforward (gather items, talk to NPCs) to genuinely hard (sliding puzzles, resource optimization, bureaucratic mazes with dead ends). There are about 90 available in English and Russian. The current experiment covers **15 quests of medium-to-hard difficulty**.
 
 ## The punchline
 
@@ -77,7 +77,7 @@ This isn't a model-specific problem. **Every model** we tested has LOOP as its d
 
 ## What actually helps (hint: it's not smarter prompting)
 
-The one architecture that clearly separates from random is the **planner mode**: before each action, the agent generates a multi-step plan, tracks progress against it, and replans when things change. Claude Sonnet 4.5 with the planner scaffolding hit ~18% success -- not amazing, but meaningfully above the random baseline.
+In a prior experiment, the one architecture that clearly separated from random was **planner mode**: before each action, the agent generates a multi-step plan, tracks progress against it, and replans when things change. Claude Sonnet 4.5 with the planner scaffolding hit ~18% success -- not amazing, but meaningfully above the random baseline.
 
 That result pointed at something specific. The planner works not because it reasons better, but because it forces the model to write down its state. Which raised an obvious question: what if we just gave the model its full history?
 
@@ -87,44 +87,31 @@ When I dug into the failure logs, I found something embarrassing. The default ag
 
 I started calling this the amnesia bug. It explains a lot. An agent that can't remember where it started can't know when it's going in circles.
 
-The fix was to build three memory modes:
+The fix was to build two non-broken memory modes (the default is proven bad and excluded from further evaluation):
 
-- **Default (3 obs, 5 decisions)**: the broken baseline
 - **Full transcript**: every previous observation, choice, and reasoning step is appended to each prompt
-- **Compaction**: every 10 steps, the agent writes a short summary of its progress; that summary travels with it instead of the raw history
+- **Compaction**: at a fixed interval, the agent writes a short summary of its progress; that summary travels with it instead of the raw history. We're testing compaction intervals of **10 and 20 steps**.
 
 No prompt engineering. No loop-detection heuristics. Just: give the agent its history.
 
-## Results: from 0% to 100% in one config change
+## Results
 
-I ran all four configurations (the three memory modes plus a loop-aware reasoning variant) on two quests -- Pizza_eng and Ski_eng -- using Gemini 3 Flash, 3 runs each:
+[RESULTS TABLE: full_transcript and compaction (intervals 10 and 20) across Gemini 3 Flash, GPT-5.4 Mini, DeepSeek V3.2 on 15 quests - pending]
 
-| Configuration | Pizza_eng | Ski_eng |
-|---|---|---|
-| Default memory (baseline) | 0/3 | 0/3 |
-| Loop-aware reasoning + default memory | 0/3 | 1/3 |
-| Full transcript memory | **3/3** | 0/3 |
-| Compaction memory | **2/2** | pending |
+Early pilot runs on a small quest set confirmed the direction: full transcript moved success rate from near-zero to competitive performance on shorter quests. The current full experiment will tell us whether that holds across 15 quests of varying difficulty and three different models.
 
-Full transcript on Pizza_eng: 0% to 100%. No new model, no fine-tuning, no carefully crafted system prompt. Just memory.
-
-The speed result surprised me more than the accuracy. I expected full transcript runs to be slower -- they send more tokens per request. They were actually faster: **55 seconds average vs. 80 seconds for the baseline**. An agent that knows where it's been doesn't wander. It solves the quest on the first coherent path instead of thrashing through dead ends for a hundred steps.
-
-The loop-aware reasoning variant helped a little (1/3 on Ski_eng vs. 0/3 baseline) but couldn't overcome the amnesia. Knowing you might be in a loop is less useful than actually remembering the last ten turns.
+Compaction is worth watching independently. It scales better than full transcript for long quests -- fewer tokens per request, no context-window blowout -- and the open question is whether the summaries lose critical detail that matters later. The interval parameter matters: too frequent and the summaries are noisy; too infrequent and the agent drifts between checkpoints.
 
 ## What's next
 
-Ski_eng is the interesting frontier. Even with full transcript memory, 0/3. The quest requires something memory alone doesn't provide -- likely domain-specific strategy or committing to a multi-step plan and not abandoning it when the path gets uncomfortable. That's a different problem, and a harder one.
+Even with full transcript memory, some quests remain unsolved. Those likely require something memory alone doesn't provide -- domain-specific strategy or committing to a multi-step plan without abandoning it when the path gets uncomfortable. That's a different problem, and a harder one.
 
-Compaction mode is worth watching. It scales better than full transcript for long quests (fewer tokens, no context-window blowout), and early results on Pizza suggest it's competitive. The open question is whether the summaries lose critical detail that matters later.
-
-The deeper finding is structural: if amnesia is responsible for most of the 71% loop rate, fixing memory should move the overall benchmark number significantly. I'll run the full quest set with full transcript and report back.
-
-A few other threads I want to pull on:
+A few threads worth pulling on after the current experiment closes:
 
 - Why do human difficulty ratings not predict LLM success? (They don't -- I checked.)
 - Can compaction be made quest-adaptive, summarizing more aggressively when nothing is changing?
 - What does the failure distribution look like after memory is fixed? Is "bad strategy" the next dominant mode?
+- Does the answer change for frontier models (Sonnet, GPT-5.4) vs. the mid-tier models tested here?
 
 ## Try it yourself
 
