@@ -75,19 +75,13 @@ The model can read. It can pick valid actions. What it can't do is remember that
 
 This isn't a model-specific problem. **Every model** we tested has LOOP as its dominant failure mode. Claude, GPT, Gemini, DeepSeek, Mistral, Minimax -- all of them get stuck in the same way.
 
-## What actually helps (hint: it's not smarter prompting)
-
-In a prior experiment, the one architecture that clearly separated from random was **planner mode**: before each action, the agent generates a multi-step plan, tracks progress against it, and replans when things change. Claude Sonnet 4.5 with the planner scaffolding hit ~18% success -- not amazing, but meaningfully above the random baseline.
-
-That result pointed at something specific. The planner works not because it reasons better, but because it forces the model to write down its state. Which raised an obvious question: what if we just gave the model its full history?
-
 ## The fix: we gave the agent a memory
 
 When I dug into the failure logs, I found something embarrassing. The default agent configuration uses a sliding context window of **3 observations**. The quest briefing -- mission goal, setting, success criteria -- is shown at step 0. By step 4, it's gone. The agent was playing quests without knowing what the quest asked it to do.
 
 I started calling this the amnesia bug. It explains a lot. An agent that can't remember where it started can't know when it's going in circles.
 
-The fix was to build two non-broken memory modes (the default is proven bad and excluded from further evaluation):
+We built two memory modes:
 
 - **Full transcript**: every previous observation, choice, and reasoning step is appended to each prompt
 - **Compaction**: at a fixed interval, the agent writes a short summary of its progress; that summary travels with it instead of the raw history. We're testing compaction intervals of **10 and 20 steps**.
