@@ -1,0 +1,16 @@
+name: memory_modes_compaction_remaining
+quests:
+- quests/sr_2_1_2121_eng/Pizza_eng.qm
+- quests/sr_2_1_2121_eng/Ski_eng.qm
+agents:
+# D: Compaction memory - remaining runs (1 Pizza + 3 Ski needed, run 2 + 3 for safety)
+- model: openrouter:google/gemini-3-flash-preview
+  template: reasoning
+  temperature: 0.4
+  runs: 2
+  memory_mode: compaction
+  compaction_interval: 10
+debug: false
+quest_timeout: 600
+max_workers: 1
+output_dir: results/benchmarks
