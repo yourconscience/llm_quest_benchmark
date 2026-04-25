@@ -1,0 +1,64 @@
+name: memory_compaction
+quests:
+  - quests/Boat.qm
+  - quests/sr_2_1_2121_eng/Badday_eng.qm
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
+  - quests/sr_2_1_2121_eng/Codebox_eng.qm
+  - quests/sr_2_1_2121_eng/Depth_eng.qm
+  - quests/sr_2_1_2121_eng/Driver_eng.qm
+  - quests/sr_2_1_2121_eng/Edelweiss_eng.qm
+  - quests/sr_2_1_2121_eng/Election_eng.qm
+  - quests/sr_2_1_2121_eng/Foncers_eng.qm
+  - quests/sr_2_1_2121_eng/Leonardo_eng.qm
+  - quests/sr_2_1_2121_eng/Ministry_eng.qm
+  - quests/sr_2_1_2121_eng/Pizza_eng.qm
+  - quests/sr_2_1_2121_eng/Prison_eng.qm
+  - quests/sr_2_1_2121_eng/Robots_eng.qm
+  - quests/sr_2_1_2121_eng/Ski_eng.qm
+agents:
+  # Gemini 3 Flash - compaction interval 10
+  - model: "openrouter:google/gemini-3-flash-preview"
+    template: reasoning
+    temperature: 0.4
+    runs: 3
+    memory_mode: compaction
+    compaction_interval: 10
+  # Gemini 3 Flash - compaction interval 20
+  - model: "openrouter:google/gemini-3-flash-preview"
+    template: reasoning
+    temperature: 0.4
+    runs: 3
+    memory_mode: compaction
+    compaction_interval: 20
+  # GPT-5.4 Mini - compaction interval 10
+  - model: "openrouter:openai/gpt-5.4-mini"
+    template: reasoning
+    temperature: 0.4
+    runs: 3
+    memory_mode: compaction
+    compaction_interval: 10
+  # GPT-5.4 Mini - compaction interval 20
+  - model: "openrouter:openai/gpt-5.4-mini"
+    template: reasoning
+    temperature: 0.4
+    runs: 3
+    memory_mode: compaction
+    compaction_interval: 20
+  # DeepSeek V3.2 - compaction interval 10
+  - model: "openrouter:deepseek/deepseek-v3.2"
+    template: reasoning
+    temperature: 0.4
+    runs: 3
+    memory_mode: compaction
+    compaction_interval: 10
+  # DeepSeek V3.2 - compaction interval 20
+  - model: "openrouter:deepseek/deepseek-v3.2"
+    template: reasoning
+    temperature: 0.4
+    runs: 3
+    memory_mode: compaction
+    compaction_interval: 20
+debug: false
+quest_timeout: 600
+max_workers: 4
+output_dir: results/benchmarks
