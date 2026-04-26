@@ -43,11 +43,8 @@ WORKDIR /app/space-rangers-quest
 RUN npm install --legacy-peer-deps && npm run build
 WORKDIR /app
 
-# Download and organize quests from GitLab
-RUN apt-get update && apt-get install -y wget unzip && \
-    ./download_quests.sh && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Download and organize quests from GitLab (uses git sparse-checkout, curl fallback)
+RUN ./download_quests.sh
 
 # Set entrypoint
 ENTRYPOINT ["llm-quest"]

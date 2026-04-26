@@ -52,7 +52,7 @@ cp .env.template .env
 llm-quest run --quest quests/Boat.qm --model gemini-3-flash-preview --timeout 120
 
 # Run benchmark matrix
-llm-quest benchmark --config configs/benchmarks/mode_comparison_pilot.yaml
+llm-quest benchmark --config configs/benchmarks/memory_full_transcript.yaml
 
 # Generate report from benchmark results
 llm-quest benchmark-report --benchmark-id <id> --output report.md
