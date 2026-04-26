@@ -34,13 +34,9 @@ The quests range from straightforward (gather items, talk to NPCs) to genuinely 
 
 ## The punchline
 
-Overall success rate across all models and configurations: **9.3%**.
+Overall success rate across all models and memory configurations: **8.5%** (16 wins out of 188 completed runs so far).
 
-For reference, an agent that picks randomly scores **11.3%**.
-
-[TODO: Insert results table/chart after final experiment iteration]
-
-Most mid-tier production models -- GPT-5.4 Mini, Gemini 3 Flash, Claude Haiku 4.5, DeepSeek V3.2, Mistral Medium, Minimax -- land somewhere between 5% and 12%. Barely distinguishable from a coin flip.
+Most mid-tier production models -- GPT-5.4 Mini, Gemini 3 Flash, DeepSeek V3.2 -- land somewhere between 2% and 13%. Even with full conversation history available, the best model (Gemini 3 Flash) solves only 13% of quests. The worst (GPT-5.4 Mini) manages 2% -- worse than random.
 
 ## Why: the loop trap
 
@@ -90,11 +86,31 @@ No prompt engineering. No loop-detection heuristics. Just: give the agent its hi
 
 ## Results
 
-[RESULTS TABLE: full_transcript and compaction (intervals 10 and 20) across Gemini 3 Flash, GPT-5.4 Mini, DeepSeek V3.2 on 15 quests - pending]
+Here's what we found across 15 quests of medium-to-hard difficulty, three models, and two memory modes (experiment still running -- numbers are preliminary but directionally stable):
 
-Early pilot runs on a small quest set confirmed the direction: full transcript moved success rate from near-zero to competitive performance on shorter quests. The current full experiment will tell us whether that holds across 15 quests of varying difficulty and three different models.
+**Full transcript mode** (all history in every prompt):
 
-Compaction is worth watching independently. It scales better than full transcript for long quests -- fewer tokens per request, no context-window blowout -- and the open question is whether the summaries lose critical detail that matters later. The interval parameter matters: too frequent and the summaries are noisy; too infrequent and the agent drifts between checkpoints.
+| Model | Wins / Runs | Success Rate |
+|---|---|---|
+| Gemini 3 Flash | 6 / 45 | 13.3% |
+| GPT-5.4 Mini | 1 / 45 | 2.2% |
+| DeepSeek V3.2 | 2 / 9* | 22.2%* |
+
+*DeepSeek still running, only 3 of 15 quests completed.
+
+**Compaction mode** (periodic LLM summary replaces raw history):
+
+| Model | Wins / Runs | Success Rate |
+|---|---|---|
+| Gemini 3 Flash (interval 10) | 7 / 89 | 7.9% |
+
+Compaction results for GPT and DeepSeek are still running.
+
+The headline: **memory helps, but not as much as you'd hope.** Gemini with full transcript hits 13% -- up from near-zero with the old sliding window, but still below random choice on some quests. GPT-5.4 Mini is shockingly bad at 2.2% despite having perfect recall of every previous step. DeepSeek looks promising early but the sample is tiny.
+
+The quests that get solved are the short, structured ones. Boat (a simple resource-gathering quest) is 100% for Gemini with full transcript. Leonardo and Ski get occasional wins. The other 12 quests -- bureaucracy mazes, prison escapes, puzzle-heavy scenarios -- remain at 0% across all models and memory modes.
+
+Compaction underperforms full transcript. At 7.9% vs 13.3% for Gemini, the summaries are losing information that matters. The agent writes "I visited the registry and was turned away" but forgets the specific detail ("you need Form 7A") that would prevent the loop. Compaction trades token cost for accuracy, and on these quests the trade isn't worth it.
 
 ## What's next
 
