@@ -55,8 +55,8 @@ RUN apt-get update && apt-get install -y wget unzip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy .env file with API keys (user creates .env from .env.template)
-COPY .env .env
+# API keys: mount .env at runtime via docker run --env-file .env
+# or docker compose (which picks up .env automatically)
 
 # Set entrypoint
 ENTRYPOINT ["llm-quest"]
