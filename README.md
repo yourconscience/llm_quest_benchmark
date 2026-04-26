@@ -23,7 +23,7 @@ cp .env.template .env
 docker compose run llm-quest run --quest quests/Boat.qm --model gemini-3-flash-preview
 
 # Run a benchmark matrix
-docker compose run llm-quest benchmark --config configs/benchmarks/mode_comparison_pilot.yaml
+docker compose run llm-quest benchmark --config configs/benchmarks/memory_full_transcript.yaml
 ```
 
 ## Local Development

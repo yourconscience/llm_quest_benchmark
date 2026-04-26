@@ -43,15 +43,9 @@ WORKDIR /app/space-rangers-quest
 RUN npm install --legacy-peer-deps && npm run build
 WORKDIR /app
 
-# Create quests directory
-RUN mkdir -p /app/quests
-
-# Download quests from GitLab
+# Download and organize quests from GitLab
 RUN apt-get update && apt-get install -y wget unzip && \
-    wget https://gitlab.com/spacerangers/spacerangers.gitlab.io/-/archive/master/spacerangers.gitlab.io-master.zip && \
-    unzip spacerangers.gitlab.io-master.zip && \
-    cp -r spacerangers.gitlab.io-master/borrowed/qm/* /app/quests/ && \
-    rm -rf spacerangers.gitlab.io-master* && \
+    ./download_quests.sh && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
