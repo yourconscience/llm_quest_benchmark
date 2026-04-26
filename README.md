@@ -17,7 +17,7 @@ git clone --recursive https://github.com/yourconscience/llm_quest_benchmark.git
 cd llm_quest_benchmark
 
 cp .env.template .env
-# Add your API keys: OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY, DEEPSEEK_API_KEY
+# Add your API keys in .env file
 
 # Run a single quest
 docker compose run llm-quest run --quest quests/Boat.qm --model gemini-3-flash-preview

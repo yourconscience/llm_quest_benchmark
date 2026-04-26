@@ -55,10 +55,8 @@ RUN apt-get update && apt-get install -y wget unzip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Create .env file placeholder
-RUN echo "# Set your API keys here\n\
-# OPENAI_API_KEY=your-api-key\n\
-# ANTHROPIC_API_KEY=your-api-key" > .env
+# Copy .env file with api keys
+# FIXME
 
 # Set entrypoint
 ENTRYPOINT ["llm-quest"]
