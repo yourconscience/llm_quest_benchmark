@@ -1,16 +1,20 @@
 # Scripts
 
-Utility/debug scripts that are kept in sync with current web/CLI workflow.
+Utility scripts for analysis, data processing, and maintenance.
 
-- `debug_database.py`: inspect `metrics.db` and `instance/llm_quest.sqlite`, plus a quick benchmark write-check.
-- `inspect_app.py`: print Flask routes and runtime hints.
-- `debug_template.py`: parse benchmark analysis template for syntax errors.
-- `test_benchmark_load.py`: load latest benchmark rows from web DB.
-- `test_template_rendering.py`: render benchmark analysis template with current DB data.
-- `run_provider_matrix.sh`: run baseline + two prompt variants and generate one combined markdown report.
-- `doc_gardening.sh`: wrapper that runs global doc-gardening skill (`~/.codex/skills/doc-gardening`).
+## Error Analysis Pipeline
+- `select_runs_for_analysis.py`: stratified sampling of runs for manual analysis.
+- `classify_failures.py`: LLM-judge failure mode classification.
+- `build_priority_matrix.py`: priority matrix from classified failures.
+- `compute_empirical_difficulty.py`: compute difficulty tiers from metrics.db success rates.
+- `replay_runs.py`: replay runs for location trace extraction.
+
+## Data & Maintenance
+- `backfill_costs.py`: retroactive cost computation for runs missing cost data.
+- `extract_quest_metadata.js`: extract metadata from .qm quest files.
+- `update_leaderboard.sh`: generate leaderboard JSON from metrics.db.
+- `doc_gardening.sh`: wrapper for doc-gardening skill.
 
 Notes:
-- Run scripts from repo root (`uv run python scripts/<name>.py`).
-- Shell helpers can be run directly (for example `./scripts/doc_gardening.sh`).
-- These are diagnostics/helpers, not part of pytest.
+- Run Python scripts from repo root: `uv run python scripts/<name>.py`
+- Shell scripts can be run directly: `./scripts/<name>.sh`

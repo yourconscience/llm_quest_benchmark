@@ -17,13 +17,13 @@ git clone --recursive https://github.com/yourconscience/llm_quest_benchmark.git
 cd llm_quest_benchmark
 
 cp .env.template .env
-# Add your API keys: OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY, DEEPSEEK_API_KEY
+# Add your API keys in .env file
 
 # Run a single quest
 docker compose run llm-quest run --quest quests/Boat.qm --model gemini-3-flash-preview
 
 # Run a benchmark matrix
-docker compose run llm-quest benchmark --config configs/benchmarks/mode_comparison_pilot.yaml
+docker compose run llm-quest benchmark --config configs/benchmarks/memory_full_transcript.yaml
 ```
 
 ## Local Development
@@ -52,7 +52,7 @@ cp .env.template .env
 llm-quest run --quest quests/Boat.qm --model gemini-3-flash-preview --timeout 120
 
 # Run benchmark matrix
-llm-quest benchmark --config configs/benchmarks/mode_comparison_pilot.yaml
+llm-quest benchmark --config configs/benchmarks/memory_full_transcript.yaml
 
 # Generate report from benchmark results
 llm-quest benchmark-report --benchmark-id <id> --output report.md

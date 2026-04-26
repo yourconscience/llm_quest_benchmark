@@ -14,8 +14,6 @@ This repository benchmarks how human and LLM agents solve Space Rangers text que
   Provider-aware client adapters (OpenAI, Anthropic, Google, DeepSeek).
 - `llm_quest_benchmark/executors/cli/`:
   Typer CLI (`llm-quest`) entrypoints.
-- `llm_quest_benchmark/web/`:
-  Flask UI for quest execution, benchmarking, and analysis.
 - `llm_quest_benchmark/tests/`:
   Unit + integration tests.
 
@@ -39,8 +37,6 @@ This repository benchmarks how human and LLM agents solve Space Rangers text que
   - `NODE_OPTIONS=--openssl-legacy-provider uv run llm-quest run --quest quests/Boat.qm --model random_choice --timeout 20 --debug`
 - Run benchmark matrix:
   - `uv run llm-quest benchmark --config configs/test/test_benchmark.yaml`
-- Start Flask UI:
-  - `uv run llm-quest server`
 - Run doc-gardening scan:
   - `./scripts/doc_gardening.sh audit . markdown`
 
@@ -51,8 +47,5 @@ This repository benchmarks how human and LLM agents solve Space Rangers text que
 ## Documentation Index
 - `README.md`: quickstart + usage.
 - `docs/ARCHITECTURE.md`: system design and module responsibilities.
-- `docs/API.md`: Flask web endpoints used by the UI.
-- `docs/DEPLOYMENT.md`: non-local Flask deployment options (stable domain).
-- `docs/RUNBOOK.md`: operations and troubleshooting.
-- `docs/PLANS.md`: roadmap and execution plans.
-- `docs/experiments/`: experiment logs and iteration notes.
+- `docs/DATASHEET.md`: dataset documentation.
+- `docs/SPEC.md`: project specification.
