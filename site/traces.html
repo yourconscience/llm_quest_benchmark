@@ -67,10 +67,10 @@ a { color: var(--accent); }
   background: var(--surface);
   overflow: hidden;
 }
-.step-item.step-repeated {
-  border-color: var(--red);
+.step-item.step-terminal {
+  border-color: var(--orange);
 }
-.step-item.step-repeated .step-header {
+.step-item.step-terminal .step-header {
   background: rgba(248,81,73,0.08);
 }
 
@@ -84,7 +84,7 @@ a { color: var(--accent); }
   transition: background 0.15s;
 }
 .step-header:hover { background: rgba(88,166,255,0.05); }
-.step-item.step-repeated .step-header:hover { background: rgba(248,81,73,0.12); }
+.step-item.step-terminal .step-header:hover { background: rgba(248,81,73,0.12); }
 
 .step-num {
   font-size: 0.75rem;
@@ -109,9 +109,9 @@ a { color: var(--accent); }
   align-items: center;
   gap: 0.5rem;
 }
-.repeat-badge {
-  background: var(--red);
-  color: #fff;
+.terminal-badge {
+  background: var(--orange);
+  color: #0d1117;
   font-size: 0.7rem;
   font-weight: 700;
   padding: 0.15em 0.5em;
@@ -299,6 +299,51 @@ a { color: var(--accent); }
       .replace(/"/g, '&quot;');
   }
 
+  // URL parameter loader: ?file=path/to/run_summary.json or ?dir=path/to/traces/
+  const params = new URLSearchParams(window.location.search);
+  const fileParam = params.get('file');
+  const dirParam = params.get('dir');
+
+  if (fileParam) {
+    const filePath = fileParam.startsWith('/') ? fileParam : '/' + fileParam;
+    loadFromUrl(filePath);
+  }
+
+  function loadFromUrl(url) {
+    fetch(url)
+      .then(r => { if (!r.ok) throw new Error(r.status + ' ' + r.statusText); return r.json(); })
+      .then(data => render(data))
+      .catch(err => console.error('Load failed:', url, err));
+  }
+
+  if (dirParam) {
+    const dirPath = dirParam.startsWith('/') ? dirParam : '/' + dirParam;
+    fetch(dirPath + '/manifest.json')
+      .then(r => r.json())
+      .then(files => {
+        const listDiv = document.createElement('div');
+        listDiv.className = 'card p-3 mb-3';
+        listDiv.innerHTML = '<h6 style="color:var(--muted)">Traces in ' + esc(dirParam) + '</h6>';
+        const ul = document.createElement('div');
+        ul.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.4rem';
+        files.forEach(f => {
+          const a = document.createElement('a');
+          a.href = '#';
+          a.textContent = f.replace('.json','');
+          const traceUrl = dirPath + '/' + f;
+          a.addEventListener('click', e => { e.preventDefault(); loadFromUrl(traceUrl); });
+          a.style.cssText = 'font-size:0.8rem;padding:0.25rem 0.5rem;border:1px solid var(--border);border-radius:4px;text-decoration:none;cursor:pointer;' +
+            (f.includes('SUCCESS') ? 'border-color:var(--green);color:var(--green)' : '');
+          ul.appendChild(a);
+        });
+        listDiv.appendChild(ul);
+        document.getElementById('drop-zone').parentNode.insertBefore(listDiv, document.getElementById('drop-zone'));
+        // Auto-load first file if no specific file requested
+        if (!fileParam && files.length > 0) loadFromUrl(dirPath + '/' + files[0]);
+      })
+      .catch(() => {}); // no manifest, skip index
+  }
+
   // Drag-drop setup
   const dropZone = document.getElementById('drop-zone');
   const fileInput = document.getElementById('file-input');
@@ -323,7 +368,7 @@ a { color: var(--accent); }
         const data = JSON.parse(ev.target.result);
         render(data);
       } catch (err) {
-        alert('Failed to parse JSON: ' + err.message);
+        console.error('Failed to parse JSON:', err.message);
       }
     };
     reader.readAsText(file, 'UTF-8');
@@ -345,18 +390,8 @@ a { color: var(--accent); }
     return Object.keys(choice)[0] || null;
   }
 
-  // Repetition detection: mark step if same action chosen within last 5 steps
-  function computeRepetitions(steps, window) {
-    const actions = [];
-    return steps.map((step, i) => {
-      const chosenKey = getChosenKey(step.llm_decision && step.llm_decision.choice);
-      const chosenText = chosenKey ? (step.llm_decision.choice[chosenKey] || '') : '';
-      const token = chosenText.trim().toLowerCase();
-      const windowSlice = actions.slice(Math.max(0, i - window), i);
-      const repeated = token.length > 0 && windowSlice.includes(token);
-      actions.push(token);
-      return repeated;
-    });
+  function isTerminalStep(step) {
+    return step.is_terminal === true;
   }
 
   function render(data) {
@@ -366,7 +401,7 @@ a { color: var(--accent); }
     const WINDOW = metrics.repetition_window || 5;
 
     // Show header
-    document.getElementById('run-header').style.display = '';
+    document.getElementById('run-header').style.display = 'block';
     document.getElementById('hdr-quest').textContent = data.quest_name || data.quest_file || 'Unknown Quest';
     document.getElementById('hdr-agent').textContent = data.agent_id || '';
 
@@ -378,24 +413,21 @@ a { color: var(--accent); }
     // Stats pills
     const totalTokens = usage.total_tokens || (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
     const cost = usage.estimated_cost_usd;
-    const repRate = metrics.repetition_rate;
     const pills = [
       { label: 'Steps', value: metrics.total_steps != null ? metrics.total_steps : steps.length },
       { label: 'Reward', value: data.reward != null ? fmt(data.reward, 0) : '-' },
       { label: 'Duration', value: fmtDur(data.run_duration) },
       { label: 'Total Tokens', value: totalTokens ? fmt(totalTokens, 0) : '-' },
       { label: 'Cost', value: cost != null ? ('$' + cost.toFixed(4)) : '-' },
-      { label: 'Repetition Rate', value: repRate != null ? (repRate * 100).toFixed(1) + '%' : '-' },
     ];
     document.getElementById('stat-pills').innerHTML = pills.map(p =>
       `<div class="stat-pill"><strong>${esc(String(p.value))}</strong>${esc(p.label)}</div>`
     ).join('');
 
     // Timeline
-    document.getElementById('timeline').style.display = '';
+    document.getElementById('timeline').style.display = 'block';
     document.getElementById('steps-label').textContent = steps.length + ' steps';
 
-    const repeated = computeRepetitions(steps, WINDOW);
     const container = document.getElementById('steps-container');
     container.innerHTML = '';
 
@@ -403,7 +435,7 @@ a { color: var(--accent); }
       const dec = step.llm_decision || {};
       const chosenKey = getChosenKey(dec.choice);
       const chosenText = chosenKey ? (dec.choice[chosenKey] || '') : '';
-      const isRepeated = repeated[idx];
+      const isTerminal = isTerminalStep(step);
       const isError = dec.parse_mode === 'error_default';
       const isSingleAuto = dec.reasoning === 'auto_single_choice';
 
@@ -416,7 +448,7 @@ a { color: var(--accent); }
       const stepTokens = pt + ct;
 
       const item = document.createElement('div');
-      item.className = 'step-item' + (isRepeated ? ' step-repeated' : '');
+      item.className = 'step-item' + (isTerminal ? ' step-terminal' : '');
 
       // Build choices HTML
       const choices = step.choices || {};
@@ -451,7 +483,7 @@ a { color: var(--accent); }
           <span class="step-num">#${step.step}</span>
           <span class="step-action-preview">${esc(previewText)}</span>
           <span class="step-meta">
-            ${isRepeated ? '<span class="repeat-badge">REPEAT</span>' : ''}
+            ${isTerminal ? '<span class="terminal-badge">' + esc((data.outcome || 'END').toUpperCase()) + '</span>' : ''}
             ${isError ? '<span class="error-badge">ERROR</span>' : ''}
             ${isSingleAuto ? '<span style="font-size:0.72rem;color:var(--muted)">auto</span>' : ''}
             ${stepTokens > 0 ? `<span>${fmt(stepTokens, 0)} tok</span>` : ''}

@@ -182,16 +182,7 @@ class PlannerAgent(LLMAgent):
             if parsed_response.action != action_before_policy and not parsed_response.reasoning:
                 parsed_response.reasoning = "policy_safety_override"
 
-            loop_adjusted_action = self._apply_loop_breaker(
-                parsed_response.action,
-                state_signature,
-                choices,
-            )
-            if loop_adjusted_action != parsed_response.action:
-                parsed_response.action = loop_adjusted_action
-                parsed_response.reasoning = (
-                    parsed_response.reasoning + "; " if parsed_response.reasoning else ""
-                ) + "policy_loop_break_override"
+            # Loop breaker disabled (see llm_agent.py for rationale)
 
             total_usage = (
                 self._merge_usage(plan_usage, action_usage) if plan_usage else self._normalize_usage(action_usage)

@@ -200,11 +200,14 @@ def parse_llm_response(
     response_json, json_parse_mode = _parse_json_response(response, debug, logger)
     if response_json and isinstance(response_json, dict):
         analysis = response_json.get("analysis") or extracted_analysis
-        reasoning = response_json.get("reasoning") or extracted_reasoning
+        reasoning = response_json.get("reasoning") or response_json.get("thinking") or extracted_reasoning
         if not reasoning and analysis:
             reasoning = analysis
         if not analysis and not reasoning:
             reasoning = raw_reasoning
+
+        # memo / state_notes / state_vars / state all map to subgoal for transcript tracking
+        subgoal = response_json.get("subgoal") or response_json.get("memo") or response_json.get("state_notes") or response_json.get("state_vars") or response_json.get("state")
 
         # Check for either 'action' or 'result' field
         action_value = response_json.get("action") or response_json.get("result") or response_json.get("choice")
@@ -216,7 +219,7 @@ def parse_llm_response(
                         action=action,
                         reasoning=reasoning,
                         analysis=analysis,
-                        subgoal=response_json.get("subgoal"),
+                        subgoal=subgoal,
                         is_default=False,
                         parse_mode=json_parse_mode or "json",
                     )
@@ -457,6 +460,9 @@ class LLMAgent(QuestPlayer):
                     line += f"\n  You chose: {chosen}"
                 if reasoning:
                     line += f"\n  Reasoning: {reasoning[:150]}"
+                state_notes = entry.get("state_notes", "")
+                if state_notes:
+                    line += f"\n  State: {state_notes[:120]}"
                 lines.append(line)
             blocks.append("=== QUEST TRANSCRIPT ===\n" + "\n\n".join(lines))
 
@@ -489,6 +495,9 @@ class LLMAgent(QuestPlayer):
                     line = f"Step {step}: {obs}"
                     if chosen:
                         line += f"\n  You chose: {chosen}"
+                    state_notes = entry.get("state_notes", "")
+                    if state_notes:
+                        line += f"\n  State: {state_notes[:120]}"
                     lines.append(line)
                 blocks.append("=== RECENT STEPS ===\n" + "\n\n".join(lines))
 
@@ -596,7 +605,6 @@ class LLMAgent(QuestPlayer):
     @staticmethod
     def _normalize_for_signature(value: str, max_len: int = 320) -> str:
         text = (value or "").lower()
-        text = re.sub(r"\d+", "<num>", text)
         text = re.sub(r"\s+", " ", text).strip()
         if len(text) > max_len:
             return text[:max_len]
@@ -687,6 +695,7 @@ class LLMAgent(QuestPlayer):
                     "observation": state_snippet if self._memory_mode == "compaction" else state.strip()[:400],
                     "choice_text": selected_text,
                     "reasoning": (response.reasoning or "")[:150],
+                    "state_notes": (response.subgoal or "")[:120],
                     "action": action,
                 }
             )
@@ -908,16 +917,9 @@ class LLMAgent(QuestPlayer):
             parsed_response.action = self._apply_safety_filter(parsed_response.action, choices)
             if parsed_response.action != action_before_policy and not parsed_response.reasoning:
                 parsed_response.reasoning = "policy_safety_override"
-            loop_adjusted_action = self._apply_loop_breaker(
-                parsed_response.action,
-                state_signature,
-                choices,
-            )
-            if loop_adjusted_action != parsed_response.action:
-                parsed_response.action = loop_adjusted_action
-                parsed_response.reasoning = (
-                    parsed_response.reasoning + "; " if parsed_response.reasoning else ""
-                ) + "policy_loop_break_override"
+            # Loop breaker disabled: it was overriding correct LLM decisions
+            # due to aggressive threshold (1) and number normalization collapsing
+            # distinct states (e.g. "HP:80" == "HP:53") into identical signatures.
             usage_payload = self._normalize_usage(llm_usage)
             parsed_response.prompt_tokens = usage_payload["prompt_tokens"]
             parsed_response.completion_tokens = usage_payload["completion_tokens"]

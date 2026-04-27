@@ -289,8 +289,19 @@ class QuestRunner:
                     if done:
                         self.agent.on_game_end(self.env.state)
 
-                        # Log quest outcome
+                        # Log terminal step: the final observation after the last action
                         outcome = QuestOutcome.SUCCESS if success else QuestOutcome.FAILURE
+                        if self.quest_logger:
+                            terminal_state = AgentState(
+                                step=self.step_count + 1,
+                                location_id=self.env.state.get("location_id", "unknown") if self.env.state else "unknown",
+                                observation=observation,
+                                choices=[],
+                                action=outcome.name,
+                                llm_response=None,
+                            )
+                            self.quest_logger.log_step(terminal_state)
+
                         reward = self.env.state.get("reward", 0.0) if self.env and self.env.state else 0.0
                         if self.quest_logger:
                             # Get benchmark_id from the agent_config parameter if available

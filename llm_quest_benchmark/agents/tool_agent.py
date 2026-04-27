@@ -202,12 +202,7 @@ class ToolAgent(LLMAgent):
             if parsed_response.action != action_before_policy and not parsed_response.reasoning:
                 parsed_response.reasoning = "policy_safety_override"
 
-            loop_adjusted = self._apply_loop_breaker(parsed_response.action, state_signature, choices)
-            if loop_adjusted != parsed_response.action:
-                parsed_response.action = loop_adjusted
-                parsed_response.reasoning = (
-                    parsed_response.reasoning + "; " if parsed_response.reasoning else ""
-                ) + "policy_loop_break_override"
+            # Loop breaker disabled (see llm_agent.py for rationale)
 
             parsed_response.prompt_tokens = total_usage["prompt_tokens"]
             parsed_response.completion_tokens = total_usage["completion_tokens"]
