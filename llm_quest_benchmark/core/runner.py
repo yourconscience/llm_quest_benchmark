@@ -294,8 +294,10 @@ class QuestRunner:
                         if self.quest_logger:
                             terminal_state = AgentState(
                                 step=self.step_count + 1,
-                                location_id=self.env.state.get("location_id", "unknown") if self.env.state else "unknown",
-                                observation=observation,
+                                location_id=self.env.state.get("location_id", "unknown")
+                                if self.env.state
+                                else "unknown",
+                                observation=observation or f"[Quest ended: {outcome.name}]",
                                 choices=[],
                                 action=outcome.name,
                                 llm_response=None,

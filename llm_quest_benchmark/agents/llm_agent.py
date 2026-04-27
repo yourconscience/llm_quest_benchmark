@@ -207,7 +207,13 @@ def parse_llm_response(
             reasoning = raw_reasoning
 
         # memo / state_notes / state_vars / state all map to subgoal for transcript tracking
-        subgoal = response_json.get("subgoal") or response_json.get("memo") or response_json.get("state_notes") or response_json.get("state_vars") or response_json.get("state")
+        subgoal = (
+            response_json.get("subgoal")
+            or response_json.get("memo")
+            or response_json.get("state_notes")
+            or response_json.get("state_vars")
+            or response_json.get("state")
+        )
 
         # Check for either 'action' or 'result' field
         action_value = response_json.get("action") or response_json.get("result") or response_json.get("choice")
