@@ -260,7 +260,7 @@ class OpenAICompatibleClient(LLMClient):
     def _get_client(self) -> OpenAI:
         if self._client is None:
             api_key, base_url = self._provider_settings()
-            kwargs = {"api_key": api_key}
+            kwargs = {"api_key": api_key, "timeout": self.request_timeout, "max_retries": 0}
             if base_url:
                 kwargs["base_url"] = base_url
             self._client = OpenAI(**kwargs)
@@ -631,8 +631,7 @@ class ExecCLIClient(LLMClient):
 
 def get_llm_client(model_name: str, system_prompt: str = "", temperature: float = DEFAULT_TEMPERATURE) -> LLMClient:
     """Factory function to get appropriate LLM client."""
-    # Use a longer request timeout to prevent timeouts during quest execution
-    request_timeout = 60
+    request_timeout = 30
     spec = parse_model_name(model_name)
 
     if spec.provider == "anthropic":

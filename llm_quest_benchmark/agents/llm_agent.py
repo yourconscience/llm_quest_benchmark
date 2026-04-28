@@ -324,7 +324,6 @@ class LLMAgent(QuestPlayer):
         self._context_window = 3
         self._context_chars = 220
         self._decision_window = 5
-        self._loop_repetition_threshold = 1
         self._max_state_signatures = 200
         self._use_safety_filter = True
         self._last_response = LLMResponse(action=1, is_default=True)
@@ -624,38 +623,6 @@ class LLMAgent(QuestPlayer):
         raw_signature = f"{normalized_state}||{normalized_choices}"
         return hashlib.sha1(raw_signature.encode("utf-8", errors="ignore")).hexdigest()[:20]
 
-    def _apply_loop_breaker(self, action: int, state_signature: str, choices: list[dict[str, str]]) -> int:
-        """Avoid repeating the same action in repeated states."""
-        if len(choices) < 2:
-            return action
-
-        counts = self._state_action_counts.get(state_signature, {})
-        selected_count = counts.get(action, 0)
-        visits = sum(counts.values())
-        if visits < self._loop_repetition_threshold or selected_count < self._loop_repetition_threshold:
-            return action
-
-        ranked = []
-        for idx, choice in enumerate(choices, start=1):
-            ranked.append((counts.get(idx, 0), self._choice_risk_score(choice.get("text", "")), idx))
-        ranked.sort(key=lambda item: (item[0], item[1]))
-
-        replacement = action
-        for _, _, candidate in ranked:
-            if candidate != action:
-                replacement = candidate
-                break
-
-        if replacement != action and self.debug:
-            self.logger.debug(
-                "Loop breaker override: state=%s action %s -> %s (counts=%s)",
-                state_signature,
-                action,
-                replacement,
-                counts,
-            )
-        return replacement
-
     def _remember_decision(
         self,
         state: str,
@@ -787,31 +754,6 @@ class LLMAgent(QuestPlayer):
         if total_visits >= 5 and current_count >= 3 and best_action != action:
             return best_action, True
         return action, False
-
-    def _record_decision(
-        self,
-        state: str,
-        action: int,
-        choices: list[dict[str, str]],
-        reasoning: str | None,
-    ) -> None:
-        state_key = self._state_fingerprint(state)
-        if state_key:
-            by_action = self._state_action_counts.setdefault(state_key, {})
-            by_action[action] = by_action.get(action, 0) + 1
-
-        choice_text = ""
-        if 1 <= action <= len(choices):
-            choice_text = choices[action - 1].get("text", "")
-        self._decision_trace.append(
-            {
-                "action": action,
-                "choice_text": choice_text,
-                "reasoning": reasoning or "",
-            }
-        )
-        if len(self._decision_trace) > 30:
-            self._decision_trace = self._decision_trace[-30:]
 
     @staticmethod
     def _normalize_usage(usage: dict[str, Any] | None) -> dict[str, Any]:
