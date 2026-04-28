@@ -63,6 +63,59 @@ Two arms, 2 runs per quest:
 
 First run attempt took 10+ hours and only completed 36% of runs. Root cause: OpenAI Python SDK default read timeout is 600s with 2 retries. When OpenRouter connections stalled, a single API call could block for 16-32 minutes. Fix: set `max_retries=0` on SDK client (our own retry wrapper handles retries) and reduce timeout from 600s to 30s.
 
+### Results (re-run with timeout fix, 65 min each)
+
+| Arm | Wins | Rate | Cost | Won quests |
+|---|---|---|---|---|
+| no_loop_breaker (full_transcript + reasoning) | 2/36 | 5.6% | $4.46 | Ski, Disk |
+| stateful_compact (compaction + 20w memo) | 6/36 | 16.7% | $3.27 | Pilot x2, Disk, Election, Sortirovka1 x2 |
+
+### Failure analysis
+
+- **Memo field empty 100% of steps in no_loop_breaker arm** - reasoning.jinja doesn't instruct memo usage
+- **stateful_compact 3x better**: memo kept signals salient (e.g. "Hogger is greedy" in Pilot), enabled numeric dashboards in Sortirovka1
+- **31% fewer prompt tokens** with compaction vs full_transcript, zero parse regressions
+- **Root causes of remaining failures**: numeric optimization blindness (Pizza, Banket), spatial puzzle inability (Codebox, Shashki), health race undetected (Badday skipped bell mechanic), RNG-dependent outcomes (Disk riddle randomization)
+
+## Exp 4: Memo Variations (2026-04-28)
+
+**Branch**: `exp4-memo-variations` (PR #26)
+**Model**: Gemini 3 Flash Preview (via OpenRouter)
+**Quests**: Same 18 quests as exp3
+**Hypothesis**: Memo quality is the bottleneck. Test whether more space, structured format, or more compute improves on the 20-word baseline.
+
+### Design
+
+Four arms, 2 runs per quest, all using compaction mode (interval 50):
+
+| Arm | Template | Memo budget | Reasoning budget | Tests |
+|---|---|---|---|---|
+| compaction_no_memo | reasoning.jinja | none | 25w | ablation: is memo or compaction the key? |
+| memo_extended | memo_extended.jinja | 50w generic | 50w | is space the bottleneck? |
+| memo_structured | memo_structured.jinja | 50w structured (HP:X Money:Y Trend:+/-) | 50w | does format help? |
+| memo_cot | memo_cot.jinja | 30w + 100w thinking scratchpad | N/A | does compute help? |
+
+Code change: raised memo truncation from 120/160 chars to 350 chars, reasoning storage from 150 to 800 chars.
+
 ### Results
 
-_Pending re-run with timeout fix._
+| Arm | Wins | Rate | Cost | Time | Won quests |
+|---|---|---|---|---|---|
+| **exp3 baseline: stateful_compact (20w memo)** | **6/36** | **16.7%** | **$3.27** | **65m** | **Pilot x2, Disk, Election, Sortirovka1 x2** |
+| compaction_no_memo (ablation) | 2/36 | 5.6% | $2.23 | 68m | Pizza, Disk |
+| memo_extended (50w generic) | 2/36 | 5.6% | $4.28 | 89m | Pilot, Election |
+| memo_structured (50w format) | 1/36 | 2.8% | $3.91 | 82m | Pizza |
+| memo_cot (100w thinking) | 1/36 | 2.8% | $3.15 | 83m | Election |
+
+### Findings
+
+1. **Original 20-word stateful_compact remains the clear winner.** None of the exp4 variations improved on it.
+2. **Compaction alone = no memo.** compaction_no_memo matched full_transcript baseline exactly (5.6%), confirming memo is the active ingredient.
+3. **More space doesn't help.** memo_extended (50w) = 5.6%, same as no-memo baselines. The bottleneck isn't memo size.
+4. **Structure hurts.** Rigid format instructions constrained the model instead of helping it (2.8%).
+5. **More compute doesn't help.** 100-word thinking scratchpad performed worst despite most output tokens (2.8%).
+6. **Conciseness wins.** The 20-word constraint forced maximally selective state tracking - the right pressure.
+
+### Conclusion
+
+The memo improvement curve is not monotonic: 0 words (5.6%) -> 20 words (16.7%) -> 50 words (5.6%) -> 50 words structured (2.8%). The sweet spot is a short, unconstrained memo. Next improvements should target agent architecture (planner, tools) or knowledge injection, not memo format.
