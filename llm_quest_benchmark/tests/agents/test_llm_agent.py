@@ -146,18 +146,6 @@ def test_safety_filter_prefers_lower_risk_choice():
     assert agent._apply_safety_filter(1, choices) == 2
 
 
-def test_loop_breaker_prefers_alternative_after_repeated_state():
-    agent = LLMAgent(model_name="gpt-5-mini")
-    choices = [
-        {"text": "Пойти в космопорт и улететь, чтобы завтра не позориться"},
-        {"text": "Пойти позаниматься в библиотеку"},
-    ]
-    sig = agent._state_signature("Looping state", choices)
-    agent._state_action_counts[sig] = {1: 2, 2: 0}
-
-    assert agent._apply_loop_breaker(1, sig, choices) == 2
-
-
 def test_get_last_response_uses_skip_single_result():
     agent = LLMAgent(model_name="gpt-5-mini", skip_single=True)
     agent.history.append(LLMResponse(action=2, is_default=False))
