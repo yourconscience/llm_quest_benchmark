@@ -207,13 +207,14 @@ def parse_llm_response(
             reasoning = raw_reasoning
 
         # memo / state_notes / state_vars / state all map to subgoal for transcript tracking
-        subgoal = (
+        subgoal_raw = (
             response_json.get("subgoal")
             or response_json.get("memo")
             or response_json.get("state_notes")
             or response_json.get("state_vars")
             or response_json.get("state")
         )
+        subgoal = str(subgoal_raw) if subgoal_raw is not None else None
 
         # Check for either 'action' or 'result' field
         action_value = response_json.get("action") or response_json.get("result") or response_json.get("choice")
@@ -599,9 +600,12 @@ class LLMAgent(QuestPlayer):
                 obs = obs[:400] + "..."
             chosen = entry.get("choice_text", "")
             reasoning = entry.get("reasoning", "")
+            state_notes = entry.get("state_notes", "")
             line = f"Step {step}: {obs}"
             if chosen:
                 line += f"\n  Chose: {chosen}"
+            if state_notes:
+                line += f"\n  State: {state_notes[:120]}"
             if reasoning:
                 line += f"\n  Reasoning: {reasoning[:100]}"
             lines.append(line)
