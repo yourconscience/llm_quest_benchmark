@@ -161,7 +161,7 @@ class ToolAgent(LLMAgent):
                 return any(values)
         if isinstance(node, ast.Compare):
             left = ToolAgent._eval_calculator_node(node.left)
-            for op, comparator in zip(node.ops, node.comparators, strict=False):
+            for op, comparator in zip(node.ops, node.comparators, strict=True):
                 right = ToolAgent._eval_calculator_node(comparator)
                 if isinstance(op, ast.Eq):
                     ok = left == right
@@ -252,7 +252,7 @@ class ToolAgent(LLMAgent):
 
     def _execute_tool_calls(self, tool_calls: list[dict[str, Any]]) -> list[str]:
         results = []
-        for tc in tool_calls[:2]:
+        for tc in tool_calls:
             name, inp = tc["tool"], tc.get("input", "")
             if name == "quest_history":
                 result = self.quest_history(inp)
