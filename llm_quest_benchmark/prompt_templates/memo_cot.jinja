@@ -1,0 +1,18 @@
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Goal: maximize chances to complete the mission successfully.
+Think step by step before choosing. In your "thinking" field:
+- Compute any math or scores visible in the observation.
+- If in combat, estimate turns to win vs turns to survive. Change tactics if losing.
+- If solving a puzzle, write out the current board state and work through the logic.
+- Compare each action's likely outcome. Identify which advances the mission.
+- Reference your memo from prior turns for continuity.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"thinking":"<max 100 words: work through the problem step by step>","memo":"<max 30 words: key state to carry forward>","result":<action_number>}
