@@ -36,7 +36,7 @@ if [[ ${#DIRS[@]} -eq 0 ]]; then
   exit 1
 fi
 
-uv run llm-quest leaderboard "${DIRS[@]}" 2>/dev/null
+uv run llm-quest leaderboard "${DIRS[@]}"
 
 # Print summary table from the generated JSON
 python3 - <<'EOF'

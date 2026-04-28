@@ -13,7 +13,7 @@ Most agent benchmarks vary tasks and models but treat the agent as a black box. 
 ## Non-goals
 
 - Full RAG pipeline with vector DB (potential follow-up). Lightweight knowledge injection is in scope as Mode C.
-- Runtime web UI. The existing Flask app is removed entirely - the interface is CLI + YAML config.
+- Runtime web UI. The interface is CLI + YAML config.
 - New quest authoring or quest format changes. Quests come from upstream Space Rangers archives via `download_quests.sh`.
 - Competing with TextQuests (HuggingFace) or TextArena on their turf. LLM-Quest focuses on structured quests with clear success/failure, not open-ended IF or adversarial games.
 
@@ -101,13 +101,6 @@ Selection rationale: one model per major provider, mid-tier production class (EL
 
 ## Architecture changes
 
-### Remove Flask web UI
-
-Delete `llm_quest_benchmark/web/` and all Flask dependencies. The web UI is replaced by:
-- CLI commands for running experiments (`llm-quest run`, `llm-quest benchmark`).
-- YAML config files for defining benchmark matrices.
-- Static site for publishing results.
-
 ### CLI interface
 
 ```
@@ -153,7 +146,7 @@ All criteria must be met for the spec to be considered complete:
 4. **Corpus scale**: 35+ working EN quests in the corpus, each with >= 3 completion attempts per model in published results.
 5. **Reproducibility**: Full benchmark can be reproduced from a clean clone with `uv` or Docker via a single documented command.
 6. **Blog post**: Published on the project site with method, results, and discussion sections.
-7. **Flask removed**: No Flask dependencies remain in the project.
+7. **CLI-only**: No web UI dependencies in the project.
 
 ## Constraints
 
@@ -179,6 +172,22 @@ All criteria must be met for the spec to be considered complete:
 6. **Models may not complete quests at all**: TextQuests (2025) found zero models completing any Infocom game without clues. Our quests are shorter and choice-based (easier), but the same ceiling effect is possible. Progress % and the knowledge gradient provide a publishable story even if success rates are low.
 7. **TextQuests differentiation**: HuggingFace's TextQuests (2025) is the closest competitor. Key differentiators: agent architecture comparison (5 modes vs 1), bilingual RU/EN, choice-based vs parser-based IF, knowledge gradient experiment. Lead with "vary the agent, not the task" framing.
 
+## Agent response protocol
+
+All agents return structured JSON. The canonical response schema:
+
+```json
+{"memo": "<max 20 words>", "reasoning": "<max 25 words>", "result": <action_number>}
+```
+
+Fields:
+- `memo` - Short state tracker maintained across turns. Agents use this to track inventory, health, codes, quest phase, and anything else worth remembering. Max 20 words. This is the **single** key for all state tracking: no aliases (`subgoal`, `state_notes`, etc.).
+- `reasoning` - Brief explanation for the choice. Max 25 words.
+- `analysis` - Optional deeper analysis (used by some templates).
+- `result` - 1-based action number.
+
+The `memo` field is stored in decision history, passed through compaction, and displayed in trace views. Templates that use state tracking must use this key.
+
 ## Codebase notes
 
 - Prompt templates: `llm_quest_benchmark/prompt_templates/*.jinja` - modes A/B reuse these.
@@ -186,13 +195,11 @@ All criteria must be met for the spec to be considered complete:
 - Benchmark configs: `configs/benchmarks/*.yaml` - add new configs for the full matrix.
 - Quest outcome: `llm_quest_benchmark/environments/state.py:QuestOutcome` - binary SUCCESS/FAILURE already implemented.
 - Existing CLI: `llm_quest_benchmark/executors/cli/commands.py` - extend with new commands.
-- Flask code to remove: `llm_quest_benchmark/web/` (entire directory).
 
 ## Phases
 
 ### Phase 1: Foundation
 - Download and validate quest corpus (run `download_quests.sh`, count working quests per language).
-- Remove Flask web UI and dependencies.
 - Implement progress % metric: extract location/state data from quest engine, label checkpoints for 10 pilot quests.
 - Implement repetition rate metric.
 - Ensure modes A and B run cleanly on 10+ quests across 2+ providers with all metrics reported.
@@ -223,6 +230,10 @@ All criteria must be met for the spec to be considered complete:
 - Deploy site to GitHub Pages.
 - Update README to lead with benchmark framing.
 
-## Outcome / Deviations
+## Current implementation status
 
-_To be filled after implementation._
+- **Interface**: CLI + YAML config. No web UI.
+- **Agent modes**: A (baseline), B (prompted), D (planner), E (tool-augmented) implemented. C (knowledge) not yet started.
+- **Memory modes**: `full_transcript` and `compaction` (configurable interval).
+- **LLM client**: OpenAI-compatible SDK with `timeout=30`, `max_retries=0`. All providers routed via OpenRouter.
+- **Metrics**: Success rate, token cost, step count. Progress % and repetition rate not yet implemented.

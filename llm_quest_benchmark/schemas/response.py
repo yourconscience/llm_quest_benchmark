@@ -10,7 +10,7 @@ class LLMResponse:
     action: int  # The chosen action number (1-based)
     analysis: str | None = None  # Optional analysis of the choice
     reasoning: str | None = None  # Optional explanation for the choice
-    subgoal: str | None = None  # Optional short-term objective for next turns
+    memo: str | None = None  # State tracking: inventory, health, codes, quest phase
     is_default: bool = False  # Whether this is a default value due to parsing error
     parse_mode: str | None = None  # How the output was parsed (json/number/default/etc)
     prompt_tokens: int | None = None

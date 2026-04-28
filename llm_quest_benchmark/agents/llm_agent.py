@@ -200,11 +200,14 @@ def parse_llm_response(
     response_json, json_parse_mode = _parse_json_response(response, debug, logger)
     if response_json and isinstance(response_json, dict):
         analysis = response_json.get("analysis") or extracted_analysis
-        reasoning = response_json.get("reasoning") or extracted_reasoning
+        reasoning = response_json.get("reasoning") or response_json.get("thinking") or extracted_reasoning
         if not reasoning and analysis:
             reasoning = analysis
         if not analysis and not reasoning:
             reasoning = raw_reasoning
+
+        memo_raw = response_json.get("memo")
+        memo = str(memo_raw) if memo_raw is not None else None
 
         # Check for either 'action' or 'result' field
         action_value = response_json.get("action") or response_json.get("result") or response_json.get("choice")
@@ -216,7 +219,7 @@ def parse_llm_response(
                         action=action,
                         reasoning=reasoning,
                         analysis=analysis,
-                        subgoal=response_json.get("subgoal"),
+                        memo=memo,
                         is_default=False,
                         parse_mode=json_parse_mode or "json",
                     )
@@ -315,7 +318,6 @@ class LLMAgent(QuestPlayer):
         self._context_window = 3
         self._context_chars = 220
         self._decision_window = 5
-        self._loop_repetition_threshold = 1
         self._max_state_signatures = 200
         self._use_safety_filter = True
         self._last_response = LLMResponse(action=1, is_default=True)
@@ -398,27 +400,27 @@ class LLMAgent(QuestPlayer):
                 blocks.append("Recent context from previous steps:\n" + "\n\n".join(snippets))
 
         if self._decision_history:
-            recent_subgoals = []
+            recent_memos = []
             for item in self._decision_history[-self._decision_window :]:
-                subgoal = (item.get("subgoal") or "").strip()
-                if not subgoal:
+                m = (item.get("memo") or "").strip()
+                if not m:
                     continue
-                if recent_subgoals and recent_subgoals[-1] == subgoal:
+                if recent_memos and recent_memos[-1] == m:
                     continue
-                recent_subgoals.append(subgoal)
-            if recent_subgoals:
-                lines = [f"[Subgoal {idx}] {sg}" for idx, sg in enumerate(recent_subgoals, start=1)]
-                blocks.append("Subgoal memory (recent short-term objectives):\n" + "\n".join(lines))
+                recent_memos.append(m)
+            if recent_memos:
+                lines = [f"[Memo {idx}] {m}" for idx, m in enumerate(recent_memos, start=1)]
+                blocks.append("State memo (recent):\n" + "\n".join(lines))
 
             recent_decisions = self._decision_history[-self._decision_window :]
             decision_lines = []
             for idx, item in enumerate(recent_decisions, start=1):
                 choice = item.get("choice", "")
                 parse_mode = item.get("parse_mode", "unknown")
-                subgoal = item.get("subgoal")
-                subgoal_suffix = f" | subgoal: {subgoal}" if subgoal else ""
+                memo_val = item.get("memo")
+                memo_suffix = f" | memo: {memo_val}" if memo_val else ""
                 decision_lines.append(
-                    f"[Decision {idx}] action {item.get('action')}: {choice} (parse={parse_mode}){subgoal_suffix}"
+                    f"[Decision {idx}] action {item.get('action')}: {choice} (parse={parse_mode}){memo_suffix}"
                 )
             blocks.append("Recent selected actions:\n" + "\n".join(decision_lines))
 
@@ -457,6 +459,9 @@ class LLMAgent(QuestPlayer):
                     line += f"\n  You chose: {chosen}"
                 if reasoning:
                     line += f"\n  Reasoning: {reasoning[:150]}"
+                state_notes = entry.get("memo", "")
+                if state_notes:
+                    line += f"\n  State: {state_notes[:120]}"
                 lines.append(line)
             blocks.append("=== QUEST TRANSCRIPT ===\n" + "\n\n".join(lines))
 
@@ -489,6 +494,9 @@ class LLMAgent(QuestPlayer):
                     line = f"Step {step}: {obs}"
                     if chosen:
                         line += f"\n  You chose: {chosen}"
+                    state_notes = entry.get("memo", "")
+                    if state_notes:
+                        line += f"\n  State: {state_notes[:120]}"
                     lines.append(line)
                 blocks.append("=== RECENT STEPS ===\n" + "\n\n".join(lines))
 
@@ -585,9 +593,12 @@ class LLMAgent(QuestPlayer):
                 obs = obs[:400] + "..."
             chosen = entry.get("choice_text", "")
             reasoning = entry.get("reasoning", "")
+            state_notes = entry.get("memo", "")
             line = f"Step {step}: {obs}"
             if chosen:
                 line += f"\n  Chose: {chosen}"
+            if state_notes:
+                line += f"\n  State: {state_notes[:120]}"
             if reasoning:
                 line += f"\n  Reasoning: {reasoning[:100]}"
             lines.append(line)
@@ -596,7 +607,6 @@ class LLMAgent(QuestPlayer):
     @staticmethod
     def _normalize_for_signature(value: str, max_len: int = 320) -> str:
         text = (value or "").lower()
-        text = re.sub(r"\d+", "<num>", text)
         text = re.sub(r"\s+", " ", text).strip()
         if len(text) > max_len:
             return text[:max_len]
@@ -609,38 +619,6 @@ class LLMAgent(QuestPlayer):
         )
         raw_signature = f"{normalized_state}||{normalized_choices}"
         return hashlib.sha1(raw_signature.encode("utf-8", errors="ignore")).hexdigest()[:20]
-
-    def _apply_loop_breaker(self, action: int, state_signature: str, choices: list[dict[str, str]]) -> int:
-        """Avoid repeating the same action in repeated states."""
-        if len(choices) < 2:
-            return action
-
-        counts = self._state_action_counts.get(state_signature, {})
-        selected_count = counts.get(action, 0)
-        visits = sum(counts.values())
-        if visits < self._loop_repetition_threshold or selected_count < self._loop_repetition_threshold:
-            return action
-
-        ranked = []
-        for idx, choice in enumerate(choices, start=1):
-            ranked.append((counts.get(idx, 0), self._choice_risk_score(choice.get("text", "")), idx))
-        ranked.sort(key=lambda item: (item[0], item[1]))
-
-        replacement = action
-        for _, _, candidate in ranked:
-            if candidate != action:
-                replacement = candidate
-                break
-
-        if replacement != action and self.debug:
-            self.logger.debug(
-                "Loop breaker override: state=%s action %s -> %s (counts=%s)",
-                state_signature,
-                action,
-                replacement,
-                counts,
-            )
-        return replacement
 
     def _remember_decision(
         self,
@@ -671,7 +649,7 @@ class LLMAgent(QuestPlayer):
                 "action": action,
                 "choice": selected_text,
                 "parse_mode": response.parse_mode or "unknown",
-                "subgoal": (response.subgoal or "").strip()[:160] or None,
+                "memo": (response.memo or "").strip()[:160] or None,
             }
         )
         if len(self._decision_history) > 40:
@@ -687,6 +665,7 @@ class LLMAgent(QuestPlayer):
                     "observation": state_snippet if self._memory_mode == "compaction" else state.strip()[:400],
                     "choice_text": selected_text,
                     "reasoning": (response.reasoning or "")[:150],
+                    "memo": (response.memo or "")[:120],
                     "action": action,
                 }
             )
@@ -772,31 +751,6 @@ class LLMAgent(QuestPlayer):
         if total_visits >= 5 and current_count >= 3 and best_action != action:
             return best_action, True
         return action, False
-
-    def _record_decision(
-        self,
-        state: str,
-        action: int,
-        choices: list[dict[str, str]],
-        reasoning: str | None,
-    ) -> None:
-        state_key = self._state_fingerprint(state)
-        if state_key:
-            by_action = self._state_action_counts.setdefault(state_key, {})
-            by_action[action] = by_action.get(action, 0) + 1
-
-        choice_text = ""
-        if 1 <= action <= len(choices):
-            choice_text = choices[action - 1].get("text", "")
-        self._decision_trace.append(
-            {
-                "action": action,
-                "choice_text": choice_text,
-                "reasoning": reasoning or "",
-            }
-        )
-        if len(self._decision_trace) > 30:
-            self._decision_trace = self._decision_trace[-30:]
 
     @staticmethod
     def _normalize_usage(usage: dict[str, Any] | None) -> dict[str, Any]:
@@ -908,16 +862,6 @@ class LLMAgent(QuestPlayer):
             parsed_response.action = self._apply_safety_filter(parsed_response.action, choices)
             if parsed_response.action != action_before_policy and not parsed_response.reasoning:
                 parsed_response.reasoning = "policy_safety_override"
-            loop_adjusted_action = self._apply_loop_breaker(
-                parsed_response.action,
-                state_signature,
-                choices,
-            )
-            if loop_adjusted_action != parsed_response.action:
-                parsed_response.action = loop_adjusted_action
-                parsed_response.reasoning = (
-                    parsed_response.reasoning + "; " if parsed_response.reasoning else ""
-                ) + "policy_loop_break_override"
             usage_payload = self._normalize_usage(llm_usage)
             parsed_response.prompt_tokens = usage_payload["prompt_tokens"]
             parsed_response.completion_tokens = usage_payload["completion_tokens"]
