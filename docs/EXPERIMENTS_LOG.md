@@ -174,6 +174,15 @@ Decision after Exp 5:
 
 Goal: test whether a general always-on tool architecture improves quest completion without quest-specific routing.
 
+Implementation status (2026-04-28):
+
+- Branch: `exp6-unified-tools`
+- Memory propagation fix implemented for `PlannerAgent` and `ToolAgent`.
+- Tool metadata is exported in `run_summary.json` under `llm_decision.tool_calls` and `llm_decision.tool_results`.
+- Unified tools implemented: `calculator`, `scratchpad`, and existing `quest_history`.
+- Screening config added: `configs/benchmarks/exp6_unified_tools_screen.yaml`.
+- Smoke run on `Banket_eng` and `Shashki_eng` completed 0/2. This verifies plumbing and logging, but suggests the first tool prompt may overuse scratchpad on board-state quests and loop on drink-mixing arithmetic. Treat the full 18-quest screen as exploratory, not as a likely winner until Exp 5 variance is known.
+
 Architecture:
 
 - Base memory architecture: same as Exp 5 (`stateful_compact`, compaction, 20-word memo behavior).

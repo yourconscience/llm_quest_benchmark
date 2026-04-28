@@ -73,6 +73,8 @@ def create_agent(
             action_template=resolved_action_template,
             temperature=temperature,
             skip_single=skip_single,
+            memory_mode=memory_mode,
+            compaction_interval=compaction_interval,
         )
 
     if resolved_action_template == "tool_augmented.jinja":
@@ -83,6 +85,8 @@ def create_agent(
             action_template=resolved_action_template,
             temperature=temperature,
             skip_single=skip_single,
+            memory_mode=memory_mode,
+            compaction_interval=compaction_interval,
         )
 
     # Default to LLM agent

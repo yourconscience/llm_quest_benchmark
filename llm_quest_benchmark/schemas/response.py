@@ -11,6 +11,8 @@ class LLMResponse:
     analysis: str | None = None  # Optional analysis of the choice
     reasoning: str | None = None  # Optional explanation for the choice
     memo: str | None = None  # State tracking: inventory, health, codes, quest phase
+    tool_calls: list[dict] | None = None  # Tool calls requested by tool-augmented agents
+    tool_results: list[str] | None = None  # Tool outputs returned to the model
     is_default: bool = False  # Whether this is a default value due to parsing error
     parse_mode: str | None = None  # How the output was parsed (json/number/default/etc)
     prompt_tokens: int | None = None
