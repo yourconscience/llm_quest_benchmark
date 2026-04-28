@@ -13,7 +13,7 @@ Most agent benchmarks vary tasks and models but treat the agent as a black box. 
 ## Non-goals
 
 - Full RAG pipeline with vector DB (potential follow-up). Lightweight knowledge injection is in scope as Mode C.
-- Runtime web UI. The existing Flask app is removed entirely - the interface is CLI + YAML config.
+- Runtime web UI. The interface is CLI + YAML config.
 - New quest authoring or quest format changes. Quests come from upstream Space Rangers archives via `download_quests.sh`.
 - Competing with TextQuests (HuggingFace) or TextArena on their turf. LLM-Quest focuses on structured quests with clear success/failure, not open-ended IF or adversarial games.
 
@@ -101,13 +101,6 @@ Selection rationale: one model per major provider, mid-tier production class (EL
 
 ## Architecture changes
 
-### Remove Flask web UI
-
-Delete `llm_quest_benchmark/web/` and all Flask dependencies. The web UI is replaced by:
-- CLI commands for running experiments (`llm-quest run`, `llm-quest benchmark`).
-- YAML config files for defining benchmark matrices.
-- Static site for publishing results.
-
 ### CLI interface
 
 ```
@@ -153,7 +146,7 @@ All criteria must be met for the spec to be considered complete:
 4. **Corpus scale**: 35+ working EN quests in the corpus, each with >= 3 completion attempts per model in published results.
 5. **Reproducibility**: Full benchmark can be reproduced from a clean clone with `uv` or Docker via a single documented command.
 6. **Blog post**: Published on the project site with method, results, and discussion sections.
-7. **Flask removed**: No Flask dependencies remain in the project.
+7. **CLI-only**: No web UI dependencies in the project.
 
 ## Constraints
 
@@ -207,7 +200,6 @@ The `memo` field is stored in decision history, passed through compaction, and d
 
 ### Phase 1: Foundation
 - Download and validate quest corpus (run `download_quests.sh`, count working quests per language).
-- Remove Flask web UI and dependencies.
 - Implement progress % metric: extract location/state data from quest engine, label checkpoints for 10 pilot quests.
 - Implement repetition rate metric.
 - Ensure modes A and B run cleanly on 10+ quests across 2+ providers with all metrics reported.
@@ -238,11 +230,10 @@ The `memo` field is stored in decision history, passed through compaction, and d
 - Deploy site to GitHub Pages.
 - Update README to lead with benchmark framing.
 
-## Outcome / Deviations
+## Current implementation status
 
-- Flask web UI removed. CLI + static site is the interface.
-- `subgoal` field renamed to `memo` everywhere (templates, parser, logging, trace viewer).
-- Loop breaker mechanism removed after Exp 2.5 showed it was the primary cause of quest failures.
-- OpenAI SDK timeout fixed: default 600s read timeout + 2 internal retries was causing 16-32 min stalls. Now `timeout=30`, `max_retries=0`.
-- Agent modes D (planner) and E (tool-augmented) implemented.
-- Memory modes implemented: `full_transcript` and `compaction` with configurable intervals.
+- **Interface**: CLI + YAML config. No web UI.
+- **Agent modes**: A (baseline), B (prompted), D (planner), E (tool-augmented) implemented. C (knowledge) not yet started.
+- **Memory modes**: `full_transcript` and `compaction` (configurable interval).
+- **LLM client**: OpenAI-compatible SDK with `timeout=30`, `max_retries=0`. All providers routed via OpenRouter.
+- **Metrics**: Success rate, token cost, step count. Progress % and repetition rate not yet implemented.
