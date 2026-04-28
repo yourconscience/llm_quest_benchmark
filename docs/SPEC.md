@@ -179,6 +179,22 @@ All criteria must be met for the spec to be considered complete:
 6. **Models may not complete quests at all**: TextQuests (2025) found zero models completing any Infocom game without clues. Our quests are shorter and choice-based (easier), but the same ceiling effect is possible. Progress % and the knowledge gradient provide a publishable story even if success rates are low.
 7. **TextQuests differentiation**: HuggingFace's TextQuests (2025) is the closest competitor. Key differentiators: agent architecture comparison (5 modes vs 1), bilingual RU/EN, choice-based vs parser-based IF, knowledge gradient experiment. Lead with "vary the agent, not the task" framing.
 
+## Agent response protocol
+
+All agents return structured JSON. The canonical response schema:
+
+```json
+{"memo": "<max 20 words>", "reasoning": "<max 25 words>", "result": <action_number>}
+```
+
+Fields:
+- `memo` - Short state tracker maintained across turns. Agents use this to track inventory, health, codes, quest phase, and anything else worth remembering. Max 20 words. This is the **single** key for all state tracking: no aliases (`subgoal`, `state_notes`, etc.).
+- `reasoning` - Brief explanation for the choice. Max 25 words.
+- `analysis` - Optional deeper analysis (used by some templates).
+- `result` - 1-based action number.
+
+The `memo` field is stored in decision history, passed through compaction, and displayed in trace views. Templates that use state tracking must use this key.
+
 ## Codebase notes
 
 - Prompt templates: `llm_quest_benchmark/prompt_templates/*.jinja` - modes A/B reuse these.
@@ -186,7 +202,6 @@ All criteria must be met for the spec to be considered complete:
 - Benchmark configs: `configs/benchmarks/*.yaml` - add new configs for the full matrix.
 - Quest outcome: `llm_quest_benchmark/environments/state.py:QuestOutcome` - binary SUCCESS/FAILURE already implemented.
 - Existing CLI: `llm_quest_benchmark/executors/cli/commands.py` - extend with new commands.
-- Flask code to remove: `llm_quest_benchmark/web/` (entire directory).
 
 ## Phases
 
@@ -225,4 +240,9 @@ All criteria must be met for the spec to be considered complete:
 
 ## Outcome / Deviations
 
-_To be filled after implementation._
+- Flask web UI removed. CLI + static site is the interface.
+- `subgoal` field renamed to `memo` everywhere (templates, parser, logging, trace viewer).
+- Loop breaker mechanism removed after Exp 2.5 showed it was the primary cause of quest failures.
+- OpenAI SDK timeout fixed: default 600s read timeout + 2 internal retries was causing 16-32 min stalls. Now `timeout=30`, `max_retries=0`.
+- Agent modes D (planner) and E (tool-augmented) implemented.
+- Memory modes implemented: `full_transcript` and `compaction` with configurable intervals.

@@ -465,7 +465,7 @@ a { color: var(--accent); }
       // Reasoning / analysis
       const reasoning = dec.reasoning && dec.reasoning !== 'auto_single_choice' ? dec.reasoning : null;
       const analysis = dec.analysis || null;
-      const subgoal = dec.subgoal || null;
+      const memo = dec.memo || null;
       let reasoningHtml = '';
       if (analysis) {
         reasoningHtml += `<div class="detail-label mt-3">Analysis</div><div class="reasoning-text">${esc(analysis)}</div>`;
@@ -473,8 +473,8 @@ a { color: var(--accent); }
       if (reasoning) {
         reasoningHtml += `<div class="detail-label mt-3">Reasoning</div><div class="reasoning-text">${esc(reasoning)}</div>`;
       }
-      if (subgoal) {
-        reasoningHtml += `<div class="detail-label mt-3">Subgoal</div><div class="reasoning-text">${esc(subgoal)}</div>`;
+      if (memo) {
+        reasoningHtml += `<div class="detail-label mt-3">Memo</div><div class="reasoning-text">${esc(memo)}</div>`;
       }
 
       item.innerHTML = `

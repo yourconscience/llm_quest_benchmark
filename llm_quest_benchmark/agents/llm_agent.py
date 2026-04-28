@@ -206,15 +206,8 @@ def parse_llm_response(
         if not analysis and not reasoning:
             reasoning = raw_reasoning
 
-        # memo / state_notes / state_vars / state all map to subgoal for transcript tracking
-        subgoal_raw = (
-            response_json.get("subgoal")
-            or response_json.get("memo")
-            or response_json.get("state_notes")
-            or response_json.get("state_vars")
-            or response_json.get("state")
-        )
-        subgoal = str(subgoal_raw) if subgoal_raw is not None else None
+        memo_raw = response_json.get("memo")
+        memo = str(memo_raw) if memo_raw is not None else None
 
         # Check for either 'action' or 'result' field
         action_value = response_json.get("action") or response_json.get("result") or response_json.get("choice")
@@ -226,7 +219,7 @@ def parse_llm_response(
                         action=action,
                         reasoning=reasoning,
                         analysis=analysis,
-                        subgoal=subgoal,
+                        memo=memo,
                         is_default=False,
                         parse_mode=json_parse_mode or "json",
                     )
@@ -407,27 +400,27 @@ class LLMAgent(QuestPlayer):
                 blocks.append("Recent context from previous steps:\n" + "\n\n".join(snippets))
 
         if self._decision_history:
-            recent_subgoals = []
+            recent_memos = []
             for item in self._decision_history[-self._decision_window :]:
-                subgoal = (item.get("subgoal") or "").strip()
-                if not subgoal:
+                m = (item.get("memo") or "").strip()
+                if not m:
                     continue
-                if recent_subgoals and recent_subgoals[-1] == subgoal:
+                if recent_memos and recent_memos[-1] == m:
                     continue
-                recent_subgoals.append(subgoal)
-            if recent_subgoals:
-                lines = [f"[Subgoal {idx}] {sg}" for idx, sg in enumerate(recent_subgoals, start=1)]
-                blocks.append("Subgoal memory (recent short-term objectives):\n" + "\n".join(lines))
+                recent_memos.append(m)
+            if recent_memos:
+                lines = [f"[Memo {idx}] {m}" for idx, m in enumerate(recent_memos, start=1)]
+                blocks.append("State memo (recent):\n" + "\n".join(lines))
 
             recent_decisions = self._decision_history[-self._decision_window :]
             decision_lines = []
             for idx, item in enumerate(recent_decisions, start=1):
                 choice = item.get("choice", "")
                 parse_mode = item.get("parse_mode", "unknown")
-                subgoal = item.get("subgoal")
-                subgoal_suffix = f" | subgoal: {subgoal}" if subgoal else ""
+                memo_val = item.get("memo")
+                memo_suffix = f" | memo: {memo_val}" if memo_val else ""
                 decision_lines.append(
-                    f"[Decision {idx}] action {item.get('action')}: {choice} (parse={parse_mode}){subgoal_suffix}"
+                    f"[Decision {idx}] action {item.get('action')}: {choice} (parse={parse_mode}){memo_suffix}"
                 )
             blocks.append("Recent selected actions:\n" + "\n".join(decision_lines))
 
@@ -466,7 +459,7 @@ class LLMAgent(QuestPlayer):
                     line += f"\n  You chose: {chosen}"
                 if reasoning:
                     line += f"\n  Reasoning: {reasoning[:150]}"
-                state_notes = entry.get("state_notes", "")
+                state_notes = entry.get("memo", "")
                 if state_notes:
                     line += f"\n  State: {state_notes[:120]}"
                 lines.append(line)
@@ -501,7 +494,7 @@ class LLMAgent(QuestPlayer):
                     line = f"Step {step}: {obs}"
                     if chosen:
                         line += f"\n  You chose: {chosen}"
-                    state_notes = entry.get("state_notes", "")
+                    state_notes = entry.get("memo", "")
                     if state_notes:
                         line += f"\n  State: {state_notes[:120]}"
                     lines.append(line)
@@ -600,7 +593,7 @@ class LLMAgent(QuestPlayer):
                 obs = obs[:400] + "..."
             chosen = entry.get("choice_text", "")
             reasoning = entry.get("reasoning", "")
-            state_notes = entry.get("state_notes", "")
+            state_notes = entry.get("memo", "")
             line = f"Step {step}: {obs}"
             if chosen:
                 line += f"\n  Chose: {chosen}"
@@ -656,7 +649,7 @@ class LLMAgent(QuestPlayer):
                 "action": action,
                 "choice": selected_text,
                 "parse_mode": response.parse_mode or "unknown",
-                "subgoal": (response.subgoal or "").strip()[:160] or None,
+                "memo": (response.memo or "").strip()[:160] or None,
             }
         )
         if len(self._decision_history) > 40:
@@ -672,7 +665,7 @@ class LLMAgent(QuestPlayer):
                     "observation": state_snippet if self._memory_mode == "compaction" else state.strip()[:400],
                     "choice_text": selected_text,
                     "reasoning": (response.reasoning or "")[:150],
-                    "state_notes": (response.subgoal or "")[:120],
+                    "memo": (response.memo or "")[:120],
                     "action": action,
                 }
             )
@@ -869,9 +862,6 @@ class LLMAgent(QuestPlayer):
             parsed_response.action = self._apply_safety_filter(parsed_response.action, choices)
             if parsed_response.action != action_before_policy and not parsed_response.reasoning:
                 parsed_response.reasoning = "policy_safety_override"
-            # Loop breaker disabled: it was overriding correct LLM decisions
-            # due to aggressive threshold (1) and number normalization collapsing
-            # distinct states (e.g. "HP:80" == "HP:53") into identical signatures.
             usage_payload = self._normalize_usage(llm_usage)
             parsed_response.prompt_tokens = usage_payload["prompt_tokens"]
             parsed_response.completion_tokens = usage_payload["completion_tokens"]
