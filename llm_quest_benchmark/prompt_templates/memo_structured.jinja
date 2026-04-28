@@ -1,0 +1,18 @@
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Goal: maximize chances to complete the mission successfully.
+Guidelines:
+1. Maintain structured memo using this format: HP:X Money:Y Items:[list] Board:[state] Phase:[description] Trend:[+/-/=]. Track ALL numbers visible in the story. For grids or puzzles, maintain a compact board representation.
+2. Always note whether your situation is improving (+), declining (-), or stable (=). If declining, change strategy.
+3. Avoid choices that abandon, surrender, or prematurely end the quest.
+4. Reference your memo from prior turns to make consistent decisions.
+5. If a location has interactive elements you haven't tried, flag them as unresolved.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"memo":"<max 50 words: structured state per format above>","reasoning":"<max 50 words>","result":<action_number>}

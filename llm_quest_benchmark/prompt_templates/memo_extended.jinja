@@ -1,0 +1,18 @@
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Goal: maximize chances to complete the mission successfully.
+Guidelines:
+1. Write down important state in "memo": inventory, health, money, codes, NPC names, quest phase, puzzle state.
+2. Prefer actions that keep progress alive and gather useful information.
+3. Avoid choices that abandon, surrender, or prematurely end the quest.
+4. Prioritize the core mission objective over side quests.
+5. Reference your memo from prior turns to make consistent decisions.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"memo":"<max 50 words: write down key state to remember>","reasoning":"<max 50 words>","result":<action_number>}

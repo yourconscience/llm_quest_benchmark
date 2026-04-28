@@ -458,10 +458,10 @@ class LLMAgent(QuestPlayer):
                 if chosen:
                     line += f"\n  You chose: {chosen}"
                 if reasoning:
-                    line += f"\n  Reasoning: {reasoning[:150]}"
+                    line += f"\n  Reasoning: {reasoning[:800]}"
                 state_notes = entry.get("memo", "")
                 if state_notes:
-                    line += f"\n  State: {state_notes[:120]}"
+                    line += f"\n  State: {state_notes[:350]}"
                 lines.append(line)
             blocks.append("=== QUEST TRANSCRIPT ===\n" + "\n\n".join(lines))
 
@@ -496,7 +496,7 @@ class LLMAgent(QuestPlayer):
                         line += f"\n  You chose: {chosen}"
                     state_notes = entry.get("memo", "")
                     if state_notes:
-                        line += f"\n  State: {state_notes[:120]}"
+                        line += f"\n  State: {state_notes[:350]}"
                     lines.append(line)
                 blocks.append("=== RECENT STEPS ===\n" + "\n\n".join(lines))
 
@@ -598,9 +598,9 @@ class LLMAgent(QuestPlayer):
             if chosen:
                 line += f"\n  Chose: {chosen}"
             if state_notes:
-                line += f"\n  State: {state_notes[:120]}"
+                line += f"\n  State: {state_notes[:350]}"
             if reasoning:
-                line += f"\n  Reasoning: {reasoning[:100]}"
+                line += f"\n  Reasoning: {reasoning[:800]}"
             lines.append(line)
         return "\n\n".join(lines)
 
@@ -649,7 +649,7 @@ class LLMAgent(QuestPlayer):
                 "action": action,
                 "choice": selected_text,
                 "parse_mode": response.parse_mode or "unknown",
-                "memo": (response.memo or "").strip()[:160] or None,
+                "memo": (response.memo or "").strip()[:350] or None,
             }
         )
         if len(self._decision_history) > 40:
@@ -664,8 +664,8 @@ class LLMAgent(QuestPlayer):
                     "step": self._step_count,
                     "observation": state_snippet if self._memory_mode == "compaction" else state.strip()[:400],
                     "choice_text": selected_text,
-                    "reasoning": (response.reasoning or "")[:150],
-                    "memo": (response.memo or "")[:120],
+                    "reasoning": (response.reasoning or "")[:800],
+                    "memo": (response.memo or "").strip()[:350] or None,
                     "action": action,
                 }
             )
