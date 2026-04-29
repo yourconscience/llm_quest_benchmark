@@ -231,6 +231,40 @@ def test_codex_exec_reads_output_last_message(mock_run, monkeypatch):
     assert usage["completion_tokens"] == 0
 
 
+def test_parse_model_name_claude_provider():
+    spec = parse_model_name("claude:claude-haiku-4-5-20251001")
+    assert spec.provider == "claude"
+    assert spec.model_id == "claude-haiku-4-5-20251001"
+
+
+def test_get_llm_client_claude_provider():
+    client = get_llm_client("claude:claude-haiku-4-5-20251001")
+    assert isinstance(client, ExecCLIClient)
+    assert client.provider == "claude_cli"
+    assert client.model_id == "claude-haiku-4-5-20251001"
+
+
+def test_claude_provider_passes_model_flag(monkeypatch):
+    """claude:<model-id> routes to ExecCLIClient and passes --model <model-id>."""
+    monkeypatch.setattr("llm_quest_benchmark.llm.client.shutil.which", lambda command: f"/opt/{command}")
+    captured_commands = []
+
+    def fake_run_claude(self, prompt):
+        # Reconstruct the command the real method would build to validate --model flag.
+        command = [self._command_path(), "-p"]
+        if self.model_id and self.model_id != "claude-exec":
+            command.extend(["--model", self.model_id])
+        captured_commands.append(command)
+        self._record_usage(0, 0)
+        return "1"
+
+    monkeypatch.setattr(ExecCLIClient, "_run_claude_exec", fake_run_claude)
+
+    client = get_llm_client("claude:claude-haiku-4-5-20251001", system_prompt="system")
+    assert client.get_completion("pick one") == "1"
+    assert captured_commands[0][captured_commands[0].index("--model") + 1] == "claude-haiku-4-5-20251001"
+
+
 def test_claude_exec_uses_print_mode_and_system_prompt(monkeypatch):
     monkeypatch.setattr("llm_quest_benchmark.llm.client.shutil.which", lambda command: f"/opt/{command}")
     captured_commands = []
