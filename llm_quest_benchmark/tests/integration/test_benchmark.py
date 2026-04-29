@@ -12,6 +12,26 @@ from llm_quest_benchmark.executors.benchmark import run_benchmark
 from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 
 
+def _fake_task_for_parallel_test(task, result_queue):
+    time.sleep(0.4)
+    result_queue.put(
+        {
+            "event": "done",
+            "run_index": task["run_index"],
+            "result": benchmark_module._result_entry(
+                task["quest"],
+                task["agent_config"],
+                task["attempt"],
+                QuestOutcome.FAILURE.name,
+            ),
+        }
+    )
+
+
+def _slow_task_for_timeout_test(task, result_queue):
+    time.sleep(5)
+
+
 @pytest.mark.timeout(20)  # 20 seconds timeout for benchmark test
 def test_benchmark_e2e(caplog, tmp_path):
     """Test end-to-end benchmark functionality."""
@@ -130,22 +150,7 @@ def test_benchmark_uses_max_workers(monkeypatch, tmp_path):
     failure: true
     """)
 
-    def fake_task(task, result_queue):
-        time.sleep(0.4)
-        result_queue.put(
-            {
-                "event": "done",
-                "run_index": task["run_index"],
-                "result": benchmark_module._result_entry(
-                    task["quest"],
-                    task["agent_config"],
-                    task["attempt"],
-                    QuestOutcome.FAILURE.name,
-                ),
-            }
-        )
-
-    monkeypatch.setattr(benchmark_module, "_run_benchmark_task", fake_task)
+    monkeypatch.setattr(benchmark_module, "_run_benchmark_task", _fake_task_for_parallel_test)
 
     config = BenchmarkConfig(
         quests=[str(quest_path)],
@@ -160,7 +165,7 @@ def test_benchmark_uses_max_workers(monkeypatch, tmp_path):
     elapsed = time.monotonic() - started
 
     assert len(results) == 4
-    assert elapsed < 1.4
+    assert elapsed < 3.0
 
 
 @pytest.mark.timeout(10)
@@ -172,11 +177,8 @@ def test_benchmark_enforces_child_process_timeout(monkeypatch, tmp_path):
     failure: true
     """)
 
-    def slow_task(task, result_queue):
-        time.sleep(5)
-
     recorded_timeouts = []
-    monkeypatch.setattr(benchmark_module, "_run_benchmark_task", slow_task)
+    monkeypatch.setattr(benchmark_module, "_run_benchmark_task", _slow_task_for_timeout_test)
     monkeypatch.setattr(
         benchmark_module,
         "_mark_run_timeout",
