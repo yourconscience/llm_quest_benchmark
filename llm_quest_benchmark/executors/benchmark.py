@@ -357,7 +357,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
 
     # Collect results for each agent x quest combination.
     results_by_index: list[tuple[int, dict[str, Any]]] = []
-    ctx = mp.get_context("fork")
+    ctx = mp.get_context("spawn")
     running: dict[int, dict[str, Any]] = {}
     next_task = 0
 
@@ -415,6 +415,9 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                     results_by_index.append((current_index, result))
                     completed.append(current_index)
                     process.join(timeout=1)
+                    if process.is_alive():
+                        process.terminate()
+                        process.join(timeout=5)
                     _emit_progress(
                         progress_callback,
                         {
@@ -486,6 +489,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                 )
                 results_by_index.append((current_index, result))
                 completed.append(current_index)
+                process.join()
 
         for current_index in completed:
             handle = running.pop(current_index, None)
