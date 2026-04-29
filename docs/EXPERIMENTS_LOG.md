@@ -244,7 +244,7 @@ Test whether the architecture findings from exp3-6 (all using Gemini 3 Flash) ge
 4. **DeepSeek V3 and Mistral Small 4 tied at 7%.** Each won only 1 quest run.
 5. **Qwen3 30B struggled (7%).** 4 timeouts (3 Election, 1 Leonardo) at 600s suggest the model generates very long outputs or gets stuck in loops.
 6. **No model won Pilot or Leonardo.** Gemini's wins on these quests don't transfer - they may depend on Gemini-specific reasoning patterns.
-7. **Disk is the most model-independent quest** - won by 4 of 6 models. Its success likely depends on RNG (riddle variant) more than model capability.
+7. **Disk is the most model-independent quest** - won by 5 of 6 models. Its success likely depends on RNG (riddle variant) more than model capability.
 8. **Election success varies widely by model** - from 0/3 (Haiku, Mistral, Qwen) to 3/5 (Gemini). Coalition-building strategy appears model-dependent.
 
 ### Conclusion
