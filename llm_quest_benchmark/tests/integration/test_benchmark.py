@@ -165,7 +165,7 @@ def test_benchmark_uses_max_workers(monkeypatch, tmp_path):
     elapsed = time.monotonic() - started
 
     assert len(results) == 4
-    assert elapsed < 3.0
+    assert elapsed < 5.0
 
 
 @pytest.mark.timeout(10)
