@@ -1,0 +1,59 @@
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Available tools:
+{% for tool in tool_descriptions %}
+- {{ tool }}
+{% endfor %}
+
+{% if scratchpad_note %}
+Current scratchpad:
+{{ scratchpad_note }}
+
+{% endif %}
+{% if recent_steps %}
+Recent quest history:
+{% for item in recent_steps %}
+- {{ item }}
+{% endfor %}
+
+{% endif %}
+{% if tool_results %}
+Tool results:
+{% for result in tool_results %}
+- {{ result }}
+{% endfor %}
+
+{% endif %}
+{% if prompt_kind == "select" %}
+Decide whether you need a tool before choosing an action.
+Use tools only when they will materially improve the choice.
+Consider unconventional, risky, or morally grey solutions if they increase your chances of success.
+When numbers appear in the story, write exact values in your memo. Use calculator to verify arithmetic.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"memo":"<max 20 words: key state to remember>","analysis":"<max 25 words>","tool_calls":[{"tool":"calculator|scratchpad|quest_history","input":"<expression_or_query>","operation":"<read|write_replace for scratchpad>","content":"<new scratchpad note for write_replace>"}],"result":<action_number_or_null>}
+
+Rules:
+- `tool_calls` may contain 0 or 1 items.
+- If no tools are needed, set `tool_calls` to [] and provide `result`.
+- If a tool is needed, set `result` to null.
+- Use `calculator` for arithmetic, totals, percentages, inequalities, and simple comparisons.
+- Prefer `memo` for ordinary step memory.
+- Use `scratchpad` only for state too large for the 20-word memo: board states, coordinates, inventories, failed branches, and candidate plans.
+- Do not rewrite scratchpad every step; write only when a durable state update would otherwise be lost.
+- For scratchpad read: set `operation` to `read` and `content` to "".
+- For scratchpad write: set `operation` to `write_replace` and `content` to the full concise updated note.
+{% else %}
+Use the tool results if they help, but ignore them if they conflict with the story text.
+Choose the best action now.
+Consider unconventional, risky, or morally grey solutions if they increase your chances of success.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"memo":"<max 20 words: key state to remember>","analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}
+{% endif %}

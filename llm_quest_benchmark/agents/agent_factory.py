@@ -77,7 +77,7 @@ def create_agent(
             compaction_interval=compaction_interval,
         )
 
-    if resolved_action_template == "tool_augmented.jinja":
+    if resolved_action_template in ("tool_augmented.jinja", "tool_augmented_hints.jinja"):
         return ToolAgent(
             debug=debug,
             model_name=model,
