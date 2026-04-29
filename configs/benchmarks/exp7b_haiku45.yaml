@@ -6,7 +6,7 @@ quests:
   - quests/sr_2_1_2121_eng/Disk_eng.qm
   - quests/sr_2_1_2121_eng/Robots_eng.qm
 agents:
-  - model: "anthropic:claude-haiku-4-5-20251001"
+  - model: "claude:claude-haiku-4-5-20251001"
     template: stateful_compact
     temperature: 0.4
     runs: 3
