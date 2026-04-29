@@ -2,8 +2,12 @@
 
 import json
 import logging
+import multiprocessing as mp
+import queue
 import sqlite3
+import time
 import uuid
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -28,6 +32,140 @@ logging.getLogger("llm_quest_benchmark").setLevel(logging.WARNING)
 logging.getLogger("llm_quest_benchmark.executors.ts_bridge").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
+
+
+def _result_entry(
+    quest: str,
+    agent_config,
+    attempt: int,
+    outcome: str,
+    reward: float = 0.0,
+    error: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "quest": quest,
+        "model": agent_config.model,
+        "temperature": agent_config.temperature,
+        "template": agent_config.action_template,
+        "agent_id": agent_config.agent_id,
+        "attempt": attempt,
+        "outcome": outcome,
+        "reward": reward,
+        "error": error,
+    }
+
+
+def _mark_run_timeout(run_id: int | None, quest: str, agent_config, benchmark_id: str, timeout: int) -> None:
+    """Record a parent-enforced timeout for a killed child process."""
+    agent_config_json = json.dumps(agent_config.__dict__)
+    end_time = datetime.utcnow()
+    conn = sqlite3.connect(DEFAULT_DB_PATH)
+    try:
+        if run_id is not None:
+            row = conn.execute("SELECT start_time FROM runs WHERE id = ?", (run_id,)).fetchone()
+            run_duration = None
+            if row and row[0]:
+                try:
+                    start_time = datetime.fromisoformat(str(row[0]))
+                    run_duration = (end_time - start_time).total_seconds()
+                except ValueError:
+                    run_duration = None
+            conn.execute(
+                """
+                UPDATE runs
+                SET agent_id = ?, agent_config = ?, benchmark_id = ?, outcome = ?,
+                    reward = ?, end_time = ?, run_duration = ?
+                WHERE id = ?
+                """,
+                (
+                    agent_config.agent_id,
+                    agent_config_json,
+                    benchmark_id,
+                    QuestOutcome.TIMEOUT.name,
+                    0.0,
+                    end_time,
+                    run_duration,
+                    run_id,
+                ),
+            )
+        else:
+            conn.execute(
+                """
+                INSERT INTO runs
+                    (quest_file, quest_name, start_time, end_time, agent_id, agent_config,
+                     outcome, reward, run_duration, benchmark_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    quest,
+                    Path(quest).stem,
+                    end_time,
+                    end_time,
+                    agent_config.agent_id,
+                    agent_config_json,
+                    QuestOutcome.TIMEOUT.name,
+                    0.0,
+                    0.0,
+                    benchmark_id,
+                ),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _run_benchmark_task(task: dict[str, Any], result_queue) -> None:
+    """Run one benchmark attempt in a child process."""
+    agent_config = task["agent_config"]
+    agent_config.benchmark_id = task["benchmark_id"]
+    quest = task["quest"]
+    attempt = task["attempt"]
+
+    def callback(event: str, data: Any = None) -> None:
+        if event == "run_record" and isinstance(data, dict):
+            result_queue.put(
+                {
+                    "event": "run_record",
+                    "run_index": task["run_index"],
+                    "run_id": data.get("run_id"),
+                }
+            )
+
+    try:
+        agent = create_agent(
+            model=agent_config.model,
+            temperature=agent_config.temperature,
+            system_template=agent_config.system_template,
+            action_template=agent_config.action_template,
+            skip_single=agent_config.skip_single,
+            debug=agent_config.debug,
+            memory_mode=agent_config.memory_mode,
+            compaction_interval=agent_config.compaction_interval,
+        )
+        outcome = run_quest_with_timeout(
+            quest,
+            agent,
+            timeout=10**9,
+            agent_config=agent_config,
+            debug=agent_config.debug,
+            callbacks=[callback],
+        )
+        outcome_name = outcome.name if outcome else QuestOutcome.TIMEOUT.name
+        result_queue.put(
+            {
+                "event": "done",
+                "run_index": task["run_index"],
+                "result": _result_entry(quest, agent_config, attempt, outcome_name),
+            }
+        )
+    except Exception as exc:
+        result_queue.put(
+            {
+                "event": "done",
+                "run_index": task["run_index"],
+                "result": _result_entry(quest, agent_config, attempt, QuestOutcome.ERROR.name, error=str(exc)),
+            }
+        )
 
 
 def generate_benchmark_id(prefix: str = "benchmark") -> str:
@@ -172,9 +310,6 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
     if not config.benchmark_id:
         config.benchmark_id = generate_benchmark_id("benchmark")
 
-    if config.max_workers and config.max_workers > 1:
-        logger.info("max_workers=%s is currently accepted but benchmark runs sequentially", config.max_workers)
-
     logger.info(f"Running benchmark with ID: {config.benchmark_id}")
 
     # Expand quest paths into actual quest files
@@ -185,11 +320,9 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
     logger.info(f"Running {len(quest_files)} quests with {len(config.agents)} agents")
     logger.info(f"Agents: {', '.join(a.agent_id for a in config.agents)}")
 
-    # Collect results for each agent x quest combination.
-    results = []
-
     total_runs = len(quest_files) * sum(agent.runs for agent in config.agents)
     run_index = 0
+    tasks = []
 
     for agent_config in config.agents:
         for quest_file in quest_files:
@@ -197,111 +330,172 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                 run_index += 1
                 quest_str = str(quest_file)
                 quest_name = Path(quest_file).name
+                task_agent_config = deepcopy(agent_config)
+                task_agent_config.benchmark_id = config.benchmark_id
+                tasks.append(
+                    {
+                        "run_index": run_index,
+                        "total_runs": total_runs,
+                        "quest": quest_str,
+                        "quest_name": quest_name,
+                        "agent_config": task_agent_config,
+                        "attempt": attempt,
+                        "benchmark_id": config.benchmark_id,
+                    }
+                )
 
                 logger.info(
-                    "Agent %s running quest %s (attempt %s/%s)",
+                    "Queued agent %s quest %s (attempt %s/%s)",
                     agent_config.agent_id,
                     quest_name,
                     attempt,
                     agent_config.runs,
                 )
+
+    max_workers = max(1, int(config.max_workers or 1))
+    logger.info("Running %s benchmark attempts with max_workers=%s", total_runs, max_workers)
+
+    # Collect results for each agent x quest combination.
+    results_by_index: list[tuple[int, dict[str, Any]]] = []
+    ctx = mp.get_context("fork")
+    running: dict[int, dict[str, Any]] = {}
+    next_task = 0
+
+    while next_task < len(tasks) or running:
+        while next_task < len(tasks) and len(running) < max_workers:
+            task = tasks[next_task]
+            next_task += 1
+            agent_config = task["agent_config"]
+            task_queue = ctx.Queue()
+            process = ctx.Process(target=_run_benchmark_task, args=(task, task_queue))
+            process.start()
+            running[task["run_index"]] = {
+                "task": task,
+                "queue": task_queue,
+                "process": process,
+                "started_at": time.monotonic(),
+                "run_id": None,
+            }
+            logger.info(
+                "Agent %s running quest %s (attempt %s/%s)",
+                agent_config.agent_id,
+                task["quest_name"],
+                task["attempt"],
+                agent_config.runs,
+            )
+            _emit_progress(
+                progress_callback,
+                {
+                    "event": "pair_start",
+                    "run_index": task["run_index"],
+                    "total_runs": total_runs,
+                    "quest": task["quest"],
+                    "quest_name": task["quest_name"],
+                    "agent_id": agent_config.agent_id,
+                    "model": agent_config.model,
+                    "attempt": task["attempt"],
+                },
+            )
+
+        completed: list[int] = []
+        for current_index, handle in list(running.items()):
+            task = handle["task"]
+            agent_config = task["agent_config"]
+            process = handle["process"]
+            task_queue = handle["queue"]
+            while True:
+                try:
+                    message = task_queue.get_nowait()
+                except queue.Empty:
+                    break
+                if message.get("event") == "run_record":
+                    handle["run_id"] = message.get("run_id")
+                elif message.get("event") == "done":
+                    result = message["result"]
+                    results_by_index.append((current_index, result))
+                    completed.append(current_index)
+                    process.join(timeout=1)
+                    _emit_progress(
+                        progress_callback,
+                        {
+                            "event": "pair_done",
+                            "run_index": current_index,
+                            "total_runs": total_runs,
+                            "quest": task["quest"],
+                            "quest_name": task["quest_name"],
+                            "agent_id": agent_config.agent_id,
+                            "model": agent_config.model,
+                            "attempt": task["attempt"],
+                            "outcome": result["outcome"],
+                            "error": result["error"],
+                        },
+                    )
+                    break
+
+            if current_index in completed:
+                continue
+
+            elapsed = time.monotonic() - handle["started_at"]
+            if elapsed > max(config.quest_timeout, 1):
+                logger.warning(
+                    "Quest %s attempt %s timed out after %s seconds",
+                    task["quest_name"],
+                    task["attempt"],
+                    config.quest_timeout,
+                )
+                process.terminate()
+                process.join(timeout=5)
+                if process.is_alive():
+                    process.kill()
+                    process.join(timeout=1)
+                _mark_run_timeout(
+                    handle["run_id"], task["quest"], agent_config, config.benchmark_id, config.quest_timeout
+                )
+                result = _result_entry(
+                    task["quest"],
+                    agent_config,
+                    task["attempt"],
+                    QuestOutcome.TIMEOUT.name,
+                    error=f"Timed out after {config.quest_timeout} seconds",
+                )
+                results_by_index.append((current_index, result))
+                completed.append(current_index)
                 _emit_progress(
                     progress_callback,
                     {
-                        "event": "pair_start",
-                        "run_index": run_index,
+                        "event": "pair_done",
+                        "run_index": current_index,
                         "total_runs": total_runs,
-                        "quest": quest_str,
-                        "quest_name": quest_name,
+                        "quest": task["quest"],
+                        "quest_name": task["quest_name"],
                         "agent_id": agent_config.agent_id,
                         "model": agent_config.model,
-                        "attempt": attempt,
+                        "attempt": task["attempt"],
+                        "outcome": QuestOutcome.TIMEOUT.name,
+                        "error": f"Timed out after {config.quest_timeout} seconds",
                     },
                 )
 
-                try:
-                    # Set the benchmark_id in agent_config for database tracking
-                    agent_config.benchmark_id = config.benchmark_id
+            elif process.exitcode is not None and process.exitcode != 0:
+                result = _result_entry(
+                    task["quest"],
+                    agent_config,
+                    task["attempt"],
+                    QuestOutcome.ERROR.name,
+                    error=f"Worker exited with code {process.exitcode}",
+                )
+                results_by_index.append((current_index, result))
+                completed.append(current_index)
 
-                    # Create agent
-                    agent = create_agent(
-                        model=agent_config.model,
-                        temperature=agent_config.temperature,
-                        system_template=agent_config.system_template,
-                        action_template=agent_config.action_template,
-                        skip_single=agent_config.skip_single,
-                        debug=agent_config.debug,
-                        memory_mode=agent_config.memory_mode,
-                        compaction_interval=agent_config.compaction_interval,
-                    )
+        for current_index in completed:
+            handle = running.pop(current_index, None)
+            if handle:
+                handle["queue"].close()
 
-                    # Run quest with timeout
-                    outcome = run_quest_with_timeout(
-                        quest_str, agent, timeout=config.quest_timeout, agent_config=agent_config
-                    )
-                    outcome_name = outcome.name if outcome else QuestOutcome.TIMEOUT.name
-                    timeout_error = None if outcome else f"Timed out after {config.quest_timeout} seconds"
+        if not completed:
+            time.sleep(0.1)
 
-                    # Create result entry
-                    result = {
-                        "quest": quest_str,
-                        "model": agent_config.model,
-                        "temperature": agent_config.temperature,
-                        "template": agent_config.action_template,
-                        "agent_id": agent_config.agent_id,
-                        "attempt": attempt,
-                        "outcome": outcome_name,
-                        "reward": getattr(outcome, "reward", 0.0),
-                        "error": timeout_error,
-                    }
-                    _emit_progress(
-                        progress_callback,
-                        {
-                            "event": "pair_done",
-                            "run_index": run_index,
-                            "total_runs": total_runs,
-                            "quest": quest_str,
-                            "quest_name": quest_name,
-                            "agent_id": agent_config.agent_id,
-                            "model": agent_config.model,
-                            "attempt": attempt,
-                            "outcome": outcome_name,
-                            "error": timeout_error,
-                        },
-                    )
-
-                except Exception as e:
-                    # Log the error but continue with other quests
-                    logger.error(f"Error running quest {quest_file} with agent {agent_config.agent_id}: {e}")
-
-                    # Create error result
-                    result = {
-                        "quest": quest_str,
-                        "model": agent_config.model,
-                        "temperature": agent_config.temperature,
-                        "template": agent_config.action_template,
-                        "agent_id": agent_config.agent_id,
-                        "attempt": attempt,
-                        "outcome": QuestOutcome.ERROR.name,
-                        "reward": 0.0,
-                        "error": str(e),
-                    }
-                    _emit_progress(
-                        progress_callback,
-                        {
-                            "event": "pair_done",
-                            "run_index": run_index,
-                            "total_runs": total_runs,
-                            "quest": quest_str,
-                            "quest_name": quest_name,
-                            "agent_id": agent_config.agent_id,
-                            "model": agent_config.model,
-                            "attempt": attempt,
-                            "outcome": QuestOutcome.ERROR.name,
-                            "error": str(e),
-                        },
-                    )
-                results.append(result)
+    results = [result for _, result in sorted(results_by_index, key=lambda item: item[0])]
 
     artifact_dir = _write_benchmark_artifacts(config, results)
     if artifact_dir:

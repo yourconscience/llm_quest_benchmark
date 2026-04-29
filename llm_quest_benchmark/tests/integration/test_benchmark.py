@@ -1,10 +1,13 @@
 """End-to-end tests for benchmark functionality"""
 
 import logging
+import time
 
 import pytest
 
 from llm_quest_benchmark.constants import DEFAULT_TEMPLATE, SYSTEM_ROLE_TEMPLATE
+from llm_quest_benchmark.environments.state import QuestOutcome
+from llm_quest_benchmark.executors import benchmark as benchmark_module
 from llm_quest_benchmark.executors.benchmark import run_benchmark
 from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 
@@ -116,3 +119,82 @@ def test_benchmark_supports_multiple_runs_per_agent(tmp_path):
 
     assert len(results) == 2
     assert [result["attempt"] for result in results] == [1, 2]
+
+
+@pytest.mark.timeout(10)
+def test_benchmark_uses_max_workers(monkeypatch, tmp_path):
+    quest_path = tmp_path / "parallel_quest.qm"
+    quest_path.write_text("""
+    [start]
+    text: Done.
+    failure: true
+    """)
+
+    def fake_task(task, result_queue):
+        time.sleep(0.4)
+        result_queue.put(
+            {
+                "event": "done",
+                "run_index": task["run_index"],
+                "result": benchmark_module._result_entry(
+                    task["quest"],
+                    task["agent_config"],
+                    task["attempt"],
+                    QuestOutcome.FAILURE.name,
+                ),
+            }
+        )
+
+    monkeypatch.setattr(benchmark_module, "_run_benchmark_task", fake_task)
+
+    config = BenchmarkConfig(
+        quests=[str(quest_path)],
+        agents=[AgentConfig(model="random_choice", runs=4)],
+        quest_timeout=5,
+        max_workers=2,
+        output_dir=str(tmp_path),
+    )
+
+    started = time.monotonic()
+    results = run_benchmark(config)
+    elapsed = time.monotonic() - started
+
+    assert len(results) == 4
+    assert elapsed < 1.4
+
+
+@pytest.mark.timeout(10)
+def test_benchmark_enforces_child_process_timeout(monkeypatch, tmp_path):
+    quest_path = tmp_path / "slow_quest.qm"
+    quest_path.write_text("""
+    [start]
+    text: Slow.
+    failure: true
+    """)
+
+    def slow_task(task, result_queue):
+        time.sleep(5)
+
+    recorded_timeouts = []
+    monkeypatch.setattr(benchmark_module, "_run_benchmark_task", slow_task)
+    monkeypatch.setattr(
+        benchmark_module,
+        "_mark_run_timeout",
+        lambda run_id, quest, agent_config, benchmark_id, timeout: recorded_timeouts.append((quest, timeout)),
+    )
+
+    config = BenchmarkConfig(
+        quests=[str(quest_path)],
+        agents=[AgentConfig(model="random_choice", runs=1)],
+        quest_timeout=1,
+        max_workers=1,
+        output_dir=str(tmp_path),
+    )
+
+    started = time.monotonic()
+    results = run_benchmark(config)
+    elapsed = time.monotonic() - started
+
+    assert elapsed < 3
+    assert results[0]["outcome"] == QuestOutcome.TIMEOUT.name
+    assert recorded_timeouts == [(str(quest_path), 1)]

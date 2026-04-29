@@ -182,6 +182,7 @@ Implementation status (2026-04-28):
 - Unified tools implemented: `calculator`, `scratchpad`, and existing `quest_history`.
 - Screening config added: `configs/benchmarks/exp6_unified_tools_screen.yaml`.
 - Smoke run on `Banket_eng` and `Shashki_eng` completed 0/2. This verifies plumbing and logging, but suggests the first tool prompt may overuse scratchpad on board-state quests and loop on drink-mixing arithmetic. Treat the full 18-quest screen as exploratory, not as a likely winner until Exp 5 variance is known.
+- Benchmark harness fixed after Exp 5 exposed runtime drift: `max_workers` now runs attempts concurrently, and the parent process enforces `quest_timeout` by terminating over-limit child runs and recording `TIMEOUT`.
 
 Architecture:
 
