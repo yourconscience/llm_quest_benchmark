@@ -11,6 +11,8 @@ MODEL_PROVIDER_CONFIG = {
     "deepseek": {"models": ["deepseek-3.2-chat", "deepseek-reasoner"]},
     "codex_cli": {"models": ["codex-exec"]},
     "claude_cli": {"models": ["claude-exec"]},
+    # Claude CLI provider: accepts any model id and runs via the `claude` CLI binary.
+    "claude": {"models": []},
     # Optional compatibility gateway (hidden from default UI model list).
     "openrouter": {"models": []},
 }

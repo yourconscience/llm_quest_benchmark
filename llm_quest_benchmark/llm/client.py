@@ -526,9 +526,15 @@ class ExecCLIClient(LLMClient):
             "",
             "--no-session-persistence",
         ]
-        model = self._configured_model()
-        if model:
-            command.extend(["--model", model])
+        # For the `claude` provider the model_id is the actual model name supplied
+        # via "claude:<model-id>"; for the legacy claude_cli provider it is the
+        # generic placeholder "claude-exec", so fall back to the env-var in that case.
+        if self.model_id and self.model_id != "claude-exec":
+            command.extend(["--model", self.model_id])
+        else:
+            model = self._configured_model()
+            if model:
+                command.extend(["--model", model])
         if self.system_prompt:
             command.extend(["--system-prompt", self.system_prompt])
         command.extend(self._extra_args())
@@ -641,9 +647,14 @@ def get_llm_client(model_name: str, system_prompt: str = "", temperature: float 
             temperature=temperature,
             request_timeout=request_timeout,
         )
-    if spec.provider in {"codex_cli", "claude_cli"}:
+    if spec.provider in {"codex_cli", "claude_cli", "claude"}:
+        # The "claude" provider is a shorthand for running any Claude model via
+        # the `claude` CLI binary (Max subscription).  It maps to the same
+        # ExecCLIClient implementation as "claude_cli" but carries the real
+        # model id in spec.model_id so _run_claude_exec passes it via --model.
+        cli_provider = spec.provider if spec.provider != "claude" else "claude_cli"
         return ExecCLIClient(
-            provider=spec.provider,
+            provider=cli_provider,
             model_id=spec.model_id,
             system_prompt=system_prompt,
             temperature=temperature,
