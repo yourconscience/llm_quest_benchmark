@@ -250,3 +250,58 @@ Test whether the architecture findings from exp3-6 (all using Gemini 3 Flash) ge
 ### Conclusion
 
 Architecture matters more than model choice for this benchmark, but model choice still matters significantly. The 20w memo + compaction architecture produces non-zero results across all tested models, but the success rate ranges from 7% to 36%. The cheapest models (Qwen, Llama at $0.08/M input) bracket the range: Llama near the top, Qwen near the bottom. Cost does not predict performance here.
+
+## Exp 7b: Model Upgrades (2026-04-30)
+
+**Branch**: `exp7b-model-upgrades` (PR #29)
+**Models**: 3 upgraded models replacing the weakest exp7 performers
+**Quests**: All 18 quests, 2 runs each (36 per model, 108 total)
+**Architecture**: stateful_compact (20w memo, compaction interval 50) - same as exp5/exp7
+
+### Design
+
+Exp7 bottom performers (DeepSeek V3, Qwen3 30B, Mistral Small) scored 7% each. We replaced them with newer versions to test whether model upgrades improve results. Also upgraded Haiku from 3.5 to 4.5.
+
+| Model | Replaces | Provider |
+|---|---|---|
+| DeepSeek V4 Flash | DeepSeek V3 0324 | OpenRouter |
+| Qwen 3.6 Flash | Qwen3 30B A3B | OpenRouter |
+| Claude Haiku 4.5 | Claude 3.5 Haiku | Claude CLI (-p mode) |
+
+### Results
+
+| Quest | DeepSeek V4 Flash | Qwen 3.6 Flash | Haiku 4.5 |
+|---|---|---|---|
+| Badday | 0/2 | 0/2 | 0/2 |
+| Pizza | 0/2 | 0/2 | 0/2 |
+| Pilot | 0/2 | 0/2 | 0/2 |
+| Ski | 0/2 | 0/2 | 0/2 |
+| Leonardo | 0/2 | 0/2 | 0/2 |
+| Robots | 0/2 | 0/2 | 0/2 |
+| Banket | 0/2 | 0/2 | 0/2 |
+| Codebox | 0/2 | 0/2 | 0/2 |
+| Depth | 0/2 | 0/2 | 0/2 |
+| Disk | 0/2 | **2/2** | 0/2 |
+| Driver | 0/2 | 0/2 | 0/2 |
+| Edelweiss | 0/2 | 0/2 | 0/2 |
+| Election | 0/2 | 0/2 | 0/2 |
+| Foncers | 0/2 | 0/2 | 0/2 |
+| Ministry | 0/2 | 0/2 | 0/2 |
+| Player | 0/2 | 0/2 | 0/2 |
+| Shashki | 0/2 | 0/2 | 0/2 |
+| Sortirovka1 | 0/2 | 0/2 | 0/2 |
+| **Total** | **0/36 (0%)** | **2/36 (5.6%)** | **0/36 (0%)** |
+| Timeouts | 5 (14%) | 17 (47%) | 19 (53%) |
+
+### Findings
+
+1. **All three upgrades performed worse than their predecessors.** DeepSeek V4 Flash (0%) < V3 (7%), Haiku 4.5 (0%) < 3.5 (20%), Qwen 3.6 Flash (5.6%) < 3 30B (7%).
+2. **DeepSeek V4 Flash scored 0/36 with 5 timeouts.** Complete failure across all 18 quests. Worse than V3 which managed 1/15 on the easier subset.
+3. **Qwen 3.6 Flash had a 47% timeout rate** (17/36), suggesting the model generates excessively long outputs. Only won Disk (2/2), which is RNG-dependent.
+4. **Haiku 4.5 scored 0/36 with 53% timeout rate** (19/36). The Claude CLI `-p` mode added ~7s latency per step, contributing to timeouts. Failed even on Disk, which 5 of 6 exp7 models won.
+5. **Newer model versions do not automatically improve on this benchmark.** The task rewards concise, focused responses. Models optimized for longer reasoning chains may perform worse when the memo constraint demands brevity.
+6. **Timeout rates correlate inversely with success.** Gemini Flash (exp5 baseline, ~0% timeouts) >> Qwen 3.6 (47% timeouts) >> Haiku 4.5 (53% timeouts). Models that run long on a single step waste budget better spent on more turns.
+
+### Conclusion
+
+Model upgrades hurt rather than helped. The benchmark penalizes verbosity: models that generate longer outputs hit the 600s quest timeout before reaching completion, especially on longer quests. The exp7 ranking stands: Gemini Flash > Llama 4 Scout > Claude Haiku 3.5 > DeepSeek V3 = Mistral Small = Qwen3 30B. Flash/distilled models optimized for speed and conciseness outperform larger or newer variants on this task.
