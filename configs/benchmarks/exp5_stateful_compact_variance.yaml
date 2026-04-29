@@ -1,0 +1,35 @@
+name: exp5_stateful_compact_variance
+quests:
+  # Easy (>50% success)
+  - quests/sr_2_1_2121_eng/Badday_eng.qm
+  - quests/sr_2_1_2121_eng/Pizza_eng.qm
+  # Medium (10-50%)
+  - quests/sr_2_1_2121_eng/Pilot_eng.qm
+  - quests/sr_2_1_2121_eng/Ski_eng.qm
+  # Hard (<2%)
+  - quests/sr_2_1_2121_eng/Leonardo_eng.qm
+  - quests/sr_2_1_2121_eng/Robots_eng.qm
+  # Unrated (0% so far or untested)
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
+  - quests/sr_2_1_2121_eng/Codebox_eng.qm
+  - quests/sr_2_1_2121_eng/Depth_eng.qm
+  - quests/sr_2_1_2121_eng/Disk_eng.qm
+  - quests/sr_2_1_2121_eng/Driver_eng.qm
+  - quests/sr_2_1_2121_eng/Edelweiss_eng.qm
+  - quests/sr_2_1_2121_eng/Election_eng.qm
+  - quests/sr_2_1_2121_eng/Foncers_eng.qm
+  - quests/sr_2_1_2121_eng/Ministry_eng.qm
+  - quests/sr_2_1_2121_eng/Player_eng.qm
+  - quests/sr_2_1_2121_eng/Shashki_eng.qm
+  - quests/sr_2_1_2121_eng/Sortirovka1_eng.qm
+agents:
+  - model: "openrouter:google/gemini-3-flash-preview"
+    template: stateful_compact
+    temperature: 0.4
+    runs: 5
+    memory_mode: compaction
+    compaction_interval: 50
+debug: false
+quest_timeout: 600
+max_workers: 2
+output_dir: results/benchmarks

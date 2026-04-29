@@ -120,111 +120,133 @@ Code change: raised memo truncation from 120/160 chars to 350 chars, reasoning s
 
 The memo improvement curve is not monotonic: 0 words (5.6%) -> 20 words (16.7%) -> 50 words (5.6%) -> 50 words structured (2.8%). The sweet spot is a short, unconstrained memo. Next improvements should target agent architecture (planner, tools) or knowledge injection, not memo format.
 
-## Next Plan: Baseline Replication + Unified Tools
+## Exp 5: Baseline Variance (2026-04-28)
 
-### Decisions
+**Config**: `configs/benchmarks/exp5_stateful_compact_variance.yaml`
+**Model**: Gemini 3 Flash Preview (via OpenRouter)
+**Quests**: 18 quests, 5 runs each (90 total)
 
-- Exp 5 is a pure replication of the current best architecture: `stateful_compact` with a 20-word memo, compaction mode, same 18-quest set, same Gemini 3 Flash Preview model, 5 runs per quest.
-- Do not add a 30-word memo arm to Exp 5. That would mix replication with prompt tuning and make variance harder to interpret.
-- Tools must be evaluated as an always-enabled architecture on the full quest set, not selectively enabled by quest. The benchmark should test a general agent mode, not quest-specific routing.
-- First unified-tools run should be cheap: 2 runs per quest across the same 18 quests. Scale only if it does not clearly hurt relative to the Exp 5 baseline.
-- Planner experiments are postponed until tool/planner memory propagation is fixed and verified.
+### Results
 
-### Required fix before planner or tool experiments
+Overall: **9/90 (10.0%)**
 
-`PlannerAgent` and `ToolAgent` inherit from `LLMAgent`, but current factory and prompt construction do not give them the same memory surface as the winning baseline.
+| Quest | Wins | Type |
+|---|---|---|
+| Election | 3/5 | Coalition strategy |
+| Leonardo | 2/5 | Resource management |
+| Disk | 2/5 | Riddle (RNG-dependent) |
+| Pilot | 1/5 | Exam with arithmetic |
+| Robots | 1/5 | Combat with counters |
+| 13 other quests | 0/5 each | Various |
 
-Known issue:
+### Findings
 
-- `agent_factory.create_agent()` passes `memory_mode` and `compaction_interval` only to plain `LLMAgent`.
-- `PlannerAgent` and `ToolAgent` build prompts from raw `state`, while plain `LLMAgent` uses `_build_contextual_state(state)` to inject the quest briefing, full transcript, compaction summary, recent steps, and memo history.
+- The exp3 result (16.7%) was partially lucky. At 5 runs the rate drops to 10.0%.
+- No quest is reliably won: best is Election at 3/5 (60%).
+- Quests that never win are consistently zero across all 5 runs.
+- Sortirovka1 (won 2/2 in exp3) dropped to 0/5, suggesting its exp3 wins were lucky.
 
-Fix requirement:
+### Failure taxonomy (81 failed traces)
 
-- Pass `memory_mode` and `compaction_interval` into `PlannerAgent` and `ToolAgent`.
-- Ensure planner/tool prompts receive the same contextual state block as the baseline when `memory_mode` is `full_transcript` or `compaction`.
-- Add focused tests proving `create_agent(..., action_template="tool_augmented", memory_mode="compaction")` and planner equivalent preserve that setting and include contextual memory in prompts.
+1. **No numeric reasoning** (Pizza, Pilot, Banket): directional heuristics instead of exact computation
+2. **No spatial state** (Codebox, Shashki, Player): can't maintain board representation in memo
+3. **No trajectory awareness** (Badday, Ski): doesn't notice losing trends
+4. **No objective persistence** (Badday, Depth): forgets interactive elements once out of view
+5. **Pure RNG** (Disk, Election): stochastic quest branches
 
-### Exp 5: Baseline variance
+## Exp 6: Prompt Hints + Tools (2026-04-29)
 
-Goal: measure variance of the current best architecture.
+**Branch**: `exp6-unified-tools` (PR #27, merged)
+**Model**: Gemini 3 Flash Preview (via OpenRouter)
+**Quests**: 18 quests, 3 runs each (54 per variant, 162 total)
 
-Config:
+### Design
 
-- Model: `openrouter:google/gemini-3-flash-preview`
-- Template: `stateful_compact`
-- Memory mode: `compaction`
-- Compaction interval: `50`
-- Runs: `5`
-- Quests: same 18 quests from Exp 3 / Exp 4
+Three variants testing prompt content changes and tool augmentation:
 
-Primary readout:
+| Variant | Template | Description |
+|---|---|---|
+| C: Prompt hints | stateful_compact_hints.jinja | Baseline 20w memo + "morally grey solutions" + "write exact numbers" hints |
+| D: Tools | tool_augmented.jinja | Calculator + scratchpad + quest_history (two-phase: select tools -> execute -> choose) |
+| C+D: Tools+hints | tool_augmented_hints.jinja | Tools + both prompt hints combined |
 
-- Overall success rate and Wilson interval.
-- Per-quest wins out of 5.
-- Cost and wall-clock time.
-- Whether previously solved quests remain solved: `Pilot`, `Disk`, `Election`, `Sortirovka1`.
+Tools available (always-on, not quest-specific):
+- `calculator(expression)`: AST-based arithmetic evaluation
+- `scratchpad(operation, content)`: persistent read/write_replace note (max 1200 chars)
+- `quest_history(query)`: keyword search over prior observations and actions
 
-Decision after Exp 5:
+### Results
 
-- If the 20-word baseline collapses under 5 runs per quest, prioritize variance analysis before new architecture claims.
-- If it remains meaningfully above no-memo/full-transcript baselines, use it as the control for Exp 6.
+| Variant | Wins | Rate | vs Exp5 (10.0%) |
+|---|---|---|---|
+| C: Prompt hints | 0/54 | 0.0% | Much worse |
+| D: Tools | 3/54 | 5.6% | Worse |
+| **C+D: Tools+hints** | **7/54** | **13.0%** | **Better** |
 
-### Exp 6: Unified tools screen
+Per-quest breakdown:
 
-Goal: test whether a general always-on tool architecture improves quest completion without quest-specific routing.
+| Quest | Hints | Tools | T+H | Exp5 baseline |
+|---|---|---|---|---|
+| Election | 0/3 | 2/3 | **3/3** | 3/5 |
+| Pilot | 0/3 | 0/3 | **2/3** | 1/5 |
+| Leonardo | 0/3 | 0/3 | 1/3 | 2/5 |
+| Disk | 0/3 | 1/3 | 1/3 | 2/5 |
+| All others | 0/3 | 0/3 | 0/3 | 0/5 |
 
-Implementation status (2026-04-28):
+### Findings
 
-- Branch: `exp6-unified-tools`
-- Memory propagation fix implemented for `PlannerAgent` and `ToolAgent`.
-- Tool metadata is exported in `run_summary.json` under `llm_decision.tool_calls` and `llm_decision.tool_results`.
-- Unified tools implemented: `calculator`, `scratchpad`, and existing `quest_history`.
-- Screening config added: `configs/benchmarks/exp6_unified_tools_screen.yaml`.
-- Smoke run on `Banket_eng` and `Shashki_eng` completed 0/2. This verifies plumbing and logging, but suggests the first tool prompt may overuse scratchpad on board-state quests and loop on drink-mixing arithmetic. Treat the full 18-quest screen as exploratory, not as a likely winner until Exp 5 variance is known.
-- Benchmark harness fixed after Exp 5 exposed runtime drift: `max_workers` now runs attempts concurrently, and the parent process enforces `quest_timeout` by terminating over-limit child runs and recording `TIMEOUT`.
+1. **Prompt hints alone are harmful (0/54).** Adding "morally grey" and "write exact numbers" guidelines to the baseline template destroyed all wins. The extra instruction text likely interfered with the tight 20-word memo constraint.
+2. **Tools alone are modest (5.6%).** Calculator and scratchpad don't help without the prompt hints guiding their use.
+3. **The combination is synergistic (13.0%).** Neither component works alone, but together they beat the baseline. The hints tell the model what to track; the tools give it the means.
+4. **Election becomes reliably winnable (3/3).** First quest in the project with 100% success. The scratchpad tracks voter support percentages; calculator computes vote totals.
+5. **Pilot improves (2/3 vs 1/5).** Calculator helps with theory exam arithmetic.
+6. **Pizza remains at 0%.** The "morally grey" hint did not recover the bribery decision - the model still refuses to bribe judges across all variants.
 
-Architecture:
+### Conclusion
 
-- Base memory architecture: same as Exp 5 (`stateful_compact`, compaction, 20-word memo behavior).
-- Agent mode: tool-augmented.
-- Tools available on every quest:
-  - `calculator(expression)`: deterministic arithmetic for totals, deltas, percentages, linear constraints, and simple comparisons.
-  - `scratchpad(operation, content)`: one persistent run-local free-form note blob for board states, coordinates, inventories, discovered rules, failed branches, and candidate plans.
-  - `quest_history(query)`: existing run-local search over prior observations and selected actions.
+Tools + prompt hints is the new best architecture at 13.0%, beating the memo-only baseline (10.0%). The improvement comes from Election (now reliable) and Pilot (now consistent). The synergy effect is the key insight: instructions about what to notice + tools to act on it > either alone.
 
-Tool constraints:
+## Exp 7: Multi-Model Comparison (2026-04-29)
 
-- No quest-name-specific tools.
-- No hardcoded solvers for `Codebox`, `Shashki`, `Depth`, or any other quest.
-- Tools may be useful for board and spatial quests only through generic arithmetic, scratchpad state tracking, and history lookup.
-- Scratchpad API stays minimal: `read` returns the current note; `write_replace` replaces it with a concise updated note. No append mode initially.
-- Tool use is optional per decision, but the tool-capable architecture is always enabled for all 18 quests.
-- Keep max tool calls small, initially 1 per selection pass unless there is a concrete reason to allow 2.
+**Branch**: `exp4-memo-variations` (master)
+**Models**: 5 models via OpenRouter + Anthropic API
+**Quests**: 5 winnable quests (Election, Pilot, Leonardo, Disk, Robots), 3 runs each
+**Architecture**: stateful_compact (20w memo, compaction interval 50) - same as exp5 baseline
 
-Screening config:
+### Design
 
-- Model: `openrouter:google/gemini-3-flash-preview`
-- Quests: same 18 quests as Exp 5
-- Runs: `2`
-- Memory mode: `compaction`
-- Compaction interval: `50`
+Test whether the architecture findings from exp3-6 (all using Gemini 3 Flash) generalize across model families. Same prompt template, same hyperparameters, different models.
 
-Primary readout:
+| Model | Provider | Input $/M | Output $/M |
+|---|---|---|---|
+| Llama 4 Scout | OpenRouter | $0.08 | $0.30 |
+| Claude 3.5 Haiku | Anthropic API | $1.00 | $5.00 |
+| DeepSeek V3 0324 | OpenRouter | $0.20 | $0.77 |
+| Mistral Small 4 (2603) | OpenRouter | $0.15 | $0.60 |
+| Qwen3 30B A3B | OpenRouter | $0.08 | $0.28 |
 
-- Overall success rate vs Exp 5 per-quest rates.
-- Tool-call frequency per quest.
-- Parse/default rate.
-- Token and cost overhead.
-- Quests where tools appear to hurt previously stable wins.
+### Results
 
-Scale-up rule:
+| Quest | Llama 4 Scout | Claude Haiku | DeepSeek V3 | Mistral Small 4 | Qwen3 30B | Gemini Flash (exp5) |
+|---|---|---|---|---|---|---|
+| Election | 2/3 | 0/3 | 1/3 | 0/3 | 0/3 (3 timeouts) | 3/5 |
+| Pilot | 0/3 | 0/3 | 0/3 | 0/3 | 0/3 | 1/5 |
+| Leonardo | 0/3 | 0/3 | 0/3 | 0/3 | 0/3 (1 timeout) | 2/5 |
+| Disk | 2/3 | 2/3 | 0/3 | 1/3 | 1/3 | 2/5 |
+| Robots | 0/3 | 1/3 | 0/3 | 0/3 | 0/3 | 1/5 |
+| **Total** | **4/15 (27%)** | **3/15 (20%)** | **1/15 (7%)** | **1/15 (7%)** | **1/15 (7%)** | **9/25 (36%)** |
 
-- Run a 5-run version only if the 2-run screen is not obviously worse on success rate, parse rate, and cost.
+### Findings
 
-### Later work
+1. **Gemini Flash remains the best model for this task at 36% on winnable quests.** No other model matched it despite using the same architecture.
+2. **Llama 4 Scout is the strongest alternative at 27%.** Strong on Election (2/3) and Disk (2/3), zero on Pilot/Leonardo/Robots.
+3. **Claude Haiku is solid at 20%.** Only model besides Gemini to win Robots (1/3). Strong on Disk (2/3) but zero on Election - opposite pattern from Llama.
+4. **DeepSeek V3 and Mistral Small 4 tied at 7%.** Each won only 1 quest run.
+5. **Qwen3 30B struggled (7%).** 4 timeouts (3 Election, 1 Leonardo) at 600s suggest the model generates very long outputs or gets stuck in loops.
+6. **No model won Pilot or Leonardo.** Gemini's wins on these quests don't transfer - they may depend on Gemini-specific reasoning patterns.
+7. **Disk is the most model-independent quest** - won by 4 of 6 models. Its success likely depends on RNG (riddle variant) more than model capability.
+8. **Election success varies widely by model** - from 0/3 (Haiku, Mistral, Qwen) to 3/5 (Gemini). Coalition-building strategy appears model-dependent.
 
-- Test planner only after memory propagation is fixed and the unified-tools screen is understood.
-- After identifying a winning architecture, rerun across multiple models.
-- Expand quest set and consider Russian versions only after the architecture question is clearer.
-- Remove or mark impossible/pathological quests based on empirical evidence, not before the core architecture comparison is stable.
+### Conclusion
+
+Architecture matters more than model choice for this benchmark, but model choice still matters significantly. The 20w memo + compaction architecture produces non-zero results across all tested models, but the success rate ranges from 7% to 36%. The cheapest models (Qwen, Llama at $0.08/M input) bracket the range: Llama near the top, Qwen near the bottom. Cost does not predict performance here.
