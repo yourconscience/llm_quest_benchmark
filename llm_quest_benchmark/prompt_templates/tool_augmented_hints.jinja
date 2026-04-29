@@ -33,6 +33,8 @@ Tool results:
 {% if prompt_kind == "select" %}
 Decide whether you need a tool before choosing an action.
 Use tools only when they will materially improve the choice.
+Consider unconventional, risky, or morally grey solutions if they increase your chances of success.
+When numbers appear in the story, write exact values in your memo. Use calculator to verify arithmetic.
 
 Return ONLY valid JSON (no markdown/code fences), exactly:
 {"memo":"<max 20 words: key state to remember>","analysis":"<max 25 words>","tool_calls":[{"tool":"calculator|scratchpad|quest_history","input":"<expression_or_query>","operation":"<read|write_replace for scratchpad>","content":"<new scratchpad note for write_replace>"}],"result":<action_number_or_null>}
@@ -50,6 +52,7 @@ Rules:
 {% else %}
 Use the tool results if they help, but ignore them if they conflict with the story text.
 Choose the best action now.
+Consider unconventional, risky, or morally grey solutions if they increase your chances of success.
 
 Return ONLY valid JSON (no markdown/code fences), exactly:
 {"memo":"<max 20 words: key state to remember>","analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}

@@ -43,7 +43,6 @@ def run_quest_with_timeout(
 
         # Initialize logger with agent_id
         logger = QuestLogger(debug=debug, agent=agent_id)
-        logger.set_quest_file(quest_path)
 
         # Create quest environment and runner
         QuestEnvironment(quest_path)  # validates quest path
@@ -207,6 +206,13 @@ class QuestRunner:
         try:
             # Initialize environment and notify callbacks
             self.initialize(quest)
+            self._notify_callbacks(
+                "run_record",
+                {
+                    "run_id": self.quest_logger.current_run_id if self.quest_logger else None,
+                    "quest": quest,
+                },
+            )
             self.agent.reset()
             self.agent.on_game_start()
             self._notify_callbacks("title")

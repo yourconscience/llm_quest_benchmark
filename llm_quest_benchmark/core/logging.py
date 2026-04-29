@@ -151,6 +151,8 @@ class QuestLogger:
         analysis = None
         reasoning = None
         memo = None
+        tool_calls = None
+        tool_results = None
         is_default = True
         parse_mode = None
         prompt_tokens = 0
@@ -165,6 +167,8 @@ class QuestLogger:
             analysis = llm_response.get("analysis")
             reasoning = llm_response.get("reasoning")
             memo = llm_response.get("memo")
+            tool_calls = llm_response.get("tool_calls")
+            tool_results = llm_response.get("tool_results")
             is_default = bool(llm_response.get("is_default", False))
             parse_mode = llm_response.get("parse_mode")
             prompt_tokens = int(llm_response.get("prompt_tokens") or 0)
@@ -177,6 +181,8 @@ class QuestLogger:
             "analysis": analysis,
             "reasoning": reasoning,
             "memo": memo,
+            "tool_calls": tool_calls,
+            "tool_results": tool_results,
             "is_default": is_default,
             "parse_mode": parse_mode,
             "choice": self._selected_choice_map(choices_map, parsed_action_index),

@@ -167,13 +167,14 @@ class PlannerAgent(LLMAgent):
             self.logger.debug("PlannerAgent evaluating state with %s choices", len(choices))
         try:
             state_signature = self._state_signature(state, choices)
+            contextual_state = self._build_contextual_state(state)
             should_replan, replan_reason = self._should_replan(state, state_signature)
             plan_usage = None
             if should_replan:
-                plan_usage = self._update_plan(state, choices, replan_reason)
+                plan_usage = self._update_plan(contextual_state, choices, replan_reason)
 
             parsed_response, action_usage = self._choose_action_with_plan(
-                state,
+                contextual_state,
                 choices,
                 replan_reason if should_replan else None,
             )

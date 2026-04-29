@@ -18,6 +18,28 @@ def test_create_agent_uses_tool_template_alias():
     assert isinstance(agent, ToolAgent)
 
 
+def test_create_agent_propagates_memory_mode_to_planner_and_tool_agents():
+    planner = create_agent(
+        model="gpt-5-mini",
+        action_template="planner",
+        memory_mode="compaction",
+        compaction_interval=50,
+    )
+    tool = create_agent(
+        model="gpt-5-mini",
+        action_template="tool_augmented",
+        memory_mode="compaction",
+        compaction_interval=50,
+    )
+
+    assert isinstance(planner, PlannerAgent)
+    assert isinstance(tool, ToolAgent)
+    assert planner._memory_mode == "compaction"
+    assert planner._compaction_interval == 50
+    assert tool._memory_mode == "compaction"
+    assert tool._compaction_interval == 50
+
+
 def test_create_agent_uses_light_hints_template_with_standard_llm_agent():
     agent = create_agent(model="gpt-5-mini", action_template="light_hints")
     assert isinstance(agent, LLMAgent)
@@ -75,6 +97,40 @@ def test_planner_agent_reuses_plan_when_state_is_stable():
     assert mocked_llm.get_completion.call_count == 1
 
 
+def test_planner_agent_uses_contextual_memory_state():
+    agent = PlannerAgent(model_name="gpt-5-mini", memory_mode="compaction", compaction_interval=50)
+    agent._quest_briefing = "Original mission: win the election."
+    agent._transcript = [
+        {
+            "step": 1,
+            "observation": "You learned Maloqs value strength.",
+            "choice_text": "Ask about Maloqs",
+            "memo": "Maloqs value strength",
+            "action": 1,
+        }
+    ]
+    agent._steps_since_compaction = 1
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = [
+        "Use the remembered cultural clue.",
+        '{"analysis":"use clue","reasoning":"fits plan","result":1}',
+    ]
+    mocked_llm.get_last_usage.return_value = {
+        "prompt_tokens": 1,
+        "completion_tokens": 1,
+        "total_tokens": 2,
+        "estimated_cost_usd": 0.0,
+    }
+    agent.llm = mocked_llm
+
+    agent.get_action("Current banquet scene.", [{"text": "Greet like a warrior"}])
+
+    first_prompt = mocked_llm.get_completion.call_args_list[0].args[0]
+    assert "Quest briefing" in first_prompt
+    assert "RECENT STEPS" in first_prompt
+    assert "Maloqs value strength" in first_prompt
+
+
 def test_tool_agent_can_use_quest_history():
     agent = ToolAgent(model_name="gpt-5-mini")
     agent._step_log = [
@@ -102,6 +158,83 @@ def test_tool_agent_can_use_quest_history():
     assert mocked_llm.get_completion.call_count == 2
     assert agent.get_last_response().total_tokens == 65
     assert len(agent._step_log) == 2
+
+
+def test_tool_agent_calculator_supports_arithmetic_and_comparisons():
+    assert ToolAgent.calculator("55 + 12 - 5") == "55 + 12 - 5 = 62"
+    assert ToolAgent.calculator("60 >= 55 and 62 >= 80") == "60 >= 55 and 62 >= 80 = False"
+    assert ToolAgent.calculator("__import__('os')").startswith("error:")
+
+
+def test_tool_agent_scratchpad_read_write_and_reset():
+    agent = ToolAgent(model_name="gpt-5-mini")
+
+    assert agent.scratchpad("read") == "(empty)"
+    assert (
+        agent.scratchpad("write_replace", " Board: W B _ ; failed door 2 ") == "updated: Board: W B _ ; failed door 2"
+    )
+    assert agent.scratchpad("read") == "Board: W B _ ; failed door 2"
+
+    agent.reset()
+
+    assert agent.scratchpad("read") == "(empty)"
+
+
+def test_tool_agent_can_use_calculator_and_records_tool_metadata():
+    agent = ToolAgent(model_name="gpt-5-mini")
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = [
+        '{"memo":"Need mix math","analysis":"calculate target","tool_calls":[{"tool":"calculator","input":"50 + 3 >= 55"}],"result":null}',
+        '{"memo":"Need more strength","analysis":"math failed","reasoning":"choose strength","result":2}',
+    ]
+    mocked_llm.get_last_usage.return_value = {
+        "prompt_tokens": 10,
+        "completion_tokens": 5,
+        "total_tokens": 15,
+        "estimated_cost_usd": 0.0,
+    }
+    agent.llm = mocked_llm
+
+    action = agent.get_action("Strength is 50. Need at least 55.", [{"text": "Add water"}, {"text": "Add repusator"}])
+
+    response = agent.get_last_response()
+    assert action == 2
+    assert response.tool_calls == [{"tool": "calculator", "input": "50 + 3 >= 55", "operation": "", "content": ""}]
+    assert response.tool_results == ["calculator(50 + 3 >= 55) => 50 + 3 >= 55 = False"]
+    assert response.memo == "Need more strength"
+
+
+def test_tool_agent_uses_contextual_memory_state():
+    agent = ToolAgent(model_name="gpt-5-mini", memory_mode="compaction", compaction_interval=50)
+    agent._quest_briefing = "Original mission: pass pilot certification."
+    agent._transcript = [
+        {
+            "step": 1,
+            "observation": "Hogger is greedy.",
+            "choice_text": "Bribe Hogger",
+            "memo": "Hogger is greedy",
+            "action": 1,
+        }
+    ]
+    agent._steps_since_compaction = 1
+    mocked_llm = Mock()
+    mocked_llm.get_completion.return_value = (
+        '{"memo":"Hogger is greedy","analysis":"no tools needed","tool_calls":[],"result":1}'
+    )
+    mocked_llm.get_last_usage.return_value = {
+        "prompt_tokens": 10,
+        "completion_tokens": 5,
+        "total_tokens": 15,
+        "estimated_cost_usd": 0.0,
+    }
+    agent.llm = mocked_llm
+
+    agent.get_action("Current exam room.", [{"text": "Offer a bribe"}])
+
+    prompt = mocked_llm.get_completion.call_args.args[0]
+    assert "Quest briefing" in prompt
+    assert "RECENT STEPS" in prompt
+    assert "Hogger is greedy" in prompt
 
 
 def test_tool_agent_can_finish_without_tools_in_one_call():
