@@ -1,0 +1,18 @@
+name: exp7_deepseek
+quests:
+  - quests/sr_2_1_2121_eng/Election_eng.qm
+  - quests/sr_2_1_2121_eng/Pilot_eng.qm
+  - quests/sr_2_1_2121_eng/Leonardo_eng.qm
+  - quests/sr_2_1_2121_eng/Disk_eng.qm
+  - quests/sr_2_1_2121_eng/Robots_eng.qm
+agents:
+  - model: "openrouter:deepseek/deepseek-chat-v3-0324"
+    template: stateful_compact
+    temperature: 0.4
+    runs: 3
+    memory_mode: compaction
+    compaction_interval: 50
+debug: false
+quest_timeout: 600
+max_workers: 2
+output_dir: results/benchmarks

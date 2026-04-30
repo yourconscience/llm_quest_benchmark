@@ -1,0 +1,43 @@
+name: exp7b_model_upgrades
+quests:
+  - quests/sr_2_1_2121_eng/Badday_eng.qm
+  - quests/sr_2_1_2121_eng/Pizza_eng.qm
+  - quests/sr_2_1_2121_eng/Pilot_eng.qm
+  - quests/sr_2_1_2121_eng/Ski_eng.qm
+  - quests/sr_2_1_2121_eng/Leonardo_eng.qm
+  - quests/sr_2_1_2121_eng/Robots_eng.qm
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
+  - quests/sr_2_1_2121_eng/Codebox_eng.qm
+  - quests/sr_2_1_2121_eng/Depth_eng.qm
+  - quests/sr_2_1_2121_eng/Disk_eng.qm
+  - quests/sr_2_1_2121_eng/Driver_eng.qm
+  - quests/sr_2_1_2121_eng/Edelweiss_eng.qm
+  - quests/sr_2_1_2121_eng/Election_eng.qm
+  - quests/sr_2_1_2121_eng/Foncers_eng.qm
+  - quests/sr_2_1_2121_eng/Ministry_eng.qm
+  - quests/sr_2_1_2121_eng/Player_eng.qm
+  - quests/sr_2_1_2121_eng/Shashki_eng.qm
+  - quests/sr_2_1_2121_eng/Sortirovka1_eng.qm
+agents:
+  - model: "openrouter:deepseek/deepseek-v4-flash"
+    template: stateful_compact
+    temperature: 0.4
+    runs: 2
+    memory_mode: compaction
+    compaction_interval: 50
+  - model: "openrouter:qwen/qwen3.6-flash"
+    template: stateful_compact
+    temperature: 0.4
+    runs: 2
+    memory_mode: compaction
+    compaction_interval: 50
+  - model: "claude:claude-haiku-4-5-20251001"
+    template: stateful_compact
+    temperature: 0.4
+    runs: 2
+    memory_mode: compaction
+    compaction_interval: 50
+debug: false
+quest_timeout: 600
+max_workers: 2
+output_dir: results/benchmarks
