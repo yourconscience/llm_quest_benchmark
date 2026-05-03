@@ -5,80 +5,68 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Play - LLM-Quest Benchmark</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/pako@2.1.0/dist/pako.min.js"></script>
+<script src="play/qmengine.js"></script>
 <style>
-:root { --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --muted: #c9d1d9; --accent: #58a6ff; --green: #3fb950; --orange: #d29922; --red: #f85149; }
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #c9d1d9;
+  --accent: #58a6ff;
+  --green: #3fb950;
+  --orange: #d29922;
+  --red: #f85149;
+  --clr: #ffd863;
+}
 body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
 .navbar { background: var(--surface); border-bottom: 1px solid var(--border); }
-.card { background: var(--surface); border: 1px solid var(--border); }
 a { color: var(--accent); }
 .text-muted { color: var(--muted) !important; }
 
-.quest-card { cursor: pointer; transition: border-color 0.15s, transform 0.1s; }
+.quest-card { cursor: pointer; transition: border-color 0.15s, transform 0.1s; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
 .quest-card:hover { border-color: var(--accent); transform: translateY(-2px); }
 
-.diff-badge {
-  font-size: 0.75rem; font-weight: 700;
-  padding: 0.2em 0.7em; border-radius: 12px;
-  border: 1px solid currentColor;
-}
+.diff-badge { font-size: 0.75rem; font-weight: 700; padding: 0.2em 0.7em; border-radius: 12px; border: 1px solid currentColor; }
 
 .obs-panel {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;
   line-height: 1.7; white-space: pre-wrap;
+  animation: fadeIn 0.25s ease;
 }
 
-.params-strip {
-  display: flex; flex-wrap: wrap; gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-.param-pill {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 4px; padding: 0.2rem 0.6rem;
-  font-size: 0.78rem; color: var(--muted);
-  font-family: 'SF Mono', 'Fira Code', monospace;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.choice-btn {
-  display: block; width: 100%; text-align: left;
-  background: var(--surface); border: 1px solid var(--border);
-  color: var(--text); padding: 0.75rem 1rem; margin-bottom: 0.5rem;
-  border-radius: 6px; cursor: pointer; font-size: 0.95rem;
-  transition: border-color 0.15s;
-}
+.params-strip { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.param-pill { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.78rem; color: var(--muted); font-family: 'SF Mono', 'Fira Code', monospace; }
+
+.choice-btn { display: block; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.95rem; transition: border-color 0.15s; }
 .choice-btn:hover:not(:disabled) { border-color: var(--accent); }
 .choice-btn.inactive { opacity: 0.4; cursor: default; }
 .choice-btn:disabled { cursor: default; }
 
-#cohort-panel {
-  display: none; background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; padding: 1.25rem; margin-top: 1rem;
-}
+.cohort-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-top: 1rem; animation: fadeIn 0.2s ease; }
 
-.family-pill {
-  background: var(--bg); border: 1px solid var(--border);
-  color: var(--muted); padding: 0.2em 0.65em; border-radius: 12px;
-  font-size: 0.75rem; cursor: pointer; transition: all 0.15s;
-}
+.family-pill { background: var(--bg); border: 1px solid var(--border); color: var(--muted); padding: 0.2em 0.65em; border-radius: 12px; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
 .family-pill:hover, .family-pill.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
 .cohort-row { margin-bottom: 0.65rem; }
-.cohort-row.player-choice {
-  border-left: 3px solid var(--accent);
-  padding-left: 0.5rem;
-  background: rgba(88,166,255,0.06);
-  border-radius: 0 4px 4px 0;
-}
+.cohort-row.player-choice { border-left: 3px solid var(--accent); padding-left: 0.5rem; background: rgba(88,166,255,0.06); border-radius: 0 4px 4px 0; }
 .cohort-label { font-size: 0.85rem; margin-bottom: 0.25rem; color: var(--text); }
 .cohort-bar-wrap { display: flex; align-items: center; gap: 0.5rem; }
 .success-bar { height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; flex: 1; }
 .success-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.3s; }
 .cohort-pct { font-size: 0.8rem; color: var(--muted); min-width: 3rem; text-align: right; }
 
-.outcome-badge {
-  font-size: 1.1rem; font-weight: 700; padding: 0.4em 1.1em;
-  border-radius: 6px; letter-spacing: 0.03em;
-}
+.outcome-badge { font-size: 1.1rem; font-weight: 700; padding: 0.4em 1.1em; border-radius: 6px; letter-spacing: 0.03em; }
 .outcome-SUCCESS { background: var(--green); color: #0d1117; }
 .outcome-FAILURE { background: var(--red); color: #fff; }
 .outcome-DEAD { background: var(--red); color: #fff; }
@@ -87,7 +75,19 @@ a { color: var(--accent); }
 .agree-yes { color: var(--green); }
 .agree-no { color: var(--muted); }
 
-.spinner-wrap { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 2rem; }
+.game-clr { color: var(--clr); }
+.game-fix { font-family: 'SF Mono', 'Fira Code', monospace; white-space: pre; }
+
+.spinner-wrap { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 3rem; }
+
+.search-input { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 0.5rem 0.9rem; width: 100%; font-size: 0.95rem; outline: none; }
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--muted); }
+
+.card-table { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+.card-table .table { color: var(--text); margin-bottom: 0; }
+.card-table .table th { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; padding: 0.5rem 1rem; border-color: var(--border); }
+.card-table .table td { padding: 0.4rem 1rem; border-color: var(--border); }
 </style>
 </head>
 <body>
@@ -106,408 +106,627 @@ a { color: var(--accent); }
   </div>
 </nav>
 
-<!-- Screen 1: Quest Selection -->
-<div id="select-screen" class="container py-5" style="max-width:860px">
-  <div class="mb-4">
-    <h2>Play a Quest</h2>
-    <p class="text-muted">Pick a quest, make your choices, then see what AI models chose at each decision point.</p>
-  </div>
-  <div id="quest-cards" class="row g-3"></div>
-  <div id="loading-spinner" class="spinner-wrap" style="display:none">
-    <div class="spinner-border text-secondary" role="status"></div>
-    <span class="text-muted">Loading quest...</span>
-  </div>
-</div>
+<div id="root"></div>
 
-<!-- Screen 2: Playing -->
-<div id="play-screen" style="display:none">
-  <div class="container py-4" style="max-width:800px">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <div>
-        <h4 id="play-quest-title" class="mb-0"></h4>
-        <span id="play-step-counter" class="text-muted" style="font-size:0.85rem"></span>
-      </div>
-      <button class="btn btn-sm btn-outline-secondary" onclick="showScreen('select')">&#8592; Quit</button>
-    </div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
 
-    <div id="params-strip" class="params-strip" style="display:none"></div>
-    <div id="obs-text" class="obs-panel"></div>
-    <div id="choices-list"></div>
+// ---- Tag parser (ported from space-rangers-quest) ----
 
-    <div id="cohort-panel">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
-        <span style="font-size:0.85rem; color:var(--muted)">What AI models chose here (<span id="cohort-n"></span> runs)</span>
-        <div id="family-filters" style="display:flex; gap:0.4rem; flex-wrap:wrap;"></div>
-      </div>
-      <div id="cohort-bars"></div>
-    </div>
-  </div>
-</div>
+const SIMPLE_TAGS = ['clr', 'clrEnd', '/clr', 'fix', '/fix', '/format', '/color'];
 
-<!-- Screen 3: End Screen -->
-<div id="end-screen" style="display:none">
-  <div class="container py-5 text-center" style="max-width:700px">
-    <div id="end-outcome" class="outcome-badge mb-3 d-inline-block"></div>
-    <p id="end-cohort-line" class="text-muted mb-4"></p>
+function splitStringToTokens(str) {
+  const out = [];
+  let pos = 0;
+  let text = '';
 
-    <h5 class="text-start mb-2">Your path</h5>
-    <div class="card mb-4">
-      <table class="table table-sm path-table mb-0">
-        <thead><tr>
-          <th style="color:var(--muted); font-size:0.78rem; text-transform:uppercase; padding:0.5rem 1rem">Step</th>
-          <th style="color:var(--muted); font-size:0.78rem; text-transform:uppercase">Choice</th>
-          <th style="color:var(--muted); font-size:0.78rem; text-transform:uppercase">AI agreed?</th>
-        </tr></thead>
-        <tbody id="path-tbody"></tbody>
-      </table>
-    </div>
+  const flushText = () => {
+    if (text.length > 0) { out.push({ type: 'text', text }); text = ''; }
+  };
 
-    <div class="d-flex gap-3 justify-content-center">
-      <button class="btn btn-primary" id="btn-play-again">Play Again</button>
-      <button class="btn btn-outline-secondary" onclick="showScreen('select')">Try Another Quest</button>
-    </div>
-  </div>
-</div>
+  while (pos < str.length) {
+    let found = false;
+    for (const tag of SIMPLE_TAGS) {
+      const candidate = '<' + tag + '>';
+      if (str.slice(pos, pos + candidate.length) === candidate) {
+        flushText();
+        out.push({ type: 'tag', tag });
+        pos += candidate.length;
+        found = true;
+        break;
+      }
+    }
+    if (found) continue;
 
-<script src="play/qmengine.js"></script>
-<script>
-(function () {
-'use strict';
+    const formatMatch = str.slice(pos).match(/^<format=?(left|right|center)?,?(\d+)?>/);
+    if (formatMatch) {
+      flushText();
+      pos += formatMatch[0].length;
+      const kind = formatMatch[1];
+      const n = formatMatch[2] ? parseInt(formatMatch[2]) : undefined;
+      out.push({ type: 'format', format: (kind && n !== undefined) ? { kind, numberOfSpaces: n } : undefined });
+      continue;
+    }
 
-const QUESTS = [
-  { id: 'Disk_eng', title: 'Disk', difficulty: 'Easy', diffColor: 'var(--green)', desc: 'Answer riddles from a malfunctioning ship computer.', steps: '6-9' },
-  { id: 'Pizza_eng', title: 'Pizza Delivery', difficulty: 'Medium', diffColor: 'var(--orange)', desc: 'Deliver a pizza across a hostile space station.', steps: '15-30' },
-  { id: 'Badday_eng', title: 'Bad Day', difficulty: 'Hard', diffColor: 'var(--red)', desc: 'Survive a day when everything goes wrong.', steps: '20-40' },
-];
+    const colorMatch = str.slice(pos).match(/^<color=?(\d+)?,?(\d+)?,?(\d+)?>/);
+    if (colorMatch) {
+      flushText();
+      pos += colorMatch[0].length;
+      const r = colorMatch[1] ? parseInt(colorMatch[1]) : undefined;
+      const g = colorMatch[2] ? parseInt(colorMatch[2]) : undefined;
+      const b = colorMatch[3] ? parseInt(colorMatch[3]) : undefined;
+      out.push({ type: 'color', color: (r !== undefined && g !== undefined && b !== undefined) ? { r, g, b } : undefined });
+      continue;
+    }
 
-let state = {
-  screen: 'select',
-  quest: null,
-  player: null,
-  cohortData: null,
-  stepNum: 0,
-  path: [],
-  activeFamily: 'all',
-};
+    text += str[pos];
+    pos++;
+  }
+  flushText();
+  return out;
+}
+
+function formatTokens(parsed) {
+  const out = [];
+  let clrCount = 0;
+  let fixCount = 0;
+  let format = undefined;
+  let color = undefined;
+
+  for (const token of parsed) {
+    if (token.type === 'text') {
+      token.text.split(/\r\n|\n/).forEach((line, index, arr) => {
+        const haveNext = index !== arr.length - 1;
+        out.push({ type: 'text', text: line, isClr: clrCount > 0 || undefined, isFix: fixCount > 0 || undefined, color });
+        if (haveNext) out.push({ type: 'newline', isFix: fixCount > 0 || undefined });
+      });
+    } else if (token.type === 'format') {
+      if (!format && token.format) format = { format: token.format, startedAt: out.length };
+    } else if (token.type === 'color') {
+      if (!color && token.color) color = token.color;
+    } else if (token.type === 'tag') {
+      const tag = token.tag;
+      if (tag === '/color') { color = undefined; }
+      else if (tag === 'fix') { fixCount++; }
+      else if (tag === '/fix') { fixCount--; }
+      else if (tag === 'clr') { clrCount++; }
+      else if (tag === 'clrEnd' || tag === '/clr') { clrCount--; }
+      else if (tag === '/format') {
+        if (format) {
+          let length = 0;
+          for (const t of out.slice(format.startedAt)) {
+            length += t.type === 'text' ? t.text.length : 0;
+          }
+          const padNeeded = Math.max(0, format.format.numberOfSpaces - length);
+          const leftPad = padNeeded
+            ? format.format.kind === 'left' ? ' '.repeat(padNeeded)
+            : format.format.kind === 'center' ? ' '.repeat(Math.floor(padNeeded / 2))
+            : ''
+            : '';
+          const rightPad = padNeeded
+            ? format.format.kind === 'right' ? ' '.repeat(padNeeded)
+            : format.format.kind === 'center' ? ' '.repeat(Math.ceil(padNeeded / 2))
+            : ''
+            : '';
+          if (leftPad) out.splice(format.startedAt, 0, { type: 'text', text: leftPad, isClr: clrCount > 0 || undefined, isFix: fixCount > 0 || undefined });
+          if (rightPad) out.push({ type: 'text', text: rightPad, isClr: clrCount > 0 || undefined, isFix: fixCount > 0 || undefined });
+        }
+        format = undefined;
+      }
+    }
+  }
+  return out;
+}
+
+function QuestTags({ str }) {
+  const nbsp = ' ';
+  const tokens = formatTokens(splitStringToTokens(str || ''));
+  return (
+    <>
+      <span>{nbsp}</span>
+      {tokens.map((tok, i) => {
+        if (tok.type === 'newline') {
+          return <span key={i}><br />{nbsp}</span>;
+        }
+        const style = tok.color ? { color: `rgb(${tok.color.r},${tok.color.g},${tok.color.b})` } : undefined;
+        const cls = [tok.isClr ? 'game-clr' : '', tok.isFix ? 'game-fix' : ''].filter(Boolean).join(' ') || undefined;
+        return <span key={i} className={cls} style={style}>{tok.text}</span>;
+      })}
+    </>
+  );
+}
+
+// ---- Helpers ----
+
+function normalizeChoice(text) {
+  return String(text == null ? '' : text)
+    .replace(/<clr>|<clrEnd>|<\/clr>/g, '')
+    .trim()
+    .toLowerCase();
+}
 
 function stripClr(s) {
-  return String(s == null ? '' : s).replace(/<clr>|<clrEnd>/g, '');
+  return String(s == null ? '' : s).replace(/<clr>|<clrEnd>|<\/clr>/g, '');
 }
 
-function esc(s) {
-  return stripClr(String(s == null ? '' : s))
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function diffColor(diff) {
+  if (diff === 'easy') return 'var(--green)';
+  if (diff === 'medium') return 'var(--orange)';
+  return 'var(--red)';
 }
 
-function normalize(text) { return stripClr(text).trim().toLowerCase(); }
-
-function getCohortLocation(locationId) {
-  if (!state.cohortData || !state.cohortData.locations) return null;
-  return state.cohortData.locations[String(locationId)] || null;
+function diffLabel(diff) {
+  return diff.charAt(0).toUpperCase() + diff.slice(1);
 }
 
-// ── Screen transitions ──────────────────────────────────────────────────────
-function showScreen(name) {
-  ['select', 'play', 'end'].forEach(s => {
-    document.getElementById(s + '-screen').style.display = s === name ? '' : 'none';
-  });
-  state.screen = name;
-}
-
-// ── Screen 1: Quest selection ───────────────────────────────────────────────
-function buildSelectScreen() {
-  const container = document.getElementById('quest-cards');
-  container.innerHTML = '';
-  QUESTS.forEach(q => {
-    const col = document.createElement('div');
-    col.className = 'col-md-4';
-    col.innerHTML = `
-      <div class="card quest-card h-100 p-3" data-id="${esc(q.id)}">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <h5 class="mb-0">${esc(q.title)}</h5>
-          <span class="diff-badge" style="color:${q.diffColor}">${esc(q.difficulty)}</span>
-        </div>
-        <p class="text-muted mb-2" style="font-size:0.88rem">${esc(q.desc)}</p>
-        <div style="font-size:0.82rem; color:var(--muted); margin-bottom:0.5rem">~${esc(q.steps)} steps</div>
-        <div id="winrate-${esc(q.id)}" style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem">Loading...</div>
-        <button class="btn btn-sm btn-outline-primary mt-auto" data-id="${esc(q.id)}">Play</button>
-      </div>`;
-    container.appendChild(col);
-
-    // Load win rate
-    fetch('play/' + q.id + '.json')
-      .then(r => r.json())
-      .then(data => {
-        const el = document.getElementById('winrate-' + q.id);
-        if (el) el.textContent = 'AI win rate: ' + Math.round((data.win_rate || 0) * 100) + '%';
-      })
-      .catch(() => {
-        const el = document.getElementById('winrate-' + q.id);
-        if (el) el.textContent = '';
-      });
-  });
-
-  container.addEventListener('click', e => {
-    const btn = e.target.closest('[data-id]');
-    if (!btn) return;
-    const qid = btn.dataset.id;
-    const quest = QUESTS.find(q => q.id === qid);
-    if (quest) startQuest(quest);
+function sortQuests(quests) {
+  const order = { easy: 0, medium: 1, hard: 2 };
+  return [...quests].sort((a, b) => {
+    const da = order[a.difficulty] ?? 3;
+    const db = order[b.difficulty] ?? 3;
+    return da !== db ? da - db : a.title.localeCompare(b.title);
   });
 }
 
-function startQuest(quest) {
-  document.getElementById('loading-spinner').style.display = '';
-  document.getElementById('quest-cards').style.display = 'none';
+// ---- CohortPanel ----
 
-  Promise.all([
-    fetch('play/quests/' + quest.id + '.qm').then(r => r.arrayBuffer()),
-    fetch('play/' + quest.id + '.json').then(r => r.json()),
-  ]).then(([buf, cohort]) => {
-    document.getElementById('loading-spinner').style.display = 'none';
-    document.getElementById('quest-cards').style.display = '';
-
-    const qm = QMEngine.parse(Buffer.from(buf));
-    const player = new QMEngine.QMPlayer(qm, 'eng');
-    player.start();
-
-    state.quest = quest;
-    state.player = player;
-    state.cohortData = cohort;
-    state.stepNum = 0;
-    state.path = [];
-    state.activeFamily = 'all';
-
-    document.getElementById('play-quest-title').textContent = quest.title;
-    buildFamilyFilters();
-    showScreen('play');
-    renderStep();
-  }).catch(err => {
-    document.getElementById('loading-spinner').style.display = 'none';
-    document.getElementById('quest-cards').style.display = '';
-    console.error('Failed to load quest:', err);
-    alert('Failed to load quest. Check console for details.');
-  });
-}
-
-// ── Screen 2: Playing ───────────────────────────────────────────────────────
-function buildFamilyFilters() {
-  const families = (state.cohortData && state.cohortData.model_families) || [];
-  const container = document.getElementById('family-filters');
-  container.innerHTML = '';
-  ['all', ...families].forEach(fam => {
-    const btn = document.createElement('button');
-    btn.className = 'family-pill' + (fam === state.activeFamily ? ' active' : '');
-    btn.textContent = fam === 'all' ? 'All' : fam;
-    btn.dataset.family = fam;
-    btn.addEventListener('click', () => {
-      state.activeFamily = fam;
-      container.querySelectorAll('.family-pill').forEach(b => {
-        b.classList.toggle('active', b.dataset.family === fam);
-      });
-      renderCohortBars(lastCohortContext.locationId, lastCohortContext.playerChoiceNorm);
-    });
-    container.appendChild(btn);
-  });
-}
-
-let lastCohortContext = { locationId: null, playerChoiceNorm: null };
-
-function renderStep() {
-  window.scrollTo(0, 0);
-  const s = state.player.getState();
-  state.stepNum++;
-  document.getElementById('play-step-counter').textContent = 'Step ' + state.stepNum;
-
-  // Params strip
-  const params = (s.paramsState || []).filter(p => p && p.trim());
-  const paramsEl = document.getElementById('params-strip');
-  if (params.length > 0) {
-    paramsEl.style.display = '';
-    paramsEl.innerHTML = params.map(p => `<span class="param-pill">${esc(p)}</span>`).join('');
-  } else {
-    paramsEl.style.display = 'none';
-  }
-
-  // Observation
-  document.getElementById('obs-text').textContent = stripClr(s.text || '');
-
-  // Choices
-  const choices = s.choices || [];
-  const activeChoices = choices.filter(c => c.active);
-  const choicesList = document.getElementById('choices-list');
-  choicesList.innerHTML = '';
-
-  document.getElementById('cohort-panel').style.display = 'none';
-
-  choices.forEach(choice => {
-    const btn = document.createElement('button');
-    btn.className = 'choice-btn' + (choice.active ? '' : ' inactive');
-    btn.textContent = stripClr(choice.text);
-    if (!choice.active) {
-      btn.disabled = true;
-    } else {
-      btn.addEventListener('click', () => handleChoice(choice, activeChoices.length));
-    }
-    choicesList.appendChild(btn);
-  });
-
-  // Check terminal state
-  const gs = s.gameState;
-  if (gs === 'win' || gs === 'fail' || gs === 'dead') {
-    // Disable all buttons, transition to end
-    choicesList.querySelectorAll('button').forEach(b => b.disabled = true);
-    setTimeout(() => showEndScreen(gs), 500);
-  }
-}
-
-function handleChoice(choice, numActive) {
-  // Disable all buttons during dwell
-  document.getElementById('choices-list').querySelectorAll('button').forEach(b => b.disabled = true);
-
-  const locationId = state.player.getSaving().locationId;
-  const choiceNorm = normalize(choice.text);
-  // Record path entry
-  const cohortLoc = getCohortLocation(locationId);
-  const isBranching = numActive >= 2;
-  const majority = (isBranching && cohortLoc) ? getMajorityChoice(cohortLoc, 'all') : null;
-  state.path.push({
-    step: state.stepNum,
-    choiceText: stripClr(choice.text),
-    cohortMajority: majority,
-    agreed: majority ? normalize(majority) === choiceNorm : null,
-  });
-
-  // Perform jump
-  state.player.performJump(choice.jumpId);
-
-  const nextState = state.player.getState();
-  const gs = nextState.gameState;
-  const isTerminal = gs === 'win' || gs === 'fail' || gs === 'dead';
-
-  if (numActive >= 2 && cohortLoc) {
-    lastCohortContext = { locationId, playerChoiceNorm: choiceNorm };
-    renderCohortBars(locationId, choiceNorm);
-    var cohortEl = document.getElementById('cohort-panel');
-    cohortEl.style.display = 'block';
-    cohortEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    setTimeout(() => {
-      document.getElementById('cohort-panel').style.display = 'none';
-      if (isTerminal) {
-        showEndScreen(gs);
-      } else {
-        renderStep();
-      }
-    }, 1500);
-  } else {
-    if (isTerminal) {
-      showEndScreen(gs);
-    } else {
-      renderStep();
-    }
-  }
-}
-
-function getMajorityChoice(cohortLoc, family) {
-  const choices = cohortLoc.choices || {};
-  let bestKey = null, bestVal = -1;
-  Object.entries(choices).forEach(([key, data]) => {
-    const val = family === 'all' ? (data.dist && data.dist.all != null ? data.dist.all : 0)
-      : (data.dist && data.dist[family] != null ? data.dist[family] : 0);
-    if (val > bestVal) { bestVal = val; bestKey = key; }
-  });
-  return bestKey; // normalized key
-}
-
-function renderCohortBars(locationId, playerChoiceNorm) {
-  const cohortLoc = getCohortLocation(locationId);
-  const barsEl = document.getElementById('cohort-bars');
-  const nEl = document.getElementById('cohort-n');
-
+function CohortPanel({ cohortLoc, playerChoiceNorm, activeFamily, onFamilyChange, families, onContinue }) {
   if (!cohortLoc || cohortLoc.n < 5) {
-    barsEl.innerHTML = '<span style="color:var(--muted); font-size:0.85rem">Insufficient data for this location.</span>';
-    nEl.textContent = cohortLoc ? cohortLoc.n : '0';
-    return;
+    return (
+      <div className="cohort-panel">
+        <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Insufficient data for this location.</span>
+      </div>
+    );
   }
 
-  const family = state.activeFamily;
   const choices = cohortLoc.choices || {};
-
-  // Compute total for this family to normalize
   let total = 0;
   Object.values(choices).forEach(data => {
-    const n = family === 'all'
+    const n = activeFamily === 'all'
       ? (data.n || 0)
-      : (data.n_by_family && data.n_by_family[family] != null ? data.n_by_family[family] : 0);
+      : (data.n_by_family && data.n_by_family[activeFamily] != null ? data.n_by_family[activeFamily] : 0);
     total += n;
   });
 
-  nEl.textContent = family === 'all' ? cohortLoc.n : total;
+  const displayN = activeFamily === 'all' ? cohortLoc.n : total;
 
-  barsEl.innerHTML = '';
-  Object.entries(choices).forEach(([key, data]) => {
-    const isPlayer = normalize(key) === normalize(playerChoiceNorm || '');
-    const n = family === 'all'
-      ? (data.n || 0)
-      : (data.n_by_family && data.n_by_family[family] != null ? data.n_by_family[family] : 0);
-    const pct = total > 0 ? Math.round(n / total * 100) : 0;
-
-    const row = document.createElement('div');
-    row.className = 'cohort-row' + (isPlayer ? ' player-choice' : '');
-    row.innerHTML = `
-      <div class="cohort-label">${esc(data.text || key)}</div>
-      <div class="cohort-bar-wrap">
-        <div class="success-bar"><div class="success-fill" style="width:${pct}%"></div></div>
-        <span class="cohort-pct">${pct}%</span>
-      </div>`;
-    barsEl.appendChild(row);
-  });
+  return (
+    <div className="cohort-panel">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+          What AI models chose here ({displayN} runs)
+        </span>
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {['all', ...families].map(fam => (
+            <button
+              key={fam}
+              className={'family-pill' + (fam === activeFamily ? ' active' : '')}
+              onClick={() => onFamilyChange(fam)}
+            >
+              {fam === 'all' ? 'All' : fam}
+            </button>
+          ))}
+          <button
+            style={{ marginLeft: '0.5rem', background: 'var(--accent)', color: 'var(--bg)', border: 'none', borderRadius: '6px', padding: '0.25em 0.8em', fontSize: '0.82rem', cursor: 'pointer', fontWeight: 600 }}
+            onClick={onContinue}
+          >
+            Continue &#9654;
+          </button>
+        </div>
+      </div>
+      <div>
+        {Object.entries(choices).map(([key, data]) => {
+          const isPlayer = normalizeChoice(key) === normalizeChoice(playerChoiceNorm || '');
+          const n = activeFamily === 'all'
+            ? (data.n || 0)
+            : (data.n_by_family && data.n_by_family[activeFamily] != null ? data.n_by_family[activeFamily] : 0);
+          const pct = total > 0 ? Math.round(n / total * 100) : 0;
+          return (
+            <div key={key} className={'cohort-row' + (isPlayer ? ' player-choice' : '')}>
+              <div className="cohort-label">{data.text || key}</div>
+              <div className="cohort-bar-wrap">
+                <div className="success-bar"><div className="success-fill" style={{ width: pct + '%' }}></div></div>
+                <span className="cohort-pct">{pct}%</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
-// ── Screen 3: End ───────────────────────────────────────────────────────────
-function showEndScreen(gameState) {
-  const outcomeMap = { win: 'SUCCESS', fail: 'FAILURE', dead: 'DEAD' };
-  const outcome = outcomeMap[gameState] || 'FAILURE';
+// ---- EndScreen ----
 
-  const outcomeBadge = document.getElementById('end-outcome');
-  outcomeBadge.textContent = outcome;
-  outcomeBadge.className = 'outcome-badge outcome-' + outcome;
+function EndScreen({ outcome, cohortWinRate, path, onPlayAgain, onTryAnother }) {
+  const outcomeLabel = { win: 'SUCCESS', fail: 'FAILURE', dead: 'DEAD' }[outcome] || 'FAILURE';
+  return (
+    <div className="container py-5 text-center" style={{ maxWidth: 700 }}>
+      <div className={'outcome-badge outcome-' + outcomeLabel} style={{ display: 'inline-block', marginBottom: '1rem' }}>
+        {outcomeLabel}
+      </div>
+      {cohortWinRate != null && (
+        <p style={{ color: 'var(--muted)', marginBottom: '1.5rem' }}>
+          AI cohort: {Math.round(cohortWinRate * 100)}% won this quest.
+        </p>
+      )}
+      <h5 style={{ textAlign: 'left', marginBottom: '0.5rem' }}>Your path</h5>
+      <div className="card-table" style={{ marginBottom: '1.5rem' }}>
+        <table className="table table-sm path-table">
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>Choice</th>
+              <th>AI agreed?</th>
+            </tr>
+          </thead>
+          <tbody>
+            {path.map((entry, i) => (
+              <tr key={i}>
+                <td style={{ color: 'var(--muted)' }}>{entry.step}</td>
+                <td>{entry.choiceText}</td>
+                <td>
+                  {entry.agreed === true && <span className="agree-yes">Yes</span>}
+                  {entry.agreed === false && <span className="agree-no">No</span>}
+                  {entry.agreed === null && <span className="agree-no">-</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+        <button className="btn btn-primary" onClick={onPlayAgain}>Play Again</button>
+        <button className="btn btn-outline-secondary" onClick={onTryAnother}>Try Another Quest</button>
+      </div>
+    </div>
+  );
+}
 
-  const winRate = state.cohortData ? Math.round((state.cohortData.win_rate || 0) * 100) : null;
-  const cohortLine = document.getElementById('end-cohort-line');
-  if (winRate != null) {
-    cohortLine.textContent = 'AI cohort: ' + winRate + '% won this quest.';
-  } else {
-    cohortLine.textContent = '';
+// ---- QuestPlay ----
+
+function QuestPlay({ quest, cohortData, onQuit }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [player, setPlayer] = useState(null);
+  const [gameState, setGameState] = useState(null);
+  const [stepHistory, setStepHistory] = useState([]);
+  const [stepNum, setStepNum] = useState(0);
+  const [path, setPath] = useState([]);
+  const [showCohort, setShowCohort] = useState(false);
+  const [cohortInfo, setCohortInfo] = useState(null);
+  const [activeFamily, setActiveFamily] = useState('all');
+  const [ended, setEnded] = useState(null);
+  const [obsKey, setObsKey] = useState(0);
+  const [disabled, setDisabled] = useState(false);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    fetch('play/quests/' + quest.id + '.qm.gz')
+      .then(r => r.arrayBuffer())
+      .then(buf => {
+        const ungzipped = pako.ungzip(new Uint8Array(buf));
+        const qm = QMEngine.parse(Buffer.from(ungzipped));
+        const p = new QMEngine.QMPlayer(qm, 'eng');
+        p.start();
+        setPlayer(p);
+        setGameState(p.getState());
+        setStepNum(1);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError('Failed to load quest: ' + err.message);
+        setLoading(false);
+      });
+  }, [quest.id]);
+
+  const families = (cohortData && cohortData.model_families) || [];
+
+  function getCohortLoc(locationId) {
+    if (!cohortData || !cohortData.locations) return null;
+    return cohortData.locations[String(locationId)] || null;
   }
 
-  // Path table
-  const tbody = document.getElementById('path-tbody');
-  tbody.innerHTML = '';
-  state.path.forEach(entry => {
-    const tr = document.createElement('tr');
-    let agreeHtml = '<span class="agree-no">-</span>';
-    if (entry.agreed === true) agreeHtml = '<span class="agree-yes">Yes</span>';
-    else if (entry.agreed === false) agreeHtml = '<span class="agree-no">No</span>';
-    tr.innerHTML = `
-      <td style="padding:0.4rem 1rem; color:var(--muted)">${esc(entry.step)}</td>
-      <td style="padding:0.4rem 0">${esc(entry.choiceText)}</td>
-      <td style="padding:0.4rem 0">${agreeHtml}</td>`;
-    tbody.appendChild(tr);
-  });
+  function getMajorityChoice(cohortLoc) {
+    const choices = cohortLoc.choices || {};
+    let bestKey = null, bestVal = -1;
+    Object.entries(choices).forEach(([key, data]) => {
+      const val = data.dist && data.dist.all != null ? data.dist.all : 0;
+      if (val > bestVal) { bestVal = val; bestKey = key; }
+    });
+    return bestKey;
+  }
 
-  document.getElementById('btn-play-again').onclick = () => startQuest(state.quest);
+  function handleChoice(choice, activeChoices) {
+    if (disabled) return;
+    setDisabled(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
 
-  showScreen('end');
+    const locationId = player.getSaving().locationId;
+    const choiceNorm = normalizeChoice(choice.text);
+    const cohortLoc = getCohortLoc(locationId);
+    const isBranching = activeChoices.length >= 2;
+    const majority = (isBranching && cohortLoc) ? getMajorityChoice(cohortLoc) : null;
+    const agreed = majority ? normalizeChoice(majority) === choiceNorm : null;
+
+    setPath(prev => [...prev, {
+      step: stepNum,
+      choiceText: stripClr(choice.text),
+      agreed: isBranching ? agreed : null,
+    }]);
+
+    setStepHistory(prev => [...prev, player.getSaving()]);
+    player.performJump(choice.jumpId);
+
+    const nextState = player.getState();
+    const gs = nextState.gameState;
+    const isTerminal = gs === 'win' || gs === 'fail' || gs === 'dead';
+
+    if (isBranching && cohortLoc) {
+      setCohortInfo({ cohortLoc, playerChoiceNorm: choiceNorm, locationId });
+      setShowCohort(true);
+      timerRef.current = setTimeout(() => {
+        setShowCohort(false);
+        setCohortInfo(null);
+        if (isTerminal) {
+          setEnded(gs);
+        } else {
+          setGameState(player.getState());
+          setStepNum(n => n + 1);
+          setObsKey(k => k + 1);
+          setDisabled(false);
+        }
+      }, 1500);
+    } else {
+      if (isTerminal) {
+        setEnded(gs);
+      } else {
+        setGameState(player.getState());
+        setStepNum(n => n + 1);
+        setObsKey(k => k + 1);
+        setDisabled(false);
+      }
+    }
+  }
+
+  function handleContinue() {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!cohortInfo) return;
+    const gs = player.getState().gameState;
+    const isTerminal = gs === 'win' || gs === 'fail' || gs === 'dead';
+    setShowCohort(false);
+    setCohortInfo(null);
+    if (isTerminal) {
+      setEnded(gs);
+    } else {
+      setGameState(player.getState());
+      setStepNum(n => n + 1);
+      setObsKey(k => k + 1);
+      setDisabled(false);
+    }
+  }
+
+  function handleBack() {
+    if (stepHistory.length === 0) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const prevSaving = stepHistory[stepHistory.length - 1];
+    player.loadSaving(prevSaving);
+    setStepHistory(prev => prev.slice(0, -1));
+    setGameState(player.getState());
+    setStepNum(n => Math.max(1, n - 1));
+    setPath(prev => prev.slice(0, -1));
+    setObsKey(k => k + 1);
+    setShowCohort(false);
+    setCohortInfo(null);
+    setDisabled(false);
+    setEnded(null);
+  }
+
+  if (loading) {
+    return (
+      <div className="spinner-wrap">
+        <div className="spinner-border text-secondary" role="status"></div>
+        <span style={{ color: 'var(--muted)' }}>Loading quest...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-5" style={{ maxWidth: 700, textAlign: 'center' }}>
+        <p style={{ color: 'var(--red)' }}>{error}</p>
+        <button className="btn btn-outline-secondary" onClick={onQuit}>Back to quests</button>
+      </div>
+    );
+  }
+
+  if (ended) {
+    return (
+      <EndScreen
+        outcome={ended}
+        cohortWinRate={cohortData ? cohortData.win_rate : null}
+        path={path}
+        onPlayAgain={() => {
+          player.start();
+          setGameState(player.getState());
+          setStepNum(1);
+          setPath([]);
+          setStepHistory([]);
+          setEnded(null);
+          setShowCohort(false);
+          setCohortInfo(null);
+          setObsKey(k => k + 1);
+          setDisabled(false);
+        }}
+        onTryAnother={onQuit}
+      />
+    );
+  }
+
+  if (!gameState) return null;
+
+  const choices = gameState.choices || [];
+  const activeChoices = choices.filter(c => c.active);
+  const params = (gameState.paramsState || []).filter(p => p && p.trim());
+
+  return (
+    <div className="container py-4" style={{ maxWidth: 800 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        <div>
+          <h4 style={{ marginBottom: 0 }}>{quest.title}</h4>
+          <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Step {stepNum}</span>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {stepHistory.length > 0 && (
+            <button className="btn btn-sm btn-outline-secondary" onClick={handleBack}>&#8592; Back</button>
+          )}
+          <button className="btn btn-sm btn-outline-secondary" onClick={onQuit}>Quit</button>
+        </div>
+      </div>
+
+      {params.length > 0 && (
+        <div className="params-strip">
+          {params.map((p, i) => <span key={i} className="param-pill"><QuestTags str={p} /></span>)}
+        </div>
+      )}
+
+      <div key={obsKey} className="obs-panel">
+        <QuestTags str={gameState.text || ''} />
+      </div>
+
+      <div>
+        {choices.map((choice, i) => (
+          <button
+            key={i}
+            className={'choice-btn' + (choice.active ? '' : ' inactive')}
+            disabled={!choice.active || disabled}
+            onClick={() => choice.active && !disabled && handleChoice(choice, activeChoices)}
+          >
+            <QuestTags str={choice.text || ''} />
+          </button>
+        ))}
+      </div>
+
+      {showCohort && cohortInfo && (
+        <CohortPanel
+          cohortLoc={cohortInfo.cohortLoc}
+          playerChoiceNorm={cohortInfo.playerChoiceNorm}
+          activeFamily={activeFamily}
+          onFamilyChange={setActiveFamily}
+          families={families}
+          onContinue={handleContinue}
+        />
+      )}
+    </div>
+  );
 }
 
-// ── Init ────────────────────────────────────────────────────────────────────
-buildSelectScreen();
-showScreen('select');
+// ---- QuestSelect ----
 
-})();
+function QuestSelect({ onSelectQuest }) {
+  const [quests, setQuests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    fetch('play/quest-index.json')
+      .then(r => r.json())
+      .then(data => {
+        setQuests(sortQuests(data.quests || []));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const filtered = quests.filter(q =>
+    !search || q.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="container py-5" style={{ maxWidth: 860 }}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h2>Play a Quest</h2>
+        <p style={{ color: 'var(--muted)' }}>Pick a quest, make your choices, then see what AI models chose at each decision point.</p>
+      </div>
+
+      <div style={{ marginBottom: '1.5rem' }}>
+        <input
+          className="search-input"
+          type="text"
+          placeholder="Search quests..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
+      {loading ? (
+        <div className="spinner-wrap">
+          <div className="spinner-border text-secondary" role="status"></div>
+          <span style={{ color: 'var(--muted)' }}>Loading quests...</span>
+        </div>
+      ) : (
+        <div className="row g-3">
+          {filtered.map(q => (
+            <div key={q.id} className="col-md-4 col-sm-6">
+              <div className="quest-card h-100" style={{ display: 'flex', flexDirection: 'column' }} onClick={() => onSelectQuest(q)}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <h5 style={{ margin: 0 }}>{q.title}</h5>
+                  <span className="diff-badge" style={{ color: diffColor(q.difficulty) }}>{diffLabel(q.difficulty)}</span>
+                </div>
+                <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: '0.5rem', flexGrow: 1 }}>{q.description}</p>
+                <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.25rem' }}>~{q.stepsRange} steps</div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
+                  AI win rate: {Math.round((q.win_rate || 0) * 100)}%
+                </div>
+                <button className="btn btn-sm btn-outline-primary" style={{ marginTop: 'auto' }} onClick={e => { e.stopPropagation(); onSelectQuest(q); }}>
+                  Play
+                </button>
+              </div>
+            </div>
+          ))}
+          {filtered.length === 0 && (
+            <div className="col-12" style={{ color: 'var(--muted)', textAlign: 'center', padding: '2rem' }}>No quests found.</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- App ----
+
+function App() {
+  const [screen, setScreen] = useState('select');
+  const [selectedQuest, setSelectedQuest] = useState(null);
+  const [cohortData, setCohortData] = useState(null);
+
+  function handleSelectQuest(quest) {
+    setSelectedQuest(quest);
+    setCohortData(null);
+    setScreen('play');
+    fetch('play/' + quest.id + '.json')
+      .then(r => r.json())
+      .then(data => setCohortData(data))
+      .catch(() => {});
+  }
+
+  if (screen === 'select') {
+    return <QuestSelect onSelectQuest={handleSelectQuest} />;
+  }
+
+  return (
+    <QuestPlay
+      quest={selectedQuest}
+      cohortData={cohortData}
+      onQuit={() => setScreen('select')}
+    />
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
 </script>
 </body>
 </html>
