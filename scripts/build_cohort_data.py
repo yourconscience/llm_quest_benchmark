@@ -9,10 +9,11 @@ Usage:
 """
 
 import json
+import re
 import sqlite3
 import sys
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -69,7 +70,6 @@ def is_excluded(agent_id: str) -> bool:
     return any(pat in a for pat in EXCLUDE_PATTERNS)
 
 
-import re
 _CYRILLIC_RE = re.compile(r'[Ѐ-ӿ]')
 
 def has_cyrillic(text: str) -> bool:
@@ -112,7 +112,7 @@ def build_quest_data(conn: sqlite3.Connection, quest_name: str) -> dict:
     if not runs:
         return {
             "quest": quest_name,
-            "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "generated": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "total_runs": 0,
             "win_rate": 0.0,
             "model_families": [],
@@ -225,7 +225,7 @@ def build_quest_data(conn: sqlite3.Connection, quest_name: str) -> dict:
 
     return {
         "quest": quest_name,
-        "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "total_runs": total_runs,
         "win_rate": round(win_rate, 4),
         "model_families": included_families,

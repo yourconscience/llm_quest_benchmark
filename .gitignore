@@ -5,7 +5,7 @@ results/
 logs/
 
 # Quest files and utils
-/quests/
+/quests/*
 !/quests/boat.qm
 tge/
 
