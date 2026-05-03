@@ -434,7 +434,6 @@ def main() -> None:
                     **quest_entry,
                     "id": ru_quest_id,
                     "lang": "ru",
-                    "canonical_id": quest_name,
                 }
             )
 
