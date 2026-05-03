@@ -3,258 +3,178 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>About - LLM-Quest Benchmark</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ZkaQRFN5HIMXOW5p6y0Sgis4On/radW4qBjeP+1vg+PA9798auxg2kOfySrHlvtM" crossorigin="anonymous">
+<title>LLM-Quest Benchmark</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+itwOMHACZ8dgWEBe/pWbQ0dRPJK14JM/RFY0E7LQRf8L9FF9hTSqXwuDSAiIYEY" crossorigin="anonymous">
 <style>
 :root { --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --muted: #c9d1d9; --accent: #58a6ff; --green: #3fb950; --orange: #d29922; --red: #f85149; }
 body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; line-height: 1.7; }
 .navbar { background: var(--surface); border-bottom: 1px solid var(--border); }
-.nav-link-custom { color: var(--muted); text-decoration: none; margin-left: 1.5rem; }
-.nav-link-custom:hover, .nav-link-custom.active { color: var(--accent); }
-.card { background: var(--surface); border: 1px solid var(--border); }
+.nav-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+.nav-links a { color: var(--muted); text-decoration: none; font-size: 0.95rem; }
+.nav-links a:hover, .nav-links a.active { color: var(--accent); }
 a { color: var(--accent); }
-h2 { margin-top: 2.5rem; margin-bottom: 1rem; }
-h3 { margin-top: 2rem; color: var(--muted); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em; }
-.hero { padding: 3rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
-.hero h1 { font-size: 2.2rem; font-weight: 700; }
-.hero p { color: var(--muted); font-size: 1.15rem; max-width: 700px; }
-.mode-card { padding: 1.25rem; height: 100%; }
-.mode-card h5 { font-size: 1rem; margin-bottom: 0.5rem; }
-.mode-card p { font-size: 0.9rem; color: var(--muted); margin-bottom: 0; }
-.mode-letter { font-weight: 700; font-size: 0.85rem; display: inline-block; width: 1.8em; height: 1.8em; line-height: 1.8em; text-align: center; border-radius: 4px; margin-right: 0.5rem; }
+.card { background: var(--surface); border: 1px solid var(--border); }
+.text-muted { color: var(--muted) !important; }
+
+.hero { padding: 3rem 0 2.5rem; text-align: center; }
+.hero h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.75rem; }
+@media (min-width: 576px) { .hero h1 { font-size: 2.2rem; } }
+.hero .subtitle { color: var(--muted); font-size: 1.05rem; max-width: 600px; margin: 0 auto 2rem; }
+
+.cta-row { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem; }
+.cta-btn { display: inline-block; padding: 0.6rem 1.5rem; border-radius: 6px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: opacity 0.15s; }
+.cta-btn:hover { opacity: 0.85; }
+.cta-primary { background: var(--accent); color: var(--bg); }
+.cta-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+
+.stats-row { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin: 2rem 0; }
+.stat { text-align: center; min-width: 80px; }
+.stat-num { font-size: 2rem; font-weight: 700; color: var(--accent); line-height: 1; }
+.stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
+
+.section { padding: 2rem 0; }
+.section h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+.section + .section { border-top: 1px solid var(--border); }
+
+.mode-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.75rem; }
+.mode-card { padding: 1rem; border-radius: 8px; }
+.mode-card h5 { font-size: 0.95rem; margin-bottom: 0.35rem; }
+.mode-card p { font-size: 0.85rem; color: var(--muted); margin-bottom: 0; }
+.mode-letter { font-weight: 700; font-size: 0.8rem; display: inline-block; width: 1.6em; height: 1.6em; line-height: 1.6em; text-align: center; border-radius: 4px; margin-right: 0.4rem; }
 .mode-a { background: var(--muted); color: var(--bg); }
 .mode-b { background: var(--accent); color: var(--bg); }
 .mode-c { background: #a371f7; color: var(--bg); }
 .mode-d { background: var(--orange); color: var(--bg); }
 .mode-e { background: var(--green); color: var(--bg); }
-.diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem; color: var(--muted); overflow-x: auto; }
-.metric-row { display: flex; gap: 2rem; flex-wrap: wrap; margin: 1rem 0; }
-.metric-item { flex: 1; min-width: 200px; }
-.metric-name { font-weight: 600; color: var(--text); }
-.metric-desc { font-size: 0.9rem; color: var(--muted); }
-.text-muted { color: var(--muted) !important; }
-figure { margin: 2rem 0; }
-figure img { border-radius: 8px; border: 1px solid var(--border); }
-figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
-.callout { background: var(--surface); border-left: 3px solid var(--accent); padding: 1rem 1.25rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; }
-.callout p { margin-bottom: 0; }
+
+figure { margin: 2rem 0; text-align: center; }
+figure img { border-radius: 8px; border: 1px solid var(--border); max-width: 100%; }
+figcaption { font-size: 0.82rem; color: var(--muted); margin-top: 0.5rem; }
 </style>
 </head>
 <body>
 
 <nav class="navbar navbar-dark py-3">
   <div class="container">
-    <span class="navbar-brand mb-0 h1">LLM-Quest Benchmark</span>
-    <div>
-      <a href="about.html" class="text-decoration-none" style="color:var(--accent); margin-left:1.5rem">About</a>
-      <a href="index.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">Leaderboard</a>
-      <a href="play.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">Play</a>
-      <a href="paper.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">Paper</a>
-      <a href="https://github.com/yourconscience/llm_quest_benchmark" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">GitHub</a>
+    <span class="navbar-brand mb-0 h1" style="font-size: 1.1rem;">LLM-Quest Benchmark</span>
+    <div class="nav-links">
+      <a href="about.html" class="active">About</a>
+      <a href="index.html">Leaderboard</a>
+      <a href="play.html">Play</a>
+      <a href="blog.html">Blog</a>
+      <a href="https://github.com/yourconscience/llm_quest_benchmark">GitHub</a>
     </div>
   </div>
 </nav>
 
-<div class="container" style="max-width: 860px;">
+<div class="container" style="max-width: 800px;">
 
 <div class="hero">
-  <h1>LLM-Quest Benchmark</h1>
-  <p>How much does the wrapper around a language model matter? We test five agent architectures on the same set of text-based decision tasks to find out.</p>
+  <h1>Does Agent Architecture Matter?</h1>
+  <p class="subtitle">We test five agent wrappers on the same models and quests to find out whether scaffolding matters more than the model itself.</p>
+  <div class="cta-row">
+    <a href="play.html" class="cta-btn cta-primary">Play a Quest</a>
+    <a href="index.html" class="cta-btn cta-secondary">View Leaderboard</a>
+    <a href="blog.html" class="cta-btn cta-secondary">Read the Blog</a>
+  </div>
 </div>
 
-<h2>The idea in 30 seconds</h2>
-<p>
-  Take a language model. Give it a text-based quest: read a situation, pick an action from a list, repeat for 10-50 turns until you win or lose. Now do the same thing five different ways: bare prompt, chain-of-thought reasoning, injected domain knowledge, a planning loop, and tool access. Does the scaffolding around the model change outcomes more than swapping the model itself?
-</p>
-<p>
-  That is what this benchmark measures. We run each model through the same quests with each architecture, and compare success rates, exploration patterns, and cost.
-</p>
-
-<div class="callout">
-  <p>Most LLM benchmarks compare models on the same task. We compare <em>agent architectures</em> on the same model: five modes, six models, dozens of quests.</p>
+<div class="stats-row">
+  <div class="stat"><div class="stat-num">6</div><div class="stat-label">models</div></div>
+  <div class="stat"><div class="stat-num">5</div><div class="stat-label">agent modes</div></div>
+  <div class="stat"><div class="stat-num">19</div><div class="stat-label">quests</div></div>
+  <div class="stat"><div class="stat-num">360+</div><div class="stat-label">runs</div></div>
 </div>
 
-<h2>What the agent sees</h2>
-<p>
-  Each turn, the agent receives a text description of the current situation and a numbered list of possible actions. It must pick one. The quest engine advances the state, and the agent gets the next situation. This continues until the quest ends in success or failure.
-</p>
-<p>
-  Here is what a typical turn looks like:
-</p>
-
-<div class="diagram">
-<pre style="margin:0; color: var(--muted);">
-Step 7
-================================================================================
-You enter the trading post. Three merchants eye you from behind their
-stalls. A posted notice reads: "Warning: fuel prices fluctuate hourly."
-
-Status: Credits: 1,200 | Fuel: 40% | Reputation: Neutral
-
-Choices:
-  1. Buy fuel at current prices (580 cr)
-  2. Ask the merchants about cheaper fuel sources
-  3. Check the notice board for trade opportunities
-  4. Leave and try the next settlement
-</pre>
+<div class="section">
+  <h2>How it works</h2>
+  <p>
+    Give a language model a text quest: read the situation, pick an action, repeat for 10-50 turns. Run the same quest with five different agent architectures - from a bare prompt to a planning agent with tools. Compare success rates, exploration patterns, and cost.
+  </p>
+  <p>
+    The quests come from <a href="https://spacerangers.gitlab.io/#/quests">Space Rangers</a>: community-authored text adventures with branching narratives and non-obvious optimal paths. They were not built for LLM evaluation, which makes the difficulty organic rather than synthetic.
+  </p>
 </div>
 
-<p class="mt-3">
-  The quests range from straightforward (gather information, make safe choices) to adversarial (sliding puzzles, resource optimization under constraints, multi-step navigation with dead ends). Some require domain knowledge the model was never trained on. Some are solvable by any model with decent reading comprehension. The spread is what makes the benchmark useful.
-</p>
-
-<figure>
-  <img src="img/early_benchmark.jpg" alt="Early version of the LLM Quest Benchmark, March 2025" class="img-fluid" style="max-width: 100%;">
-  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests, ten total runs. GPT-4o-mini was the only model to complete both quests. The benchmark has since grown to 6 models, 15+ quests, 360+ runs, and five agent architectures.</figcaption>
-</figure>
-
-<h2>Evaluation domain</h2>
-<p>
-  The tasks are interactive fiction quests from the Space Rangers universe: a large corpus of community-authored text adventures with branching narratives, resource management, and non-obvious optimal paths. They were not designed for LLM evaluation, which is part of why they work well as one: the difficulty distribution is organic, not synthetic.
-</p>
-<p>
-  Properties that make these quests a challenging evaluation domain:
-</p>
-<ul>
-  <li><strong>Sequential decision-making</strong> over 10-50+ turns with delayed consequences</li>
-  <li><strong>Incomplete information</strong>: optimal paths are not obvious from the initial state</li>
-  <li><strong>Repetition traps</strong>: models frequently get stuck in loops, revisiting the same locations</li>
-  <li><strong>Domain-specific mechanics</strong>: scoring systems, resource budgets, and spatial puzzles that require knowledge the model may lack</li>
-  <li><strong>Reading comprehension</strong>: multi-paragraph descriptions with decision-relevant details buried in flavor text</li>
-</ul>
-<p>
-  The quest corpus contains hundreds of scenarios. The benchmark selects a balanced subset covering four difficulty categories: spatial/grid puzzles, combinatorial optimization, long-horizon navigation, and domain-specific scoring.
-  You can <a href="https://spacerangers.gitlab.io/#/quests">try the quests yourself</a> in a browser.
-</p>
-<p>
-  The quest engine used in this benchmark is <a href="https://github.com/roginvs/space-rangers-quest">space-rangers-quest</a> by roginvs, a TypeScript interpreter for the .qm quest format.
-</p>
-
-<h2>Agent modes</h2>
-<p>The benchmark's core contribution: each model is evaluated with five different cognitive architectures, from minimal to fully augmented.</p>
-
-<div class="row g-3 my-3">
-  <div class="col-md-6">
+<div class="section">
+  <h2>Agent modes</h2>
+  <div class="mode-grid">
     <div class="card mode-card">
       <h5><span class="mode-letter mode-a">A</span> Baseline</h5>
-      <p>Minimal prompt. The model sees the situation and action list, returns a number. No reasoning, no context. The control condition.</p>
+      <p>Minimal prompt. Pick a number. No reasoning.</p>
     </div>
-  </div>
-  <div class="col-md-6">
     <div class="card mode-card">
-      <h5><span class="mode-letter mode-b">B</span> Prompted reasoning</h5>
-      <p>Structured reasoning scaffold: analyze the situation, weigh options, avoid common failure patterns. Returns analysis + choice in JSON.</p>
+      <h5><span class="mode-letter mode-b">B</span> Reasoning</h5>
+      <p>Structured chain-of-thought before choosing.</p>
     </div>
-  </div>
-  <div class="col-md-6">
     <div class="card mode-card">
-      <h5><span class="mode-letter mode-c">C</span> Knowledge-augmented</h5>
-      <p>Reasoning prompt plus domain knowledge: quest mechanics, common traps, strategy hints. Tests whether the right information unlocks otherwise-impossible quests.</p>
+      <h5><span class="mode-letter mode-c">C</span> Knowledge</h5>
+      <p>Reasoning plus domain hints about game mechanics.</p>
     </div>
-  </div>
-  <div class="col-md-6">
     <div class="card mode-card">
       <h5><span class="mode-letter mode-d">D</span> Planner</h5>
-      <p>Multi-turn planning agent. Generates a strategy, executes it, replans when circumstances change. Maintains strategic coherence across turns.</p>
+      <p>Multi-turn planning with strategy updates.</p>
     </div>
-  </div>
-  <div class="col-md-6">
     <div class="card mode-card">
-      <h5><span class="mode-letter mode-e">E</span> Tool-augmented</h5>
-      <p>Agent with access to tools: state tracker, calculator, quest history. Can reason over structured data before committing to an action.</p>
+      <h5><span class="mode-letter mode-e">E</span> Tools</h5>
+      <p>State tracker, calculator, quest history.</p>
     </div>
   </div>
 </div>
 
-<h2>Architecture</h2>
-
-<div class="diagram">
-<pre style="margin:0; color: var(--muted);">
-YAML Config                    Quest Engine (TypeScript)
-+-----------------------+      +-------------------------+
-| models:               |      |  .qm quest file         |
-|   - deepseek-v3.2     |      |  branching narrative     |
-|   - gpt-5.4-mini      | --&gt; |  state machine          |
-|   - gemini-3-flash    |      |  success/failure outcome |
-| modes: [A, B, C, D, E]|      +-------------------------+
-| quests: [35 selected]  |                |
-| runs_per_config: 3     |                v
-+-----------------------+      +-------------------------+
-                               | Agent (Python)          |
-                               |  prompt template        |
-                               |  LLM API call           |
-                               |  action selection       |
-                               |  per-run telemetry      |
-                               +-------------------------+
-                                          |
-                                          v
-                               +-------------------------+
-                               | Leaderboard (JSON)      |
-                               |  success rates          |
-                               |  exploration rate       |
-                               |  repetition rate        |
-                               |  cost per run           |
-                               +-------------------------+
-</pre>
-</div>
-
-<p class="mt-3">
-  Everything is configured via YAML: model list, prompt templates, quest selection, runs per cell. A single command runs the full matrix and exports results as JSON for the leaderboard.
-</p>
-
-<h2>Metrics</h2>
-
-<div class="metric-row">
-  <div class="metric-item">
-    <div class="metric-name">Success Rate</div>
-    <div class="metric-desc">Fraction of runs ending in quest success. The primary metric. Binary outcome per run, aggregated per model-mode pair.</div>
-  </div>
-  <div class="metric-item">
-    <div class="metric-name">Exploration Rate</div>
-    <div class="metric-desc">Unique locations visited / total locations available. Measures how thoroughly the agent explores the quest state space.</div>
-  </div>
-</div>
-<div class="metric-row">
-  <div class="metric-item">
-    <div class="metric-name">Repetition Rate</div>
-    <div class="metric-desc">Fraction of steps where the agent repeats an action from the last 5 steps. High values indicate the agent is stuck in a decision loop. Rep rate &gt;0.6 predicts 0% success.</div>
-  </div>
-  <div class="metric-item">
-    <div class="metric-name">Cost per Run</div>
-    <div class="metric-desc">Total token cost (input + output) in USD. Enables cost-performance Pareto analysis across models and modes.</div>
+<div class="section">
+  <h2>Models</h2>
+  <p>Six mid-tier production models, ELO 1400-1475, all via <a href="https://openrouter.ai">OpenRouter</a>.</p>
+  <div style="overflow-x: auto;">
+    <table class="table table-sm" style="font-size: 0.88rem; min-width: 400px;">
+      <thead><tr><th>Provider</th><th>Model</th><th>ELO</th><th>Cost/run</th></tr></thead>
+      <tbody>
+        <tr><td>Google</td><td>Gemini 3 Flash</td><td>1474</td><td>~$0.02</td></tr>
+        <tr><td>OpenAI</td><td>GPT-5.4 Mini</td><td>1458</td><td>~$0.03</td></tr>
+        <tr><td>DeepSeek</td><td>V3.2</td><td>1424</td><td>~$0.01</td></tr>
+        <tr><td>Mistral</td><td>Medium 3.1</td><td>1410</td><td>~$0.02</td></tr>
+        <tr><td>Anthropic</td><td>Claude Haiku 4.5</td><td>1408</td><td>~$0.04</td></tr>
+        <tr><td>Minimax</td><td>M2.5</td><td>1403</td><td>~$0.01</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
-<h2>Models</h2>
-<p>The benchmark targets mid-tier production models: the tier developers actually deploy, not frontier flagships. Six providers, ELO 1400-1475 range, keeping comparison fair within a capability class.</p>
-<table class="table table-sm" style="max-width: 700px;">
-  <thead><tr><th>Provider</th><th>Model</th><th>ELO</th><th>Input $/M</th><th>Output $/M</th></tr></thead>
-  <tbody>
-    <tr><td>Google</td><td>Gemini 3 Flash</td><td>1474</td><td>$0.50</td><td>$3.00</td></tr>
-    <tr><td>OpenAI</td><td>GPT-5.4 Mini</td><td>1458</td><td>$0.75</td><td>$4.50</td></tr>
-    <tr><td>DeepSeek</td><td>V3.2</td><td>1424</td><td>$0.26</td><td>$0.42</td></tr>
-    <tr><td>Mistral</td><td>Medium 3.1</td><td>1410</td><td>$0.40</td><td>$2.00</td></tr>
-    <tr><td>Anthropic</td><td>Claude Haiku 4.5</td><td>1408</td><td>$1.00</td><td>$5.00</td></tr>
-    <tr><td>Minimax</td><td>M2.5</td><td>1403</td><td>$0.12</td><td>$0.99</td></tr>
-  </tbody>
-</table>
-<p class="text-muted" style="font-size: 0.9rem;">All accessed via <a href="https://openrouter.ai">OpenRouter</a>. High-tier follow-up (Claude Sonnet 4.6, GPT-5.4, Gemini 3 Pro) planned separately.</p>
+<div class="section">
+  <h2>Metrics</h2>
+  <ul style="padding-left: 1.25rem;">
+    <li><strong>Success rate</strong> - fraction of runs ending in quest success</li>
+    <li><strong>Exploration rate</strong> - unique locations visited / total available</li>
+    <li><strong>Repetition rate</strong> - how often the agent repeats recent actions (>0.6 predicts 0% success)</li>
+    <li><strong>Cost per run</strong> - total token cost in USD</li>
+  </ul>
+</div>
 
-<h2>Reproducing results</h2>
-<p>
-  See the <a href="https://github.com/yourconscience/llm_quest_benchmark#quick-start-docker">README</a> for setup and usage instructions. Supports Docker and local dev with <code>uv</code>. Adding a new model requires only a YAML config change.
+<figure>
+  <img src="img/early_benchmark.jpg" alt="First benchmark run, March 2025" class="img-fluid">
+  <figcaption>First benchmark run (March 2025). Five models, two quests. It has since grown considerably.</figcaption>
+</figure>
+
+<div class="section">
+  <h2>Open source</h2>
+  <p>
+    Everything is on <a href="https://github.com/yourconscience/llm_quest_benchmark">GitHub</a>: benchmark framework, evaluation data, configs. Supports Docker and local dev with <code>uv</code>. Adding a new model requires only a YAML config change.
+  </p>
+  <p>
+    The quest engine is <a href="https://github.com/roginvs/space-rangers-quest">space-rangers-quest</a> by roginvs.
+  </p>
+</div>
+
+<p class="text-muted" style="font-size: 0.75rem; margin-top: 2rem;">
+  Not affiliated with Elemental Games, SNK-Games, 1C Company, or Space Rangers. Quest files are community-authored content.
 </p>
 
-<p class="text-muted" style="font-size: 0.8rem; margin-top: 3rem;">
-  This project is not affiliated with Elemental Games, SNK-Games, 1C Company, or the Space Rangers franchise. The quest files are community-authored content distributed separately from this benchmark.
-</p>
-
-<footer class="text-center py-5 text-muted" style="font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 1rem;">
+<footer class="text-center py-4 text-muted" style="font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 1rem;">
   <p>
     <a href="index.html">Leaderboard</a> |
-    <a href="paper.html">Paper</a> |
-    <a href="leaderboard.json">Raw JSON</a> |
-    <a href="https://github.com/yourconscience/llm_quest_benchmark">Source Code</a>
+    <a href="play.html">Play</a> |
+    <a href="blog.html">Blog</a> |
+    <a href="https://github.com/yourconscience/llm_quest_benchmark">GitHub</a>
   </p>
 </footer>
 
