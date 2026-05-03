@@ -261,10 +261,179 @@ function DecisionHistory({ path, families }) {
   );
 }
 
+// ---- Share card renderer ----
+
+function renderShareCard(questTitle, outcomeLabel, steps, aiAgreeRate, cohortWinRate) {
+  const W = 640, H = 400;
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0, 0, W, H);
+
+  // Border glow
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, W - 2, H - 2);
+
+  // Accent line at top
+  const accentColor = outcomeLabel === 'SUCCESS' ? '#3fb950' : '#f85149';
+  ctx.fillStyle = accentColor;
+  ctx.fillRect(0, 0, W, 4);
+
+  // Quest title
+  ctx.fillStyle = '#e6edf3';
+  ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+  ctx.fillText(questTitle, 40, 52);
+
+  // Outcome badge
+  const badgeY = 80;
+  ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+  const badgeText = outcomeLabel;
+  const badgeW = ctx.measureText(badgeText).width + 40;
+  const badgeH = 44;
+  ctx.fillStyle = accentColor;
+  roundRect(ctx, 40, badgeY, badgeW, badgeH, 8);
+  ctx.fill();
+  ctx.fillStyle = outcomeLabel === 'SUCCESS' ? '#0d1117' : '#fff';
+  ctx.fillText(badgeText, 60, badgeY + 32);
+
+  // Stats grid
+  const statsY = 160;
+  const stats = [
+    { value: String(steps), label: 'steps' },
+    { value: aiAgreeRate + '%', label: 'AI agreed' },
+  ];
+  if (cohortWinRate != null) {
+    stats.push({ value: Math.round(cohortWinRate * 100) + '%', label: 'AI win rate' });
+  }
+
+  const colW = (W - 80) / stats.length;
+  stats.forEach((s, i) => {
+    const x = 40 + i * colW;
+    // Value
+    ctx.fillStyle = '#58a6ff';
+    ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+    ctx.fillText(s.value, x, statsY);
+    // Label
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+    ctx.fillText(s.label, x, statsY + 24);
+  });
+
+  // Divider
+  ctx.fillStyle = '#30363d';
+  ctx.fillRect(40, statsY + 50, W - 80, 1);
+
+  // Comparison text
+  const compY = statsY + 85;
+  if (cohortWinRate != null) {
+    const humanWon = outcomeLabel === 'SUCCESS';
+    const aiPct = Math.round(cohortWinRate * 100);
+    let compText;
+    if (humanWon && aiPct < 50) compText = 'Beat the AI cohort!';
+    else if (humanWon) compText = 'Won alongside ' + aiPct + '% of AI models';
+    else if (aiPct < 20) compText = 'Even AI struggles - only ' + aiPct + '% win rate';
+    else compText = 'AI cohort wins ' + aiPct + '% of the time';
+    ctx.fillStyle = '#c9d1d9';
+    ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+    ctx.fillText(compText, 40, compY);
+  }
+
+  // Footer
+  ctx.fillStyle = '#30363d';
+  ctx.fillRect(0, H - 50, W, 1);
+  ctx.fillStyle = '#8b949e';
+  ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+  ctx.fillText('LLM-Quest Benchmark', 40, H - 20);
+  ctx.fillStyle = '#58a6ff';
+  ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+  const url = 'yourconscience.github.io/llm_quest_benchmark/play.html';
+  ctx.fillText(url, W - 40 - ctx.measureText(url).width, H - 20);
+
+  return canvas;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function makeShareText(questTitle, outcomeLabel) {
+  const verb = outcomeLabel === 'SUCCESS' ? 'beat' : 'tried';
+  return 'I ' + verb + ' "' + questTitle + '" on LLM-Quest Benchmark. Can you do better?';
+}
+
+function downloadCanvas(canvas, filename) {
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+async function copyShareText(text, url) {
+  if (!navigator.clipboard || !navigator.clipboard.writeText) return false;
+  await navigator.clipboard.writeText(text + '\n' + url);
+  return true;
+}
+
+async function shareResult(canvas, questTitle, outcomeLabel) {
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  const file = new File([blob], 'quest-result.png', { type: 'image/png' });
+  const url = 'https://yourconscience.github.io/llm_quest_benchmark/play.html';
+  const shareData = {
+    title: questTitle + ' - ' + outcomeLabel,
+    text: makeShareText(questTitle, outcomeLabel),
+    url,
+    files: [file],
+  };
+
+  if (navigator.canShare && navigator.canShare(shareData)) {
+    await navigator.share(shareData);
+    return 'Shared result image.';
+  }
+  if (navigator.share) {
+    await navigator.share({ title: shareData.title, text: shareData.text, url: shareData.url });
+    downloadCanvas(canvas, 'quest-result.png');
+    return 'Shared link and downloaded result image.';
+  }
+
+  const copied = await copyShareText(shareData.text, shareData.url).catch(() => false);
+  downloadCanvas(canvas, 'quest-result.png');
+  return copied
+    ? 'Copied share text and downloaded result image.'
+    : 'Downloaded result image. Attach it to your social post.';
+}
+
 // ---- EndScreen ----
 
-function EndScreen({ outcome, cohortWinRate, path, onPlayAgain, onTryAnother }) {
+function EndScreen({ outcome, cohortWinRate, path, questTitle, onPlayAgain, onTryAnother }) {
+  const [shareStatus, setShareStatus] = useState('');
   const outcomeLabel = { win: 'SUCCESS', fail: 'FAILURE', dead: 'DEAD' }[outcome] || 'FAILURE';
+  const branchingSteps = path.filter(e => e.agreed !== null);
+  const agreeCount = branchingSteps.filter(e => e.agreed === true).length;
+  const aiAgreeRate = branchingSteps.length > 0 ? Math.round((agreeCount / branchingSteps.length) * 100) : 0;
+
+  function handleShare() {
+    setShareStatus('Preparing share card...');
+    const canvas = renderShareCard(questTitle, outcomeLabel, path.length, aiAgreeRate, cohortWinRate);
+    shareResult(canvas, questTitle, outcomeLabel)
+      .then(status => setShareStatus(status))
+      .catch(() => setShareStatus('Sharing failed. Try downloading from another browser.'));
+  }
+
   return (
     <div className="container py-5 text-center" style={{ maxWidth: 700 }}>
       <div className={'outcome-badge outcome-' + outcomeLabel} style={{ display: 'inline-block', marginBottom: '1rem' }}>
@@ -300,10 +469,14 @@ function EndScreen({ outcome, cohortWinRate, path, onPlayAgain, onTryAnother }) 
           </tbody>
         </table>
       </div>
-      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
         <button className="btn btn-primary" onClick={onPlayAgain}>Play Again</button>
         <button className="btn btn-outline-secondary" onClick={onTryAnother}>Try Another Quest</button>
+        <button className="btn btn-outline-info" onClick={handleShare}>Share Result</button>
       </div>
+      {shareStatus && (
+        <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginTop: '0.75rem' }}>{shareStatus}</p>
+      )}
     </div>
   );
 }
@@ -449,6 +622,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
         outcome={ended}
         cohortWinRate={cohortData ? cohortData.win_rate : null}
         path={path}
+        questTitle={quest.title || quest.id}
         onPlayAgain={() => {
           player.start();
           if (canonicalPlayer) canonicalPlayer.loadSaving(player.getSaving());
