@@ -127,15 +127,6 @@
       "total_runs": 265
     },
     {
-      "id": "Prison_eng",
-      "title": "Prison",
-      "difficulty": "hard",
-      "description": "Escape from an alien prison complex.",
-      "stepsRange": "25-50",
-      "win_rate": 0.0,
-      "total_runs": 173
-    },
-    {
       "id": "Pilot_eng",
       "title": "Pilot",
       "difficulty": "medium",

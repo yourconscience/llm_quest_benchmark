@@ -35,7 +35,6 @@ TARGET_QUESTS = [
     "Foncers_eng",
     "Driver_eng",
     "Codebox_eng",
-    "Prison_eng",
     "Pilot_eng",
     "Disk_eng",
     "Sortirovka1_eng",
@@ -133,12 +132,6 @@ QUEST_METADATA: dict[str, dict] = {
         "difficulty": "easy",
         "description": "Crack codes and solve puzzles.",
         "stepsRange": "5-15",
-    },
-    "Prison_eng": {
-        "title": "Prison",
-        "difficulty": "hard",
-        "description": "Escape from an alien prison complex.",
-        "stepsRange": "25-50",
     },
     "Pilot_eng": {
         "title": "Pilot",
