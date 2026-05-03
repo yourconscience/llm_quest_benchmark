@@ -54,9 +54,22 @@ a { color: var(--accent); }
 .choice-btn:disabled { cursor: default; }
 
 .cohort-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-top: 1rem; animation: fadeIn 0.2s ease; }
+.cohort-inline { padding: 1rem 1.25rem 1.25rem; border-top: 1px solid var(--border); }
 
 .family-pill { background: var(--bg); border: 1px solid var(--border); color: var(--muted); padding: 0.2em 0.65em; border-radius: 12px; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
 .family-pill:hover, .family-pill.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+.history-section { margin-top: 1.5rem; }
+.history-item { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.4rem; background: var(--surface); overflow: hidden; }
+.history-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.55rem 1rem; cursor: pointer; user-select: none; transition: background 0.15s; }
+.history-header:hover { background: rgba(88,166,255,0.05); }
+.history-step { font-size: 0.75rem; font-weight: 700; color: var(--muted); min-width: 1.8rem; text-align: right; }
+.history-choice { flex: 1; font-size: 0.88rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.history-agree { font-size: 0.78rem; font-weight: 600; }
+.history-chevron { font-size: 0.6rem; color: var(--muted); transition: transform 0.2s; flex-shrink: 0; }
+.history-item.open .history-chevron { transform: rotate(90deg); }
+.history-item .cohort-inline { display: none; }
+.history-item.open .cohort-inline { display: block; }
 
 .cohort-row { margin-bottom: 0.65rem; }
 .cohort-row.player-choice { border-left: 3px solid var(--accent); padding-left: 0.5rem; background: rgba(88,166,255,0.06); border-radius: 0 4px 4px 0; }
@@ -268,15 +281,11 @@ function sortQuests(quests) {
   });
 }
 
-// ---- CohortPanel ----
+// ---- CohortBars (reusable distribution bars) ----
 
-function CohortPanel({ cohortLoc, playerChoiceNorm, activeFamily, onFamilyChange, families, onContinue }) {
+function CohortBars({ cohortLoc, playerChoiceNorm, activeFamily, onFamilyChange, families }) {
   if (!cohortLoc || cohortLoc.n < 5) {
-    return (
-      <div className="cohort-panel">
-        <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Insufficient data for this location.</span>
-      </div>
-    );
+    return <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Insufficient data for this location.</span>;
   }
 
   const choices = cohortLoc.choices || {};
@@ -291,28 +300,24 @@ function CohortPanel({ cohortLoc, playerChoiceNorm, activeFamily, onFamilyChange
   const displayN = activeFamily === 'all' ? cohortLoc.n : total;
 
   return (
-    <div className="cohort-panel">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
-          What AI models chose here ({displayN} runs)
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <span style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>
+          AI models chose ({displayN} runs)
         </span>
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          {['all', ...families].map(fam => (
-            <button
-              key={fam}
-              className={'family-pill' + (fam === activeFamily ? ' active' : '')}
-              onClick={() => onFamilyChange(fam)}
-            >
-              {fam === 'all' ? 'All' : fam}
-            </button>
-          ))}
-          <button
-            style={{ marginLeft: '0.5rem', background: 'var(--accent)', color: 'var(--bg)', border: 'none', borderRadius: '6px', padding: '0.25em 0.8em', fontSize: '0.82rem', cursor: 'pointer', fontWeight: 600 }}
-            onClick={onContinue}
-          >
-            Continue &#9654;
-          </button>
-        </div>
+        {families.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {['all', ...families].map(fam => (
+              <button
+                key={fam}
+                className={'family-pill' + (fam === activeFamily ? ' active' : '')}
+                onClick={e => { e.stopPropagation(); onFamilyChange(fam); }}
+              >
+                {fam === 'all' ? 'All' : fam}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       <div>
         {Object.entries(choices).map(([key, data]) => {
@@ -332,6 +337,50 @@ function CohortPanel({ cohortLoc, playerChoiceNorm, activeFamily, onFamilyChange
           );
         })}
       </div>
+    </>
+  );
+}
+
+// ---- DecisionHistory ----
+
+function DecisionHistory({ path, families }) {
+  const [openIdx, setOpenIdx] = useState(null);
+  const [activeFamily, setActiveFamily] = useState('all');
+
+  const branchingSteps = path.filter(entry => entry.cohortLoc);
+  if (branchingSteps.length === 0) return null;
+
+  return (
+    <div className="history-section">
+      <div style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: '0.5rem' }}>
+        Decision History
+      </div>
+      {branchingSteps.map((entry, i) => {
+        const isOpen = openIdx === i;
+        return (
+          <div key={i} className={'history-item' + (isOpen ? ' open' : '')}>
+            <div className="history-header" onClick={() => setOpenIdx(isOpen ? null : i)}>
+              <span className="history-step">#{entry.step}</span>
+              <span className="history-choice">{entry.choiceText}</span>
+              <span className="history-agree" style={{ color: entry.agreed ? 'var(--green)' : entry.agreed === false ? 'var(--red)' : 'var(--muted)' }}>
+                {entry.agreed === true ? 'AI agreed' : entry.agreed === false ? 'AI disagreed' : ''}
+              </span>
+              <span className="history-chevron">&#9654;</span>
+            </div>
+            {isOpen && (
+              <div className="cohort-inline">
+                <CohortBars
+                  cohortLoc={entry.cohortLoc}
+                  playerChoiceNorm={entry.playerChoiceNorm}
+                  activeFamily={activeFamily}
+                  onFamilyChange={setActiveFamily}
+                  families={families}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -393,13 +442,8 @@ function QuestPlay({ quest, cohortData, onQuit }) {
   const [stepHistory, setStepHistory] = useState([]);
   const [stepNum, setStepNum] = useState(0);
   const [path, setPath] = useState([]);
-  const [showCohort, setShowCohort] = useState(false);
-  const [cohortInfo, setCohortInfo] = useState(null);
-  const [activeFamily, setActiveFamily] = useState('all');
   const [ended, setEnded] = useState(null);
   const [obsKey, setObsKey] = useState(0);
-  const [disabled, setDisabled] = useState(false);
-  const timerRef = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -422,10 +466,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
         setError('Failed to load quest: ' + err.message);
         setLoading(false);
       });
-    return () => {
-      controller.abort();
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    return () => controller.abort();
   }, [quest.id]);
 
   const families = (cohortData && cohortData.model_families) || [];
@@ -446,10 +487,6 @@ function QuestPlay({ quest, cohortData, onQuit }) {
   }
 
   function handleChoice(choice, activeChoices) {
-    if (disabled) return;
-    setDisabled(true);
-    if (timerRef.current) clearTimeout(timerRef.current);
-
     const locationId = player.getSaving().locationId;
     const choiceNorm = normalizeChoice(choice.text);
     const cohortLoc = getCohortLoc(locationId);
@@ -461,6 +498,8 @@ function QuestPlay({ quest, cohortData, onQuit }) {
       step: stepNum,
       choiceText: stripClr(choice.text),
       agreed: isBranching ? agreed : null,
+      cohortLoc: isBranching ? cohortLoc : null,
+      playerChoiceNorm: isBranching ? choiceNorm : null,
     }]);
 
     setStepHistory(prev => [...prev, player.getSaving()]);
@@ -470,53 +509,17 @@ function QuestPlay({ quest, cohortData, onQuit }) {
     const gs = nextState.gameState;
     const isTerminal = gs === 'win' || gs === 'fail' || gs === 'dead';
 
-    if (isBranching && cohortLoc) {
-      setCohortInfo({ cohortLoc, playerChoiceNorm: choiceNorm, locationId });
-      setShowCohort(true);
-      timerRef.current = setTimeout(() => {
-        setShowCohort(false);
-        setCohortInfo(null);
-        if (isTerminal) {
-          setEnded(gs);
-        } else {
-          setGameState(player.getState());
-          setStepNum(n => n + 1);
-          setObsKey(k => k + 1);
-          setDisabled(false);
-        }
-      }, 1500);
-    } else {
-      if (isTerminal) {
-        setEnded(gs);
-      } else {
-        setGameState(player.getState());
-        setStepNum(n => n + 1);
-        setObsKey(k => k + 1);
-        setDisabled(false);
-      }
-    }
-  }
-
-  function handleContinue() {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (!cohortInfo) return;
-    const gs = player.getState().gameState;
-    const isTerminal = gs === 'win' || gs === 'fail' || gs === 'dead';
-    setShowCohort(false);
-    setCohortInfo(null);
     if (isTerminal) {
       setEnded(gs);
     } else {
       setGameState(player.getState());
       setStepNum(n => n + 1);
       setObsKey(k => k + 1);
-      setDisabled(false);
     }
   }
 
   function handleBack() {
     if (stepHistory.length === 0) return;
-    if (timerRef.current) clearTimeout(timerRef.current);
     const prevSaving = stepHistory[stepHistory.length - 1];
     player.loadSaving(prevSaving);
     setStepHistory(prev => prev.slice(0, -1));
@@ -524,9 +527,6 @@ function QuestPlay({ quest, cohortData, onQuit }) {
     setStepNum(n => Math.max(1, n - 1));
     setPath(prev => prev.slice(0, -1));
     setObsKey(k => k + 1);
-    setShowCohort(false);
-    setCohortInfo(null);
-    setDisabled(false);
     setEnded(null);
   }
 
@@ -561,10 +561,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
           setPath([]);
           setStepHistory([]);
           setEnded(null);
-          setShowCohort(false);
-          setCohortInfo(null);
           setObsKey(k => k + 1);
-          setDisabled(false);
         }}
         onTryAnother={onQuit}
       />
@@ -607,24 +604,15 @@ function QuestPlay({ quest, cohortData, onQuit }) {
           <button
             key={i}
             className={'choice-btn' + (choice.active ? '' : ' inactive')}
-            disabled={!choice.active || disabled}
-            onClick={() => choice.active && !disabled && handleChoice(choice, activeChoices)}
+            disabled={!choice.active}
+            onClick={() => choice.active && handleChoice(choice, activeChoices)}
           >
             <QuestTags str={choice.text || ''} />
           </button>
         ))}
       </div>
 
-      {showCohort && cohortInfo && (
-        <CohortPanel
-          cohortLoc={cohortInfo.cohortLoc}
-          playerChoiceNorm={cohortInfo.playerChoiceNorm}
-          activeFamily={activeFamily}
-          onFamilyChange={setActiveFamily}
-          families={families}
-          onContinue={handleContinue}
-        />
-      )}
+      <DecisionHistory path={path} families={families} />
     </div>
   );
 }
