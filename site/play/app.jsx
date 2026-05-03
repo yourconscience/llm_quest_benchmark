@@ -157,6 +157,13 @@ function sortQuests(quests) {
   });
 }
 
+const PLAY_URL = 'https://yourconscience.github.io/llm_quest_benchmark/play.html';
+const SHARE_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+
+function drawTextLine(ctx, text, x, y, maxWidth) {
+  ctx.fillText(text, x, y, maxWidth);
+}
+
 // ---- CohortBars (reusable distribution bars) ----
 
 function CohortBars({ cohortLoc, playerChoiceNorm, activeFamily, onFamilyChange, families }) {
@@ -286,12 +293,12 @@ function renderShareCard(questTitle, outcomeLabel, steps, aiAgreeRate, cohortWin
 
   // Quest title
   ctx.fillStyle = '#e6edf3';
-  ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
-  ctx.fillText(questTitle, 40, 52);
+  ctx.font = 'bold 22px ' + SHARE_FONT;
+  drawTextLine(ctx, questTitle, 40, 52, W - 80);
 
   // Outcome badge
   const badgeY = 80;
-  ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+  ctx.font = 'bold 28px ' + SHARE_FONT;
   const badgeText = outcomeLabel;
   const badgeW = ctx.measureText(badgeText).width + 40;
   const badgeH = 44;
@@ -316,11 +323,11 @@ function renderShareCard(questTitle, outcomeLabel, steps, aiAgreeRate, cohortWin
     const x = 40 + i * colW;
     // Value
     ctx.fillStyle = '#58a6ff';
-    ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+    ctx.font = 'bold 36px ' + SHARE_FONT;
     ctx.fillText(s.value, x, statsY);
     // Label
     ctx.fillStyle = '#8b949e';
-    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+    ctx.font = '14px ' + SHARE_FONT;
     ctx.fillText(s.label, x, statsY + 24);
   });
 
@@ -339,20 +346,20 @@ function renderShareCard(questTitle, outcomeLabel, steps, aiAgreeRate, cohortWin
     else if (aiPct < 20) compText = 'Even AI struggles - only ' + aiPct + '% win rate';
     else compText = 'AI cohort wins ' + aiPct + '% of the time';
     ctx.fillStyle = '#c9d1d9';
-    ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
-    ctx.fillText(compText, 40, compY);
+    ctx.font = '16px ' + SHARE_FONT;
+    drawTextLine(ctx, compText, 40, compY, W - 80);
   }
 
   // Footer
   ctx.fillStyle = '#30363d';
   ctx.fillRect(0, H - 50, W, 1);
   ctx.fillStyle = '#8b949e';
-  ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+  ctx.font = '13px ' + SHARE_FONT;
   ctx.fillText('LLM-Quest Benchmark', 40, H - 20);
   ctx.fillStyle = '#58a6ff';
-  ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
-  const url = 'yourconscience.github.io/llm_quest_benchmark/play.html';
-  ctx.fillText(url, W - 40 - ctx.measureText(url).width, H - 20);
+  ctx.font = '13px ' + SHARE_FONT;
+  const url = PLAY_URL.replace('https://', '');
+  drawTextLine(ctx, url, W - 40 - ctx.measureText(url).width, H - 20, W - 80);
 
   return canvas;
 }
@@ -392,7 +399,7 @@ async function copyShareText(text, url) {
 async function shareResult(canvas, questTitle, outcomeLabel) {
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
   const file = new File([blob], 'quest-result.png', { type: 'image/png' });
-  const url = 'https://yourconscience.github.io/llm_quest_benchmark/play.html';
+  const url = PLAY_URL;
   const shareData = {
     title: questTitle + ' - ' + outcomeLabel,
     text: makeShareText(questTitle, outcomeLabel),
