@@ -416,7 +416,7 @@ function QuestPlay({
     }).then(r => r.arrayBuffer()).then(buf => {
       const ungzipped = pako.ungzip(new Uint8Array(buf));
       const qm = QMEngine.parse(Buffer.from(ungzipped));
-      const p = new QMEngine.QMPlayer(qm, 'eng');
+      const p = new QMEngine.QMPlayer(qm, questEngineLang(quest));
       p.start();
       setPlayer(p);
       setGameState(p.getState());
@@ -591,10 +591,18 @@ function QuestPlay({
   }));
 }
 
+// ---- Language helpers ----
+
+function questEngineLang(quest) {
+  return quest.lang === 'ru' ? 'rus' : 'eng';
+}
+
 // ---- QuestSelect ----
 
 function QuestSelect({
-  onSelectQuest
+  onSelectQuest,
+  lang,
+  onLangChange
 }) {
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -605,7 +613,12 @@ function QuestSelect({
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
-  const filtered = quests.filter(q => !search || q.title.toLowerCase().includes(search.toLowerCase()));
+  const filtered = quests.filter(q => {
+    if (q.lang && q.lang !== lang) return false;
+    if (!q.lang && lang !== 'en') return false;
+    if (search && !q.title.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
   return /*#__PURE__*/React.createElement("div", {
     className: "container py-5",
     style: {
@@ -613,13 +626,29 @@ function QuestSelect({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      marginBottom: '1.5rem'
+      marginBottom: '1.5rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: '0.75rem'
     }
-  }, /*#__PURE__*/React.createElement("h2", null, "Play a Quest"), /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", {
     style: {
-      color: 'var(--muted)'
+      marginBottom: '0.25rem'
+    }
+  }, "Play a Quest"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: 'var(--muted)',
+      marginBottom: 0
     }
   }, "Pick a quest, make your choices, then see what AI models chose at each decision point.")), /*#__PURE__*/React.createElement("div", {
+    className: "lang-toggle"
+  }, ['en', 'ru'].map(l => /*#__PURE__*/React.createElement("button", {
+    key: l,
+    className: 'lang-pill' + (l === lang ? ' active' : ''),
+    onClick: () => onLangChange(l)
+  }, l.toUpperCase())))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: '1.5rem'
     }
@@ -679,13 +708,19 @@ function QuestSelect({
       color: 'var(--muted)',
       marginBottom: '0.25rem'
     }
-  }, "~", q.stepsRange, " steps"), /*#__PURE__*/React.createElement("div", {
+  }, "~", q.stepsRange, " steps"), q.win_rate != null ? /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: '0.82rem',
       color: 'var(--muted)',
       marginBottom: '0.75rem'
     }
-  }, "AI win rate: ", Math.round((q.win_rate || 0) * 100), "%"), /*#__PURE__*/React.createElement("button", {
+  }, "AI win rate: ", Math.round((q.win_rate || 0) * 100), "%") : /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: '0.82rem',
+      color: 'var(--muted)',
+      marginBottom: '0.75rem'
+    }
+  }, "No AI data yet"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-sm btn-outline-primary",
     style: {
       marginTop: 'auto'
@@ -710,13 +745,15 @@ function App() {
   const [screen, setScreen] = useState('select');
   const [selectedQuest, setSelectedQuest] = useState(null);
   const [cohortData, setCohortData] = useState(null);
+  const [lang, setLang] = useState('en');
   const cohortReqSeq = useRef(0);
   function handleSelectQuest(quest) {
     const reqId = ++cohortReqSeq.current;
     setSelectedQuest(quest);
     setCohortData(null);
     setScreen('play');
-    fetch('play/' + quest.id + '.json').then(r => r.ok ? r.json() : null).then(data => {
+    const cohortId = quest.canonical_id || quest.id;
+    fetch('play/' + cohortId + '.json').then(r => r.ok ? r.json() : null).then(data => {
       if (cohortReqSeq.current === reqId) setCohortData(data);
     }).catch(() => {
       if (cohortReqSeq.current === reqId) setCohortData(null);
@@ -724,7 +761,9 @@ function App() {
   }
   if (screen === 'select') {
     return /*#__PURE__*/React.createElement(QuestSelect, {
-      onSelectQuest: handleSelectQuest
+      onSelectQuest: handleSelectQuest,
+      lang: lang,
+      onLangChange: setLang
     });
   }
   return /*#__PURE__*/React.createElement(QuestPlay, {

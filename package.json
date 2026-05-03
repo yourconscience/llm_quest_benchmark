@@ -5,7 +5,7 @@
     "build": "pnpm run build:engine && pnpm run build:play-jsx",
     "build:engine": "NODE_OPTIONS=--openssl-legacy-provider webpack --config webpack.engine.js",
     "build:play-jsx": "babel --presets @babel/preset-react site/play/app.jsx -o site/play/app.js",
-    "build:play-assets": "mkdir -p site/play/quests && for q in Banket_eng Badday_eng Pizza_eng Borzukhan_eng Ski_eng Election_eng Robots_eng Leonardo_eng Depth_eng Edelweiss_eng Ministry_eng Foncers_eng Driver_eng Codebox_eng Pilot_eng Disk_eng Sortirovka1_eng Shashki_eng Player_eng; do gzip -c quests/sr_2_1_2121_eng/$q.qm > site/play/quests/$q.qm.gz; done"
+    "build:play-assets": "mkdir -p site/play/quests && for q in Banket_eng Badday_eng Pizza_eng Borzukhan_eng Ski_eng Election_eng Robots_eng Leonardo_eng Depth_eng Edelweiss_eng Ministry_eng Foncers_eng Driver_eng Codebox_eng Pilot_eng Disk_eng Sortirovka1_eng Shashki_eng Player_eng; do gzip -c quests/sr_2_1_2121_eng/$q.qm > site/play/quests/$q.qm.gz; done && for q in Banket Borzukhan Ski Election Robots Depth Ministry Foncers Driver Pilot Shashki Pizza Player; do gzip -c quests/sr_2_dominators_ru/$q.qmm > site/play/quests/${q}_ru.qm.gz; done && for q in Badday Leonardo Edelweiss Codebox Sortirovka1; do gzip -c quests/sr_2_reboot_ru/$q.qmm > site/play/quests/${q}_ru.qm.gz; done"
   },
   "dependencies": {
     "ts-node": "^10.9.2",

@@ -330,7 +330,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
       .then(buf => {
         const ungzipped = pako.ungzip(new Uint8Array(buf));
         const qm = QMEngine.parse(Buffer.from(ungzipped));
-        const p = new QMEngine.QMPlayer(qm, 'eng');
+        const p = new QMEngine.QMPlayer(qm, questEngineLang(quest));
         p.start();
         setPlayer(p);
         setGameState(p.getState());
@@ -493,9 +493,15 @@ function QuestPlay({ quest, cohortData, onQuit }) {
   );
 }
 
+// ---- Language helpers ----
+
+function questEngineLang(quest) {
+  return (quest.lang === 'ru') ? 'rus' : 'eng';
+}
+
 // ---- QuestSelect ----
 
-function QuestSelect({ onSelectQuest }) {
+function QuestSelect({ onSelectQuest, lang, onLangChange }) {
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -510,15 +516,31 @@ function QuestSelect({ onSelectQuest }) {
       .catch(() => setLoading(false));
   }, []);
 
-  const filtered = quests.filter(q =>
-    !search || q.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = quests.filter(q => {
+    if (q.lang && q.lang !== lang) return false;
+    if (!q.lang && lang !== 'en') return false;
+    if (search && !q.title.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <div className="container py-5" style={{ maxWidth: 860 }}>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h2>Play a Quest</h2>
-        <p style={{ color: 'var(--muted)' }}>Pick a quest, make your choices, then see what AI models chose at each decision point.</p>
+      <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div>
+          <h2 style={{ marginBottom: '0.25rem' }}>Play a Quest</h2>
+          <p style={{ color: 'var(--muted)', marginBottom: 0 }}>Pick a quest, make your choices, then see what AI models chose at each decision point.</p>
+        </div>
+        <div className="lang-toggle">
+          {['en', 'ru'].map(l => (
+            <button
+              key={l}
+              className={'lang-pill' + (l === lang ? ' active' : '')}
+              onClick={() => onLangChange(l)}
+            >
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div style={{ marginBottom: '1.5rem' }}>
@@ -547,9 +569,15 @@ function QuestSelect({ onSelectQuest }) {
                 </div>
                 <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: '0.5rem', flexGrow: 1 }}>{q.description}</p>
                 <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.25rem' }}>~{q.stepsRange} steps</div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
-                  AI win rate: {Math.round((q.win_rate || 0) * 100)}%
-                </div>
+                {q.win_rate != null ? (
+                  <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
+                    AI win rate: {Math.round((q.win_rate || 0) * 100)}%
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
+                    No AI data yet
+                  </div>
+                )}
                 <button className="btn btn-sm btn-outline-primary" style={{ marginTop: 'auto' }} onClick={e => { e.stopPropagation(); onSelectQuest(q); }}>
                   Play
                 </button>
@@ -571,6 +599,7 @@ function App() {
   const [screen, setScreen] = useState('select');
   const [selectedQuest, setSelectedQuest] = useState(null);
   const [cohortData, setCohortData] = useState(null);
+  const [lang, setLang] = useState('en');
   const cohortReqSeq = useRef(0);
 
   function handleSelectQuest(quest) {
@@ -578,7 +607,8 @@ function App() {
     setSelectedQuest(quest);
     setCohortData(null);
     setScreen('play');
-    fetch('play/' + quest.id + '.json')
+    const cohortId = quest.canonical_id || quest.id;
+    fetch('play/' + cohortId + '.json')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (cohortReqSeq.current === reqId) setCohortData(data);
@@ -589,7 +619,7 @@ function App() {
   }
 
   if (screen === 'select') {
-    return <QuestSelect onSelectQuest={handleSelectQuest} />;
+    return <QuestSelect onSelectQuest={handleSelectQuest} lang={lang} onLangChange={setLang} />;
   }
 
   return (
