@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog - LLM-Quest Benchmark</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ZkaQRFN5HIMXOW5p6y0Sgis4On/radW4qBjeP+1vg+PA9798auxg2kOfySrHlvtM" crossorigin="anonymous">
+<style>
+:root { --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --muted: #c9d1d9; --accent: #58a6ff; --green: #3fb950; --orange: #d29922; --red: #f85149; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; line-height: 1.7; }
+.navbar { background: var(--surface); border-bottom: 1px solid var(--border); }
+a { color: var(--accent); }
+h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.3; }
+h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
+.text-muted { color: var(--muted) !important; }
+.post-meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent); padding: 1rem 1.25rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; }
+.callout p { margin-bottom: 0; }
+.key-number { font-size: 2.2rem; font-weight: 700; color: var(--accent); line-height: 1; }
+.key-label { font-size: 0.85rem; color: var(--muted); }
+.finding-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
+.finding-card h3 { font-size: 1rem; margin-top: 0; margin-bottom: 0.5rem; }
+.finding-card p { font-size: 0.92rem; color: var(--muted); margin-bottom: 0; }
+figure { margin: 2rem 0; }
+figure img { border-radius: 8px; border: 1px solid var(--border); }
+figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark py-3">
+  <div class="container">
+    <span class="navbar-brand mb-0 h1">LLM-Quest Benchmark</span>
+    <div>
+      <a href="about.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">About</a>
+      <a href="index.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">Leaderboard</a>
+      <a href="play.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">Play</a>
+      <a href="blog.html" class="text-decoration-none" style="color:var(--accent); margin-left:1.5rem">Blog</a>
+      <a href="https://github.com/yourconscience/llm_quest_benchmark" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container" style="max-width: 780px; padding-top: 2rem;">
+
+<h1>Does the wrapper around an LLM matter more than the model itself?</h1>
+<div class="post-meta">
+  Kirill Korikov &middot; May 2026
+</div>
+
+<p>
+  Most LLM benchmarks hold the agent architecture constant and vary the model. We did the opposite: same models, five different agent wrappers, dozens of text quests. The results surprised us.
+</p>
+
+<div style="display: flex; gap: 2rem; flex-wrap: wrap; margin: 2rem 0;">
+  <div style="flex: 1; min-width: 120px; text-align: center;">
+    <div class="key-number">6</div>
+    <div class="key-label">models tested</div>
+  </div>
+  <div style="flex: 1; min-width: 120px; text-align: center;">
+    <div class="key-number">5</div>
+    <div class="key-label">agent architectures</div>
+  </div>
+  <div style="flex: 1; min-width: 120px; text-align: center;">
+    <div class="key-number">19</div>
+    <div class="key-label">quests</div>
+  </div>
+  <div style="flex: 1; min-width: 120px; text-align: center;">
+    <div class="key-number">360+</div>
+    <div class="key-label">total runs</div>
+  </div>
+</div>
+
+<h2>The setup</h2>
+<p>
+  Give an LLM a text adventure: read the situation, pick from a list of actions, repeat for 10-50 turns until you win or lose. Now do the same thing five different ways:
+</p>
+<ul>
+  <li><strong>Baseline (A)</strong> - bare prompt, just pick a number</li>
+  <li><strong>Reasoning (B)</strong> - structured chain-of-thought before choosing</li>
+  <li><strong>Knowledge (C)</strong> - reasoning plus domain hints about game mechanics</li>
+  <li><strong>Planner (D)</strong> - multi-turn planning with strategy updates</li>
+  <li><strong>Tools (E)</strong> - reasoning plus state tracker, calculator, quest history</li>
+</ul>
+<p>
+  The quests come from <a href="https://spacerangers.gitlab.io/#/quests">Space Rangers</a>, a corpus of community-authored text adventures with branching narratives and non-obvious optimal paths. They were not designed for LLM evaluation, which is part of why they work: the difficulty is organic, not synthetic.
+</p>
+<p>
+  We tested six mid-tier production models - the tier developers actually deploy, not frontier flagships. All in the ELO 1400-1475 range, $0.01-0.04 per run.
+</p>
+
+<h2>What we found</h2>
+
+<div class="finding-card">
+  <h3>Prompted reasoning is the single biggest unlock</h3>
+  <p>Moving from bare prompting (A) to structured reasoning (B) produced the largest jump in success rate across all models. Simply asking the model to analyze before choosing was worth more than switching to a more expensive model.</p>
+</div>
+
+<div class="finding-card">
+  <h3>Models get stuck in loops - and it predicts failure</h3>
+  <p>A repetition rate above 0.6 (repeating recent actions more than 60% of the time) predicted 0% success rate across every model we tested. Loop detection could serve as a cheap early stopping signal.</p>
+</div>
+
+<div class="finding-card">
+  <h3>Different architectures help different problem types</h3>
+  <p>Spatial puzzles need tools (state tracking). Long quests need planning (to avoid loops). Domain-scored quests need knowledge injection. No single architecture dominates across all quest types.</p>
+</div>
+
+<div class="finding-card">
+  <h3>Cost-performance tradeoffs are real</h3>
+  <p>DeepSeek V3.2 at $0.01/run with good scaffolding outperformed more expensive models with minimal scaffolding. The cheapest model is not always the worst choice if you invest in the wrapper.</p>
+</div>
+
+<div class="callout">
+  <p>The practical takeaway: if you are building an LLM agent, spend time on the architecture before upgrading the model. A structured prompt template costs nothing and often delivers more than a tier jump in model capability.</p>
+</div>
+
+<h2>The failure taxonomy</h2>
+<p>
+  Analyzing 261 runs across the hardest quests revealed four distinct failure categories, each addressable by a different architectural intervention:
+</p>
+
+<table class="table table-sm" style="font-size: 0.9rem;">
+  <thead><tr><th>Failure type</th><th>What happens</th><th>What helps</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Spatial confusion</strong></td><td>Model cannot track coordinates or grid state</td><td>State tracker tool (E)</td></tr>
+    <tr><td><strong>Constraint overload</strong></td><td>Model drops constraints when juggling multiple goals</td><td>Calculator + constraints (E)</td></tr>
+    <tr><td><strong>Decision loops</strong></td><td>Model revisits same locations after 15-20 steps</td><td>Planner with visit log (D)</td></tr>
+    <tr><td><strong>Missing domain knowledge</strong></td><td>Model lacks game-specific scoring rules</td><td>Knowledge hints (C)</td></tr>
+  </tbody>
+</table>
+
+<h2>Try it yourself</h2>
+<p>
+  We built an interactive Play mode where you can <a href="play.html">play the same quests</a> the AI models played. After each decision, you can expand the Decision History to see what the AI cohort chose at that same point - which models agreed with you, which went a different way.
+</p>
+<p>
+  The full results are on the <a href="index.html">leaderboard</a> with per-model, per-quest breakdowns. Everything is open source: <a href="https://github.com/yourconscience/llm_quest_benchmark">code, data, configs</a>.
+</p>
+
+<figure>
+  <img src="img/early_benchmark.jpg" alt="Early version of the LLM Quest Benchmark, March 2025" class="img-fluid" style="max-width: 100%;">
+  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests. The benchmark has since grown to 6 models, 19 quests, 5 agent architectures, and 360+ runs.</figcaption>
+</figure>
+
+<h2>What's next</h2>
+<ul>
+  <li>Mode E (tool-augmented) data collection in progress</li>
+  <li>Frontier model comparison: Claude Sonnet, GPT-5.4, Gemini Pro</li>
+  <li>Human baseline data from the Play feature</li>
+  <li>Deeper cost-performance Pareto analysis</li>
+</ul>
+
+<footer class="text-center py-5 text-muted" style="font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 3rem;">
+  <p>
+    <a href="about.html">About</a> |
+    <a href="index.html">Leaderboard</a> |
+    <a href="play.html">Play</a> |
+    <a href="https://github.com/yourconscience/llm_quest_benchmark">Source Code</a>
+  </p>
+</footer>
+
+</div>
+</body>
+</html>
