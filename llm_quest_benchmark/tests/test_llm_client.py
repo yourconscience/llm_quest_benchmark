@@ -28,7 +28,6 @@ def test_parse_model_name_google_alias():
     assert spec.model_id == "gemini-2.5-flash"
 
 
-
 def test_get_llm_client_deepseek():
     client = get_llm_client("deepseek-3.2-chat")
     assert isinstance(client, OpenAICompatibleClient)
@@ -44,7 +43,6 @@ def test_get_llm_client_google():
 def test_get_llm_client_anthropic():
     client = get_llm_client("claude-sonnet-4-5")
     assert isinstance(client, AnthropicClient)
-
 
 
 def test_parse_model_name_haiku_alias():
@@ -174,5 +172,3 @@ def test_openai_gpt5_retries_empty_with_larger_budget(mock_openai_cls, monkeypat
     assert mock_chat.completions.create.call_count == 2
     second_kwargs = mock_chat.completions.create.call_args_list[1].kwargs
     assert second_kwargs["max_completion_tokens"] >= 800
-
-

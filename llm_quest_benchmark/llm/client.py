@@ -416,7 +416,6 @@ class AnthropicClient(LLMClient):
         return self._with_retries(_call)
 
 
-
 def get_llm_client(model_name: str, system_prompt: str = "", temperature: float = DEFAULT_TEMPERATURE) -> LLMClient:
     """Factory function to get appropriate LLM client."""
     request_timeout = 30
