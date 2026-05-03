@@ -1,0 +1,2072 @@
+{
+  "quest": "Robots_eng",
+  "generated": "2026-05-03T06:47:45Z",
+  "total_runs": 284,
+  "win_rate": 0.0106,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "llama",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "1": {
+      "observation_preview": "After arrival to Боннасис, you had no problems finding the Tournament Committee.",
+      "n": 154,
+      "choices": {
+        "acquaint yourself with the rules": {
+          "text": "Acquaint yourself with the rules",
+          "n": 151,
+          "dist": {
+            "all": 0.9805,
+            "claude": 0.0844,
+            "deepseek": 0.1623,
+            "gemini": 0.3312,
+            "llama": 0.0195,
+            "mistral": 0.1753,
+            "openai": 0.1364,
+            "other": 0.0325,
+            "qwen": 0.039
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 25,
+            "gemini": 51,
+            "llama": 3,
+            "mistral": 27,
+            "openai": 21,
+            "other": 5,
+            "qwen": 6
+          }
+        },
+        "i know the rules already": {
+          "text": "I know the rules already",
+          "n": 3,
+          "dist": {
+            "all": 0.0195,
+            "other": 0.0065,
+            "qwen": 0.013
+          },
+          "n_by_family": {
+            "other": 1,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "2": {
+      "observation_preview": "Battle rules.\n\nYou have tree types of weapons.\nBlaster - the weakest weapon but ",
+      "n": 151,
+      "choices": {
+        "thank you. now i know what i'm going to face": {
+          "text": "Thank you. Now I know what I'm going to face",
+          "n": 151,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0861,
+            "deepseek": 0.1656,
+            "gemini": 0.3377,
+            "llama": 0.0199,
+            "mistral": 0.1788,
+            "openai": 0.1391,
+            "other": 0.0331,
+            "qwen": 0.0397
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 25,
+            "gemini": 51,
+            "llama": 3,
+            "mistral": 27,
+            "openai": 21,
+            "other": 5,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "38": {
+      "observation_preview": "The next fight will be only tomorrow, so now you can relax and have a rest. Howe",
+      "n": 455,
+      "choices": {
+        "go to the boxes": {
+          "text": "Go to the boxes",
+          "n": 208,
+          "dist": {
+            "all": 0.4571,
+            "claude": 0.0418,
+            "deepseek": 0.0637,
+            "gemini": 0.1604,
+            "llama": 0.0088,
+            "mistral": 0.0791,
+            "openai": 0.0549,
+            "other": 0.0242,
+            "qwen": 0.0242
+          },
+          "n_by_family": {
+            "claude": 19,
+            "deepseek": 29,
+            "gemini": 73,
+            "llama": 4,
+            "mistral": 36,
+            "openai": 25,
+            "other": 11,
+            "qwen": 11
+          }
+        },
+        "go to the bar": {
+          "text": "Go to the bar",
+          "n": 219,
+          "dist": {
+            "all": 0.4813,
+            "claude": 0.0418,
+            "deepseek": 0.0725,
+            "gemini": 0.1802,
+            "llama": 0.011,
+            "mistral": 0.0769,
+            "openai": 0.0593,
+            "other": 0.0198,
+            "qwen": 0.0198
+          },
+          "n_by_family": {
+            "claude": 19,
+            "deepseek": 33,
+            "gemini": 82,
+            "llama": 5,
+            "mistral": 35,
+            "openai": 27,
+            "other": 9,
+            "qwen": 9
+          }
+        },
+        "go to bed": {
+          "text": "Go to bed",
+          "n": 28,
+          "dist": {
+            "all": 0.0615,
+            "claude": 0.0132,
+            "deepseek": 0.0066,
+            "gemini": 0.0154,
+            "mistral": 0.0154,
+            "openai": 0.0088,
+            "qwen": 0.0022
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 3,
+            "gemini": 7,
+            "mistral": 7,
+            "openai": 4,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "53": {
+      "observation_preview": "The first thing you did in the boxes was to acquaint yourself with the possible ",
+      "n": 208,
+      "choices": {
+        "install the upgraded rocket navigator": {
+          "text": "Install the upgraded rocket navigator",
+          "n": 73,
+          "dist": {
+            "all": 0.351,
+            "claude": 0.024,
+            "deepseek": 0.0769,
+            "gemini": 0.101,
+            "llama": 0.0096,
+            "mistral": 0.0769,
+            "openai": 0.0433,
+            "other": 0.0048,
+            "qwen": 0.0144
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 16,
+            "gemini": 21,
+            "llama": 2,
+            "mistral": 16,
+            "openai": 9,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "install the laser intensifier.": {
+          "text": "Install the laser intensifier.",
+          "n": 56,
+          "dist": {
+            "all": 0.2692,
+            "claude": 0.0144,
+            "deepseek": 0.0192,
+            "gemini": 0.1202,
+            "llama": 0.0048,
+            "mistral": 0.0529,
+            "openai": 0.024,
+            "other": 0.0144,
+            "qwen": 0.0192
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "gemini": 25,
+            "llama": 1,
+            "mistral": 11,
+            "openai": 5,
+            "other": 3,
+            "qwen": 4
+          }
+        },
+        "install the heading on the torpedo tube": {
+          "text": "Install the heading on the torpedo tube",
+          "n": 72,
+          "dist": {
+            "all": 0.3462,
+            "claude": 0.0481,
+            "deepseek": 0.0433,
+            "gemini": 0.1298,
+            "llama": 0.0048,
+            "mistral": 0.0385,
+            "openai": 0.0481,
+            "other": 0.0192,
+            "qwen": 0.0144
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 9,
+            "gemini": 27,
+            "llama": 1,
+            "mistral": 8,
+            "openai": 10,
+            "other": 4,
+            "qwen": 3
+          }
+        },
+        "no, thank you, i don't need anything": {
+          "text": "No, thank you, I don't need anything",
+          "n": 7,
+          "dist": {
+            "all": 0.0337,
+            "claude": 0.0048,
+            "mistral": 0.0048,
+            "openai": 0.0048,
+            "other": 0.0144,
+            "qwen": 0.0048
+          },
+          "n_by_family": {
+            "claude": 1,
+            "mistral": 1,
+            "openai": 1,
+            "other": 3,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "39": {
+      "observation_preview": "There was nothing special about the bar. You must have seen thousands of such ba",
+      "n": 219,
+      "choices": {
+        "approach the peleng": {
+          "text": "Approach the Peleng",
+          "n": 123,
+          "dist": {
+            "all": 0.5616,
+            "claude": 0.0411,
+            "deepseek": 0.1142,
+            "gemini": 0.1872,
+            "llama": 0.0091,
+            "mistral": 0.0731,
+            "openai": 0.0959,
+            "other": 0.0183,
+            "qwen": 0.0228
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 25,
+            "gemini": 41,
+            "llama": 2,
+            "mistral": 16,
+            "openai": 21,
+            "other": 4,
+            "qwen": 5
+          }
+        },
+        "talk to the maloq": {
+          "text": "Talk to the Maloq",
+          "n": 53,
+          "dist": {
+            "all": 0.242,
+            "claude": 0.0411,
+            "deepseek": 0.0046,
+            "gemini": 0.1005,
+            "llama": 0.0091,
+            "mistral": 0.0639,
+            "other": 0.0091,
+            "qwen": 0.0137
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 1,
+            "gemini": 22,
+            "llama": 2,
+            "mistral": 14,
+            "other": 2,
+            "qwen": 3
+          }
+        },
+        "come to the fans": {
+          "text": "Come to the fans",
+          "n": 43,
+          "dist": {
+            "all": 0.1963,
+            "claude": 0.0046,
+            "deepseek": 0.032,
+            "gemini": 0.0868,
+            "llama": 0.0046,
+            "mistral": 0.0228,
+            "openai": 0.0274,
+            "other": 0.0137,
+            "qwen": 0.0046
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 7,
+            "gemini": 19,
+            "llama": 1,
+            "mistral": 5,
+            "openai": 6,
+            "other": 3,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "42": {
+      "observation_preview": "The Peleng noticed you as well so when you approached him, he gave you a nasty g",
+      "n": 123,
+      "choices": {
+        "so speak. i'll give you 50 cr. you don't deserve more so far": {
+          "text": "So speak. I'll give you 50 cr. You don't deserve more so far",
+          "n": 103,
+          "dist": {
+            "all": 0.8374,
+            "claude": 0.0407,
+            "deepseek": 0.1951,
+            "gemini": 0.3252,
+            "llama": 0.0163,
+            "mistral": 0.1057,
+            "openai": 0.1057,
+            "other": 0.0081,
+            "qwen": 0.0407
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 24,
+            "gemini": 40,
+            "llama": 2,
+            "mistral": 13,
+            "openai": 13,
+            "other": 1,
+            "qwen": 5
+          }
+        },
+        "oh, no. if you want to earn some money, tell me what you know and then you can stake on me easily.": {
+          "text": "Oh, no. If you want to earn some money, tell me what you know and then you can stake on me easily.",
+          "n": 20,
+          "dist": {
+            "all": 0.1626,
+            "claude": 0.0325,
+            "deepseek": 0.0081,
+            "gemini": 0.0081,
+            "mistral": 0.0244,
+            "openai": 0.065,
+            "other": 0.0244
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 3,
+            "openai": 8,
+            "other": 3
+          }
+        }
+      }
+    },
+    "47": {
+      "observation_preview": "The Peleng ordered himself a drink, waited until they brought it and said:\n- We-",
+      "n": 110,
+      "choices": {
+        "take your 50 cr, ramper": {
+          "text": "Take your 50 cr, ramper",
+          "n": 90,
+          "dist": {
+            "all": 0.8182,
+            "claude": 0.0273,
+            "deepseek": 0.2091,
+            "gemini": 0.2727,
+            "llama": 0.0091,
+            "mistral": 0.1364,
+            "openai": 0.1182,
+            "other": 0.0091,
+            "qwen": 0.0364
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 23,
+            "gemini": 30,
+            "llama": 1,
+            "mistral": 15,
+            "openai": 13,
+            "other": 1,
+            "qwen": 4
+          }
+        },
+        "look at this arrogant fool! you can earn a pot of dibs putting a stake on me!": {
+          "text": "Look at this arrogant fool! You can earn a pot of dibs putting a stake on me!",
+          "n": 20,
+          "dist": {
+            "all": 0.1818,
+            "claude": 0.0182,
+            "deepseek": 0.0182,
+            "gemini": 0.0909,
+            "llama": 0.0091,
+            "openai": 0.0273,
+            "other": 0.0091,
+            "qwen": 0.0091
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 10,
+            "llama": 1,
+            "openai": 3,
+            "other": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "3": {
+      "observation_preview": "Two sets for each type of weapon are inside already. You need to choose 4 remain",
+      "n": 284,
+      "choices": {
+        "take the rocket set": {
+          "text": "Take the rocket set",
+          "n": 64,
+          "dist": {
+            "all": 0.2254,
+            "claude": 0.0282,
+            "deepseek": 0.0352,
+            "gemini": 0.0528,
+            "llama": 0.007,
+            "mistral": 0.0423,
+            "openai": 0.0387,
+            "other": 0.0106,
+            "qwen": 0.0106
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 10,
+            "gemini": 15,
+            "llama": 2,
+            "mistral": 12,
+            "openai": 11,
+            "other": 3,
+            "qwen": 3
+          }
+        },
+        "take the torpedo": {
+          "text": "Take the torpedo",
+          "n": 90,
+          "dist": {
+            "all": 0.3169,
+            "claude": 0.0317,
+            "deepseek": 0.0458,
+            "gemini": 0.0986,
+            "llama": 0.007,
+            "mistral": 0.0493,
+            "openai": 0.0528,
+            "other": 0.0141,
+            "qwen": 0.0176
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 13,
+            "gemini": 28,
+            "llama": 2,
+            "mistral": 14,
+            "openai": 15,
+            "other": 4,
+            "qwen": 5
+          }
+        },
+        "take the blaster charge": {
+          "text": "Take the blaster charge",
+          "n": 130,
+          "dist": {
+            "all": 0.4577,
+            "claude": 0.0317,
+            "deepseek": 0.0739,
+            "gemini": 0.169,
+            "llama": 0.0035,
+            "mistral": 0.0669,
+            "openai": 0.0634,
+            "other": 0.0211,
+            "qwen": 0.0282
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 21,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 19,
+            "openai": 18,
+            "other": 6,
+            "qwen": 8
+          }
+        }
+      }
+    },
+    "5": {
+      "observation_preview": "Choose the second set.\n\nStatus:\nBlaster charges: 2 pcs.\nRocket sets: 3 pcs.\nTorp",
+      "n": 284,
+      "choices": {
+        "take the torpedo": {
+          "text": "Take the torpedo",
+          "n": 87,
+          "dist": {
+            "all": 0.3063,
+            "claude": 0.0317,
+            "deepseek": 0.0423,
+            "gemini": 0.1162,
+            "llama": 0.0035,
+            "mistral": 0.0458,
+            "openai": 0.0423,
+            "other": 0.0141,
+            "qwen": 0.0106
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 12,
+            "gemini": 33,
+            "llama": 1,
+            "mistral": 13,
+            "openai": 12,
+            "other": 4,
+            "qwen": 3
+          }
+        },
+        "take the rocket set": {
+          "text": "Take the rocket set",
+          "n": 99,
+          "dist": {
+            "all": 0.3486,
+            "claude": 0.0282,
+            "deepseek": 0.0563,
+            "gemini": 0.0704,
+            "llama": 0.0106,
+            "mistral": 0.0634,
+            "openai": 0.0634,
+            "other": 0.0176,
+            "qwen": 0.0387
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 16,
+            "gemini": 20,
+            "llama": 3,
+            "mistral": 18,
+            "openai": 18,
+            "other": 5,
+            "qwen": 11
+          }
+        },
+        "take the blaster charge": {
+          "text": "Take the blaster charge",
+          "n": 98,
+          "dist": {
+            "all": 0.3451,
+            "claude": 0.0317,
+            "deepseek": 0.0563,
+            "gemini": 0.1338,
+            "llama": 0.0035,
+            "mistral": 0.0493,
+            "openai": 0.0493,
+            "other": 0.0141,
+            "qwen": 0.007
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 16,
+            "gemini": 38,
+            "llama": 1,
+            "mistral": 14,
+            "openai": 14,
+            "other": 4,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "6": {
+      "observation_preview": "Choose the third set.\n\nStatus:\nBlaster charges: 2 pcs.\nRocket sets: 3 pcs.\nTorpe",
+      "n": 284,
+      "choices": {
+        "take the rocket set": {
+          "text": "Take the rocket set",
+          "n": 78,
+          "dist": {
+            "all": 0.2746,
+            "claude": 0.0211,
+            "deepseek": 0.0387,
+            "gemini": 0.0951,
+            "mistral": 0.0563,
+            "openai": 0.0423,
+            "other": 0.0106,
+            "qwen": 0.0106
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 11,
+            "gemini": 27,
+            "mistral": 16,
+            "openai": 12,
+            "other": 3,
+            "qwen": 3
+          }
+        },
+        "take the torpedo": {
+          "text": "Take the torpedo",
+          "n": 103,
+          "dist": {
+            "all": 0.3627,
+            "claude": 0.0423,
+            "deepseek": 0.0563,
+            "gemini": 0.0986,
+            "llama": 0.0106,
+            "mistral": 0.0528,
+            "openai": 0.0634,
+            "other": 0.0176,
+            "qwen": 0.0211
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 16,
+            "gemini": 28,
+            "llama": 3,
+            "mistral": 15,
+            "openai": 18,
+            "other": 5,
+            "qwen": 6
+          }
+        },
+        "take the blaster charge": {
+          "text": "Take the blaster charge",
+          "n": 103,
+          "dist": {
+            "all": 0.3627,
+            "claude": 0.0282,
+            "deepseek": 0.0599,
+            "gemini": 0.1268,
+            "llama": 0.007,
+            "mistral": 0.0493,
+            "openai": 0.0493,
+            "other": 0.0176,
+            "qwen": 0.0246
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 17,
+            "gemini": 36,
+            "llama": 2,
+            "mistral": 14,
+            "openai": 14,
+            "other": 5,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "7": {
+      "observation_preview": "Choose the fourth set.\n\nStatus:\nBlaster charges: 2 pcs.\nRocket sets: 4 pcs.\nTorp",
+      "n": 283,
+      "choices": {
+        "take the blaster charge": {
+          "text": "Take the blaster charge",
+          "n": 130,
+          "dist": {
+            "all": 0.4594,
+            "claude": 0.0353,
+            "deepseek": 0.0777,
+            "gemini": 0.159,
+            "llama": 0.0035,
+            "mistral": 0.0848,
+            "openai": 0.0565,
+            "other": 0.0177,
+            "qwen": 0.0247
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 22,
+            "gemini": 45,
+            "llama": 1,
+            "mistral": 24,
+            "openai": 16,
+            "other": 5,
+            "qwen": 7
+          }
+        },
+        "take the torpedo": {
+          "text": "Take the torpedo",
+          "n": 83,
+          "dist": {
+            "all": 0.2933,
+            "claude": 0.0247,
+            "deepseek": 0.0389,
+            "gemini": 0.106,
+            "llama": 0.0071,
+            "mistral": 0.0353,
+            "openai": 0.0495,
+            "other": 0.0141,
+            "qwen": 0.0177
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 11,
+            "gemini": 30,
+            "llama": 2,
+            "mistral": 10,
+            "openai": 14,
+            "other": 4,
+            "qwen": 5
+          }
+        },
+        "take the rocket set": {
+          "text": "Take the rocket set",
+          "n": 70,
+          "dist": {
+            "all": 0.2473,
+            "claude": 0.0283,
+            "deepseek": 0.0389,
+            "gemini": 0.0565,
+            "llama": 0.0071,
+            "mistral": 0.0389,
+            "openai": 0.0495,
+            "other": 0.0141,
+            "qwen": 0.0141
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 11,
+            "gemini": 16,
+            "llama": 2,
+            "mistral": 11,
+            "openai": 14,
+            "other": 4,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "8": {
+      "observation_preview": "Prepare for the fight.\n\nStatus:\nBlaster charges: 3 pcs.\nRocket sets: 4 pcs.\nTorp",
+      "n": 283,
+      "choices": {
+        "with john \"god\" o'damned": {
+          "text": "With John \"God\" O'Damned",
+          "n": 86,
+          "dist": {
+            "all": 0.3039,
+            "claude": 0.0212,
+            "deepseek": 0.0318,
+            "gemini": 0.1131,
+            "llama": 0.0035,
+            "mistral": 0.0671,
+            "openai": 0.0353,
+            "other": 0.0177,
+            "qwen": 0.0141
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 9,
+            "gemini": 32,
+            "llama": 1,
+            "mistral": 19,
+            "openai": 10,
+            "other": 5,
+            "qwen": 4
+          }
+        },
+        "with zen cha-cha": {
+          "text": "With Zen Cha-Cha",
+          "n": 81,
+          "dist": {
+            "all": 0.2862,
+            "claude": 0.0283,
+            "deepseek": 0.0424,
+            "gemini": 0.106,
+            "llama": 0.0035,
+            "mistral": 0.0495,
+            "openai": 0.0459,
+            "other": 0.0035,
+            "qwen": 0.0071
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 12,
+            "gemini": 30,
+            "llama": 1,
+            "mistral": 14,
+            "openai": 13,
+            "other": 1,
+            "qwen": 2
+          }
+        },
+        "with steel silvester": {
+          "text": "With Steel Silvester",
+          "n": 79,
+          "dist": {
+            "all": 0.2792,
+            "claude": 0.0353,
+            "deepseek": 0.053,
+            "gemini": 0.0954,
+            "llama": 0.0106,
+            "mistral": 0.0318,
+            "openai": 0.0283,
+            "other": 0.0106,
+            "qwen": 0.0141
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 15,
+            "gemini": 27,
+            "llama": 3,
+            "mistral": 9,
+            "openai": 8,
+            "other": 3,
+            "qwen": 4
+          }
+        },
+        "i want to change my ammunition lot": {
+          "text": "I want to change my ammunition lot",
+          "n": 37,
+          "dist": {
+            "all": 0.1307,
+            "claude": 0.0035,
+            "deepseek": 0.0283,
+            "gemini": 0.0071,
+            "mistral": 0.0106,
+            "openai": 0.0459,
+            "other": 0.0141,
+            "qwen": 0.0212
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 8,
+            "gemini": 2,
+            "mistral": 3,
+            "openai": 13,
+            "other": 4,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "19": {
+      "observation_preview": "So, the great and dreadful John \"God\" O'Damned  versus you! Stands kept their br",
+      "n": 71,
+      "choices": {
+        "here we go...": {
+          "text": "Here we go...",
+          "n": 71,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0986,
+            "deepseek": 0.1408,
+            "gemini": 0.3803,
+            "llama": 0.0282,
+            "mistral": 0.1127,
+            "openai": 0.1408,
+            "other": 0.0563,
+            "qwen": 0.0423
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 10,
+            "gemini": 27,
+            "llama": 2,
+            "mistral": 8,
+            "openai": 10,
+            "other": 4,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "10": {
+      "observation_preview": "Choose what enemy's weapon you will defend yourself from.\n\nStatus:\nPlayer's life",
+      "n": 285,
+      "choices": {
+        "activate the power shield": {
+          "text": "Activate the power shield",
+          "n": 180,
+          "dist": {
+            "all": 0.6316,
+            "claude": 0.0667,
+            "deepseek": 0.0947,
+            "gemini": 0.2526,
+            "llama": 0.0211,
+            "mistral": 0.0421,
+            "openai": 0.1018,
+            "other": 0.0351,
+            "qwen": 0.0175
+          },
+          "n_by_family": {
+            "claude": 19,
+            "deepseek": 27,
+            "gemini": 72,
+            "llama": 6,
+            "mistral": 12,
+            "openai": 29,
+            "other": 10,
+            "qwen": 5
+          }
+        },
+        "manoeuvre to escape rockets": {
+          "text": "Manoeuvre to escape rockets",
+          "n": 58,
+          "dist": {
+            "all": 0.2035,
+            "claude": 0.0175,
+            "deepseek": 0.0351,
+            "gemini": 0.0596,
+            "mistral": 0.0316,
+            "openai": 0.0421,
+            "other": 0.007,
+            "qwen": 0.0105
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 10,
+            "gemini": 17,
+            "mistral": 9,
+            "openai": 12,
+            "other": 2,
+            "qwen": 3
+          }
+        },
+        "activate the noise generator": {
+          "text": "Activate the noise generator",
+          "n": 47,
+          "dist": {
+            "all": 0.1649,
+            "claude": 0.0175,
+            "deepseek": 0.0246,
+            "gemini": 0.0456,
+            "llama": 0.007,
+            "mistral": 0.0246,
+            "openai": 0.0175,
+            "other": 0.014,
+            "qwen": 0.014
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 7,
+            "gemini": 13,
+            "llama": 2,
+            "mistral": 7,
+            "openai": 5,
+            "other": 4,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "9": {
+      "observation_preview": "Choose the weapon for the attack\n\nStatus:\nPlayer's life: 100\nEnemy's life: 100\nB",
+      "n": 298,
+      "choices": {
+        "blaster fire": {
+          "text": "Blaster fire",
+          "n": 58,
+          "dist": {
+            "all": 0.1946,
+            "claude": 0.0101,
+            "deepseek": 0.0268,
+            "gemini": 0.0772,
+            "llama": 0.0034,
+            "mistral": 0.0268,
+            "openai": 0.0336,
+            "other": 0.0134,
+            "qwen": 0.0034
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 8,
+            "gemini": 23,
+            "llama": 1,
+            "mistral": 8,
+            "openai": 10,
+            "other": 4,
+            "qwen": 1
+          }
+        },
+        "rocket volley": {
+          "text": "Rocket volley",
+          "n": 80,
+          "dist": {
+            "all": 0.2685,
+            "claude": 0.0369,
+            "deepseek": 0.0369,
+            "gemini": 0.0906,
+            "llama": 0.0101,
+            "mistral": 0.0235,
+            "openai": 0.0436,
+            "other": 0.0201,
+            "qwen": 0.0067
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 11,
+            "gemini": 27,
+            "llama": 3,
+            "mistral": 7,
+            "openai": 13,
+            "other": 6,
+            "qwen": 2
+          }
+        },
+        "shoot a torpedo": {
+          "text": "Shoot a torpedo",
+          "n": 160,
+          "dist": {
+            "all": 0.5369,
+            "claude": 0.057,
+            "deepseek": 0.0839,
+            "gemini": 0.2047,
+            "llama": 0.0134,
+            "mistral": 0.0436,
+            "openai": 0.0839,
+            "other": 0.0268,
+            "qwen": 0.0235
+          },
+          "n_by_family": {
+            "claude": 17,
+            "deepseek": 25,
+            "gemini": 61,
+            "llama": 4,
+            "mistral": 13,
+            "openai": 25,
+            "other": 8,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "79": {
+      "observation_preview": "Your enemy's intuition failed this time. He activated the noise generator instea",
+      "n": 13,
+      "choices": {
+        "the enemy is biting the dust at last! after the honour round in front of the elated stand, go to the boxes.": {
+          "text": "The enemy is biting the dust at last! After the honour round in front of the elated stand, go to the boxes.",
+          "n": 13,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1538,
+            "deepseek": 0.1538,
+            "gemini": 0.4615,
+            "llama": 0.0769,
+            "mistral": 0.0769,
+            "openai": 0.0769
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 6,
+            "llama": 1,
+            "mistral": 1,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "40": {
+      "observation_preview": "When you approached the Maloq, he could hardly raise his head, gave you a cloudy",
+      "n": 53,
+      "choices": {
+        "buy the maloq a drink (50 cr)": {
+          "text": "Buy the Maloq a drink (50 cr)",
+          "n": 51,
+          "dist": {
+            "all": 0.9623,
+            "claude": 0.1698,
+            "deepseek": 0.0189,
+            "gemini": 0.4151,
+            "llama": 0.0377,
+            "mistral": 0.2642,
+            "qwen": 0.0566
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 1,
+            "gemini": 22,
+            "llama": 2,
+            "mistral": 14,
+            "qwen": 3
+          }
+        },
+        "try to get the maloq away from the bar": {
+          "text": "Try to get the Maloq away from the bar",
+          "n": 2,
+          "dist": {
+            "all": 0.0377,
+            "other": 0.0377
+          },
+          "n_by_family": {
+            "other": 2
+          }
+        }
+      }
+    },
+    "50": {
+      "observation_preview": "- Hey, dude. So you don't think that an EX-champ is too miserable to drink with,",
+      "n": 52,
+      "choices": {
+        "tell me how he beat you, and, upon my faith, i'll take the change out of him!": {
+          "text": "Tell me how he beat you, and, upon my faith, I'll take the change out of him!",
+          "n": 36,
+          "dist": {
+            "all": 0.6923,
+            "claude": 0.1731,
+            "gemini": 0.25,
+            "llama": 0.0385,
+            "mistral": 0.1923,
+            "other": 0.0192,
+            "qwen": 0.0192
+          },
+          "n_by_family": {
+            "claude": 9,
+            "gemini": 13,
+            "llama": 2,
+            "mistral": 10,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "alright, let's have another round, and you'll tell me what made you come down to such a condition... (order drinks for 50 cr)": {
+          "text": "Alright, let's have another round, and you'll tell me what made you come down to such a condition... (order drinks for 50 cr)",
+          "n": 16,
+          "dist": {
+            "all": 0.3077,
+            "deepseek": 0.0192,
+            "gemini": 0.1731,
+            "mistral": 0.0769,
+            "qwen": 0.0385
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 9,
+            "mistral": 4,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "80": {
+      "observation_preview": "A power shield against a torpedo? It's nonsense!\n\nStatus:\nPlayer's life: 70\nEnem",
+      "n": 21,
+      "choices": {
+        "the enemy is biting the dust at last! after the honour round in front of the elated stand, go to the boxes.": {
+          "text": "The enemy is biting the dust at last! After the honour round in front of the elated stand, go to the boxes.",
+          "n": 21,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.2381,
+            "deepseek": 0.0476,
+            "gemini": 0.381,
+            "mistral": 0.0952,
+            "openai": 0.1429,
+            "other": 0.0476,
+            "qwen": 0.0476
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 1,
+            "gemini": 8,
+            "mistral": 2,
+            "openai": 3,
+            "other": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "20": {
+      "observation_preview": "While you were preparing to go out to the playground, the crowd-puller Zen  Cha-",
+      "n": 85,
+      "choices": {
+        "here we go...": {
+          "text": "Here we go...",
+          "n": 85,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0824,
+            "deepseek": 0.1294,
+            "gemini": 0.3529,
+            "llama": 0.0235,
+            "mistral": 0.2235,
+            "openai": 0.1176,
+            "other": 0.0118,
+            "qwen": 0.0588
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 11,
+            "gemini": 30,
+            "llama": 2,
+            "mistral": 19,
+            "openai": 10,
+            "other": 1,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "22": {
+      "observation_preview": "It's time for your strike. Choose the weapon.\n\nStatus:\nPlayer's life: 100\nEnemy'",
+      "n": 325,
+      "choices": {
+        "rocket volley": {
+          "text": "Rocket volley",
+          "n": 86,
+          "dist": {
+            "all": 0.2646,
+            "claude": 0.0092,
+            "deepseek": 0.04,
+            "gemini": 0.0892,
+            "llama": 0.0123,
+            "mistral": 0.0338,
+            "openai": 0.0431,
+            "other": 0.0062,
+            "qwen": 0.0308
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 13,
+            "gemini": 29,
+            "llama": 4,
+            "mistral": 11,
+            "openai": 14,
+            "other": 2,
+            "qwen": 10
+          }
+        },
+        "shoot a torpedo": {
+          "text": "Shoot a torpedo",
+          "n": 108,
+          "dist": {
+            "all": 0.3323,
+            "claude": 0.0338,
+            "deepseek": 0.0523,
+            "gemini": 0.0831,
+            "llama": 0.0031,
+            "mistral": 0.0862,
+            "openai": 0.0492,
+            "other": 0.0092,
+            "qwen": 0.0154
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 17,
+            "gemini": 27,
+            "llama": 1,
+            "mistral": 28,
+            "openai": 16,
+            "other": 3,
+            "qwen": 5
+          }
+        },
+        "blaster fire": {
+          "text": "Blaster fire",
+          "n": 131,
+          "dist": {
+            "all": 0.4031,
+            "claude": 0.0277,
+            "deepseek": 0.0554,
+            "gemini": 0.2031,
+            "llama": 0.0031,
+            "mistral": 0.0646,
+            "openai": 0.0338,
+            "other": 0.0062,
+            "qwen": 0.0092
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 18,
+            "gemini": 66,
+            "llama": 1,
+            "mistral": 21,
+            "openai": 11,
+            "other": 2,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "23": {
+      "observation_preview": "You need to do something for protection now.\n\nStatus:\nPlayer's life: 100\nEnemy's",
+      "n": 342,
+      "choices": {
+        "activate the power shield": {
+          "text": "Activate the power shield",
+          "n": 133,
+          "dist": {
+            "all": 0.3889,
+            "claude": 0.0322,
+            "deepseek": 0.0702,
+            "gemini": 0.1023,
+            "llama": 0.0175,
+            "mistral": 0.0819,
+            "openai": 0.0468,
+            "other": 0.0117,
+            "qwen": 0.0263
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 24,
+            "gemini": 35,
+            "llama": 6,
+            "mistral": 28,
+            "openai": 16,
+            "other": 4,
+            "qwen": 9
+          }
+        },
+        "manoeuvre to escape rockets": {
+          "text": "Manoeuvre to escape rockets",
+          "n": 140,
+          "dist": {
+            "all": 0.4094,
+            "claude": 0.0146,
+            "deepseek": 0.0439,
+            "gemini": 0.2222,
+            "mistral": 0.0409,
+            "openai": 0.0526,
+            "other": 0.0088,
+            "qwen": 0.0263
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 15,
+            "gemini": 76,
+            "mistral": 14,
+            "openai": 18,
+            "other": 3,
+            "qwen": 9
+          }
+        },
+        "activate the noise generator": {
+          "text": "Activate the noise generator",
+          "n": 69,
+          "dist": {
+            "all": 0.2018,
+            "claude": 0.0146,
+            "deepseek": 0.0322,
+            "gemini": 0.0497,
+            "llama": 0.0029,
+            "mistral": 0.0556,
+            "openai": 0.038,
+            "qwen": 0.0088
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 11,
+            "gemini": 17,
+            "llama": 1,
+            "mistral": 19,
+            "openai": 13,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "64": {
+      "observation_preview": "What a mercy! Despite the active noise generator your blaster caused serious dam",
+      "n": 16,
+      "choices": {
+        "the enemy is biting the dust at last! after the honour round in front of the elated stand, go to the boxes.": {
+          "text": "The enemy is biting the dust at last! After the honour round in front of the elated stand, go to the boxes.",
+          "n": 16,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.125,
+            "deepseek": 0.0625,
+            "gemini": 0.5625,
+            "mistral": 0.25
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "gemini": 9,
+            "mistral": 4
+          }
+        }
+      }
+    },
+    "21": {
+      "observation_preview": "Steel Silvester's BattleMech was worked as a gobzaurus and looked awesome if not",
+      "n": 90,
+      "choices": {
+        "here we go...": {
+          "text": "Here we go...",
+          "n": 90,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1111,
+            "deepseek": 0.1667,
+            "gemini": 0.3556,
+            "llama": 0.0111,
+            "mistral": 0.1667,
+            "openai": 0.1222,
+            "other": 0.0444,
+            "qwen": 0.0222
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 15,
+            "gemini": 32,
+            "llama": 1,
+            "mistral": 15,
+            "openai": 11,
+            "other": 4,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "33": {
+      "observation_preview": "Choose what enemy's weapon you will defend yourself from.\n\nStatus:\nPlayer's life",
+      "n": 315,
+      "choices": {
+        "activate the power shield": {
+          "text": "Activate the power shield",
+          "n": 131,
+          "dist": {
+            "all": 0.4159,
+            "claude": 0.0413,
+            "deepseek": 0.0889,
+            "gemini": 0.1111,
+            "llama": 0.0063,
+            "mistral": 0.0921,
+            "openai": 0.0413,
+            "other": 0.019,
+            "qwen": 0.0159
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 28,
+            "gemini": 35,
+            "llama": 2,
+            "mistral": 29,
+            "openai": 13,
+            "other": 6,
+            "qwen": 5
+          }
+        },
+        "manoeuvre to escape rockets": {
+          "text": "Manoeuvre to escape rockets",
+          "n": 81,
+          "dist": {
+            "all": 0.2571,
+            "claude": 0.0508,
+            "deepseek": 0.0349,
+            "gemini": 0.0794,
+            "mistral": 0.0349,
+            "openai": 0.0413,
+            "other": 0.0127,
+            "qwen": 0.0032
+          },
+          "n_by_family": {
+            "claude": 16,
+            "deepseek": 11,
+            "gemini": 25,
+            "mistral": 11,
+            "openai": 13,
+            "other": 4,
+            "qwen": 1
+          }
+        },
+        "activate the noise generator": {
+          "text": "Activate the noise generator",
+          "n": 103,
+          "dist": {
+            "all": 0.327,
+            "claude": 0.0222,
+            "deepseek": 0.0508,
+            "gemini": 0.1397,
+            "llama": 0.0095,
+            "mistral": 0.0476,
+            "openai": 0.0381,
+            "other": 0.0159,
+            "qwen": 0.0032
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 16,
+            "gemini": 44,
+            "llama": 3,
+            "mistral": 15,
+            "openai": 12,
+            "other": 5,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "34": {
+      "observation_preview": "Choose the weapon for the attack\n\nStatus:\nPlayer's life: 100\nEnemy's life: 100\nB",
+      "n": 299,
+      "choices": {
+        "rocket volley": {
+          "text": "Rocket volley",
+          "n": 67,
+          "dist": {
+            "all": 0.2241,
+            "claude": 0.0435,
+            "deepseek": 0.0535,
+            "gemini": 0.0468,
+            "llama": 0.0033,
+            "mistral": 0.0502,
+            "openai": 0.0134,
+            "other": 0.0134
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 16,
+            "gemini": 14,
+            "llama": 1,
+            "mistral": 15,
+            "openai": 4,
+            "other": 4
+          }
+        },
+        "blaster fire": {
+          "text": "Blaster fire",
+          "n": 107,
+          "dist": {
+            "all": 0.3579,
+            "claude": 0.0268,
+            "deepseek": 0.0401,
+            "gemini": 0.1538,
+            "llama": 0.01,
+            "mistral": 0.0602,
+            "openai": 0.0468,
+            "other": 0.0167,
+            "qwen": 0.0033
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 12,
+            "gemini": 46,
+            "llama": 3,
+            "mistral": 18,
+            "openai": 14,
+            "other": 5,
+            "qwen": 1
+          }
+        },
+        "shoot a torpedo": {
+          "text": "Shoot a torpedo",
+          "n": 125,
+          "dist": {
+            "all": 0.4181,
+            "claude": 0.0401,
+            "deepseek": 0.0836,
+            "gemini": 0.1438,
+            "llama": 0.0067,
+            "mistral": 0.0502,
+            "openai": 0.0569,
+            "other": 0.0167,
+            "qwen": 0.0201
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 25,
+            "gemini": 43,
+            "llama": 2,
+            "mistral": 15,
+            "openai": 17,
+            "other": 5,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "71": {
+      "observation_preview": "A power shield against a torpedo? It's nonsense!\n\nStatus:\nPlayer's life: 2\nEnemy",
+      "n": 8,
+      "choices": {
+        "the enemy is biting the dust at last! after the honour round in front of the elated stand, go to the boxes.": {
+          "text": "The enemy is biting the dust at last! After the honour round in front of the elated stand, go to the boxes.",
+          "n": 8,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.375,
+            "gemini": 0.125,
+            "mistral": 0.5
+          },
+          "n_by_family": {
+            "claude": 3,
+            "gemini": 1,
+            "mistral": 4
+          }
+        }
+      }
+    },
+    "84": {
+      "observation_preview": "Looking at the merry Faeyan company, you still couldn't figure out whose fans th",
+      "n": 43,
+      "choices": {
+        "try to get closer with the fan group": {
+          "text": "Try to get closer with the fan group",
+          "n": 5,
+          "dist": {
+            "all": 0.1163,
+            "claude": 0.0233,
+            "deepseek": 0.0233,
+            "llama": 0.0233,
+            "mistral": 0.0233,
+            "qwen": 0.0233
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "llama": 1,
+            "mistral": 1,
+            "qwen": 1
+          }
+        },
+        "insert 50 cr in the slot and listen to the conversation": {
+          "text": "Insert 50 cr in the slot and listen to the conversation",
+          "n": 38,
+          "dist": {
+            "all": 0.8837,
+            "deepseek": 0.1395,
+            "gemini": 0.4419,
+            "mistral": 0.093,
+            "openai": 0.1395,
+            "other": 0.0698
+          },
+          "n_by_family": {
+            "deepseek": 6,
+            "gemini": 19,
+            "mistral": 4,
+            "openai": 6,
+            "other": 3
+          }
+        }
+      }
+    },
+    "41": {
+      "observation_preview": "You decided that boozing together is the best way to get acquainted, so you orde",
+      "n": 41,
+      "choices": {
+        "i'd like to drink to our common idol zen cha-cha!": {
+          "text": "I'd like to drink to our common idol Zen Cha-Cha!",
+          "n": 15,
+          "dist": {
+            "all": 0.3659,
+            "claude": 0.0244,
+            "deepseek": 0.0244,
+            "gemini": 0.1707,
+            "mistral": 0.0244,
+            "openai": 0.0976,
+            "qwen": 0.0244
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 7,
+            "mistral": 1,
+            "openai": 4,
+            "qwen": 1
+          }
+        },
+        "i'm going to empty this glass to the victory of the strongest fighter. of course, i mean the invincible steel silvester!": {
+          "text": "I'm going to empty this glass to the victory of the strongest fighter. Of course, I mean the invincible Steel Silvester!",
+          "n": 10,
+          "dist": {
+            "all": 0.2439,
+            "deepseek": 0.0976,
+            "gemini": 0.0488,
+            "llama": 0.0244,
+            "mistral": 0.0244,
+            "openai": 0.0244,
+            "other": 0.0244
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 2,
+            "llama": 1,
+            "mistral": 1,
+            "openai": 1,
+            "other": 1
+          }
+        },
+        "let's drink to the victory of john \"god\" o'damned, the greatest fighter at all times and among all nations!": {
+          "text": "Let's drink to the victory of John \"God\" O'Damned, the greatest fighter at all times and among all nations!",
+          "n": 16,
+          "dist": {
+            "all": 0.3902,
+            "deepseek": 0.0488,
+            "gemini": 0.2195,
+            "mistral": 0.0488,
+            "openai": 0.0244,
+            "other": 0.0488
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 9,
+            "mistral": 2,
+            "openai": 1,
+            "other": 2
+          }
+        }
+      }
+    },
+    "75": {
+      "observation_preview": "As skilful as you might be in zigzagging, nobody has escaped the blaster yet wit",
+      "n": 12,
+      "choices": {
+        "the enemy is biting the dust at last! after the honour round in front of the elated stand, go to the boxes.": {
+          "text": "The enemy is biting the dust at last! After the honour round in front of the elated stand, go to the boxes.",
+          "n": 12,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1667,
+            "deepseek": 0.0833,
+            "gemini": 0.5833,
+            "mistral": 0.0833,
+            "openai": 0.0833
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "gemini": 7,
+            "mistral": 1,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "63": {
+      "observation_preview": "You took a separate room in the bar, the Peleng ordered dinner for two of you an",
+      "n": 9,
+      "choices": {
+        "no, thank you, i've already got my share of fighting. and i've had my fill of it too!": {
+          "text": "No, thank you, I've already got my share of fighting. And I've had my fill of it too!",
+          "n": 2,
+          "dist": {
+            "all": 0.2222,
+            "claude": 0.1111,
+            "gemini": 0.1111
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 1
+          }
+        },
+        "money is never redundant. i'm ready for the fight": {
+          "text": "Money is never redundant. I'm ready for the fight",
+          "n": 7,
+          "dist": {
+            "all": 0.7778,
+            "claude": 0.1111,
+            "gemini": 0.5556,
+            "mistral": 0.1111
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 5,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "70": {
+      "observation_preview": "Your enemy's intuition failed this time. He activated the noise generator instea",
+      "n": 5,
+      "choices": {
+        "the enemy is biting the dust at last! after the honour round in front of the elated stand, go to the boxes.": {
+          "text": "The enemy is biting the dust at last! After the honour round in front of the elated stand, go to the boxes.",
+          "n": 5,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.2,
+            "gemini": 0.4,
+            "mistral": 0.2,
+            "other": 0.2
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 2,
+            "mistral": 1,
+            "other": 1
+          }
+        }
+      }
+    },
+    "85": {
+      "observation_preview": "Hardly two minutes passed before one of the fans too excited due to all the booz",
+      "n": 38,
+      "choices": {
+        "try to get closer with the fan group": {
+          "text": "Try to get closer with the fan group",
+          "n": 29,
+          "dist": {
+            "all": 0.7632,
+            "deepseek": 0.1053,
+            "gemini": 0.3421,
+            "mistral": 0.0789,
+            "openai": 0.1579,
+            "other": 0.0789
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 13,
+            "mistral": 3,
+            "openai": 6,
+            "other": 3
+          }
+        },
+        "go on gambling and insert 50 more cr": {
+          "text": "Go on gambling and insert 50 more cr",
+          "n": 9,
+          "dist": {
+            "all": 0.2368,
+            "deepseek": 0.0526,
+            "gemini": 0.1579,
+            "mistral": 0.0263
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 6,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "77": {
+      "observation_preview": "It's hard to duck a torpedo. Almost impossible. Your enemy didn't manage it eith",
+      "n": 14,
+      "choices": {
+        "the enemy is biting the dust at last! after the honour round in front of the elated stand, go to the boxes.": {
+          "text": "The enemy is biting the dust at last! After the honour round in front of the elated stand, go to the boxes.",
+          "n": 14,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0714,
+            "deepseek": 0.1429,
+            "gemini": 0.4286,
+            "llama": 0.0714,
+            "mistral": 0.0714,
+            "openai": 0.1429,
+            "qwen": 0.0714
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 6,
+            "llama": 1,
+            "mistral": 1,
+            "openai": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "54": {
+      "observation_preview": "The Peleng let no grass grow under his feet and took you to the boxes where you ",
+      "n": 31,
+      "choices": {
+        "blaster fire": {
+          "text": "Blaster fire",
+          "n": 7,
+          "dist": {
+            "all": 0.2258,
+            "gemini": 0.1935,
+            "mistral": 0.0323
+          },
+          "n_by_family": {
+            "gemini": 6,
+            "mistral": 1
+          }
+        },
+        "rocket volley": {
+          "text": "Rocket volley",
+          "n": 8,
+          "dist": {
+            "all": 0.2581,
+            "claude": 0.0645,
+            "gemini": 0.1935
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 6
+          }
+        },
+        "shoot a torpedo": {
+          "text": "Shoot a torpedo",
+          "n": 16,
+          "dist": {
+            "all": 0.5161,
+            "claude": 0.0645,
+            "gemini": 0.3548,
+            "mistral": 0.0968
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 11,
+            "mistral": 3
+          }
+        }
+      }
+    },
+    "58": {
+      "observation_preview": "You need to do something for protection now.\n\nStatus:\nPlayer's life: 150\nEnemy's",
+      "n": 33,
+      "choices": {
+        "activate the power shield": {
+          "text": "Activate the power shield",
+          "n": 15,
+          "dist": {
+            "all": 0.4545,
+            "claude": 0.0606,
+            "gemini": 0.303,
+            "mistral": 0.0909
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 10,
+            "mistral": 3
+          }
+        },
+        "manoeuvre to escape rockets": {
+          "text": "Manoeuvre to escape rockets",
+          "n": 7,
+          "dist": {
+            "all": 0.2121,
+            "claude": 0.0303,
+            "gemini": 0.1818
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 6
+          }
+        },
+        "activate the noise generator": {
+          "text": "Activate the noise generator",
+          "n": 11,
+          "dist": {
+            "all": 0.3333,
+            "claude": 0.0303,
+            "gemini": 0.2424,
+            "mistral": 0.0606
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 8,
+            "mistral": 2
+          }
+        }
+      }
+    },
+    "78": {
+      "observation_preview": "The enemy tried the antirocket manoeuvre but your blaster was faster.\n\nStatus:\nP",
+      "n": 12,
+      "choices": {
+        "the enemy is biting the dust at last! after the honour round in front of the elated stand, go to the boxes.": {
+          "text": "The enemy is biting the dust at last! After the honour round in front of the elated stand, go to the boxes.",
+          "n": 12,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.1667,
+            "gemini": 0.4167,
+            "mistral": 0.0833,
+            "openai": 0.25,
+            "other": 0.0833
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 5,
+            "mistral": 1,
+            "openai": 3,
+            "other": 1
+          }
+        }
+      }
+    },
+    "76": {
+      "observation_preview": "The enemy's nerves snapped at last and he decided to activate the power shield. ",
+      "n": 2,
+      "choices": {
+        "the enemy is biting the dust at last! after the honour round in front of the elated stand, go to the boxes.": {
+          "text": "The enemy is biting the dust at last! After the honour round in front of the elated stand, go to the boxes.",
+          "n": 2,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.5,
+            "mistral": 0.5
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "86": {
+      "observation_preview": "Once again you gave your ear to the conversation and heard a fan asking his budd",
+      "n": 9,
+      "choices": {
+        "try to get closer with the fan group": {
+          "text": "Try to get closer with the fan group",
+          "n": 9,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.2222,
+            "gemini": 0.6667,
+            "mistral": 0.1111
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 6,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "62": {
+      "observation_preview": "The enemy blew off all his ammunition so they announced your victory due to ammu",
+      "n": 1,
+      "choices": {
+        "no, thank you, i've already got my share of fighting. and i've had my fill of it too!": {
+          "text": "No, thank you, I've already got my share of fighting. And I've had my fill of it too!",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    }
+  }
+}

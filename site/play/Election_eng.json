@@ -1,0 +1,5006 @@
+{
+  "quest": "Election_eng",
+  "generated": "2026-05-03T06:47:45Z",
+  "total_runs": 286,
+  "win_rate": 0.042,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "llama",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "13": {
+      "observation_preview": "Two seriously looking Pelengs met you in a small spaceport of the Боннасис plane",
+      "n": 82,
+      "choices": {
+        "strange that such a warm post is claimed by only two candidates. what's wrong?": {
+          "text": "Strange that such a warm post is claimed by only two candidates. What's wrong?",
+          "n": 76,
+          "dist": {
+            "all": 0.9268,
+            "claude": 0.1463,
+            "deepseek": 0.0854,
+            "gemini": 0.2927,
+            "mistral": 0.2805,
+            "openai": 0.061,
+            "other": 0.0244,
+            "qwen": 0.0366
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 7,
+            "gemini": 24,
+            "mistral": 23,
+            "openai": 5,
+            "other": 2,
+            "qwen": 3
+          }
+        },
+        "ok, guys, see you all tomorrow, it's time for me to sleep!": {
+          "text": "Ok, guys, see you all tomorrow, it's time for me to sleep!",
+          "n": 6,
+          "dist": {
+            "all": 0.0732,
+            "gemini": 0.0244,
+            "other": 0.0244,
+            "qwen": 0.0244
+          },
+          "n_by_family": {
+            "gemini": 2,
+            "other": 2,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "109": {
+      "observation_preview": "- Well, what is there to say?, Kill Young said surprisedly. Боннасис is a typica",
+      "n": 140,
+      "choices": {
+        "ok, guys, see you all tomorrow, it's time for me to sleep!": {
+          "text": "Ok, guys, see you all tomorrow, it's time for me to sleep!",
+          "n": 68,
+          "dist": {
+            "all": 0.4857,
+            "claude": 0.0857,
+            "deepseek": 0.0214,
+            "gemini": 0.1714,
+            "mistral": 0.15,
+            "openai": 0.0286,
+            "other": 0.0071,
+            "qwen": 0.0214
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 3,
+            "gemini": 24,
+            "mistral": 21,
+            "openai": 4,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "strange that such a warm post is claimed by only two candidates. what's wrong?": {
+          "text": "Strange that such a warm post is claimed by only two candidates. What's wrong?",
+          "n": 72,
+          "dist": {
+            "all": 0.5143,
+            "claude": 0.0071,
+            "deepseek": 0.1143,
+            "gemini": 0.2,
+            "llama": 0.0214,
+            "mistral": 0.0286,
+            "openai": 0.1143,
+            "other": 0.0071,
+            "qwen": 0.0214
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 16,
+            "gemini": 28,
+            "llama": 3,
+            "mistral": 4,
+            "openai": 16,
+            "other": 1,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "22": {
+      "observation_preview": "Breakfast was served into your room that morning. After the breakfast a luxuriou",
+      "n": 144,
+      "choices": {
+        "start work": {
+          "text": "Start work",
+          "n": 144,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0903,
+            "deepseek": 0.1319,
+            "gemini": 0.375,
+            "llama": 0.0208,
+            "mistral": 0.1736,
+            "openai": 0.1319,
+            "other": 0.0278,
+            "qwen": 0.0486
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 19,
+            "gemini": 54,
+            "llama": 3,
+            "mistral": 25,
+            "openai": 19,
+            "other": 4,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "38": {
+      "observation_preview": "Three experts were waiting for you in the adjacent room. You shook hands with th",
+      "n": 144,
+      "choices": {
+        "taxes are going down": {
+          "text": "Taxes are going down",
+          "n": 101,
+          "dist": {
+            "all": 0.7014,
+            "claude": 0.0486,
+            "deepseek": 0.1042,
+            "gemini": 0.3681,
+            "llama": 0.0139,
+            "mistral": 0.0625,
+            "openai": 0.0278,
+            "other": 0.0278,
+            "qwen": 0.0486
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 15,
+            "gemini": 53,
+            "llama": 2,
+            "mistral": 9,
+            "openai": 4,
+            "other": 4,
+            "qwen": 7
+          }
+        },
+        "the taxes will stay on the same level they are now": {
+          "text": "The taxes will stay on the same level they are now",
+          "n": 40,
+          "dist": {
+            "all": 0.2778,
+            "claude": 0.0417,
+            "deepseek": 0.0278,
+            "gemini": 0.0069,
+            "llama": 0.0069,
+            "mistral": 0.0903,
+            "openai": 0.1042
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 4,
+            "gemini": 1,
+            "llama": 1,
+            "mistral": 13,
+            "openai": 15
+          }
+        },
+        "taxes are rising up": {
+          "text": "Taxes are rising up",
+          "n": 3,
+          "dist": {
+            "all": 0.0208,
+            "mistral": 0.0208
+          },
+          "n_by_family": {
+            "mistral": 3
+          }
+        }
+      }
+    },
+    "41": {
+      "observation_preview": "- So, the state employees will have to survive the salary delays once again?\n\nSt",
+      "n": 101,
+      "choices": {
+        "we will make an exception": {
+          "text": "We will make an exception",
+          "n": 7,
+          "dist": {
+            "all": 0.0693,
+            "claude": 0.0198,
+            "deepseek": 0.0099,
+            "mistral": 0.0198,
+            "openai": 0.0099,
+            "qwen": 0.0099
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "mistral": 2,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "that's right!": {
+          "text": "That's right!",
+          "n": 13,
+          "dist": {
+            "all": 0.1287,
+            "claude": 0.0099,
+            "deepseek": 0.0396,
+            "gemini": 0.0099,
+            "llama": 0.0198,
+            "mistral": 0.0198,
+            "openai": 0.0099,
+            "other": 0.0099,
+            "qwen": 0.0099
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 1,
+            "llama": 2,
+            "mistral": 2,
+            "openai": 1,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "i think we will find individual sponsors for that": {
+          "text": "I think we will find individual sponsors for that",
+          "n": 70,
+          "dist": {
+            "all": 0.6931,
+            "claude": 0.0297,
+            "deepseek": 0.0891,
+            "gemini": 0.495,
+            "mistral": 0.0297,
+            "openai": 0.0099,
+            "other": 0.0099,
+            "qwen": 0.0297
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 9,
+            "gemini": 50,
+            "mistral": 3,
+            "openai": 1,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "we will see": {
+          "text": "We will see",
+          "n": 6,
+          "dist": {
+            "all": 0.0594,
+            "claude": 0.0099,
+            "gemini": 0.0099,
+            "mistral": 0.0198,
+            "openai": 0.0099,
+            "qwen": 0.0099
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 1,
+            "mistral": 2,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "the main thing is that the planet have enough money to feed the presidential administration, all the rest is unessential": {
+          "text": "The main thing is that the planet have enough money to feed the presidential administration, all the rest is unessential",
+          "n": 5,
+          "dist": {
+            "all": 0.0495,
+            "deepseek": 0.0099,
+            "gemini": 0.0099,
+            "other": 0.0198,
+            "qwen": 0.0099
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "other": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "42": {
+      "observation_preview": "- Well, now my next question. What of the areas of your budget policy will be pr",
+      "n": 144,
+      "choices": {
+        "science and education": {
+          "text": "Science and Education",
+          "n": 25,
+          "dist": {
+            "all": 0.1736,
+            "claude": 0.0347,
+            "deepseek": 0.0139,
+            "gemini": 0.0347,
+            "mistral": 0.0833,
+            "openai": 0.0069
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 2,
+            "gemini": 5,
+            "mistral": 12,
+            "openai": 1
+          }
+        },
+        "all the areas will have the same priority": {
+          "text": "All the areas will have the same priority",
+          "n": 33,
+          "dist": {
+            "all": 0.2292,
+            "claude": 0.0208,
+            "deepseek": 0.0208,
+            "gemini": 0.0417,
+            "mistral": 0.0347,
+            "openai": 0.1042,
+            "qwen": 0.0069
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 3,
+            "gemini": 6,
+            "mistral": 5,
+            "openai": 15,
+            "qwen": 1
+          }
+        },
+        "law and order": {
+          "text": "Law and Order",
+          "n": 33,
+          "dist": {
+            "all": 0.2292,
+            "claude": 0.0347,
+            "deepseek": 0.0417,
+            "gemini": 0.1528
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 6,
+            "gemini": 22
+          }
+        },
+        "sports and physical training": {
+          "text": "Sports and Physical Training",
+          "n": 2,
+          "dist": {
+            "all": 0.0139,
+            "qwen": 0.0139
+          },
+          "n_by_family": {
+            "qwen": 2
+          }
+        },
+        "business and trade": {
+          "text": "Business and Trade",
+          "n": 32,
+          "dist": {
+            "all": 0.2222,
+            "deepseek": 0.0278,
+            "gemini": 0.1181,
+            "llama": 0.0139,
+            "mistral": 0.0347,
+            "openai": 0.0139,
+            "qwen": 0.0139
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 17,
+            "llama": 2,
+            "mistral": 5,
+            "openai": 2,
+            "qwen": 2
+          }
+        },
+        "armament and defence": {
+          "text": "Armament and Defence",
+          "n": 4,
+          "dist": {
+            "all": 0.0278,
+            "gemini": 0.0069,
+            "mistral": 0.0139,
+            "openai": 0.0069
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 2,
+            "openai": 1
+          }
+        },
+        "strengthening of the authority": {
+          "text": "Strengthening of the authority",
+          "n": 13,
+          "dist": {
+            "all": 0.0903,
+            "deepseek": 0.0208,
+            "gemini": 0.0208,
+            "mistral": 0.0069,
+            "other": 0.0278,
+            "qwen": 0.0139
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 3,
+            "mistral": 1,
+            "other": 4,
+            "qwen": 2
+          }
+        },
+        "art and culture": {
+          "text": "Art and Culture",
+          "n": 2,
+          "dist": {
+            "all": 0.0139,
+            "deepseek": 0.0069,
+            "llama": 0.0069
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "llama": 1
+          }
+        }
+      }
+    },
+    "52": {
+      "observation_preview": "- Fine! Now I would like to hear more about each particular area. What are you p",
+      "n": 144,
+      "choices": {
+        "we will develop new military technologies": {
+          "text": "We will develop new military technologies",
+          "n": 48,
+          "dist": {
+            "all": 0.3333,
+            "claude": 0.0417,
+            "deepseek": 0.0069,
+            "gemini": 0.0764,
+            "llama": 0.0069,
+            "mistral": 0.1597,
+            "openai": 0.0417
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 1,
+            "gemini": 11,
+            "llama": 1,
+            "mistral": 23,
+            "openai": 6
+          }
+        },
+        "we will procure new weapons from industrially developed countries": {
+          "text": "We will procure new weapons from industrially developed countries",
+          "n": 54,
+          "dist": {
+            "all": 0.375,
+            "claude": 0.0208,
+            "deepseek": 0.0347,
+            "gemini": 0.2153,
+            "llama": 0.0069,
+            "mistral": 0.0069,
+            "openai": 0.0417,
+            "other": 0.0278,
+            "qwen": 0.0208
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 5,
+            "gemini": 31,
+            "llama": 1,
+            "mistral": 1,
+            "openai": 6,
+            "other": 4,
+            "qwen": 3
+          }
+        },
+        "we will increase military payroll": {
+          "text": "We will increase military payroll",
+          "n": 16,
+          "dist": {
+            "all": 0.1111,
+            "deepseek": 0.0625,
+            "mistral": 0.0069,
+            "openai": 0.0278,
+            "qwen": 0.0139
+          },
+          "n_by_family": {
+            "deepseek": 9,
+            "mistral": 1,
+            "openai": 4,
+            "qwen": 2
+          }
+        },
+        "we will construct new military plants": {
+          "text": "We will construct new military plants",
+          "n": 22,
+          "dist": {
+            "all": 0.1528,
+            "claude": 0.0278,
+            "deepseek": 0.0278,
+            "gemini": 0.0833,
+            "llama": 0.0069,
+            "openai": 0.0069
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 4,
+            "gemini": 12,
+            "llama": 1,
+            "openai": 1
+          }
+        },
+        "why strengthen it? it is strong enough": {
+          "text": "Why strengthen it? It is strong enough",
+          "n": 2,
+          "dist": {
+            "all": 0.0139,
+            "openai": 0.0139
+          },
+          "n_by_family": {
+            "openai": 2
+          }
+        },
+        "we will dismiss the army, and transfer military expenses for peaceful purposes. no one will attack us anyway!": {
+          "text": "We will dismiss the army, and transfer military expenses for peaceful purposes. No one will attack us anyway!",
+          "n": 2,
+          "dist": {
+            "all": 0.0139,
+            "qwen": 0.0139
+          },
+          "n_by_family": {
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "53": {
+      "observation_preview": "- Interesting decision! And what are you planning to do in regards to the law en",
+      "n": 144,
+      "choices": {
+        "we will have to conduct a reform of the criminal court system, with meticulous observance of all the formalities stipulated by the law.": {
+          "text": "We will have to conduct a reform of the criminal court system, with meticulous observance of all the formalities stipulated by the law.",
+          "n": 96,
+          "dist": {
+            "all": 0.6667,
+            "claude": 0.0833,
+            "deepseek": 0.0556,
+            "gemini": 0.2639,
+            "llama": 0.0208,
+            "mistral": 0.1528,
+            "openai": 0.0764,
+            "qwen": 0.0139
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 8,
+            "gemini": 38,
+            "llama": 3,
+            "mistral": 22,
+            "openai": 11,
+            "qwen": 2
+          }
+        },
+        "we will increase policemen salaries": {
+          "text": "We will increase policemen salaries",
+          "n": 27,
+          "dist": {
+            "all": 0.1875,
+            "claude": 0.0069,
+            "deepseek": 0.0694,
+            "gemini": 0.0278,
+            "mistral": 0.0208,
+            "openai": 0.0417,
+            "qwen": 0.0208
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 10,
+            "gemini": 4,
+            "mistral": 3,
+            "openai": 6,
+            "qwen": 3
+          }
+        },
+        "we will build new prisons and imprison one and all": {
+          "text": "We will build new prisons and imprison one and all",
+          "n": 10,
+          "dist": {
+            "all": 0.0694,
+            "deepseek": 0.0069,
+            "gemini": 0.0208,
+            "other": 0.0278,
+            "qwen": 0.0139
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 3,
+            "other": 4,
+            "qwen": 2
+          }
+        },
+        "we will have to promulgate a more rigid penal code": {
+          "text": "We will have to promulgate a more rigid penal code",
+          "n": 6,
+          "dist": {
+            "all": 0.0417,
+            "gemini": 0.0417
+          },
+          "n_by_family": {
+            "gemini": 6
+          }
+        },
+        "we will not do anything, we will leave anything as it is": {
+          "text": "We will not do anything, we will leave anything as it is",
+          "n": 2,
+          "dist": {
+            "all": 0.0139,
+            "openai": 0.0139
+          },
+          "n_by_family": {
+            "openai": 2
+          }
+        },
+        "we will proclaim general clemency on the day i am elected": {
+          "text": "We will proclaim general clemency on the day I am elected",
+          "n": 2,
+          "dist": {
+            "all": 0.0139,
+            "gemini": 0.0139
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        },
+        "we will reconsider all the cases and free all who were convicted unjustly": {
+          "text": "We will reconsider all the cases and free all who were convicted unjustly",
+          "n": 1,
+          "dist": {
+            "all": 0.0069,
+            "gemini": 0.0069
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "54": {
+      "observation_preview": "- I hope that these steps will prove effective! And what will be your policy tow",
+      "n": 144,
+      "choices": {
+        "freedom of speech - this is the highest value, so nothing is to be spared for the free press!": {
+          "text": "Freedom of speech - this is the highest value, so nothing is to be spared for the free press!",
+          "n": 42,
+          "dist": {
+            "all": 0.2917,
+            "claude": 0.0278,
+            "gemini": 0.1875,
+            "mistral": 0.0486,
+            "openai": 0.0069,
+            "qwen": 0.0208
+          },
+          "n_by_family": {
+            "claude": 4,
+            "gemini": 27,
+            "mistral": 7,
+            "openai": 1,
+            "qwen": 3
+          }
+        },
+        "surely, the press will stay free! well, maybe we will censor something this time or that...": {
+          "text": "Surely, the press will stay free! Well, maybe we will censor something this time or that...",
+          "n": 84,
+          "dist": {
+            "all": 0.5833,
+            "claude": 0.0625,
+            "deepseek": 0.1111,
+            "gemini": 0.1319,
+            "llama": 0.0208,
+            "mistral": 0.125,
+            "openai": 0.125,
+            "qwen": 0.0069
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 16,
+            "gemini": 19,
+            "llama": 3,
+            "mistral": 18,
+            "openai": 18,
+            "qwen": 1
+          }
+        },
+        "the only really free press is the one that backs the supreme power!": {
+          "text": "The only really free press is the one that backs the supreme power!",
+          "n": 4,
+          "dist": {
+            "all": 0.0278,
+            "deepseek": 0.0069,
+            "gemini": 0.0069,
+            "qwen": 0.0139
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "qwen": 2
+          }
+        },
+        "my opinion is that the press must be eliminated and all the journalists be shot down! it's the most useless of professions!!!": {
+          "text": "My opinion is that the press must be eliminated and all the journalists be shot down! It's the most useless of professions!!!",
+          "n": 10,
+          "dist": {
+            "all": 0.0694,
+            "deepseek": 0.0139,
+            "gemini": 0.0208,
+            "other": 0.0278,
+            "qwen": 0.0069
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 3,
+            "other": 4,
+            "qwen": 1
+          }
+        },
+        "the press will be absolutely free! we will publish a drug addict journal and young terrorist newspaper, as well as all the rest of the editions that are being unjustly suppressed by the current regime!": {
+          "text": "The press will be absolutely free! We will publish a Drug Addict Journal and Young Terrorist Newspaper, as well as all the rest of the editions that are being unjustly suppressed by the current regime!",
+          "n": 4,
+          "dist": {
+            "all": 0.0278,
+            "gemini": 0.0278
+          },
+          "n_by_family": {
+            "gemini": 4
+          }
+        }
+      }
+    },
+    "67": {
+      "observation_preview": "- Please, be assured that the journalists will judge your words on their merits!",
+      "n": 144,
+      "choices": {
+        "we will primarily subsidise mass physical training and child sport, because they are the nation's health. and big sport will manage to survive without government support...": {
+          "text": "We will primarily subsidise mass physical training and child sport, because they are the nation's health. And big sport will manage to survive without government support...",
+          "n": 127,
+          "dist": {
+            "all": 0.8819,
+            "claude": 0.0903,
+            "deepseek": 0.1181,
+            "gemini": 0.3194,
+            "llama": 0.0208,
+            "mistral": 0.1667,
+            "openai": 0.125,
+            "qwen": 0.0417
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 17,
+            "gemini": 46,
+            "llama": 3,
+            "mistral": 24,
+            "openai": 18,
+            "qwen": 6
+          }
+        },
+        "you can make good money on sport, if you manage to make a timely investment. we will first develop the economically rewarding sports!": {
+          "text": "You can make good money on sport, if you manage to make a timely investment. We will first develop the economically rewarding sports!",
+          "n": 6,
+          "dist": {
+            "all": 0.0417,
+            "gemini": 0.0347,
+            "mistral": 0.0069
+          },
+          "n_by_family": {
+            "gemini": 5,
+            "mistral": 1
+          }
+        },
+        "this is all trifling! there are more important areas. and our main funds will be directed there!": {
+          "text": "This is all trifling! There are more important areas. And our main funds will be directed there!",
+          "n": 1,
+          "dist": {
+            "all": 0.0069,
+            "openai": 0.0069
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        },
+        "i think this is the most useless item of expenditure. we will cut it down first!": {
+          "text": "I think this is the most useless item of expenditure. We will cut it down first!",
+          "n": 10,
+          "dist": {
+            "all": 0.0694,
+            "deepseek": 0.0139,
+            "gemini": 0.0208,
+            "other": 0.0278,
+            "qwen": 0.0069
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 3,
+            "other": 4,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "68": {
+      "observation_preview": "Well, well, everything's clear with the sports! Now, the final question - what c",
+      "n": 144,
+      "choices": {
+        "we will increase research fellows' and professors' salaries": {
+          "text": "We will increase research fellows' and professors' salaries",
+          "n": 69,
+          "dist": {
+            "all": 0.4792,
+            "claude": 0.0833,
+            "deepseek": 0.0417,
+            "gemini": 0.1875,
+            "mistral": 0.0764,
+            "openai": 0.0764,
+            "qwen": 0.0139
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 6,
+            "gemini": 27,
+            "mistral": 11,
+            "openai": 11,
+            "qwen": 2
+          }
+        },
+        "our policy will be to prioritise on the development of science!": {
+          "text": "Our policy will be to prioritise on the development of science!",
+          "n": 50,
+          "dist": {
+            "all": 0.3472,
+            "claude": 0.0069,
+            "deepseek": 0.0764,
+            "gemini": 0.0833,
+            "llama": 0.0139,
+            "mistral": 0.0694,
+            "openai": 0.0486,
+            "other": 0.0278,
+            "qwen": 0.0208
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 11,
+            "gemini": 12,
+            "llama": 2,
+            "mistral": 10,
+            "openai": 7,
+            "other": 4,
+            "qwen": 3
+          }
+        },
+        "we will subsidise only the useful areas of science such as the development of new armament": {
+          "text": "We will subsidise only the useful areas of science such as the development of new armament",
+          "n": 15,
+          "dist": {
+            "all": 0.1042,
+            "deepseek": 0.0139,
+            "gemini": 0.0556,
+            "mistral": 0.0208,
+            "qwen": 0.0139
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 8,
+            "mistral": 3,
+            "qwen": 2
+          }
+        },
+        "the funding for the education and science has been reduced substantially": {
+          "text": "The funding for the education and science has been reduced substantially",
+          "n": 1,
+          "dist": {
+            "all": 0.0069,
+            "mistral": 0.0069
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        },
+        "conducting our own research is a waste of time. it would be cheaper to steal from the neighbours, wouldn't it?": {
+          "text": "Conducting our own research is a waste of time. It would be cheaper to steal from the neighbours, wouldn't it?",
+          "n": 7,
+          "dist": {
+            "all": 0.0486,
+            "gemini": 0.0486
+          },
+          "n_by_family": {
+            "gemini": 7
+          }
+        },
+        "everything will stay as it used to be - i can't see a point in changing anything": {
+          "text": "Everything will stay as it used to be - I can't see a point in changing anything",
+          "n": 1,
+          "dist": {
+            "all": 0.0069,
+            "openai": 0.0069
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        },
+        "we will lay off all chair warmers and that's all!": {
+          "text": "We will lay off all chair warmers and that's all!",
+          "n": 1,
+          "dist": {
+            "all": 0.0069,
+            "llama": 0.0069
+          },
+          "n_by_family": {
+            "llama": 1
+          }
+        }
+      }
+    },
+    "69": {
+      "observation_preview": "Having answered the last question you dismissed the experts and nicely entertain",
+      "n": 144,
+      "choices": {
+        "familiarise yourself with the data and get to bed": {
+          "text": "Familiarise yourself with the data and get to bed",
+          "n": 144,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0903,
+            "deepseek": 0.1319,
+            "gemini": 0.375,
+            "llama": 0.0208,
+            "mistral": 0.1736,
+            "openai": 0.1319,
+            "other": 0.0278,
+            "qwen": 0.0486
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 19,
+            "gemini": 54,
+            "llama": 3,
+            "mistral": 25,
+            "openai": 19,
+            "other": 4,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "12": {
+      "observation_preview": "Today 20 Апреля 3026, is day 2 of the election campaign. The whole resources of ",
+      "n": 840,
+      "choices": {
+        "organise a press conference": {
+          "text": "Organise a press conference",
+          "n": 363,
+          "dist": {
+            "all": 0.4321,
+            "claude": 0.0286,
+            "deepseek": 0.0619,
+            "gemini": 0.181,
+            "llama": 0.0131,
+            "mistral": 0.0798,
+            "openai": 0.0548,
+            "other": 0.0036,
+            "qwen": 0.0095
+          },
+          "n_by_family": {
+            "claude": 24,
+            "deepseek": 52,
+            "gemini": 152,
+            "llama": 11,
+            "mistral": 67,
+            "openai": 46,
+            "other": 3,
+            "qwen": 8
+          }
+        },
+        "work with documents until lunch": {
+          "text": "Work with documents until lunch",
+          "n": 140,
+          "dist": {
+            "all": 0.1667,
+            "claude": 0.0167,
+            "deepseek": 0.0214,
+            "gemini": 0.0321,
+            "mistral": 0.0464,
+            "openai": 0.0333,
+            "other": 0.006,
+            "qwen": 0.0107
+          },
+          "n_by_family": {
+            "claude": 14,
+            "deepseek": 18,
+            "gemini": 27,
+            "mistral": 39,
+            "openai": 28,
+            "other": 5,
+            "qwen": 9
+          }
+        },
+        "go to the electoral committee and see how the vote count is done": {
+          "text": "Go to the electoral committee and see how the vote count is done",
+          "n": 42,
+          "dist": {
+            "all": 0.05,
+            "claude": 0.0036,
+            "deepseek": 0.0119,
+            "gemini": 0.0095,
+            "llama": 0.0012,
+            "mistral": 0.0155,
+            "openai": 0.0083
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 10,
+            "gemini": 8,
+            "llama": 1,
+            "mistral": 13,
+            "openai": 7
+          }
+        },
+        "start canvassing among the crowd": {
+          "text": "Start canvassing among the crowd",
+          "n": 113,
+          "dist": {
+            "all": 0.1345,
+            "claude": 0.0071,
+            "deepseek": 0.0262,
+            "gemini": 0.0452,
+            "llama": 0.0048,
+            "mistral": 0.0167,
+            "openai": 0.025,
+            "other": 0.0036,
+            "qwen": 0.006
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 22,
+            "gemini": 38,
+            "llama": 4,
+            "mistral": 14,
+            "openai": 21,
+            "other": 3,
+            "qwen": 5
+          }
+        },
+        "use black pr": {
+          "text": "Use black PR",
+          "n": 11,
+          "dist": {
+            "all": 0.0131,
+            "claude": 0.0012,
+            "deepseek": 0.0012,
+            "gemini": 0.0024,
+            "mistral": 0.006,
+            "qwen": 0.0024
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 2,
+            "mistral": 5,
+            "qwen": 2
+          }
+        },
+        "hear the forecast": {
+          "text": "Hear the forecast",
+          "n": 171,
+          "dist": {
+            "all": 0.2036,
+            "claude": 0.0107,
+            "deepseek": 0.0357,
+            "gemini": 0.0976,
+            "llama": 0.0024,
+            "mistral": 0.0179,
+            "openai": 0.0369,
+            "other": 0.0012,
+            "qwen": 0.0012
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 30,
+            "gemini": 82,
+            "llama": 2,
+            "mistral": 15,
+            "openai": 31,
+            "other": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "29": {
+      "observation_preview": "Your press conference proved to be a real barnstormer among the journalists of a",
+      "n": 324,
+      "choices": {
+        "any questions?": {
+          "text": "Any questions?",
+          "n": 324,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.071,
+            "deepseek": 0.142,
+            "gemini": 0.3796,
+            "llama": 0.0278,
+            "mistral": 0.2037,
+            "openai": 0.142,
+            "other": 0.0093,
+            "qwen": 0.0247
+          },
+          "n_by_family": {
+            "claude": 23,
+            "deepseek": 46,
+            "gemini": 123,
+            "llama": 9,
+            "mistral": 66,
+            "openai": 46,
+            "other": 3,
+            "qwen": 8
+          }
+        }
+      }
+    },
+    "57": {
+      "observation_preview": "A clothed in military uniform Maloq journalist, so huge that he even surpassed a",
+      "n": 94,
+      "choices": {
+        "i am taking up exercise every morning!": {
+          "text": "I am taking up exercise every morning!",
+          "n": 74,
+          "dist": {
+            "all": 0.7872,
+            "claude": 0.0532,
+            "deepseek": 0.1383,
+            "gemini": 0.3298,
+            "llama": 0.0106,
+            "mistral": 0.0957,
+            "openai": 0.117,
+            "other": 0.0106,
+            "qwen": 0.0319
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 13,
+            "gemini": 31,
+            "llama": 1,
+            "mistral": 9,
+            "openai": 11,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "i regularly took to yoga and meditation": {
+          "text": "I regularly took to yoga and meditation",
+          "n": 13,
+          "dist": {
+            "all": 0.1383,
+            "claude": 0.0106,
+            "deepseek": 0.0106,
+            "gemini": 0.0426,
+            "mistral": 0.0745
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 4,
+            "mistral": 7
+          }
+        },
+        "real ranger must first of all keep his banking account in fitness and not his physical shape!": {
+          "text": "Real ranger must first of all keep his banking account in fitness and not his physical shape!",
+          "n": 5,
+          "dist": {
+            "all": 0.0532,
+            "deepseek": 0.0106,
+            "gemini": 0.0106,
+            "mistral": 0.0213,
+            "openai": 0.0106
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 2,
+            "openai": 1
+          }
+        },
+        "and why should i support it?": {
+          "text": "And why should I support it?",
+          "n": 2,
+          "dist": {
+            "all": 0.0213,
+            "mistral": 0.0213
+          },
+          "n_by_family": {
+            "mistral": 2
+          }
+        }
+      }
+    },
+    "58": {
+      "observation_preview": "Maloqs gave you an ovation, for according to the regulations, the real warrior m",
+      "n": 94,
+      "choices": {
+        "next question, please": {
+          "text": "Next question, please",
+          "n": 65,
+          "dist": {
+            "all": 0.6915,
+            "claude": 0.0426,
+            "deepseek": 0.0957,
+            "gemini": 0.3085,
+            "llama": 0.0106,
+            "mistral": 0.1383,
+            "openai": 0.0638,
+            "other": 0.0106,
+            "qwen": 0.0213
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 9,
+            "gemini": 29,
+            "llama": 1,
+            "mistral": 13,
+            "openai": 6,
+            "other": 1,
+            "qwen": 2
+          }
+        },
+        "i would like to finish my press conference on that - sorry, it's lunchtime!": {
+          "text": "I would like to finish my press conference on that - sorry, it's lunchtime!",
+          "n": 29,
+          "dist": {
+            "all": 0.3085,
+            "claude": 0.0213,
+            "deepseek": 0.0638,
+            "gemini": 0.0745,
+            "mistral": 0.0745,
+            "openai": 0.0638,
+            "qwen": 0.0106
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 6,
+            "gemini": 7,
+            "mistral": 7,
+            "openai": 6,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "44": {
+      "observation_preview": "A bold young man managed to get the floor before anyone else could.\n\n- Jim Hakke",
+      "n": 99,
+      "choices": {
+        "you need to study the culture of that tribe, learn their folkways and customs. why, they can just give this idol to you themselves!": {
+          "text": "You need to study the culture of that tribe, learn their folkways and customs. Why, they can just give this idol to you themselves!",
+          "n": 77,
+          "dist": {
+            "all": 0.7778,
+            "claude": 0.0505,
+            "deepseek": 0.1515,
+            "gemini": 0.1919,
+            "llama": 0.0303,
+            "mistral": 0.202,
+            "openai": 0.1313,
+            "qwen": 0.0202
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 15,
+            "gemini": 19,
+            "llama": 3,
+            "mistral": 20,
+            "openai": 13,
+            "qwen": 2
+          }
+        },
+        "all you need is a good trade. buy cheap, sell with a higher price, betray partners from time to time - and everything will be okey-dokey.": {
+          "text": "All you need is a good trade. Buy cheap, sell with a higher price, betray partners from time to time - and everything will be okey-dokey.",
+          "n": 3,
+          "dist": {
+            "all": 0.0303,
+            "deepseek": 0.0101,
+            "openai": 0.0101,
+            "other": 0.0101
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "openai": 1,
+            "other": 1
+          }
+        },
+        "i would try to shock this tribe by the technical progress - i would show them my spaceship, weaponry and materiel. i think the locals would become more compliant!": {
+          "text": "I would try to shock this tribe by the technical progress - I would show them my spaceship, weaponry and materiel. I think the locals would become more compliant!",
+          "n": 9,
+          "dist": {
+            "all": 0.0909,
+            "gemini": 0.0707,
+            "mistral": 0.0202
+          },
+          "n_by_family": {
+            "gemini": 7,
+            "mistral": 2
+          }
+        },
+        "you should buy the local booze for all your money, make the chief drunk, and you can count that the idol is yours!": {
+          "text": "You should buy the local booze for all your money, make the chief drunk, and you can count that the idol is yours!",
+          "n": 10,
+          "dist": {
+            "all": 0.101,
+            "gemini": 0.101
+          },
+          "n_by_family": {
+            "gemini": 10
+          }
+        }
+      }
+    },
+    "45": {
+      "observation_preview": "The Gaals and Faes liked the tactics you proposed - really, the knowledge is the",
+      "n": 99,
+      "choices": {
+        "next question, please": {
+          "text": "Next question, please",
+          "n": 63,
+          "dist": {
+            "all": 0.6364,
+            "claude": 0.0505,
+            "deepseek": 0.0808,
+            "gemini": 0.2424,
+            "llama": 0.0202,
+            "mistral": 0.1212,
+            "openai": 0.1111,
+            "qwen": 0.0101
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 8,
+            "gemini": 24,
+            "llama": 2,
+            "mistral": 12,
+            "openai": 11,
+            "qwen": 1
+          }
+        },
+        "i would like to finish my press conference on that - sorry, it's lunchtime!": {
+          "text": "I would like to finish my press conference on that - sorry, it's lunchtime!",
+          "n": 36,
+          "dist": {
+            "all": 0.3636,
+            "deepseek": 0.0808,
+            "gemini": 0.1212,
+            "llama": 0.0101,
+            "mistral": 0.101,
+            "openai": 0.0303,
+            "other": 0.0101,
+            "qwen": 0.0101
+          },
+          "n_by_family": {
+            "deepseek": 8,
+            "gemini": 12,
+            "llama": 1,
+            "mistral": 10,
+            "openai": 3,
+            "other": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "61": {
+      "observation_preview": "Somehow the journalists were not eager to ask you questions. At last a short Fae",
+      "n": 90,
+      "choices": {
+        "i liked all the subjects, i was always keen on learning!": {
+          "text": "I liked all the subjects, I was always keen on learning!",
+          "n": 40,
+          "dist": {
+            "all": 0.4444,
+            "claude": 0.0667,
+            "deepseek": 0.0333,
+            "gemini": 0.1556,
+            "llama": 0.0111,
+            "mistral": 0.0778,
+            "openai": 0.0889,
+            "qwen": 0.0111
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 3,
+            "gemini": 14,
+            "llama": 1,
+            "mistral": 7,
+            "openai": 8,
+            "qwen": 1
+          }
+        },
+        "i loved the sciences, they can be applied somehow at least, unlike the humanities nonsense!": {
+          "text": "I loved the sciences, they can be applied somehow at least, unlike the Humanities nonsense!",
+          "n": 20,
+          "dist": {
+            "all": 0.2222,
+            "deepseek": 0.0333,
+            "gemini": 0.1111,
+            "mistral": 0.0444,
+            "openai": 0.0222,
+            "qwen": 0.0111
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 10,
+            "mistral": 4,
+            "openai": 2,
+            "qwen": 1
+          }
+        },
+        "i enjoyed the humanities, like ethics or philosophy": {
+          "text": "I enjoyed the Humanities, like Ethics or Philosophy",
+          "n": 21,
+          "dist": {
+            "all": 0.2333,
+            "claude": 0.0111,
+            "deepseek": 0.0444,
+            "gemini": 0.0667,
+            "llama": 0.0111,
+            "mistral": 0.0889,
+            "openai": 0.0111
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 6,
+            "llama": 1,
+            "mistral": 8,
+            "openai": 1
+          }
+        },
+        "most of all i liked the military science. can't you see that from me?!": {
+          "text": "Most of all I liked the military science. Can't you see that from me?!",
+          "n": 4,
+          "dist": {
+            "all": 0.0444,
+            "gemini": 0.0333,
+            "mistral": 0.0111
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "mistral": 1
+          }
+        },
+        "same thing as now - the money!": {
+          "text": "Same thing as now - the money!",
+          "n": 2,
+          "dist": {
+            "all": 0.0222,
+            "openai": 0.0111,
+            "other": 0.0111
+          },
+          "n_by_family": {
+            "openai": 1,
+            "other": 1
+          }
+        },
+        "most of all i loved the baseball bat - you can play baseball with it or kick someone if the need occurs!": {
+          "text": "Most of all I loved the baseball bat - you can play baseball with it or kick someone if the need occurs!",
+          "n": 3,
+          "dist": {
+            "all": 0.0333,
+            "gemini": 0.0333
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "62": {
+      "observation_preview": "This was just the kind of answer the Faeyan teacher was hoping to get as well as",
+      "n": 90,
+      "choices": {
+        "i would like to finish my press conference on that - sorry, it's lunchtime!": {
+          "text": "I would like to finish my press conference on that - sorry, it's lunchtime!",
+          "n": 30,
+          "dist": {
+            "all": 0.3333,
+            "claude": 0.0556,
+            "deepseek": 0.0222,
+            "gemini": 0.1222,
+            "llama": 0.0111,
+            "mistral": 0.0556,
+            "openai": 0.0556,
+            "other": 0.0111
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 2,
+            "gemini": 11,
+            "llama": 1,
+            "mistral": 5,
+            "openai": 5,
+            "other": 1
+          }
+        },
+        "next question, please": {
+          "text": "Next question, please",
+          "n": 60,
+          "dist": {
+            "all": 0.6667,
+            "claude": 0.0222,
+            "deepseek": 0.0889,
+            "gemini": 0.2778,
+            "llama": 0.0111,
+            "mistral": 0.1667,
+            "openai": 0.0778,
+            "qwen": 0.0222
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 8,
+            "gemini": 25,
+            "llama": 1,
+            "mistral": 15,
+            "openai": 7,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "27": {
+      "observation_preview": "You had a good lunch and were ready to plunge into your election campaign with r",
+      "n": 745,
+      "choices": {
+        "start canvassing among the crowd": {
+          "text": "Start canvassing among the crowd",
+          "n": 325,
+          "dist": {
+            "all": 0.4362,
+            "claude": 0.0295,
+            "deepseek": 0.047,
+            "gemini": 0.2107,
+            "llama": 0.0188,
+            "mistral": 0.0604,
+            "openai": 0.0483,
+            "other": 0.0027,
+            "qwen": 0.0188
+          },
+          "n_by_family": {
+            "claude": 22,
+            "deepseek": 35,
+            "gemini": 157,
+            "llama": 14,
+            "mistral": 45,
+            "openai": 36,
+            "other": 2,
+            "qwen": 14
+          }
+        },
+        "document work": {
+          "text": "Document work",
+          "n": 154,
+          "dist": {
+            "all": 0.2067,
+            "claude": 0.0148,
+            "deepseek": 0.0349,
+            "gemini": 0.0403,
+            "llama": 0.0013,
+            "mistral": 0.047,
+            "openai": 0.0483,
+            "other": 0.0107,
+            "qwen": 0.0094
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 26,
+            "gemini": 30,
+            "llama": 1,
+            "mistral": 35,
+            "openai": 36,
+            "other": 8,
+            "qwen": 7
+          }
+        },
+        "visit a social event": {
+          "text": "Visit a social event",
+          "n": 147,
+          "dist": {
+            "all": 0.1973,
+            "claude": 0.0148,
+            "deepseek": 0.0403,
+            "gemini": 0.0483,
+            "mistral": 0.0604,
+            "openai": 0.0309,
+            "other": 0.0013,
+            "qwen": 0.0013
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 30,
+            "gemini": 36,
+            "mistral": 45,
+            "openai": 23,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "hear the forecast": {
+          "text": "Hear the forecast",
+          "n": 119,
+          "dist": {
+            "all": 0.1597,
+            "claude": 0.0054,
+            "deepseek": 0.0188,
+            "gemini": 0.0765,
+            "mistral": 0.0121,
+            "openai": 0.0456,
+            "qwen": 0.0013
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 14,
+            "gemini": 57,
+            "mistral": 9,
+            "openai": 34,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "66": {
+      "observation_preview": "You expressed a wish to have a campaign ad shot for you, and soon an image maker",
+      "n": 437,
+      "choices": {
+        "make an advertisement reel": {
+          "text": "Make an advertisement reel",
+          "n": 112,
+          "dist": {
+            "all": 0.2563,
+            "claude": 0.0183,
+            "deepseek": 0.032,
+            "gemini": 0.1053,
+            "llama": 0.0069,
+            "mistral": 0.0366,
+            "openai": 0.0412,
+            "other": 0.0023,
+            "qwen": 0.0137
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 14,
+            "gemini": 46,
+            "llama": 3,
+            "mistral": 16,
+            "openai": 18,
+            "other": 1,
+            "qwen": 6
+          }
+        },
+        "put the posters in the streets": {
+          "text": "Put the posters in the streets",
+          "n": 106,
+          "dist": {
+            "all": 0.2426,
+            "claude": 0.0229,
+            "deepseek": 0.0366,
+            "gemini": 0.0892,
+            "llama": 0.0069,
+            "mistral": 0.0275,
+            "openai": 0.0435,
+            "other": 0.0069,
+            "qwen": 0.0092
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 16,
+            "gemini": 39,
+            "llama": 3,
+            "mistral": 12,
+            "openai": 19,
+            "other": 3,
+            "qwen": 4
+          }
+        },
+        "make advertisement t-shirts": {
+          "text": "Make advertisement T-shirts",
+          "n": 57,
+          "dist": {
+            "all": 0.1304,
+            "claude": 0.0092,
+            "deepseek": 0.0183,
+            "gemini": 0.0618,
+            "llama": 0.0069,
+            "mistral": 0.0046,
+            "openai": 0.0183,
+            "other": 0.0023,
+            "qwen": 0.0092
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 8,
+            "gemini": 27,
+            "llama": 3,
+            "mistral": 2,
+            "openai": 8,
+            "other": 1,
+            "qwen": 4
+          }
+        },
+        "purchase advertisement badges.": {
+          "text": "Purchase advertisement badges.",
+          "n": 105,
+          "dist": {
+            "all": 0.2403,
+            "claude": 0.0114,
+            "deepseek": 0.0297,
+            "gemini": 0.1121,
+            "llama": 0.0137,
+            "mistral": 0.0526,
+            "openai": 0.0206
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 13,
+            "gemini": 49,
+            "llama": 6,
+            "mistral": 23,
+            "openai": 9
+          }
+        },
+        "write leaflets": {
+          "text": "Write leaflets",
+          "n": 38,
+          "dist": {
+            "all": 0.087,
+            "deepseek": 0.0069,
+            "gemini": 0.0572,
+            "llama": 0.0069,
+            "mistral": 0.0137,
+            "openai": 0.0023
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 25,
+            "llama": 3,
+            "mistral": 6,
+            "openai": 1
+          }
+        },
+        "send spam via e-mail": {
+          "text": "Send Spam via e-mail",
+          "n": 10,
+          "dist": {
+            "all": 0.0229,
+            "claude": 0.0023,
+            "gemini": 0.0069,
+            "openai": 0.0046,
+            "qwen": 0.0092
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 3,
+            "openai": 2,
+            "qwen": 4
+          }
+        },
+        "we will not do anything, i changed my mind!": {
+          "text": "We will not do anything, I changed my mind!",
+          "n": 9,
+          "dist": {
+            "all": 0.0206,
+            "deepseek": 0.0069,
+            "gemini": 0.0137
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 6
+          }
+        }
+      }
+    },
+    "70": {
+      "observation_preview": "- At first you should select the costume and the background, - the image maker s",
+      "n": 428,
+      "choices": {
+        "in a scientist robe at the backdrop of a lab": {
+          "text": "In a scientist robe at the backdrop of a lab",
+          "n": 97,
+          "dist": {
+            "all": 0.2266,
+            "claude": 0.0117,
+            "deepseek": 0.0421,
+            "gemini": 0.0935,
+            "llama": 0.0117,
+            "mistral": 0.0304,
+            "openai": 0.0304,
+            "other": 0.0047,
+            "qwen": 0.0023
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 18,
+            "gemini": 40,
+            "llama": 5,
+            "mistral": 13,
+            "openai": 13,
+            "other": 2,
+            "qwen": 1
+          }
+        },
+        "in business suit at the backdrop of skyscrapers": {
+          "text": "In business suit at the backdrop of skyscrapers",
+          "n": 98,
+          "dist": {
+            "all": 0.229,
+            "claude": 0.0187,
+            "deepseek": 0.0187,
+            "gemini": 0.0888,
+            "llama": 0.028,
+            "mistral": 0.0234,
+            "openai": 0.0397,
+            "qwen": 0.0117
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 8,
+            "gemini": 38,
+            "llama": 12,
+            "mistral": 10,
+            "openai": 17,
+            "qwen": 5
+          }
+        },
+        "in ranger outfit at the backdrop of a spaceship": {
+          "text": "In ranger outfit at the backdrop of a spaceship",
+          "n": 84,
+          "dist": {
+            "all": 0.1963,
+            "claude": 0.0164,
+            "deepseek": 0.0397,
+            "gemini": 0.0444,
+            "mistral": 0.0304,
+            "openai": 0.0421,
+            "other": 0.0047,
+            "qwen": 0.0187
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 17,
+            "gemini": 19,
+            "mistral": 13,
+            "openai": 18,
+            "other": 2,
+            "qwen": 8
+          }
+        },
+        "in army uniform at the backdrop of a plasmotank": {
+          "text": "In army uniform at the backdrop of a plasmotank",
+          "n": 102,
+          "dist": {
+            "all": 0.2383,
+            "claude": 0.0093,
+            "deepseek": 0.0164,
+            "gemini": 0.1565,
+            "llama": 0.0023,
+            "mistral": 0.0327,
+            "openai": 0.0164,
+            "other": 0.0023,
+            "qwen": 0.0023
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 7,
+            "gemini": 67,
+            "llama": 1,
+            "mistral": 14,
+            "openai": 7,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "in builder's outfit at the backdrop of recent projects": {
+          "text": "In builder's outfit at the backdrop of recent projects",
+          "n": 12,
+          "dist": {
+            "all": 0.028,
+            "claude": 0.0023,
+            "deepseek": 0.0093,
+            "gemini": 0.0023,
+            "mistral": 0.007,
+            "openai": 0.0023,
+            "qwen": 0.0047
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 1,
+            "mistral": 3,
+            "openai": 1,
+            "qwen": 2
+          }
+        },
+        "in sporting outfit at the backdrop of a stadium": {
+          "text": "In sporting outfit at the backdrop of a stadium",
+          "n": 10,
+          "dist": {
+            "all": 0.0234,
+            "gemini": 0.0117,
+            "mistral": 0.007,
+            "openai": 0.0023,
+            "qwen": 0.0023
+          },
+          "n_by_family": {
+            "gemini": 5,
+            "mistral": 3,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "in hawaiian shirt with golden chain at the backdrop of an luxury restaurant": {
+          "text": "In Hawaiian shirt with golden chain at the backdrop of an luxury restaurant",
+          "n": 17,
+          "dist": {
+            "all": 0.0397,
+            "gemini": 0.035,
+            "mistral": 0.0047
+          },
+          "n_by_family": {
+            "gemini": 15,
+            "mistral": 2
+          }
+        },
+        "in white doctor's gown with a syringe in hand at the backdrop of a ward": {
+          "text": "In white doctor's gown with a syringe in hand at the backdrop of a ward",
+          "n": 8,
+          "dist": {
+            "all": 0.0187,
+            "claude": 0.007,
+            "gemini": 0.0093,
+            "mistral": 0.0023
+          },
+          "n_by_family": {
+            "claude": 3,
+            "gemini": 4,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "71": {
+      "observation_preview": "- Fine! - exclaimed the image maker, after he had given necessary orders to make",
+      "n": 97,
+      "choices": {
+        "we protect freedom!": {
+          "text": "We protect freedom!",
+          "n": 15,
+          "dist": {
+            "all": 0.1546,
+            "claude": 0.0515,
+            "deepseek": 0.0412,
+            "gemini": 0.0412,
+            "mistral": 0.0206
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 4,
+            "gemini": 4,
+            "mistral": 2
+          }
+        },
+        "live better, be happy!": {
+          "text": "Live better, be happy!",
+          "n": 23,
+          "dist": {
+            "all": 0.2371,
+            "deepseek": 0.0103,
+            "gemini": 0.0928,
+            "llama": 0.0103,
+            "openai": 0.1237
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 9,
+            "llama": 1,
+            "openai": 12
+          }
+        },
+        "kill dominators, save the galaxy!": {
+          "text": "Kill Dominators, save the Galaxy!",
+          "n": 6,
+          "dist": {
+            "all": 0.0619,
+            "gemini": 0.0309,
+            "mistral": 0.0103,
+            "openai": 0.0103,
+            "qwen": 0.0103
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "mistral": 1,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "protect our children!": {
+          "text": "Protect our children!",
+          "n": 18,
+          "dist": {
+            "all": 0.1856,
+            "deepseek": 0.0515,
+            "gemini": 0.0619,
+            "llama": 0.0206,
+            "mistral": 0.0515
+          },
+          "n_by_family": {
+            "deepseek": 5,
+            "gemini": 6,
+            "llama": 2,
+            "mistral": 5
+          }
+        },
+        "let's give happiness to the population!!!": {
+          "text": "Let's give happiness to the population!!!",
+          "n": 23,
+          "dist": {
+            "all": 0.2371,
+            "deepseek": 0.0206,
+            "gemini": 0.1546,
+            "llama": 0.0103,
+            "mistral": 0.0515
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 15,
+            "llama": 1,
+            "mistral": 5
+          }
+        },
+        "vote with your heart!": {
+          "text": "Vote with your heart!",
+          "n": 9,
+          "dist": {
+            "all": 0.0928,
+            "deepseek": 0.0515,
+            "gemini": 0.0103,
+            "llama": 0.0103,
+            "other": 0.0206
+          },
+          "n_by_family": {
+            "deepseek": 5,
+            "gemini": 1,
+            "llama": 1,
+            "other": 2
+          }
+        },
+        "we will maintain order!": {
+          "text": "We will maintain order!",
+          "n": 2,
+          "dist": {
+            "all": 0.0206,
+            "gemini": 0.0206
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        },
+        "bread and circuses!": {
+          "text": "Bread and circuses!",
+          "n": 1,
+          "dist": {
+            "all": 0.0103,
+            "deepseek": 0.0103
+          },
+          "n_by_family": {
+            "deepseek": 1
+          }
+        }
+      }
+    },
+    "85": {
+      "observation_preview": "A sickly scientist playing the role of a defender of rights and freedoms looked ",
+      "n": 65,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 55,
+          "dist": {
+            "all": 0.8462,
+            "claude": 0.2308,
+            "deepseek": 0.1385,
+            "gemini": 0.2462,
+            "llama": 0.0615,
+            "mistral": 0.0769,
+            "openai": 0.0615,
+            "qwen": 0.0308
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 9,
+            "gemini": 16,
+            "llama": 4,
+            "mistral": 5,
+            "openai": 4,
+            "qwen": 2
+          }
+        },
+        "go for lunch": {
+          "text": "Go for lunch",
+          "n": 10,
+          "dist": {
+            "all": 0.1538,
+            "claude": 0.0308,
+            "deepseek": 0.0154,
+            "gemini": 0.0615,
+            "openai": 0.0308,
+            "qwen": 0.0154
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "gemini": 4,
+            "openai": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "26": {
+      "observation_preview": "So, day 2 of the election campaign is over! You are in your hotel room. Are you ",
+      "n": 1008,
+      "choices": {
+        "watch stereovision system": {
+          "text": "Watch stereovision system",
+          "n": 586,
+          "dist": {
+            "all": 0.5813,
+            "claude": 0.0397,
+            "deepseek": 0.0863,
+            "gemini": 0.1964,
+            "llama": 0.0149,
+            "mistral": 0.124,
+            "openai": 0.0933,
+            "other": 0.0099,
+            "qwen": 0.0169
+          },
+          "n_by_family": {
+            "claude": 40,
+            "deepseek": 87,
+            "gemini": 198,
+            "llama": 15,
+            "mistral": 125,
+            "openai": 94,
+            "other": 10,
+            "qwen": 17
+          }
+        },
+        "hear the forecast": {
+          "text": "Hear the forecast",
+          "n": 422,
+          "dist": {
+            "all": 0.4187,
+            "claude": 0.0476,
+            "deepseek": 0.0645,
+            "gemini": 0.1359,
+            "mistral": 0.0714,
+            "openai": 0.0645,
+            "other": 0.0179,
+            "qwen": 0.0169
+          },
+          "n_by_family": {
+            "claude": 48,
+            "deepseek": 65,
+            "gemini": 137,
+            "mistral": 72,
+            "openai": 65,
+            "other": 18,
+            "qwen": 17
+          }
+        }
+      }
+    },
+    "15": {
+      "observation_preview": "Today, the parliament of the Боннасис plant issued a decree on the lowering of t",
+      "n": 151,
+      "choices": {
+        "go to bed": {
+          "text": "Go to bed",
+          "n": 151,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0662,
+            "deepseek": 0.1589,
+            "gemini": 0.3841,
+            "llama": 0.0199,
+            "mistral": 0.1722,
+            "openai": 0.1722,
+            "qwen": 0.0265
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 24,
+            "gemini": 58,
+            "llama": 3,
+            "mistral": 26,
+            "openai": 26,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "28": {
+      "observation_preview": "The floor was passed to an aged grey-headed human.\n\n- Old Gink, Young Generation",
+      "n": 96,
+      "choices": {
+        "in time of trouble all reasonable citizens of the galaxy must lay their lives in preventing the dominators' threat!": {
+          "text": "In time of trouble all reasonable citizens of the Galaxy must lay their lives in preventing the Dominators' threat!",
+          "n": 26,
+          "dist": {
+            "all": 0.2708,
+            "claude": 0.0521,
+            "deepseek": 0.0521,
+            "gemini": 0.0938,
+            "mistral": 0.0312,
+            "openai": 0.0417
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 5,
+            "gemini": 9,
+            "mistral": 3,
+            "openai": 4
+          }
+        },
+        "when you are flying in a bottomless blackness of the space, which is packed with the light of faraway stars, the truth can be revealed to you in the light of prominence - this is the eternity!": {
+          "text": "When you are flying in a bottomless blackness of the space, which is packed with the light of faraway stars, the truth can be revealed to you in the light of prominence - this is the eternity!",
+          "n": 19,
+          "dist": {
+            "all": 0.1979,
+            "claude": 0.0104,
+            "deepseek": 0.0104,
+            "gemini": 0.1042,
+            "mistral": 0.0729
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 10,
+            "mistral": 7
+          }
+        },
+        "profession of a ranger means freedom and the possibility to find one's own self!": {
+          "text": "Profession of a ranger means freedom and the possibility to find one's own self!",
+          "n": 49,
+          "dist": {
+            "all": 0.5104,
+            "claude": 0.0417,
+            "deepseek": 0.0938,
+            "gemini": 0.1354,
+            "llama": 0.0312,
+            "mistral": 0.0833,
+            "openai": 0.1042,
+            "qwen": 0.0208
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 9,
+            "gemini": 13,
+            "llama": 3,
+            "mistral": 8,
+            "openai": 10,
+            "qwen": 2
+          }
+        },
+        "so what? no thirst work - go, loot the transports, and track in dope. the main thing is to get away from the dominators in time!": {
+          "text": "So what? No thirst work - go, loot the transports, and track in dope. The main thing is to get away from the Dominators in time!",
+          "n": 2,
+          "dist": {
+            "all": 0.0208,
+            "gemini": 0.0208
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "30": {
+      "observation_preview": "- Is he really such an idiot or just looks like it? - a baffled Peleng journalis",
+      "n": 96,
+      "choices": {
+        "next question, please": {
+          "text": "Next question, please",
+          "n": 68,
+          "dist": {
+            "all": 0.7083,
+            "claude": 0.0625,
+            "deepseek": 0.125,
+            "gemini": 0.2812,
+            "llama": 0.0208,
+            "mistral": 0.1146,
+            "openai": 0.0938,
+            "qwen": 0.0104
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 12,
+            "gemini": 27,
+            "llama": 2,
+            "mistral": 11,
+            "openai": 9,
+            "qwen": 1
+          }
+        },
+        "i would like to finish my press conference on that: now, it's lunchtime!": {
+          "text": "I would like to finish my press conference on that: now, it's lunchtime!",
+          "n": 28,
+          "dist": {
+            "all": 0.2917,
+            "claude": 0.0417,
+            "deepseek": 0.0312,
+            "gemini": 0.0729,
+            "llama": 0.0104,
+            "mistral": 0.0729,
+            "openai": 0.0521,
+            "qwen": 0.0104
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 3,
+            "gemini": 7,
+            "llama": 1,
+            "mistral": 7,
+            "openai": 5,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "35": {
+      "observation_preview": "One of the Gaals managed to get the floor before his colleagues.\n\n- Shooch Yaa, ",
+      "n": 103,
+      "choices": {
+        "its not the colour that's important, it's composition of the colours": {
+          "text": "Its not the colour that's important, it's composition of the colours",
+          "n": 71,
+          "dist": {
+            "all": 0.6893,
+            "claude": 0.0485,
+            "deepseek": 0.0777,
+            "gemini": 0.3495,
+            "mistral": 0.1456,
+            "openai": 0.0583,
+            "qwen": 0.0097
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 8,
+            "gemini": 36,
+            "mistral": 15,
+            "openai": 6,
+            "qwen": 1
+          }
+        },
+        "colour of 1000 cr banknote": {
+          "text": "Colour of 1000 cr banknote",
+          "n": 3,
+          "dist": {
+            "all": 0.0291,
+            "claude": 0.0097,
+            "openai": 0.0194
+          },
+          "n_by_family": {
+            "claude": 1,
+            "openai": 2
+          }
+        },
+        "the colour of blood of enemies killed by me": {
+          "text": "The colour of blood of enemies killed by me",
+          "n": 7,
+          "dist": {
+            "all": 0.068,
+            "gemini": 0.0194,
+            "mistral": 0.0485
+          },
+          "n_by_family": {
+            "gemini": 2,
+            "mistral": 5
+          }
+        },
+        "colour of freshly brewed beer": {
+          "text": "Colour of freshly brewed beer",
+          "n": 14,
+          "dist": {
+            "all": 0.1359,
+            "claude": 0.0097,
+            "deepseek": 0.0485,
+            "gemini": 0.0097,
+            "llama": 0.0291,
+            "openai": 0.0291,
+            "qwen": 0.0097
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 5,
+            "gemini": 1,
+            "llama": 3,
+            "openai": 3,
+            "qwen": 1
+          }
+        },
+        "the colour of dead dominator parts": {
+          "text": "The colour of dead Dominator parts",
+          "n": 5,
+          "dist": {
+            "all": 0.0485,
+            "deepseek": 0.0194,
+            "other": 0.0097,
+            "qwen": 0.0194
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "other": 1,
+            "qwen": 2
+          }
+        },
+        "unfortunately i am colour blind, daltonian - i cannot distinguish colours": {
+          "text": "Unfortunately I am colour blind, daltonian - I cannot distinguish colours",
+          "n": 3,
+          "dist": {
+            "all": 0.0291,
+            "mistral": 0.0194,
+            "openai": 0.0097
+          },
+          "n_by_family": {
+            "mistral": 2,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "37": {
+      "observation_preview": "The Gaal started nodding satisfactorily - he was apparently inclined to hear som",
+      "n": 103,
+      "choices": {
+        "next question, please": {
+          "text": "Next question, please",
+          "n": 67,
+          "dist": {
+            "all": 0.6505,
+            "claude": 0.0485,
+            "deepseek": 0.1068,
+            "gemini": 0.2427,
+            "llama": 0.0194,
+            "mistral": 0.1165,
+            "openai": 0.0777,
+            "qwen": 0.0388
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 11,
+            "gemini": 25,
+            "llama": 2,
+            "mistral": 12,
+            "openai": 8,
+            "qwen": 4
+          }
+        },
+        "i would like to finish my press conference on that: now, it's lunchtime!": {
+          "text": "I would like to finish my press conference on that: now, it's lunchtime!",
+          "n": 36,
+          "dist": {
+            "all": 0.3495,
+            "claude": 0.0194,
+            "deepseek": 0.0388,
+            "gemini": 0.1359,
+            "llama": 0.0097,
+            "mistral": 0.0971,
+            "openai": 0.0388,
+            "other": 0.0097
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 4,
+            "gemini": 14,
+            "llama": 1,
+            "mistral": 10,
+            "openai": 4,
+            "other": 1
+          }
+        }
+      }
+    },
+    "60": {
+      "observation_preview": "A weasel-like Peleng with a cunning snout gained the floor:\n\n- Hush Baba, Law an",
+      "n": 106,
+      "choices": {
+        "you should pay the mafioso and he will deal with the others on his own part": {
+          "text": "You should pay the Mafioso and he will deal with the others on his own part",
+          "n": 29,
+          "dist": {
+            "all": 0.2736,
+            "claude": 0.0377,
+            "deepseek": 0.0094,
+            "gemini": 0.0377,
+            "llama": 0.0189,
+            "mistral": 0.0849,
+            "openai": 0.0849
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 1,
+            "gemini": 4,
+            "llama": 2,
+            "mistral": 9,
+            "openai": 9
+          }
+        },
+        "you should set the mayor against various committees and then inform on the local mafiosi chief to the police, after which you can quickly gather all the required signatures when everyone will be fighting": {
+          "text": "You should set the Mayor against various committees and then inform on the local Mafiosi chief to the police, after which you can quickly gather all the required signatures when everyone will be fighting",
+          "n": 45,
+          "dist": {
+            "all": 0.4245,
+            "claude": 0.0377,
+            "deepseek": 0.066,
+            "gemini": 0.217,
+            "llama": 0.0094,
+            "mistral": 0.066,
+            "openai": 0.0283
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 7,
+            "gemini": 23,
+            "llama": 1,
+            "mistral": 7,
+            "openai": 3
+          }
+        },
+        "you should pay the mayor and the police chief, and then win the rest with their help": {
+          "text": "You should pay the Mayor and the Police Chief, and then win the rest with their help",
+          "n": 11,
+          "dist": {
+            "all": 0.1038,
+            "deepseek": 0.0377,
+            "openai": 0.0189,
+            "other": 0.0094,
+            "qwen": 0.0377
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "openai": 2,
+            "other": 1,
+            "qwen": 4
+          }
+        },
+        "it's not good to bribe, everything must be done strictly according to the law!": {
+          "text": "It's not good to bribe, everything must be done strictly according to the law!",
+          "n": 12,
+          "dist": {
+            "all": 0.1132,
+            "deepseek": 0.0094,
+            "gemini": 0.066,
+            "mistral": 0.0189,
+            "openai": 0.0189
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 7,
+            "mistral": 2,
+            "openai": 2
+          }
+        },
+        "you can buy good gun for this money, after which there should be no more problems concerning the permits": {
+          "text": "You can buy good gun for this money, after which there should be no more problems concerning the permits",
+          "n": 9,
+          "dist": {
+            "all": 0.0849,
+            "gemini": 0.0849
+          },
+          "n_by_family": {
+            "gemini": 9
+          }
+        }
+      }
+    },
+    "59": {
+      "observation_preview": "- Yes, this is the best decision! - Shooch Yaa exclaimed. - Where have you got t",
+      "n": 106,
+      "choices": {
+        "i would like to finish my press conference on that - sorry, it's lunchtime!": {
+          "text": "I would like to finish my press conference on that - sorry, it's lunchtime!",
+          "n": 35,
+          "dist": {
+            "all": 0.3302,
+            "claude": 0.0283,
+            "deepseek": 0.0283,
+            "gemini": 0.1887,
+            "llama": 0.0094,
+            "mistral": 0.0283,
+            "openai": 0.0283,
+            "qwen": 0.0189
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 3,
+            "gemini": 20,
+            "llama": 1,
+            "mistral": 3,
+            "openai": 3,
+            "qwen": 2
+          }
+        },
+        "next question, please": {
+          "text": "Next question, please",
+          "n": 71,
+          "dist": {
+            "all": 0.6698,
+            "claude": 0.0472,
+            "deepseek": 0.0943,
+            "gemini": 0.217,
+            "llama": 0.0189,
+            "mistral": 0.1415,
+            "openai": 0.1226,
+            "other": 0.0094,
+            "qwen": 0.0189
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 10,
+            "gemini": 23,
+            "llama": 2,
+            "mistral": 15,
+            "openai": 13,
+            "other": 1,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "31": {
+      "observation_preview": "Presidential candidate Abu Linkoln Husseyn proclaimed that on the first day of h",
+      "n": 355,
+      "choices": {
+        "go to bed": {
+          "text": "Go to bed",
+          "n": 355,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0592,
+            "deepseek": 0.1296,
+            "gemini": 0.3408,
+            "llama": 0.0338,
+            "mistral": 0.2282,
+            "openai": 0.1606,
+            "other": 0.0169,
+            "qwen": 0.031
+          },
+          "n_by_family": {
+            "claude": 21,
+            "deepseek": 46,
+            "gemini": 121,
+            "llama": 12,
+            "mistral": 81,
+            "openai": 57,
+            "other": 6,
+            "qwen": 11
+          }
+        }
+      }
+    },
+    "89": {
+      "observation_preview": "Within several minutes Kill Young brought you the activities list for. Where do ",
+      "n": 147,
+      "choices": {
+        "to antiwar rally": {
+          "text": "To antiwar rally",
+          "n": 18,
+          "dist": {
+            "all": 0.1224,
+            "claude": 0.0136,
+            "deepseek": 0.0204,
+            "gemini": 0.0408,
+            "mistral": 0.0136,
+            "openai": 0.0272,
+            "other": 0.0068
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 6,
+            "mistral": 2,
+            "openai": 4,
+            "other": 1
+          }
+        },
+        "to the meeting with university students": {
+          "text": "To the meeting with university students",
+          "n": 34,
+          "dist": {
+            "all": 0.2313,
+            "claude": 0.034,
+            "deepseek": 0.0612,
+            "gemini": 0.0408,
+            "mistral": 0.0408,
+            "openai": 0.0544
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 9,
+            "gemini": 6,
+            "mistral": 6,
+            "openai": 8
+          }
+        },
+        "to the military plant": {
+          "text": "To the military plant",
+          "n": 30,
+          "dist": {
+            "all": 0.2041,
+            "claude": 0.0136,
+            "deepseek": 0.034,
+            "gemini": 0.0816,
+            "mistral": 0.0476,
+            "openai": 0.0204,
+            "qwen": 0.0068
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 5,
+            "gemini": 12,
+            "mistral": 7,
+            "openai": 3,
+            "qwen": 1
+          }
+        },
+        "to a local garrison": {
+          "text": "To a local garrison",
+          "n": 17,
+          "dist": {
+            "all": 0.1156,
+            "claude": 0.0068,
+            "deepseek": 0.0204,
+            "gemini": 0.0204,
+            "mistral": 0.034,
+            "openai": 0.034
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 3,
+            "mistral": 5,
+            "openai": 5
+          }
+        },
+        "to fairy-tale amusement park": {
+          "text": "To fairy-tale amusement park",
+          "n": 2,
+          "dist": {
+            "all": 0.0136,
+            "gemini": 0.0136
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        },
+        "to iike-baana exhibition": {
+          "text": "To iike-baana exhibition",
+          "n": 5,
+          "dist": {
+            "all": 0.034,
+            "deepseek": 0.0204,
+            "gemini": 0.0136
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 2
+          }
+        },
+        "to the nearest prison": {
+          "text": "To the nearest prison",
+          "n": 32,
+          "dist": {
+            "all": 0.2177,
+            "claude": 0.0068,
+            "deepseek": 0.034,
+            "gemini": 0.0204,
+            "mistral": 0.1429,
+            "openai": 0.0136
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 5,
+            "gemini": 3,
+            "mistral": 21,
+            "openai": 2
+          }
+        },
+        "i changed my mind, we will not go to speak with the crowd today!": {
+          "text": "I changed my mind, we will not go to speak with the crowd today!",
+          "n": 2,
+          "dist": {
+            "all": 0.0136,
+            "deepseek": 0.0068,
+            "mistral": 0.0068
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "mistral": 1
+          }
+        },
+        "to lyapzva hiz xenopark": {
+          "text": "To Lyapzva Hiz xenopark",
+          "n": 4,
+          "dist": {
+            "all": 0.0272,
+            "gemini": 0.0068,
+            "mistral": 0.0136,
+            "openai": 0.0068
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 2,
+            "openai": 1
+          }
+        },
+        "to hatchball match": {
+          "text": "To hatchball match",
+          "n": 3,
+          "dist": {
+            "all": 0.0204,
+            "deepseek": 0.0068,
+            "gemini": 0.0068,
+            "mistral": 0.0068
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "102": {
+      "observation_preview": "Speaking at an antiwar rally, you stated that the planet Боннасис does not need ",
+      "n": 18,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 18,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1111,
+            "deepseek": 0.1667,
+            "gemini": 0.3333,
+            "mistral": 0.1111,
+            "openai": 0.2222,
+            "other": 0.0556
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 6,
+            "mistral": 2,
+            "openai": 4,
+            "other": 1
+          }
+        }
+      }
+    },
+    "1": {
+      "observation_preview": "In accordance with the latest sociological polls we will get approximately:\n\n<fi",
+      "n": 681,
+      "choices": {
+        "further": {
+          "text": "Further",
+          "n": 625,
+          "dist": {
+            "all": 0.9178,
+            "claude": 0.0808,
+            "deepseek": 0.1483,
+            "gemini": 0.3436,
+            "mistral": 0.1233,
+            "openai": 0.1733,
+            "other": 0.025,
+            "qwen": 0.0235
+          },
+          "n_by_family": {
+            "claude": 55,
+            "deepseek": 101,
+            "gemini": 234,
+            "mistral": 84,
+            "openai": 118,
+            "other": 17,
+            "qwen": 16
+          }
+        },
+        "go to the electoral committee and see how the vote count is done": {
+          "text": "Go to the electoral committee and see how the vote count is done",
+          "n": 56,
+          "dist": {
+            "all": 0.0822,
+            "claude": 0.0029,
+            "deepseek": 0.0073,
+            "gemini": 0.0338,
+            "llama": 0.0029,
+            "mistral": 0.0176,
+            "openai": 0.0162,
+            "other": 0.0015
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 5,
+            "gemini": 23,
+            "llama": 2,
+            "mistral": 12,
+            "openai": 11,
+            "other": 1
+          }
+        }
+      }
+    },
+    "32": {
+      "observation_preview": "A Gaalian journalist took the floor.\n\n- Professor Noo Pasaran, Interracial Relat",
+      "n": 96,
+      "choices": {
+        "no one, because the eating of reasonable beings is absolutely non-ethical!": {
+          "text": "No one, because the eating of reasonable beings is absolutely non-ethical!",
+          "n": 87,
+          "dist": {
+            "all": 0.9062,
+            "claude": 0.0833,
+            "deepseek": 0.125,
+            "gemini": 0.3229,
+            "llama": 0.0208,
+            "mistral": 0.2083,
+            "openai": 0.1354,
+            "qwen": 0.0104
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 12,
+            "gemini": 31,
+            "llama": 2,
+            "mistral": 20,
+            "openai": 13,
+            "qwen": 1
+          }
+        },
+        "dominator, as they are our common enemy!": {
+          "text": "Dominator, as they are our common enemy!",
+          "n": 6,
+          "dist": {
+            "all": 0.0625,
+            "gemini": 0.0625
+          },
+          "n_by_family": {
+            "gemini": 6
+          }
+        },
+        "faeyan, because it is easy to handle him!": {
+          "text": "Faeyan, because it is easy to handle him!",
+          "n": 1,
+          "dist": {
+            "all": 0.0104,
+            "deepseek": 0.0104
+          },
+          "n_by_family": {
+            "deepseek": 1
+          }
+        },
+        "gaal, so that you would not even think of asking such idiotic questions!": {
+          "text": "Gaal, so that you would not even think of asking such idiotic questions!",
+          "n": 1,
+          "dist": {
+            "all": 0.0104,
+            "qwen": 0.0104
+          },
+          "n_by_family": {
+            "qwen": 1
+          }
+        },
+        "maloq, for their meat will last long!": {
+          "text": "Maloq, for their meat will last long!",
+          "n": 1,
+          "dist": {
+            "all": 0.0104,
+            "llama": 0.0104
+          },
+          "n_by_family": {
+            "llama": 1
+          }
+        }
+      }
+    },
+    "33": {
+      "observation_preview": "The Gaal applauded - he seemed to be waiting for just this kind of answer. But a",
+      "n": 96,
+      "choices": {
+        "next question, please": {
+          "text": "Next question, please",
+          "n": 61,
+          "dist": {
+            "all": 0.6354,
+            "claude": 0.0625,
+            "deepseek": 0.0938,
+            "gemini": 0.2604,
+            "mistral": 0.125,
+            "openai": 0.0833,
+            "qwen": 0.0104
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 9,
+            "gemini": 25,
+            "mistral": 12,
+            "openai": 8,
+            "qwen": 1
+          }
+        },
+        "i would like to finish my press conference on that: now, it's lunchtime!": {
+          "text": "I would like to finish my press conference on that: now, it's lunchtime!",
+          "n": 35,
+          "dist": {
+            "all": 0.3646,
+            "claude": 0.0208,
+            "deepseek": 0.0417,
+            "gemini": 0.125,
+            "llama": 0.0312,
+            "mistral": 0.0833,
+            "openai": 0.0521,
+            "qwen": 0.0104
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 4,
+            "gemini": 12,
+            "llama": 3,
+            "mistral": 8,
+            "openai": 5,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "49": {
+      "observation_preview": "A powerful Maloq brushed aside all his colleagues and took the floor.\n\n- Karra B",
+      "n": 98,
+      "choices": {
+        "i would begin negotiations, bargain and hang out for terms, kill time and try to get to the nearest planet": {
+          "text": "I would begin negotiations, bargain and hang out for terms, kill time and try to get to the nearest planet",
+          "n": 38,
+          "dist": {
+            "all": 0.3878,
+            "claude": 0.0408,
+            "deepseek": 0.0306,
+            "gemini": 0.0408,
+            "llama": 0.0204,
+            "mistral": 0.1429,
+            "openai": 0.1122
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 3,
+            "gemini": 4,
+            "llama": 2,
+            "mistral": 14,
+            "openai": 11
+          }
+        },
+        "i would pay him, then land at a planet, repair the ship, take off, find that pirate and victimise him!": {
+          "text": "I would pay him, then land at a planet, repair the ship, take off, find that pirate and victimise him!",
+          "n": 10,
+          "dist": {
+            "all": 0.102,
+            "claude": 0.0102,
+            "deepseek": 0.0408,
+            "gemini": 0.0204,
+            "mistral": 0.0102,
+            "openai": 0.0102,
+            "other": 0.0102
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 2,
+            "mistral": 1,
+            "openai": 1,
+            "other": 1
+          }
+        },
+        "i would engage in fight! this is the highest honour for any reasonable being to die in action!": {
+          "text": "I would engage in fight! This is the highest honour for any reasonable being to die in action!",
+          "n": 46,
+          "dist": {
+            "all": 0.4694,
+            "deepseek": 0.0714,
+            "gemini": 0.3163,
+            "llama": 0.0102,
+            "mistral": 0.051,
+            "openai": 0.0204
+          },
+          "n_by_family": {
+            "deepseek": 7,
+            "gemini": 31,
+            "llama": 1,
+            "mistral": 5,
+            "openai": 2
+          }
+        },
+        "i would pay the money - it's stupid to lose the life and spaceship because of them money": {
+          "text": "I would pay the money - it's stupid to lose the life and spaceship because of them money",
+          "n": 3,
+          "dist": {
+            "all": 0.0306,
+            "openai": 0.0306
+          },
+          "n_by_family": {
+            "openai": 3
+          }
+        },
+        "i would try to jump into a hyper - you can always heal yourself there, having shot a couple of pirates": {
+          "text": "I would try to jump into a hyper - you can always heal yourself there, having shot a couple of pirates",
+          "n": 1,
+          "dist": {
+            "all": 0.0102,
+            "mistral": 0.0102
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "50": {
+      "observation_preview": "Your tactics were fully endorsed by the Humans - the acknowledged masters of the",
+      "n": 98,
+      "choices": {
+        "next question, please": {
+          "text": "Next question, please",
+          "n": 62,
+          "dist": {
+            "all": 0.6327,
+            "claude": 0.0408,
+            "deepseek": 0.0918,
+            "gemini": 0.2347,
+            "llama": 0.0204,
+            "mistral": 0.1531,
+            "openai": 0.0816,
+            "other": 0.0102
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 9,
+            "gemini": 23,
+            "llama": 2,
+            "mistral": 15,
+            "openai": 8,
+            "other": 1
+          }
+        },
+        "i would like to finish my press conference on that: now, it's lunchtime!": {
+          "text": "I would like to finish my press conference on that: now, it's lunchtime!",
+          "n": 36,
+          "dist": {
+            "all": 0.3673,
+            "claude": 0.0102,
+            "deepseek": 0.051,
+            "gemini": 0.1429,
+            "llama": 0.0102,
+            "mistral": 0.0612,
+            "openai": 0.0918
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 5,
+            "gemini": 14,
+            "llama": 1,
+            "mistral": 6,
+            "openai": 9
+          }
+        }
+      }
+    },
+    "55": {
+      "observation_preview": "A weasel-like Fae slipped to the microphone faster than the gaping representativ",
+      "n": 95,
+      "choices": {
+        "honestly, i am agnostic!": {
+          "text": "Honestly, I am agnostic!",
+          "n": 51,
+          "dist": {
+            "all": 0.5368,
+            "claude": 0.0737,
+            "deepseek": 0.0421,
+            "gemini": 0.1053,
+            "llama": 0.0316,
+            "mistral": 0.1579,
+            "openai": 0.1263
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 4,
+            "gemini": 10,
+            "llama": 3,
+            "mistral": 15,
+            "openai": 12
+          }
+        },
+        "no, because god's existence has not been proved scientifically": {
+          "text": "No, because God's existence has not been proved scientifically",
+          "n": 11,
+          "dist": {
+            "all": 0.1158,
+            "claude": 0.0105,
+            "gemini": 0.0842,
+            "mistral": 0.0105,
+            "openai": 0.0105
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 8,
+            "mistral": 1,
+            "openai": 1
+          }
+        },
+        "everything depends on the situation, if it is profitable for me - i believe, if not - i believe not": {
+          "text": "Everything depends on the situation, if it is profitable for me - I believe, if not - I believe not",
+          "n": 3,
+          "dist": {
+            "all": 0.0316,
+            "deepseek": 0.0105,
+            "gemini": 0.0105,
+            "mistral": 0.0105
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 1
+          }
+        },
+        "yes, the universe must have been created by someone, if not by god, then by whom?": {
+          "text": "Yes, the Universe must have been created by someone, if not by God, then by whom?",
+          "n": 25,
+          "dist": {
+            "all": 0.2632,
+            "deepseek": 0.0842,
+            "gemini": 0.1474,
+            "mistral": 0.0105,
+            "other": 0.0105,
+            "qwen": 0.0105
+          },
+          "n_by_family": {
+            "deepseek": 8,
+            "gemini": 14,
+            "mistral": 1,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "if i win this election - this means god exists!": {
+          "text": "If I win this election - this means God exists!",
+          "n": 2,
+          "dist": {
+            "all": 0.0211,
+            "deepseek": 0.0105,
+            "mistral": 0.0105
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "mistral": 1
+          }
+        },
+        "i do believe! i recall how having doped myself with cocaine i conversed with him for quite a time...": {
+          "text": "I do believe! I recall how having doped myself with cocaine I conversed with him for quite a time...",
+          "n": 1,
+          "dist": {
+            "all": 0.0105,
+            "gemini": 0.0105
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        },
+        "no, because the rangers' charter does not say anything about god": {
+          "text": "No, because the rangers' Charter does not say anything about God",
+          "n": 2,
+          "dist": {
+            "all": 0.0211,
+            "gemini": 0.0211
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "56": {
+      "observation_preview": "Meaningful use of unclear words with unclear meaning is the best way to achieve ",
+      "n": 95,
+      "choices": {
+        "i would like to finish my press conference on that - sorry, it's lunchtime!": {
+          "text": "I would like to finish my press conference on that - sorry, it's lunchtime!",
+          "n": 32,
+          "dist": {
+            "all": 0.3368,
+            "claude": 0.0316,
+            "deepseek": 0.0526,
+            "gemini": 0.1684,
+            "mistral": 0.0526,
+            "openai": 0.0316
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 5,
+            "gemini": 16,
+            "mistral": 5,
+            "openai": 3
+          }
+        },
+        "next question, please": {
+          "text": "Next question, please",
+          "n": 63,
+          "dist": {
+            "all": 0.6632,
+            "claude": 0.0526,
+            "deepseek": 0.0947,
+            "gemini": 0.2105,
+            "llama": 0.0316,
+            "mistral": 0.1474,
+            "openai": 0.1053,
+            "other": 0.0105,
+            "qwen": 0.0105
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 9,
+            "gemini": 20,
+            "llama": 3,
+            "mistral": 14,
+            "openai": 10,
+            "other": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "78": {
+      "observation_preview": "- Fine! - exclaimed the image maker, after he had given necessary orders to make",
+      "n": 98,
+      "choices": {
+        "we protect freedom!": {
+          "text": "We protect freedom!",
+          "n": 20,
+          "dist": {
+            "all": 0.2041,
+            "claude": 0.0612,
+            "gemini": 0.0714,
+            "llama": 0.0306,
+            "mistral": 0.0102,
+            "openai": 0.0204,
+            "qwen": 0.0102
+          },
+          "n_by_family": {
+            "claude": 6,
+            "gemini": 7,
+            "llama": 3,
+            "mistral": 1,
+            "openai": 2,
+            "qwen": 1
+          }
+        },
+        "live better, be happy!": {
+          "text": "Live better, be happy!",
+          "n": 37,
+          "dist": {
+            "all": 0.3776,
+            "claude": 0.0204,
+            "deepseek": 0.0408,
+            "gemini": 0.1531,
+            "llama": 0.0204,
+            "mistral": 0.0102,
+            "openai": 0.102,
+            "qwen": 0.0306
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 4,
+            "gemini": 15,
+            "llama": 2,
+            "mistral": 1,
+            "openai": 10,
+            "qwen": 3
+          }
+        },
+        "kill dominators, save the galaxy!": {
+          "text": "Kill Dominators, save the Galaxy!",
+          "n": 1,
+          "dist": {
+            "all": 0.0102,
+            "gemini": 0.0102
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        },
+        "protect our children!": {
+          "text": "Protect our children!",
+          "n": 4,
+          "dist": {
+            "all": 0.0408,
+            "gemini": 0.0102,
+            "llama": 0.0102,
+            "mistral": 0.0204
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "llama": 1,
+            "mistral": 2
+          }
+        },
+        "we will maintain order!": {
+          "text": "We will maintain order!",
+          "n": 24,
+          "dist": {
+            "all": 0.2449,
+            "deepseek": 0.0408,
+            "gemini": 0.1429,
+            "llama": 0.0102,
+            "mistral": 0.0306,
+            "openai": 0.0204
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 14,
+            "llama": 1,
+            "mistral": 3,
+            "openai": 2
+          }
+        },
+        "let's give happiness to the population!!!": {
+          "text": "Let's give happiness to the population!!!",
+          "n": 4,
+          "dist": {
+            "all": 0.0408,
+            "llama": 0.0204,
+            "openai": 0.0204
+          },
+          "n_by_family": {
+            "llama": 2,
+            "openai": 2
+          }
+        },
+        "bread and circuses!": {
+          "text": "Bread and circuses!",
+          "n": 5,
+          "dist": {
+            "all": 0.051,
+            "mistral": 0.0306,
+            "openai": 0.0102,
+            "qwen": 0.0102
+          },
+          "n_by_family": {
+            "mistral": 3,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "vote with your heart!": {
+          "text": "Vote with your heart!",
+          "n": 3,
+          "dist": {
+            "all": 0.0306,
+            "llama": 0.0306
+          },
+          "n_by_family": {
+            "llama": 3
+          }
+        }
+      }
+    },
+    "72": {
+      "observation_preview": "- Fine! - exclaimed the image maker, after he had given necessary orders to make",
+      "n": 84,
+      "choices": {
+        "kill dominators, save the galaxy!": {
+          "text": "Kill Dominators, save the Galaxy!",
+          "n": 26,
+          "dist": {
+            "all": 0.3095,
+            "claude": 0.0357,
+            "deepseek": 0.0238,
+            "gemini": 0.1667,
+            "mistral": 0.0714,
+            "openai": 0.0119
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 2,
+            "gemini": 14,
+            "mistral": 6,
+            "openai": 1
+          }
+        },
+        "protect our children!": {
+          "text": "Protect our children!",
+          "n": 6,
+          "dist": {
+            "all": 0.0714,
+            "deepseek": 0.0238,
+            "mistral": 0.0238,
+            "openai": 0.0238
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "mistral": 2,
+            "openai": 2
+          }
+        },
+        "live better, be happy!": {
+          "text": "Live better, be happy!",
+          "n": 13,
+          "dist": {
+            "all": 0.1548,
+            "deepseek": 0.0238,
+            "gemini": 0.0119,
+            "openai": 0.0952,
+            "qwen": 0.0238
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 1,
+            "openai": 8,
+            "qwen": 2
+          }
+        },
+        "we will maintain order!": {
+          "text": "We will maintain order!",
+          "n": 7,
+          "dist": {
+            "all": 0.0833,
+            "deepseek": 0.0357,
+            "gemini": 0.0238,
+            "openai": 0.0238
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 2,
+            "openai": 2
+          }
+        },
+        "let's give happiness to the population!!!": {
+          "text": "Let's give happiness to the population!!!",
+          "n": 5,
+          "dist": {
+            "all": 0.0595,
+            "deepseek": 0.0238,
+            "mistral": 0.0238,
+            "qwen": 0.0119
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "mistral": 2,
+            "qwen": 1
+          }
+        },
+        "bread and circuses!": {
+          "text": "Bread and circuses!",
+          "n": 2,
+          "dist": {
+            "all": 0.0238,
+            "mistral": 0.0119,
+            "openai": 0.0119
+          },
+          "n_by_family": {
+            "mistral": 1,
+            "openai": 1
+          }
+        },
+        "we protect freedom!": {
+          "text": "We protect freedom!",
+          "n": 17,
+          "dist": {
+            "all": 0.2024,
+            "claude": 0.0476,
+            "deepseek": 0.0476,
+            "gemini": 0.0238,
+            "mistral": 0.0119,
+            "openai": 0.0476,
+            "qwen": 0.0238
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 4,
+            "gemini": 2,
+            "mistral": 1,
+            "openai": 4,
+            "qwen": 2
+          }
+        },
+        "vote with your heart!": {
+          "text": "Vote with your heart!",
+          "n": 8,
+          "dist": {
+            "all": 0.0952,
+            "deepseek": 0.0238,
+            "mistral": 0.0119,
+            "other": 0.0238,
+            "qwen": 0.0357
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "mistral": 1,
+            "other": 2,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "79": {
+      "observation_preview": "Space ranger outfit nicely matched the slogan which you uttered, but together th",
+      "n": 65,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 50,
+          "dist": {
+            "all": 0.7692,
+            "claude": 0.0308,
+            "deepseek": 0.0308,
+            "gemini": 0.4923,
+            "mistral": 0.1692,
+            "openai": 0.0308,
+            "qwen": 0.0154
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 32,
+            "mistral": 11,
+            "openai": 2,
+            "qwen": 1
+          }
+        },
+        "go for lunch": {
+          "text": "Go for lunch",
+          "n": 15,
+          "dist": {
+            "all": 0.2308,
+            "claude": 0.0308,
+            "gemini": 0.0923,
+            "mistral": 0.0923,
+            "openai": 0.0154
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 6,
+            "mistral": 6,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "99": {
+      "observation_preview": "It turned out that you were rather popular among the students, the best part of ",
+      "n": 34,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 34,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1471,
+            "deepseek": 0.2647,
+            "gemini": 0.1765,
+            "mistral": 0.1765,
+            "openai": 0.2353
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 9,
+            "gemini": 6,
+            "mistral": 6,
+            "openai": 8
+          }
+        }
+      }
+    },
+    "100": {
+      "observation_preview": "You became a professional ranger when you were visiting a military plant. You cr",
+      "n": 30,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 30,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0667,
+            "deepseek": 0.1667,
+            "gemini": 0.4,
+            "mistral": 0.2333,
+            "openai": 0.1,
+            "qwen": 0.0333
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 5,
+            "gemini": 12,
+            "mistral": 7,
+            "openai": 3,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "9": {
+      "observation_preview": "New data appeared on the board.\n\nApproximately 20% of the ballots have been coun",
+      "n": 334,
+      "choices": {
+        "wait another hour": {
+          "text": "Wait another hour",
+          "n": 236,
+          "dist": {
+            "all": 0.7066,
+            "claude": 0.021,
+            "deepseek": 0.0898,
+            "gemini": 0.3413,
+            "llama": 0.0359,
+            "mistral": 0.1317,
+            "openai": 0.0808,
+            "other": 0.006
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 30,
+            "gemini": 114,
+            "llama": 12,
+            "mistral": 44,
+            "openai": 27,
+            "other": 2
+          }
+        },
+        "scram before it's not to late!!!": {
+          "text": "Scram before it's not to late!!!",
+          "n": 65,
+          "dist": {
+            "all": 0.1946,
+            "claude": 0.015,
+            "deepseek": 0.0359,
+            "gemini": 0.018,
+            "mistral": 0.0689,
+            "openai": 0.0539,
+            "other": 0.003
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 12,
+            "gemini": 6,
+            "mistral": 23,
+            "openai": 18,
+            "other": 1
+          }
+        },
+        "we won!!!": {
+          "text": "We won!!!",
+          "n": 12,
+          "dist": {
+            "all": 0.0359,
+            "deepseek": 0.003,
+            "gemini": 0.0269,
+            "llama": 0.006
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 9,
+            "llama": 2
+          }
+        },
+        "and what now?": {
+          "text": "And what now?",
+          "n": 1,
+          "dist": {
+            "all": 0.003,
+            "gemini": 0.003
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        },
+        "alas, we lost...": {
+          "text": "Alas, we lost...",
+          "n": 20,
+          "dist": {
+            "all": 0.0599,
+            "deepseek": 0.006,
+            "gemini": 0.0449,
+            "llama": 0.003,
+            "mistral": 0.006
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 15,
+            "llama": 1,
+            "mistral": 2
+          }
+        }
+      }
+    },
+    "82": {
+      "observation_preview": "Improvement of the life standards thanks to the efforts of the big business has ",
+      "n": 84,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 56,
+          "dist": {
+            "all": 0.6667,
+            "claude": 0.0238,
+            "deepseek": 0.0595,
+            "gemini": 0.2619,
+            "llama": 0.0119,
+            "mistral": 0.0238,
+            "openai": 0.25,
+            "qwen": 0.0357
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 5,
+            "gemini": 22,
+            "llama": 1,
+            "mistral": 2,
+            "openai": 21,
+            "qwen": 3
+          }
+        },
+        "go for lunch": {
+          "text": "Go for lunch",
+          "n": 28,
+          "dist": {
+            "all": 0.3333,
+            "deepseek": 0.0476,
+            "gemini": 0.1071,
+            "llama": 0.0238,
+            "openai": 0.131,
+            "qwen": 0.0238
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 9,
+            "llama": 2,
+            "openai": 11,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "47": {
+      "observation_preview": "A terrible act of terrorism in the Gaalian Fine Arts and Abstract Logic Museum c",
+      "n": 76,
+      "choices": {
+        "go to bed": {
+          "text": "Go to bed",
+          "n": 76,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1053,
+            "deepseek": 0.2105,
+            "gemini": 0.25,
+            "mistral": 0.2368,
+            "openai": 0.1447,
+            "other": 0.0263,
+            "qwen": 0.0263
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 16,
+            "gemini": 19,
+            "mistral": 18,
+            "openai": 11,
+            "other": 2,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "34": {
+      "observation_preview": "A Peleng was the fastest to react:\n\n- Zap Katze, Lump of Mud newspaper. Imagine ",
+      "n": 93,
+      "choices": {
+        "i think that i would sue him, if i would survive such a mess": {
+          "text": "I think that I would sue him, if I would survive such a mess",
+          "n": 9,
+          "dist": {
+            "all": 0.0968,
+            "claude": 0.0108,
+            "deepseek": 0.0108,
+            "gemini": 0.0215,
+            "llama": 0.0323,
+            "mistral": 0.0108,
+            "openai": 0.0108
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 2,
+            "llama": 3,
+            "mistral": 1,
+            "openai": 1
+          }
+        },
+        "i think that the command does not have anything to do with it": {
+          "text": "I think that the command does not have anything to do with it",
+          "n": 33,
+          "dist": {
+            "all": 0.3548,
+            "claude": 0.0323,
+            "deepseek": 0.0323,
+            "gemini": 0.0323,
+            "mistral": 0.1183,
+            "openai": 0.129,
+            "qwen": 0.0108
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 3,
+            "gemini": 3,
+            "mistral": 11,
+            "openai": 12,
+            "qwen": 1
+          }
+        },
+        "i think i am the one to blame - i should not have agreed to test a maloq fighter": {
+          "text": "I think I am the one to blame - I should not have agreed to test a Maloq fighter",
+          "n": 19,
+          "dist": {
+            "all": 0.2043,
+            "claude": 0.0108,
+            "deepseek": 0.0645,
+            "gemini": 0.043,
+            "mistral": 0.0645,
+            "openai": 0.0215
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 6,
+            "gemini": 4,
+            "mistral": 6,
+            "openai": 2
+          }
+        },
+        "(censored)": {
+          "text": "(Censored)",
+          "n": 12,
+          "dist": {
+            "all": 0.129,
+            "deepseek": 0.0215,
+            "gemini": 0.0753,
+            "other": 0.0215,
+            "qwen": 0.0108
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 7,
+            "other": 2,
+            "qwen": 1
+          }
+        },
+        "this is a slander about maloq fighters! i will not answer this question!!!": {
+          "text": "This is a slander about Maloq fighters! I will not answer this question!!!",
+          "n": 20,
+          "dist": {
+            "all": 0.2151,
+            "deepseek": 0.0108,
+            "gemini": 0.2043
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 19
+          }
+        }
+      }
+    },
+    "48": {
+      "observation_preview": "Your reasonable and civilised response was to everyone's liking, except the Pele",
+      "n": 93,
+      "choices": {
+        "next question, please": {
+          "text": "Next question, please",
+          "n": 68,
+          "dist": {
+            "all": 0.7312,
+            "claude": 0.043,
+            "deepseek": 0.0753,
+            "gemini": 0.2688,
+            "llama": 0.0323,
+            "mistral": 0.1398,
+            "openai": 0.129,
+            "other": 0.0215,
+            "qwen": 0.0215
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 7,
+            "gemini": 25,
+            "llama": 3,
+            "mistral": 13,
+            "openai": 12,
+            "other": 2,
+            "qwen": 2
+          }
+        },
+        "i would like to finish my press conference on that: now, it's lunchtime!": {
+          "text": "I would like to finish my press conference on that: now, it's lunchtime!",
+          "n": 25,
+          "dist": {
+            "all": 0.2688,
+            "claude": 0.0108,
+            "deepseek": 0.0645,
+            "gemini": 0.1075,
+            "mistral": 0.0538,
+            "openai": 0.0323
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 6,
+            "gemini": 10,
+            "mistral": 5,
+            "openai": 3
+          }
+        }
+      }
+    },
+    "36": {
+      "observation_preview": "Kill Young looked at you with a shade of doubt on his face.\n\n- Black PR is consi",
+      "n": 11,
+      "choices": {
+        "gaals": {
+          "text": "Gaals",
+          "n": 1,
+          "dist": {
+            "all": 0.0909,
+            "claude": 0.0909
+          },
+          "n_by_family": {
+            "claude": 1
+          }
+        },
+        "pelengs": {
+          "text": "Pelengs",
+          "n": 4,
+          "dist": {
+            "all": 0.3636,
+            "gemini": 0.0909,
+            "mistral": 0.2727
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 3
+          }
+        },
+        "faes": {
+          "text": "Faes",
+          "n": 1,
+          "dist": {
+            "all": 0.0909,
+            "deepseek": 0.0909
+          },
+          "n_by_family": {
+            "deepseek": 1
+          }
+        },
+        "maloqs": {
+          "text": "Maloqs",
+          "n": 3,
+          "dist": {
+            "all": 0.2727,
+            "gemini": 0.0909,
+            "mistral": 0.0909,
+            "qwen": 0.0909
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 1,
+            "qwen": 1
+          }
+        },
+        "humans": {
+          "text": "Humans",
+          "n": 2,
+          "dist": {
+            "all": 0.1818,
+            "mistral": 0.0909,
+            "qwen": 0.0909
+          },
+          "n_by_family": {
+            "mistral": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "75": {
+      "observation_preview": "- Fine! - exclaimed the image maker, after he had given necessary orders to make",
+      "n": 102,
+      "choices": {
+        "kill dominators, save the galaxy!": {
+          "text": "Kill Dominators, save the Galaxy!",
+          "n": 28,
+          "dist": {
+            "all": 0.2745,
+            "claude": 0.0098,
+            "gemini": 0.1863,
+            "mistral": 0.0686,
+            "openai": 0.0098
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 19,
+            "mistral": 7,
+            "openai": 1
+          }
+        },
+        "live better, be happy!": {
+          "text": "Live better, be happy!",
+          "n": 1,
+          "dist": {
+            "all": 0.0098,
+            "openai": 0.0098
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        },
+        "we protect freedom!": {
+          "text": "We protect freedom!",
+          "n": 12,
+          "dist": {
+            "all": 0.1176,
+            "claude": 0.0196,
+            "deepseek": 0.0196,
+            "gemini": 0.0588,
+            "llama": 0.0098,
+            "mistral": 0.0098
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 6,
+            "llama": 1,
+            "mistral": 1
+          }
+        },
+        "we will maintain order!": {
+          "text": "We will maintain order!",
+          "n": 49,
+          "dist": {
+            "all": 0.4804,
+            "claude": 0.0098,
+            "deepseek": 0.049,
+            "gemini": 0.3235,
+            "mistral": 0.0392,
+            "openai": 0.049,
+            "qwen": 0.0098
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 5,
+            "gemini": 33,
+            "mistral": 4,
+            "openai": 5,
+            "qwen": 1
+          }
+        },
+        "protect our children!": {
+          "text": "Protect our children!",
+          "n": 7,
+          "dist": {
+            "all": 0.0686,
+            "gemini": 0.0588,
+            "mistral": 0.0098
+          },
+          "n_by_family": {
+            "gemini": 6,
+            "mistral": 1
+          }
+        },
+        "vote with your heart!": {
+          "text": "Vote with your heart!",
+          "n": 2,
+          "dist": {
+            "all": 0.0196,
+            "gemini": 0.0098,
+            "other": 0.0098
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "other": 1
+          }
+        },
+        "bread and circuses!": {
+          "text": "Bread and circuses!",
+          "n": 2,
+          "dist": {
+            "all": 0.0196,
+            "gemini": 0.0196
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        },
+        "let's give happiness to the population!!!": {
+          "text": "Let's give happiness to the population!!!",
+          "n": 1,
+          "dist": {
+            "all": 0.0098,
+            "mistral": 0.0098
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "20": {
+      "observation_preview": "- Were you not aware of this? - the Peleng said in amazement. - In order to avoi",
+      "n": 81,
+      "choices": {
+        "ok! good bye, folks, i need to have some sleep!": {
+          "text": "OK! Good bye, folks, I need to have some sleep!",
+          "n": 70,
+          "dist": {
+            "all": 0.8642,
+            "claude": 0.0123,
+            "deepseek": 0.1975,
+            "gemini": 0.3457,
+            "llama": 0.037,
+            "mistral": 0.0494,
+            "openai": 0.1852,
+            "other": 0.0123,
+            "qwen": 0.0247
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 16,
+            "gemini": 28,
+            "llama": 3,
+            "mistral": 4,
+            "openai": 15,
+            "other": 1,
+            "qwen": 2
+          }
+        },
+        "what?! if i lose, i will be killed? i'm getting out of here immediately!!!": {
+          "text": "What?! If I lose, I will be killed? I'm getting out of here immediately!!!",
+          "n": 11,
+          "dist": {
+            "all": 0.1358,
+            "deepseek": 0.0494,
+            "mistral": 0.0247,
+            "openai": 0.0247,
+            "other": 0.0247,
+            "qwen": 0.0123
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "mistral": 2,
+            "openai": 2,
+            "other": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "39": {
+      "observation_preview": "- You mean, the protests of rights activists concerning the illegitimacy of the ",
+      "n": 40,
+      "choices": {
+        "well, we will definitely abolish all unjust taxes and will add just ones, but in general everything will remain as it used to be!": {
+          "text": "Well, we will definitely abolish all unjust taxes and will add just ones, but in general everything will remain as it used to be!",
+          "n": 18,
+          "dist": {
+            "all": 0.45,
+            "claude": 0.075,
+            "llama": 0.025,
+            "mistral": 0.175,
+            "openai": 0.175
+          },
+          "n_by_family": {
+            "claude": 3,
+            "llama": 1,
+            "mistral": 7,
+            "openai": 7
+          }
+        },
+        "it's the first time i hear about a problem like that. what do you mean?!": {
+          "text": "It's the first time I hear about a problem like that. What do you mean?!",
+          "n": 9,
+          "dist": {
+            "all": 0.225,
+            "claude": 0.025,
+            "deepseek": 0.025,
+            "gemini": 0.025,
+            "mistral": 0.075,
+            "openai": 0.075
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 3,
+            "openai": 3
+          }
+        },
+        "ah, yes, we will definitely cancel that tax": {
+          "text": "Ah, yes, we will definitely cancel that tax",
+          "n": 8,
+          "dist": {
+            "all": 0.2,
+            "claude": 0.025,
+            "deepseek": 0.05,
+            "mistral": 0.075,
+            "openai": 0.05
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "mistral": 3,
+            "openai": 2
+          }
+        },
+        "this issue will be resolved independently": {
+          "text": "This issue will be resolved independently",
+          "n": 2,
+          "dist": {
+            "all": 0.05,
+            "claude": 0.025,
+            "deepseek": 0.025
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1
+          }
+        },
+        "i told you - everything will be as it used to be!!!": {
+          "text": "I told you - everything will be as it used to be!!!",
+          "n": 3,
+          "dist": {
+            "all": 0.075,
+            "openai": 0.075
+          },
+          "n_by_family": {
+            "openai": 3
+          }
+        }
+      }
+    },
+    "80": {
+      "observation_preview": "The idea to protect children from the Dominator threat was understandable to all",
+      "n": 44,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 36,
+          "dist": {
+            "all": 0.8182,
+            "claude": 0.0455,
+            "deepseek": 0.1136,
+            "gemini": 0.3182,
+            "llama": 0.0455,
+            "mistral": 0.25,
+            "openai": 0.0455
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 5,
+            "gemini": 14,
+            "llama": 2,
+            "mistral": 11,
+            "openai": 2
+          }
+        },
+        "go for lunch": {
+          "text": "Go for lunch",
+          "n": 8,
+          "dist": {
+            "all": 0.1818,
+            "claude": 0.0227,
+            "deepseek": 0.0455,
+            "gemini": 0.0455,
+            "llama": 0.0227,
+            "mistral": 0.0455
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 2,
+            "llama": 1,
+            "mistral": 2
+          }
+        }
+      }
+    },
+    "101": {
+      "observation_preview": "There was a picket line in front of the entry control point comprised of the Hum",
+      "n": 17,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 17,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0588,
+            "deepseek": 0.1765,
+            "gemini": 0.1765,
+            "mistral": 0.2941,
+            "openai": 0.2941
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 3,
+            "mistral": 5,
+            "openai": 5
+          }
+        }
+      }
+    },
+    "81": {
+      "observation_preview": "Rare ad had been the cause of such a vivid public response. The Maloqs announced",
+      "n": 88,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 65,
+          "dist": {
+            "all": 0.7386,
+            "claude": 0.0114,
+            "deepseek": 0.0909,
+            "gemini": 0.4886,
+            "llama": 0.0114,
+            "mistral": 0.0795,
+            "openai": 0.0341,
+            "qwen": 0.0227
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 8,
+            "gemini": 43,
+            "llama": 1,
+            "mistral": 7,
+            "openai": 3,
+            "qwen": 2
+          }
+        },
+        "go for lunch": {
+          "text": "Go for lunch",
+          "n": 23,
+          "dist": {
+            "all": 0.2614,
+            "claude": 0.0114,
+            "deepseek": 0.0682,
+            "gemini": 0.1023,
+            "openai": 0.0795
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 6,
+            "gemini": 9,
+            "openai": 7
+          }
+        }
+      }
+    },
+    "77": {
+      "observation_preview": "- Fine! - exclaimed the image maker, after he had given necessary orders to make",
+      "n": 12,
+      "choices": {
+        "we will maintain order!": {
+          "text": "We will maintain order!",
+          "n": 6,
+          "dist": {
+            "all": 0.5,
+            "claude": 0.0833,
+            "deepseek": 0.1667,
+            "gemini": 0.0833,
+            "openai": 0.0833,
+            "qwen": 0.0833
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 1,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "protect our children!": {
+          "text": "Protect our children!",
+          "n": 2,
+          "dist": {
+            "all": 0.1667,
+            "mistral": 0.1667
+          },
+          "n_by_family": {
+            "mistral": 2
+          }
+        },
+        "let's give happiness to the population!!!": {
+          "text": "Let's give happiness to the population!!!",
+          "n": 2,
+          "dist": {
+            "all": 0.1667,
+            "mistral": 0.0833,
+            "qwen": 0.0833
+          },
+          "n_by_family": {
+            "mistral": 1,
+            "qwen": 1
+          }
+        },
+        "live better, be happy!": {
+          "text": "Live better, be happy!",
+          "n": 2,
+          "dist": {
+            "all": 0.1667,
+            "deepseek": 0.1667
+          },
+          "n_by_family": {
+            "deepseek": 2
+          }
+        }
+      }
+    },
+    "86": {
+      "observation_preview": "Gaining happiness by means of profitable trade bargains totally matched the ment",
+      "n": 37,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 24,
+          "dist": {
+            "all": 0.6486,
+            "deepseek": 0.0541,
+            "gemini": 0.3243,
+            "llama": 0.0541,
+            "mistral": 0.1081,
+            "openai": 0.0541,
+            "qwen": 0.0541
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 12,
+            "llama": 2,
+            "mistral": 4,
+            "openai": 2,
+            "qwen": 2
+          }
+        },
+        "go for lunch": {
+          "text": "Go for lunch",
+          "n": 13,
+          "dist": {
+            "all": 0.3514,
+            "deepseek": 0.0541,
+            "gemini": 0.1351,
+            "llama": 0.027,
+            "mistral": 0.1351
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 5,
+            "llama": 1,
+            "mistral": 5
+          }
+        }
+      }
+    },
+    "106": {
+      "observation_preview": "You decided to relax and visited a local fairy-tale amusement park. But soon you",
+      "n": 2,
+      "choices": {
+        "further": {
+          "text": "Further",
+          "n": 2,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "74": {
+      "observation_preview": "- Fine! - exclaimed the image maker, after he had given necessary orders to make",
+      "n": 10,
+      "choices": {
+        "kill dominators, save the galaxy!": {
+          "text": "Kill Dominators, save the Galaxy!",
+          "n": 3,
+          "dist": {
+            "all": 0.3,
+            "gemini": 0.1,
+            "mistral": 0.2
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 2
+          }
+        },
+        "live better, be happy!": {
+          "text": "Live better, be happy!",
+          "n": 2,
+          "dist": {
+            "all": 0.2,
+            "mistral": 0.1,
+            "openai": 0.1
+          },
+          "n_by_family": {
+            "mistral": 1,
+            "openai": 1
+          }
+        },
+        "bread and circuses!": {
+          "text": "Bread and circuses!",
+          "n": 4,
+          "dist": {
+            "all": 0.4,
+            "gemini": 0.3,
+            "qwen": 0.1
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "qwen": 1
+          }
+        },
+        "let's give happiness to the population!!!": {
+          "text": "Let's give happiness to the population!!!",
+          "n": 1,
+          "dist": {
+            "all": 0.1,
+            "gemini": 0.1
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "105": {
+      "observation_preview": "During the tour around the hall you became so lyrical that promised to make the ",
+      "n": 5,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 5,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.6,
+            "gemini": 0.4
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "104": {
+      "observation_preview": "You were somewhat surprised that the bulk of the jail inmates was comprised of t",
+      "n": 32,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 32,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0312,
+            "deepseek": 0.1562,
+            "gemini": 0.0938,
+            "mistral": 0.6562,
+            "openai": 0.0625
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 5,
+            "gemini": 3,
+            "mistral": 21,
+            "openai": 2
+          }
+        }
+      }
+    },
+    "40": {
+      "observation_preview": "- Are you afraid of the sharp decrease of the gross product?\n\nStatus:\n<fix>Numbe",
+      "n": 3,
+      "choices": {
+        "not at all!": {
+          "text": "Not at all!",
+          "n": 1,
+          "dist": {
+            "all": 0.3333,
+            "mistral": 0.3333
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        },
+        "well, we are not going to raise taxes a lot! well, a little bit, maybe...": {
+          "text": "Well, we are not going to raise taxes a lot! Well, a little bit, maybe...",
+          "n": 1,
+          "dist": {
+            "all": 0.3333,
+            "mistral": 0.3333
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        },
+        "i think we can subsidise business from the budget, you should not be so concerned about it.": {
+          "text": "I think we can subsidise business from the budget, you should not be so concerned about it.",
+          "n": 1,
+          "dist": {
+            "all": 0.3333,
+            "mistral": 0.3333
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "73": {
+      "observation_preview": "- Fine! - exclaimed the image maker, after he had given necessary orders to make",
+      "n": 17,
+      "choices": {
+        "bread and circuses!": {
+          "text": "Bread and circuses!",
+          "n": 9,
+          "dist": {
+            "all": 0.5294,
+            "gemini": 0.4706,
+            "mistral": 0.0588
+          },
+          "n_by_family": {
+            "gemini": 8,
+            "mistral": 1
+          }
+        },
+        "kill dominators, save the galaxy!": {
+          "text": "Kill Dominators, save the Galaxy!",
+          "n": 1,
+          "dist": {
+            "all": 0.0588,
+            "mistral": 0.0588
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        },
+        "live better, be happy!": {
+          "text": "Live better, be happy!",
+          "n": 5,
+          "dist": {
+            "all": 0.2941,
+            "gemini": 0.2941
+          },
+          "n_by_family": {
+            "gemini": 5
+          }
+        },
+        "let's give happiness to the population!!!": {
+          "text": "Let's give happiness to the population!!!",
+          "n": 1,
+          "dist": {
+            "all": 0.0588,
+            "gemini": 0.0588
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        },
+        "we protect freedom!": {
+          "text": "We protect freedom!",
+          "n": 1,
+          "dist": {
+            "all": 0.0588,
+            "gemini": 0.0588
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "84": {
+      "observation_preview": "The sight of a boozed guy, enjoying his time in a bar, accompanied by a bourgeoi",
+      "n": 23,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 19,
+          "dist": {
+            "all": 0.8261,
+            "deepseek": 0.0435,
+            "gemini": 0.4348,
+            "mistral": 0.2174,
+            "openai": 0.087,
+            "qwen": 0.0435
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 10,
+            "mistral": 5,
+            "openai": 2,
+            "qwen": 1
+          }
+        },
+        "go for lunch": {
+          "text": "Go for lunch",
+          "n": 4,
+          "dist": {
+            "all": 0.1739,
+            "gemini": 0.1304,
+            "qwen": 0.0435
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "107": {
+      "observation_preview": "The officers spent the whole night introducing you to the xenopark. Looking at t",
+      "n": 4,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 4,
+          "dist": {
+            "all": 1.0,
+            "gemini": 0.25,
+            "mistral": 0.5,
+            "openai": 0.25
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 2,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "83": {
+      "observation_preview": "Where is a ranger's heart? You're right - in his spaceship. And voters' interest",
+      "n": 22,
+      "choices": {
+        "go for lunch": {
+          "text": "Go for lunch",
+          "n": 9,
+          "dist": {
+            "all": 0.4091,
+            "deepseek": 0.1818,
+            "mistral": 0.0455,
+            "other": 0.1364,
+            "qwen": 0.0455
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "mistral": 1,
+            "other": 3,
+            "qwen": 1
+          }
+        },
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 13,
+          "dist": {
+            "all": 0.5909,
+            "deepseek": 0.1364,
+            "gemini": 0.0909,
+            "llama": 0.1818,
+            "other": 0.0909,
+            "qwen": 0.0909
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 2,
+            "llama": 4,
+            "other": 2,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "103": {
+      "observation_preview": "During a hatch-ball match between the Humans and the Pelengs you suddenly rememb",
+      "n": 3,
+      "choices": {
+        "return to the hotel": {
+          "text": "Return to the hotel",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.3333,
+            "gemini": 0.3333,
+            "mistral": 0.3333
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "76": {
+      "observation_preview": "- Fine! - exclaimed the image maker, after he had given necessary orders to make",
+      "n": 8,
+      "choices": {
+        "protect our children!": {
+          "text": "Protect our children!",
+          "n": 7,
+          "dist": {
+            "all": 0.875,
+            "claude": 0.375,
+            "gemini": 0.375,
+            "mistral": 0.125
+          },
+          "n_by_family": {
+            "claude": 3,
+            "gemini": 3,
+            "mistral": 1
+          }
+        },
+        "live better, be happy!": {
+          "text": "Live better, be happy!",
+          "n": 1,
+          "dist": {
+            "all": 0.125,
+            "gemini": 0.125
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "10": {
+      "observation_preview": "As soon as the election results appeared on the board, an armed security guard s",
+      "n": 12,
+      "choices": {
+        "ok, i'll sign it, as we agreed!": {
+          "text": "Ok, I'll sign it, as we agreed!",
+          "n": 12,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.0833,
+            "gemini": 0.75,
+            "llama": 0.1667
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 9,
+            "llama": 2
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "quest": "Player_eng",
+  "generated": "2026-05-03T06:47:47Z",
+  "total_runs": 69,
+  "win_rate": 0.0,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "qwen"
+  ],
+  "locations": {
+    "1": {
+      "observation_preview": "A decently dressed Faeyan met you near the spaceport. He introduced himself as t",
+      "n": 39,
+      "choices": {
+        "tell me about the device": {
+          "text": "Tell me about the device",
+          "n": 39,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0513,
+            "deepseek": 0.0513,
+            "gemini": 0.8462,
+            "qwen": 0.0513
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 33,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "2": {
+      "observation_preview": "- The device has a square indicator 3*3 boxes in size. After we hook the tuner u",
+      "n": 39,
+      "choices": {
+        "is this all or are there any more details?": {
+          "text": "Is this all or are there any more details?",
+          "n": 39,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0513,
+            "deepseek": 0.0513,
+            "gemini": 0.8462,
+            "qwen": 0.0513
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 33,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "11": {
+      "observation_preview": "- I was reluctant to tell you about it but as long as you asked... See, we didn'",
+      "n": 39,
+      "choices": {
+        "so, am i supposed to fix a broken player with the help of a defective tuner?!": {
+          "text": "So, am I supposed to fix a broken player with the help of a defective tuner?!",
+          "n": 39,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0513,
+            "deepseek": 0.0513,
+            "gemini": 0.8462,
+            "qwen": 0.0513
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 33,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "3": {
+      "observation_preview": "Awkward silence settled in the car for some time.\n\n- Also I must warn you, that ",
+      "n": 78,
+      "choices": {
+        "5": {
+          "text": "5",
+          "n": 36,
+          "dist": {
+            "all": 0.4615,
+            "claude": 0.0128,
+            "gemini": 0.4231,
+            "qwen": 0.0256
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 33,
+            "qwen": 2
+          }
+        },
+        "1": {
+          "text": "1",
+          "n": 16,
+          "dist": {
+            "all": 0.2051,
+            "claude": 0.0256,
+            "deepseek": 0.0256,
+            "gemini": 0.1282,
+            "qwen": 0.0256
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 10,
+            "qwen": 2
+          }
+        },
+        "2": {
+          "text": "2",
+          "n": 23,
+          "dist": {
+            "all": 0.2949,
+            "deepseek": 0.0128,
+            "gemini": 0.2821
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 22
+          }
+        },
+        "8": {
+          "text": "8",
+          "n": 1,
+          "dist": {
+            "all": 0.0128,
+            "gemini": 0.0128
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        },
+        "3": {
+          "text": "3",
+          "n": 1,
+          "dist": {
+            "all": 0.0128,
+            "deepseek": 0.0128
+          },
+          "n_by_family": {
+            "deepseek": 1
+          }
+        },
+        "4": {
+          "text": "4",
+          "n": 1,
+          "dist": {
+            "all": 0.0128,
+            "claude": 0.0128
+          },
+          "n_by_family": {
+            "claude": 1
+          }
+        }
+      }
+    },
+    "4": {
+      "observation_preview": "Quiet buzzing was heard, and the box that you chose became white.\n\nThe testing i",
+      "n": 39,
+      "choices": {
+        "call the faeyan": {
+          "text": "Call the Faeyan",
+          "n": 39,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0513,
+            "deepseek": 0.0513,
+            "gemini": 0.8462,
+            "qwen": 0.0513
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 33,
+            "qwen": 2
+          }
+        }
+      }
+    }
+  }
+}

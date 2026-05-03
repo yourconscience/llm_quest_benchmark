@@ -20,7 +20,151 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = REPO_ROOT / "metrics.db"
 OUT_DIR = REPO_ROOT / "site" / "play"
 
-TARGET_QUESTS = ["Disk_eng", "Pizza_eng", "Badday_eng"]
+TARGET_QUESTS = [
+    "Banket_eng",
+    "Badday_eng",
+    "Pizza_eng",
+    "Borzukhan_eng",
+    "Ski_eng",
+    "Election_eng",
+    "Robots_eng",
+    "Leonardo_eng",
+    "Depth_eng",
+    "Edelweiss_eng",
+    "Ministry_eng",
+    "Foncers_eng",
+    "Driver_eng",
+    "Codebox_eng",
+    "Prison_eng",
+    "Pilot_eng",
+    "Disk_eng",
+    "Sortirovka1_eng",
+    "Shashki_eng",
+    "Player_eng",
+]
+
+QUEST_METADATA: dict[str, dict] = {
+    "Disk_eng": {
+        "title": "Disk",
+        "difficulty": "easy",
+        "description": "Answer riddles from a malfunctioning ship computer.",
+        "stepsRange": "6-9",
+    },
+    "Pizza_eng": {
+        "title": "Pizza Delivery",
+        "difficulty": "medium",
+        "description": "Deliver a pizza across a hostile space station.",
+        "stepsRange": "15-30",
+    },
+    "Badday_eng": {
+        "title": "Bad Day",
+        "difficulty": "hard",
+        "description": "Survive a day when everything goes wrong.",
+        "stepsRange": "20-40",
+    },
+    "Banket_eng": {
+        "title": "Banquet",
+        "difficulty": "medium",
+        "description": "Navigate the politics of an interstellar banquet.",
+        "stepsRange": "15-25",
+    },
+    "Borzukhan_eng": {
+        "title": "Borzukhan",
+        "difficulty": "hard",
+        "description": "Infiltrate a fortified enemy base.",
+        "stepsRange": "20-40",
+    },
+    "Ski_eng": {
+        "title": "Ski Resort",
+        "difficulty": "medium",
+        "description": "Manage a ski resort on an alien planet.",
+        "stepsRange": "15-25",
+    },
+    "Election_eng": {
+        "title": "Election",
+        "difficulty": "hard",
+        "description": "Win a planetary election campaign.",
+        "stepsRange": "25-50",
+    },
+    "Robots_eng": {
+        "title": "Robots",
+        "difficulty": "hard",
+        "description": "Survive a robot uprising on a space station.",
+        "stepsRange": "20-40",
+    },
+    "Leonardo_eng": {
+        "title": "Leonardo",
+        "difficulty": "hard",
+        "description": "Solve mysteries in a Renaissance-themed quest.",
+        "stepsRange": "20-40",
+    },
+    "Depth_eng": {
+        "title": "Depth",
+        "difficulty": "medium",
+        "description": "Explore the depths of an underwater facility.",
+        "stepsRange": "15-30",
+    },
+    "Edelweiss_eng": {
+        "title": "Edelweiss",
+        "difficulty": "medium",
+        "description": "Navigate a mountain expedition gone wrong.",
+        "stepsRange": "15-30",
+    },
+    "Ministry_eng": {
+        "title": "Ministry",
+        "difficulty": "hard",
+        "description": "Navigate bureaucratic intrigue at a space ministry.",
+        "stepsRange": "20-35",
+    },
+    "Foncers_eng": {
+        "title": "Foncers",
+        "difficulty": "medium",
+        "description": "Compete in an underground racing league.",
+        "stepsRange": "10-20",
+    },
+    "Driver_eng": {
+        "title": "Driver",
+        "difficulty": "hard",
+        "description": "Complete a dangerous cargo delivery run.",
+        "stepsRange": "25-50",
+    },
+    "Codebox_eng": {
+        "title": "Code Box",
+        "difficulty": "easy",
+        "description": "Crack codes and solve puzzles.",
+        "stepsRange": "5-15",
+    },
+    "Prison_eng": {
+        "title": "Prison",
+        "difficulty": "hard",
+        "description": "Escape from an alien prison complex.",
+        "stepsRange": "25-50",
+    },
+    "Pilot_eng": {
+        "title": "Pilot",
+        "difficulty": "medium",
+        "description": "Pass the pilot certification exam.",
+        "stepsRange": "10-20",
+    },
+    "Sortirovka1_eng": {
+        "title": "Sorting",
+        "difficulty": "easy",
+        "description": "Sort items in a warehouse puzzle.",
+        "stepsRange": "5-10",
+    },
+    "Shashki_eng": {
+        "title": "Checkers",
+        "difficulty": "easy",
+        "description": "Play a game of space checkers.",
+        "stepsRange": "5-10",
+    },
+    "Player_eng": {
+        "title": "Player",
+        "difficulty": "easy",
+        "description": "A simple introductory quest.",
+        "stepsRange": "5-10",
+    },
+}
 
 EXCLUDE_PATTERNS = ["random", "test", "planner", "tool"]
 
@@ -262,6 +406,35 @@ def main() -> None:
             print(f"  -> {out_path}")
     finally:
         conn.close()
+
+    # Build quest-index.json from generated cohort files
+    print("\nBuilding quest-index.json...")
+    index_quests = []
+    for quest_name in TARGET_QUESTS:
+        cohort_path = OUT_DIR / f"{quest_name}.json"
+        if not cohort_path.exists():
+            print(f"  [WARN] missing cohort file for {quest_name}, skipping", file=sys.stderr)
+            continue
+        cohort = json.loads(cohort_path.read_text(encoding="utf-8"))
+        meta = QUEST_METADATA.get(quest_name, {})
+        index_quests.append(
+            {
+                "id": quest_name,
+                "title": meta.get("title", quest_name),
+                "difficulty": meta.get("difficulty", "unknown"),
+                "description": meta.get("description", ""),
+                "stepsRange": meta.get("stepsRange", ""),
+                "win_rate": cohort.get("win_rate", 0.0),
+                "total_runs": cohort.get("total_runs", 0),
+            }
+        )
+
+    index_path = OUT_DIR / "quest-index.json"
+    index_path.write_text(
+        json.dumps({"quests": index_quests}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    print(f"  -> {index_path} ({len(index_quests)} quests)")
 
 
 if __name__ == "__main__":

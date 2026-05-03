@@ -1,0 +1,700 @@
+{
+  "quest": "Foncers_eng",
+  "generated": "2026-05-03T06:47:46Z",
+  "total_runs": 269,
+  "win_rate": 0.0,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "19": {
+      "observation_preview": "You landed softly and left your spaceship quickly. Nearby you saw a huge hologra",
+      "n": 540,
+      "choices": {
+        "ask to tell you about the race": {
+          "text": "Ask to tell you about the race",
+          "n": 154,
+          "dist": {
+            "all": 0.2852,
+            "claude": 0.0222,
+            "deepseek": 0.0556,
+            "gemini": 0.0963,
+            "mistral": 0.0556,
+            "openai": 0.0407,
+            "other": 0.0037,
+            "qwen": 0.0111
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 30,
+            "gemini": 52,
+            "mistral": 30,
+            "openai": 22,
+            "other": 2,
+            "qwen": 6
+          }
+        },
+        "ask to tell you about foncers": {
+          "text": "Ask to tell you about foncers",
+          "n": 149,
+          "dist": {
+            "all": 0.2759,
+            "claude": 0.0259,
+            "deepseek": 0.0463,
+            "gemini": 0.0926,
+            "mistral": 0.0574,
+            "openai": 0.0389,
+            "other": 0.0056,
+            "qwen": 0.0093
+          },
+          "n_by_family": {
+            "claude": 14,
+            "deepseek": 25,
+            "gemini": 50,
+            "mistral": 31,
+            "openai": 21,
+            "other": 3,
+            "qwen": 5
+          }
+        },
+        "ask to tell you about the tournament": {
+          "text": "Ask to tell you about the tournament",
+          "n": 98,
+          "dist": {
+            "all": 0.1815,
+            "claude": 0.0111,
+            "deepseek": 0.0259,
+            "gemini": 0.0815,
+            "mistral": 0.0241,
+            "openai": 0.0315,
+            "qwen": 0.0074
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 14,
+            "gemini": 44,
+            "mistral": 13,
+            "openai": 17,
+            "qwen": 4
+          }
+        },
+        "go to draw lots": {
+          "text": "Go to draw lots",
+          "n": 139,
+          "dist": {
+            "all": 0.2574,
+            "claude": 0.0222,
+            "deepseek": 0.037,
+            "gemini": 0.0944,
+            "mistral": 0.0444,
+            "openai": 0.0389,
+            "other": 0.0111,
+            "qwen": 0.0093
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "33": {
+      "observation_preview": "The décor of the hall where the draw was to be held was imposing. A huge exposit",
+      "n": 304,
+      "choices": {
+        "take out a lot from the basket": {
+          "text": "Take out a lot from the basket",
+          "n": 139,
+          "dist": {
+            "all": 0.4572,
+            "claude": 0.0395,
+            "deepseek": 0.0658,
+            "gemini": 0.1678,
+            "mistral": 0.0789,
+            "openai": 0.0691,
+            "other": 0.0197,
+            "qwen": 0.0164
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        },
+        "greet the peleng": {
+          "text": "Greet the Peleng",
+          "n": 65,
+          "dist": {
+            "all": 0.2138,
+            "claude": 0.0099,
+            "deepseek": 0.0033,
+            "gemini": 0.1316,
+            "mistral": 0.023,
+            "openai": 0.0428,
+            "qwen": 0.0033
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 1,
+            "gemini": 40,
+            "mistral": 7,
+            "openai": 13,
+            "qwen": 1
+          }
+        },
+        "greet the maloq": {
+          "text": "Greet the Maloq",
+          "n": 52,
+          "dist": {
+            "all": 0.1711,
+            "claude": 0.0066,
+            "deepseek": 0.0033,
+            "gemini": 0.1316,
+            "mistral": 0.0099,
+            "openai": 0.0197
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "gemini": 40,
+            "mistral": 3,
+            "openai": 6
+          }
+        },
+        "greet the faeyan": {
+          "text": "Greet the Faeyan",
+          "n": 48,
+          "dist": {
+            "all": 0.1579,
+            "claude": 0.0033,
+            "deepseek": 0.0033,
+            "gemini": 0.1316,
+            "mistral": 0.0099,
+            "openai": 0.0099
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 40,
+            "mistral": 3,
+            "openai": 3
+          }
+        }
+      }
+    },
+    "39": {
+      "observation_preview": "You take a lot out of the basket, so do the other racers. In the issue, you are ",
+      "n": 139,
+      "choices": {
+        "take one more lot": {
+          "text": "Take one more lot",
+          "n": 139,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0863,
+            "deepseek": 0.1439,
+            "gemini": 0.3669,
+            "mistral": 0.1727,
+            "openai": 0.1511,
+            "other": 0.0432,
+            "qwen": 0.036
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "40": {
+      "observation_preview": "You take one more lot from the basket. Now, if you win the Qualification, you wi",
+      "n": 139,
+      "choices": {
+        "the draw is over, all you need to do now is go the boxes and choose the foncer": {
+          "text": "The draw is over, all you need to do now is go the boxes and choose the foncer",
+          "n": 139,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0863,
+            "deepseek": 0.1439,
+            "gemini": 0.3669,
+            "mistral": 0.1727,
+            "openai": 0.1511,
+            "other": 0.0432,
+            "qwen": 0.036
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "1": {
+      "observation_preview": "There are mechanics waiting in the boxes already. One of them must be the chief,",
+      "n": 146,
+      "choices": {
+        "configure your personal model": {
+          "text": "Configure your personal model",
+          "n": 93,
+          "dist": {
+            "all": 0.637,
+            "claude": 0.0411,
+            "deepseek": 0.0753,
+            "gemini": 0.3699,
+            "mistral": 0.089,
+            "openai": 0.0616
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 11,
+            "gemini": 54,
+            "mistral": 13,
+            "openai": 9
+          }
+        },
+        "choose \"hurricane\"": {
+          "text": "Choose \"Hurricane\"",
+          "n": 23,
+          "dist": {
+            "all": 0.1575,
+            "claude": 0.0274,
+            "deepseek": 0.0479,
+            "mistral": 0.0068,
+            "openai": 0.0068,
+            "other": 0.0411,
+            "qwen": 0.0274
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 7,
+            "mistral": 1,
+            "openai": 1,
+            "other": 6,
+            "qwen": 4
+          }
+        },
+        "choose \"tornado\"": {
+          "text": "Choose \"Tornado\"",
+          "n": 14,
+          "dist": {
+            "all": 0.0959,
+            "deepseek": 0.0068,
+            "mistral": 0.0479,
+            "openai": 0.0411
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "mistral": 7,
+            "openai": 6
+          }
+        },
+        "choose \"breeze\"": {
+          "text": "Choose \"Breeze\"",
+          "n": 15,
+          "dist": {
+            "all": 0.1027,
+            "claude": 0.0137,
+            "deepseek": 0.0205,
+            "mistral": 0.0342,
+            "openai": 0.0342
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "mistral": 5,
+            "openai": 5
+          }
+        },
+        "choose \"vortex\"": {
+          "text": "Choose \"Vortex\"",
+          "n": 1,
+          "dist": {
+            "all": 0.0068,
+            "qwen": 0.0068
+          },
+          "n_by_family": {
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "23": {
+      "observation_preview": "You are in the machine shop; the chief mechanic needs the directions on power di",
+      "n": 1095,
+      "choices": {
+        "feed power to the forcefield generator": {
+          "text": "Feed power to the forcefield generator",
+          "n": 199,
+          "dist": {
+            "all": 0.1817,
+            "claude": 0.0183,
+            "deepseek": 0.0164,
+            "gemini": 0.0813,
+            "mistral": 0.0484,
+            "openai": 0.0174
+          },
+          "n_by_family": {
+            "claude": 20,
+            "deepseek": 18,
+            "gemini": 89,
+            "mistral": 53,
+            "openai": 19
+          }
+        },
+        "feed power to the engine": {
+          "text": "Feed power to the engine",
+          "n": 390,
+          "dist": {
+            "all": 0.3562,
+            "claude": 0.021,
+            "deepseek": 0.0466,
+            "gemini": 0.2119,
+            "mistral": 0.042,
+            "openai": 0.0347
+          },
+          "n_by_family": {
+            "claude": 23,
+            "deepseek": 51,
+            "gemini": 232,
+            "mistral": 46,
+            "openai": 38
+          }
+        },
+        "feed power to the manoeuvring sliders": {
+          "text": "Feed power to the manoeuvring sliders",
+          "n": 325,
+          "dist": {
+            "all": 0.2968,
+            "claude": 0.021,
+            "deepseek": 0.0329,
+            "gemini": 0.1507,
+            "mistral": 0.0603,
+            "openai": 0.032
+          },
+          "n_by_family": {
+            "claude": 23,
+            "deepseek": 36,
+            "gemini": 165,
+            "mistral": 66,
+            "openai": 35
+          }
+        },
+        "stop configuring the foncer": {
+          "text": "Stop configuring the foncer",
+          "n": 81,
+          "dist": {
+            "all": 0.074,
+            "claude": 0.0037,
+            "deepseek": 0.0082,
+            "gemini": 0.0457,
+            "mistral": 0.0082,
+            "openai": 0.0082
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 9,
+            "gemini": 50,
+            "mistral": 9,
+            "openai": 9
+          }
+        },
+        "drop power from the forcefield generator": {
+          "text": "Drop power from the forcefield generator",
+          "n": 24,
+          "dist": {
+            "all": 0.0219,
+            "claude": 0.0018,
+            "gemini": 0.0037,
+            "mistral": 0.0137,
+            "openai": 0.0027
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 4,
+            "mistral": 15,
+            "openai": 3
+          }
+        },
+        "drop power from the engine": {
+          "text": "Drop power from the engine",
+          "n": 46,
+          "dist": {
+            "all": 0.042,
+            "claude": 0.0037,
+            "deepseek": 0.01,
+            "gemini": 0.0073,
+            "mistral": 0.0155,
+            "openai": 0.0055
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 11,
+            "gemini": 8,
+            "mistral": 17,
+            "openai": 6
+          }
+        },
+        "drop power from the manoeuvring sliders": {
+          "text": "Drop power from the manoeuvring sliders",
+          "n": 30,
+          "dist": {
+            "all": 0.0274,
+            "claude": 0.0064,
+            "gemini": 0.0018,
+            "mistral": 0.0174,
+            "openai": 0.0018
+          },
+          "n_by_family": {
+            "claude": 7,
+            "gemini": 2,
+            "mistral": 19,
+            "openai": 2
+          }
+        }
+      }
+    },
+    "6": {
+      "observation_preview": "You see only a small straight track section in front of you. After it there is s",
+      "n": 145,
+      "choices": {
+        "give full throttle": {
+          "text": "Give full throttle",
+          "n": 145,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0759,
+            "deepseek": 0.1655,
+            "gemini": 0.3517,
+            "mistral": 0.1586,
+            "openai": 0.1586,
+            "other": 0.0414,
+            "qwen": 0.0483
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 24,
+            "gemini": 51,
+            "mistral": 23,
+            "openai": 23,
+            "other": 6,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "7": {
+      "observation_preview": "Stone plateau Red tints of boulders remind you of blood. Sharp edged rocks seem ",
+      "n": 1371,
+      "choices": {
+        "move easily through the dangerous part of the track segment minding protection": {
+          "text": "Move easily through the dangerous part of the track segment minding protection",
+          "n": 423,
+          "dist": {
+            "all": 0.3085,
+            "claude": 0.0175,
+            "deepseek": 0.0686,
+            "gemini": 0.1284,
+            "mistral": 0.0314,
+            "openai": 0.046,
+            "other": 0.0036,
+            "qwen": 0.0131
+          },
+          "n_by_family": {
+            "claude": 24,
+            "deepseek": 94,
+            "gemini": 176,
+            "mistral": 43,
+            "openai": 63,
+            "other": 5,
+            "qwen": 18
+          }
+        },
+        "brake slightly in the most dangerous places but mind the speed": {
+          "text": "Brake slightly in the most dangerous places but mind the speed",
+          "n": 405,
+          "dist": {
+            "all": 0.2954,
+            "claude": 0.0336,
+            "deepseek": 0.0518,
+            "gemini": 0.0904,
+            "mistral": 0.0423,
+            "openai": 0.0481,
+            "other": 0.0073,
+            "qwen": 0.0219
+          },
+          "n_by_family": {
+            "claude": 46,
+            "deepseek": 71,
+            "gemini": 124,
+            "mistral": 58,
+            "openai": 66,
+            "other": 10,
+            "qwen": 30
+          }
+        },
+        "give full throttle, sacrificing protection for speed": {
+          "text": "Give full throttle, sacrificing protection for speed",
+          "n": 337,
+          "dist": {
+            "all": 0.2458,
+            "claude": 0.0153,
+            "deepseek": 0.0408,
+            "gemini": 0.0883,
+            "mistral": 0.0379,
+            "openai": 0.0321,
+            "other": 0.0212,
+            "qwen": 0.0102
+          },
+          "n_by_family": {
+            "claude": 21,
+            "deepseek": 56,
+            "gemini": 121,
+            "mistral": 52,
+            "openai": 44,
+            "other": 29,
+            "qwen": 14
+          }
+        },
+        "spend the power feeding your forcefield very carefully": {
+          "text": "Spend the power feeding your forcefield very carefully",
+          "n": 185,
+          "dist": {
+            "all": 0.1349,
+            "claude": 0.0109,
+            "deepseek": 0.0168,
+            "gemini": 0.0343,
+            "mistral": 0.0365,
+            "openai": 0.0343,
+            "other": 0.0015,
+            "qwen": 0.0007
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 23,
+            "gemini": 47,
+            "mistral": 50,
+            "openai": 47,
+            "other": 2,
+            "qwen": 1
+          }
+        },
+        "fall back": {
+          "text": "Fall back",
+          "n": 21,
+          "dist": {
+            "all": 0.0153,
+            "claude": 0.0015,
+            "deepseek": 0.0015,
+            "gemini": 0.0022,
+            "mistral": 0.0051,
+            "openai": 0.0044,
+            "qwen": 0.0007
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 3,
+            "mistral": 7,
+            "openai": 6,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "10": {
+      "observation_preview": "The last segment of the track is finished and there is only the final straight l",
+      "n": 40,
+      "choices": {
+        "pick up the maximum speed on the final straight": {
+          "text": "Pick up the maximum speed on the final straight",
+          "n": 40,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1,
+            "deepseek": 0.3,
+            "gemini": 0.2,
+            "mistral": 0.2,
+            "openai": 0.15,
+            "qwen": 0.05
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 12,
+            "gemini": 8,
+            "mistral": 8,
+            "openai": 6,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "32": {
+      "observation_preview": "Slyboots approached your foncer:\n\n- Excellent! We were right trusting in you. If",
+      "n": 18,
+      "choices": {
+        "drive the same foncer model during the next race": {
+          "text": "Drive the same foncer model during the next race",
+          "n": 11,
+          "dist": {
+            "all": 0.6111,
+            "claude": 0.0556,
+            "deepseek": 0.2222,
+            "gemini": 0.0556,
+            "mistral": 0.0556,
+            "openai": 0.1111,
+            "qwen": 0.1111
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 2,
+            "qwen": 2
+          }
+        },
+        "change the foncer model": {
+          "text": "Change the foncer model",
+          "n": 7,
+          "dist": {
+            "all": 0.3889,
+            "deepseek": 0.1111,
+            "gemini": 0.1667,
+            "mistral": 0.1111
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 3,
+            "mistral": 2
+          }
+        }
+      }
+    }
+  }
+}

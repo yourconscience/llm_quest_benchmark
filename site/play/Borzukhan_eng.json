@@ -1,0 +1,524 @@
+{
+  "quest": "Borzukhan_eng",
+  "generated": "2026-05-03T06:47:45Z",
+  "total_runs": 6,
+  "win_rate": 0.1667,
+  "model_families": [
+    "gemini"
+  ],
+  "locations": {
+    "2": {
+      "observation_preview": "In the camp you were met by the agent of planet Земля.\n- Dear Греф, I am glad to",
+      "n": 3,
+      "choices": {
+        "how do i find borzukhan's base?": {
+          "text": "How do I find Borzukhan's base?",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "4": {
+      "observation_preview": "- This may surely become a difficult task, since the planet is rather large. Alt",
+      "n": 6,
+      "choices": {
+        "how do i destroy the base?": {
+          "text": "How do I destroy the base?",
+          "n": 2,
+          "dist": {
+            "all": 0.3333,
+            "gemini": 0.3333
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        },
+        "i'm ready!": {
+          "text": "I'm ready!",
+          "n": 2,
+          "dist": {
+            "all": 0.3333,
+            "gemini": 0.3333
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        },
+        "why didn't you locate the base yourselves?": {
+          "text": "Why didn't you locate the base yourselves?",
+          "n": 2,
+          "dist": {
+            "all": 0.3333,
+            "gemini": 0.3333
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "3": {
+      "observation_preview": "- Of course we are not going to send you there unarmed. You will get a laser gun",
+      "n": 3,
+      "choices": {
+        "how do i find borzukhan's base?": {
+          "text": "How do I find Borzukhan's base?",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "5": {
+      "observation_preview": "- Excellent! But before you start off, you must receive your munitions. You are ",
+      "n": 3,
+      "choices": {
+        "climb into the flyer": {
+          "text": "Climb into the flyer",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "7": {
+      "observation_preview": "You are sitting in a light flyer and contemplate where you should go.\n\nStatus:\nY",
+      "n": 12,
+      "choices": {
+        "circle over the camp and look around": {
+          "text": "Circle over the camp and look around",
+          "n": 3,
+          "dist": {
+            "all": 0.25,
+            "gemini": 0.25
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        },
+        "go southwest, to the forest": {
+          "text": "Go southwest, to the forest",
+          "n": 3,
+          "dist": {
+            "all": 0.25,
+            "gemini": 0.25
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        },
+        "go back to the camp and get some medical assistance": {
+          "text": "Go back to the camp and get some medical assistance",
+          "n": 3,
+          "dist": {
+            "all": 0.25,
+            "gemini": 0.25
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        },
+        "go north, to the mountains": {
+          "text": "Go north, to the mountains",
+          "n": 3,
+          "dist": {
+            "all": 0.25,
+            "gemini": 0.25
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "11": {
+      "observation_preview": "You circled around the camp. To the north you saw a high range. To the west and ",
+      "n": 3,
+      "choices": {
+        "fly to the smoke trace": {
+          "text": "Fly to the smoke trace",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "12": {
+      "observation_preview": "You followed the smoke and soon beheld a group of creatures gathered around a fi",
+      "n": 3,
+      "choices": {
+        "land carefully not far from the fire": {
+          "text": "Land carefully not far from the fire",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "13": {
+      "observation_preview": "You carefully landed the flyer not far from the fire, behind a huge rock, where ",
+      "n": 3,
+      "choices": {
+        "listen to the peleng conversation": {
+          "text": "Listen to the Peleng conversation",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "23": {
+      "observation_preview": "You pricked up your ears and tried to make out what the Pelengs were talking abo",
+      "n": 3,
+      "choices": {
+        "continue listening": {
+          "text": "Continue listening",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "26": {
+      "observation_preview": "You continued listening to the pirate conversation and heard one of them complai",
+      "n": 3,
+      "choices": {
+        "fly away": {
+          "text": "Fly away",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "17": {
+      "observation_preview": "You turned your flyer and flew away not wanting to mess with this bunch.\n\nStatus",
+      "n": 3,
+      "choices": {
+        "next": {
+          "text": "Next",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "9": {
+      "observation_preview": "You are circling over the woods. From this height you cannot see anything suspic",
+      "n": 3,
+      "choices": {
+        "land and look for the lyakusha's cabin": {
+          "text": "Land and look for the lyakusha's cabin",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "29": {
+      "observation_preview": "Remembering the conversation of the pirates that you'd overheard, you decided to",
+      "n": 6,
+      "choices": {
+        "sneak up to the cabin and carefully look in the window": {
+          "text": "Sneak up to the cabin and carefully look in the window",
+          "n": 3,
+          "dist": {
+            "all": 0.5,
+            "gemini": 0.5
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        },
+        "kick the door in and burst into the house with your gun ready": {
+          "text": "Kick the door in and burst into the house with your gun ready",
+          "n": 3,
+          "dist": {
+            "all": 0.5,
+            "gemini": 0.5
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "31": {
+      "observation_preview": "You crawled up to the window and cautiously peeked inside. In the armchair right",
+      "n": 3,
+      "choices": {
+        "carefully step away from the window": {
+          "text": "Carefully step away from the window",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "33": {
+      "observation_preview": "You kicked the door in and burst into the cabin. Borzukhan jumped up from his ar",
+      "n": 3,
+      "choices": {
+        "shoot the laser gun": {
+          "text": "Shoot the laser gun",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "44": {
+      "observation_preview": "Fortunately enough he wasn't that good a shot, and you were only scratched. Oh w",
+      "n": 3,
+      "choices": {
+        "go back to the flyer": {
+          "text": "Go back to the flyer",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "106": {
+      "observation_preview": "You decided to go back to the camp to get some treatment. You were taken to a me",
+      "n": 3,
+      "choices": {
+        "next": {
+          "text": "Next",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "8": {
+      "observation_preview": "You circled over the mountains north of the camp and soon detected a cave openin",
+      "n": 3,
+      "choices": {
+        "fly back to the cave": {
+          "text": "Fly back to the cave",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "54": {
+      "observation_preview": "You headed your flyer to the cave, when suddenly a group of pirates with laser g",
+      "n": 3,
+      "choices": {
+        "throw a grenade into the guards": {
+          "text": "Throw a grenade into the guards",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "58": {
+      "observation_preview": "You took out a grenade and threw it at the guards. The explosion shook the rocks",
+      "n": 3,
+      "choices": {
+        "land the flyer and enter the cave": {
+          "text": "Land the flyer and enter the cave",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "59": {
+      "observation_preview": "You landed the flyer behind the nearest rock, and cautiously stepped into the ca",
+      "n": 3,
+      "choices": {
+        "run out of the cave and escape in your flyer": {
+          "text": "Run out of the cave and escape in your flyer",
+          "n": 1,
+          "dist": {
+            "all": 0.3333,
+            "gemini": 0.3333
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        },
+        "run out of the cave and hide behind a rock": {
+          "text": "Run out of the cave and hide behind a rock",
+          "n": 2,
+          "dist": {
+            "all": 0.6667,
+            "gemini": 0.6667
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "6": {
+      "observation_preview": "- Of course, we could have sent our people in advance, so that they located the ",
+      "n": 2,
+      "choices": {
+        "how do i destroy the base?": {
+          "text": "How do I destroy the base?",
+          "n": 1,
+          "dist": {
+            "all": 0.5,
+            "gemini": 0.5
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        },
+        "i'm ready!": {
+          "text": "I'm ready!",
+          "n": 1,
+          "dist": {
+            "all": 0.5,
+            "gemini": 0.5
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "62": {
+      "observation_preview": "You rushed out of the cave and crouched behind a rock. The enemies ran out and l",
+      "n": 2,
+      "choices": {
+        "throw a grenade into the crowd of pirates": {
+          "text": "Throw a grenade into the crowd of pirates",
+          "n": 2,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "65": {
+      "observation_preview": "You tossed a grenade into the crowd of pirates and blew them apart. Once again t",
+      "n": 2,
+      "choices": {
+        "go back to the cave": {
+          "text": "Go back to the cave",
+          "n": 2,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "66": {
+      "observation_preview": "You went down the corridor. Several minutes later you ran into a ramification. O",
+      "n": 2,
+      "choices": {
+        "enter the door": {
+          "text": "Enter the door",
+          "n": 2,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    }
+  }
+}

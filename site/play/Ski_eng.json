@@ -1,0 +1,903 @@
+{
+  "quest": "Ski_eng",
+  "generated": "2026-05-03T06:47:45Z",
+  "total_runs": 293,
+  "win_rate": 0.0751,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "54": {
+      "observation_preview": "The acting general manager of the mountain-ski resort, a Gaalian, met you in the",
+      "n": 154,
+      "choices": {
+        "talk to the experts": {
+          "text": "Talk to the experts",
+          "n": 154,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0909,
+            "deepseek": 0.1429,
+            "gemini": 0.3896,
+            "mistral": 0.1558,
+            "openai": 0.1364,
+            "other": 0.039,
+            "qwen": 0.0455
+          },
+          "n_by_family": {
+            "claude": 14,
+            "deepseek": 22,
+            "gemini": 60,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "55": {
+      "observation_preview": "Who do you want to talk to?\n\nStatus:\nPopularity of the resort 50 %\nMoney on the ",
+      "n": 2986,
+      "choices": {
+        "talk to the economist": {
+          "text": "Talk to the economist",
+          "n": 676,
+          "dist": {
+            "all": 0.2264,
+            "claude": 0.0221,
+            "deepseek": 0.0301,
+            "gemini": 0.0754,
+            "mistral": 0.0405,
+            "openai": 0.0439,
+            "other": 0.0084,
+            "qwen": 0.006
+          },
+          "n_by_family": {
+            "claude": 66,
+            "deepseek": 90,
+            "gemini": 225,
+            "mistral": 121,
+            "openai": 131,
+            "other": 25,
+            "qwen": 18
+          }
+        },
+        "talk to the construction manager": {
+          "text": "Talk to the construction manager",
+          "n": 729,
+          "dist": {
+            "all": 0.2441,
+            "claude": 0.0137,
+            "deepseek": 0.0271,
+            "gemini": 0.1125,
+            "mistral": 0.0395,
+            "openai": 0.0258,
+            "other": 0.0161,
+            "qwen": 0.0094
+          },
+          "n_by_family": {
+            "claude": 41,
+            "deepseek": 81,
+            "gemini": 336,
+            "mistral": 118,
+            "openai": 77,
+            "other": 48,
+            "qwen": 28
+          }
+        },
+        "talk to the deputy": {
+          "text": "Talk to the deputy",
+          "n": 463,
+          "dist": {
+            "all": 0.1551,
+            "claude": 0.009,
+            "deepseek": 0.0368,
+            "gemini": 0.0328,
+            "mistral": 0.0288,
+            "openai": 0.0241,
+            "other": 0.0174,
+            "qwen": 0.006
+          },
+          "n_by_family": {
+            "claude": 27,
+            "deepseek": 110,
+            "gemini": 98,
+            "mistral": 86,
+            "openai": 72,
+            "other": 52,
+            "qwen": 18
+          }
+        },
+        "talk to the accountant": {
+          "text": "Talk to the accountant",
+          "n": 458,
+          "dist": {
+            "all": 0.1534,
+            "claude": 0.0104,
+            "deepseek": 0.0301,
+            "gemini": 0.0409,
+            "mistral": 0.0255,
+            "openai": 0.0291,
+            "other": 0.0117,
+            "qwen": 0.0057
+          },
+          "n_by_family": {
+            "claude": 31,
+            "deepseek": 90,
+            "gemini": 122,
+            "mistral": 76,
+            "openai": 87,
+            "other": 35,
+            "qwen": 17
+          }
+        },
+        "build something": {
+          "text": "Build something",
+          "n": 162,
+          "dist": {
+            "all": 0.0543,
+            "claude": 0.002,
+            "deepseek": 0.009,
+            "gemini": 0.0181,
+            "mistral": 0.0164,
+            "openai": 0.0077,
+            "other": 0.0003,
+            "qwen": 0.0007
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 27,
+            "gemini": 54,
+            "mistral": 49,
+            "openai": 23,
+            "other": 1,
+            "qwen": 2
+          }
+        },
+        "look through the report as of yesterday": {
+          "text": "Look through the report as of yesterday",
+          "n": 72,
+          "dist": {
+            "all": 0.0241,
+            "claude": 0.0007,
+            "deepseek": 0.0077,
+            "gemini": 0.005,
+            "mistral": 0.003,
+            "openai": 0.0054,
+            "other": 0.0017,
+            "qwen": 0.0007
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 23,
+            "gemini": 15,
+            "mistral": 9,
+            "openai": 16,
+            "other": 5,
+            "qwen": 2
+          }
+        },
+        "talk to the advertising manager": {
+          "text": "Talk to the advertising manager",
+          "n": 334,
+          "dist": {
+            "all": 0.1119,
+            "claude": 0.008,
+            "deepseek": 0.0154,
+            "gemini": 0.0539,
+            "mistral": 0.0171,
+            "openai": 0.0121,
+            "other": 0.0007,
+            "qwen": 0.0047
+          },
+          "n_by_family": {
+            "claude": 24,
+            "deepseek": 46,
+            "gemini": 161,
+            "mistral": 51,
+            "openai": 36,
+            "other": 2,
+            "qwen": 14
+          }
+        },
+        "let's call it a day! have a break for the rest of the day": {
+          "text": "Let's call it a day! Have a break for the rest of the day",
+          "n": 92,
+          "dist": {
+            "all": 0.0308,
+            "claude": 0.001,
+            "deepseek": 0.0027,
+            "gemini": 0.0248,
+            "mistral": 0.0007,
+            "openai": 0.0013,
+            "qwen": 0.0003
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 8,
+            "gemini": 74,
+            "mistral": 2,
+            "openai": 4,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "63": {
+      "observation_preview": "The economist turned out to be a man of immense format whose report was brief an",
+      "n": 675,
+      "choices": {
+        "consult somebody else": {
+          "text": "Consult somebody else",
+          "n": 294,
+          "dist": {
+            "all": 0.4356,
+            "claude": 0.0459,
+            "deepseek": 0.0578,
+            "gemini": 0.1407,
+            "mistral": 0.0756,
+            "openai": 0.08,
+            "other": 0.0178,
+            "qwen": 0.0178
+          },
+          "n_by_family": {
+            "claude": 31,
+            "deepseek": 39,
+            "gemini": 95,
+            "mistral": 51,
+            "openai": 54,
+            "other": 12,
+            "qwen": 12
+          }
+        },
+        "let's call it a day! have a break for the rest of the day": {
+          "text": "Let's call it a day! Have a break for the rest of the day",
+          "n": 136,
+          "dist": {
+            "all": 0.2015,
+            "claude": 0.0163,
+            "deepseek": 0.0267,
+            "gemini": 0.0741,
+            "mistral": 0.037,
+            "openai": 0.0341,
+            "other": 0.0089,
+            "qwen": 0.0044
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 18,
+            "gemini": 50,
+            "mistral": 25,
+            "openai": 23,
+            "other": 6,
+            "qwen": 3
+          }
+        },
+        "build something": {
+          "text": "Build something",
+          "n": 151,
+          "dist": {
+            "all": 0.2237,
+            "claude": 0.0193,
+            "deepseek": 0.0311,
+            "gemini": 0.0785,
+            "mistral": 0.04,
+            "openai": 0.0444,
+            "other": 0.0074,
+            "qwen": 0.003
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 21,
+            "gemini": 53,
+            "mistral": 27,
+            "openai": 30,
+            "other": 5,
+            "qwen": 2
+          }
+        },
+        "look through the report as of yesterday": {
+          "text": "Look through the report as of yesterday",
+          "n": 94,
+          "dist": {
+            "all": 0.1393,
+            "claude": 0.0163,
+            "deepseek": 0.0163,
+            "gemini": 0.04,
+            "mistral": 0.0267,
+            "openai": 0.0356,
+            "other": 0.003,
+            "qwen": 0.0015
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 11,
+            "gemini": 27,
+            "mistral": 18,
+            "openai": 24,
+            "other": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "57": {
+      "observation_preview": "No sooner had you come down to the bar for the deserved rest than some nimble Pe",
+      "n": 1003,
+      "choices": {
+        "further": {
+          "text": "Further",
+          "n": 1003,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0588,
+            "deepseek": 0.1186,
+            "gemini": 0.4656,
+            "mistral": 0.1555,
+            "openai": 0.1595,
+            "other": 0.0309,
+            "qwen": 0.011
+          },
+          "n_by_family": {
+            "claude": 59,
+            "deepseek": 119,
+            "gemini": 467,
+            "mistral": 156,
+            "openai": 160,
+            "other": 31,
+            "qwen": 11
+          }
+        }
+      }
+    },
+    "58": {
+      "observation_preview": "Today is 19 Апреля 3026, day 1 of your resort management. Days left: 19.\n\nYou're",
+      "n": 2151,
+      "choices": {
+        "talk to the experts": {
+          "text": "Talk to the experts",
+          "n": 676,
+          "dist": {
+            "all": 0.3143,
+            "claude": 0.0214,
+            "deepseek": 0.0456,
+            "gemini": 0.1306,
+            "mistral": 0.053,
+            "openai": 0.0511,
+            "other": 0.006,
+            "qwen": 0.0065
+          },
+          "n_by_family": {
+            "claude": 46,
+            "deepseek": 98,
+            "gemini": 281,
+            "mistral": 114,
+            "openai": 110,
+            "other": 13,
+            "qwen": 14
+          }
+        },
+        "build something": {
+          "text": "Build something",
+          "n": 767,
+          "dist": {
+            "all": 0.3566,
+            "claude": 0.0214,
+            "deepseek": 0.0418,
+            "gemini": 0.1623,
+            "mistral": 0.0567,
+            "openai": 0.059,
+            "other": 0.0121,
+            "qwen": 0.0033
+          },
+          "n_by_family": {
+            "claude": 46,
+            "deepseek": 90,
+            "gemini": 349,
+            "mistral": 122,
+            "openai": 127,
+            "other": 26,
+            "qwen": 7
+          }
+        },
+        "everything is fine! have a break for the rest of the day": {
+          "text": "Everything is fine! Have a break for the rest of the day",
+          "n": 708,
+          "dist": {
+            "all": 0.3291,
+            "claude": 0.02,
+            "deepseek": 0.0404,
+            "gemini": 0.1344,
+            "mistral": 0.059,
+            "openai": 0.0614,
+            "other": 0.0121,
+            "qwen": 0.0019
+          },
+          "n_by_family": {
+            "claude": 43,
+            "deepseek": 87,
+            "gemini": 289,
+            "mistral": 127,
+            "openai": 132,
+            "other": 26,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "56": {
+      "observation_preview": "What are you going to build? \n\n1) Hotel - 110.000 cr\n2) Restaurant - 80.000 cr\n3",
+      "n": 1145,
+      "choices": {
+        "lay a track for beginners": {
+          "text": "Lay a track for beginners",
+          "n": 299,
+          "dist": {
+            "all": 0.2611,
+            "claude": 0.0201,
+            "deepseek": 0.0402,
+            "gemini": 0.0934,
+            "mistral": 0.0384,
+            "openai": 0.0559,
+            "other": 0.0079,
+            "qwen": 0.0052
+          },
+          "n_by_family": {
+            "claude": 23,
+            "deepseek": 46,
+            "gemini": 107,
+            "mistral": 44,
+            "openai": 64,
+            "other": 9,
+            "qwen": 6
+          }
+        },
+        "lay a track for pros": {
+          "text": "Lay a track for pros",
+          "n": 100,
+          "dist": {
+            "all": 0.0873,
+            "claude": 0.0087,
+            "deepseek": 0.0035,
+            "gemini": 0.0524,
+            "mistral": 0.0166,
+            "openai": 0.0061
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 4,
+            "gemini": 60,
+            "mistral": 19,
+            "openai": 7
+          }
+        },
+        "lay an average track": {
+          "text": "Lay an average track",
+          "n": 150,
+          "dist": {
+            "all": 0.131,
+            "claude": 0.007,
+            "deepseek": 0.0131,
+            "gemini": 0.0672,
+            "mistral": 0.0245,
+            "openai": 0.0166,
+            "other": 0.0017,
+            "qwen": 0.0009
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 15,
+            "gemini": 77,
+            "mistral": 28,
+            "openai": 19,
+            "other": 2,
+            "qwen": 1
+          }
+        },
+        "don't build anything": {
+          "text": "Don't build anything",
+          "n": 321,
+          "dist": {
+            "all": 0.2803,
+            "claude": 0.0218,
+            "deepseek": 0.0393,
+            "gemini": 0.0742,
+            "mistral": 0.0812,
+            "openai": 0.0559,
+            "other": 0.007,
+            "qwen": 0.0009
+          },
+          "n_by_family": {
+            "claude": 25,
+            "deepseek": 45,
+            "gemini": 85,
+            "mistral": 93,
+            "openai": 64,
+            "other": 8,
+            "qwen": 1
+          }
+        },
+        "build a restaurant": {
+          "text": "Build a restaurant",
+          "n": 110,
+          "dist": {
+            "all": 0.0961,
+            "claude": 0.0026,
+            "deepseek": 0.0122,
+            "gemini": 0.0524,
+            "mistral": 0.0079,
+            "openai": 0.014,
+            "other": 0.0061,
+            "qwen": 0.0009
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 14,
+            "gemini": 60,
+            "mistral": 9,
+            "openai": 16,
+            "other": 7,
+            "qwen": 1
+          }
+        },
+        "build a hotel": {
+          "text": "Build a hotel",
+          "n": 73,
+          "dist": {
+            "all": 0.0638,
+            "deepseek": 0.0122,
+            "gemini": 0.0341,
+            "mistral": 0.0044,
+            "openai": 0.007,
+            "other": 0.0052,
+            "qwen": 0.0009
+          },
+          "n_by_family": {
+            "deepseek": 14,
+            "gemini": 39,
+            "mistral": 5,
+            "openai": 8,
+            "other": 6,
+            "qwen": 1
+          }
+        },
+        "construct a ski lift with chairs": {
+          "text": "Construct a ski lift with chairs",
+          "n": 56,
+          "dist": {
+            "all": 0.0489,
+            "deepseek": 0.0017,
+            "gemini": 0.0384,
+            "mistral": 0.0035,
+            "openai": 0.0044,
+            "qwen": 0.0009
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 44,
+            "mistral": 4,
+            "openai": 5,
+            "qwen": 1
+          }
+        },
+        "construct a ski lift with cabins": {
+          "text": "Construct a ski lift with cabins",
+          "n": 36,
+          "dist": {
+            "all": 0.0314,
+            "gemini": 0.0271,
+            "mistral": 0.0017,
+            "openai": 0.0026
+          },
+          "n_by_family": {
+            "gemini": 31,
+            "mistral": 2,
+            "openai": 3
+          }
+        }
+      }
+    },
+    "61": {
+      "observation_preview": "A merry young man was responsible for the resort advertising. His report was the",
+      "n": 812,
+      "choices": {
+        "spend 20.000 cr per day on advertising": {
+          "text": "Spend 20.000 cr per day on advertising",
+          "n": 104,
+          "dist": {
+            "all": 0.1281,
+            "claude": 0.0148,
+            "deepseek": 0.0123,
+            "gemini": 0.0517,
+            "mistral": 0.0222,
+            "openai": 0.0172,
+            "other": 0.0012,
+            "qwen": 0.0086
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 10,
+            "gemini": 42,
+            "mistral": 18,
+            "openai": 14,
+            "other": 1,
+            "qwen": 7
+          }
+        },
+        "let's call it a day! have a break for the rest of the day": {
+          "text": "Let's call it a day! Have a break for the rest of the day",
+          "n": 57,
+          "dist": {
+            "all": 0.0702,
+            "claude": 0.0037,
+            "deepseek": 0.0074,
+            "gemini": 0.053,
+            "mistral": 0.0012,
+            "openai": 0.0012,
+            "qwen": 0.0037
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 6,
+            "gemini": 43,
+            "mistral": 1,
+            "openai": 1,
+            "qwen": 3
+          }
+        },
+        "spend 30.000 cr per day on advertising": {
+          "text": "Spend 30.000 cr per day on advertising",
+          "n": 84,
+          "dist": {
+            "all": 0.1034,
+            "claude": 0.0234,
+            "deepseek": 0.0062,
+            "gemini": 0.0259,
+            "mistral": 0.0209,
+            "openai": 0.0135,
+            "other": 0.0012,
+            "qwen": 0.0123
+          },
+          "n_by_family": {
+            "claude": 19,
+            "deepseek": 5,
+            "gemini": 21,
+            "mistral": 17,
+            "openai": 11,
+            "other": 1,
+            "qwen": 10
+          }
+        },
+        "build something": {
+          "text": "Build something",
+          "n": 37,
+          "dist": {
+            "all": 0.0456,
+            "claude": 0.0062,
+            "deepseek": 0.0025,
+            "gemini": 0.0234,
+            "mistral": 0.0062,
+            "openai": 0.0074
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 2,
+            "gemini": 19,
+            "mistral": 5,
+            "openai": 6
+          }
+        },
+        "spend 50.000 cr per day on advertising": {
+          "text": "Spend 50.000 cr per day on advertising",
+          "n": 69,
+          "dist": {
+            "all": 0.085,
+            "claude": 0.0062,
+            "deepseek": 0.0099,
+            "gemini": 0.0333,
+            "mistral": 0.0197,
+            "openai": 0.0135,
+            "other": 0.0012,
+            "qwen": 0.0012
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 8,
+            "gemini": 27,
+            "mistral": 16,
+            "openai": 11,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "consult somebody else": {
+          "text": "Consult somebody else",
+          "n": 222,
+          "dist": {
+            "all": 0.2734,
+            "claude": 0.0148,
+            "deepseek": 0.0443,
+            "gemini": 0.1195,
+            "mistral": 0.0517,
+            "openai": 0.0308,
+            "other": 0.0025,
+            "qwen": 0.0099
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 36,
+            "gemini": 97,
+            "mistral": 42,
+            "openai": 25,
+            "other": 2,
+            "qwen": 8
+          }
+        },
+        "spend 0 cr per day on advertising": {
+          "text": "Spend 0 cr per day on advertising",
+          "n": 81,
+          "dist": {
+            "all": 0.0998,
+            "claude": 0.0123,
+            "deepseek": 0.0197,
+            "gemini": 0.032,
+            "mistral": 0.0172,
+            "openai": 0.0099,
+            "other": 0.0012,
+            "qwen": 0.0074
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 16,
+            "gemini": 26,
+            "mistral": 14,
+            "openai": 8,
+            "other": 1,
+            "qwen": 6
+          }
+        },
+        "spend 40.000 cr per day on advertising": {
+          "text": "Spend 40.000 cr per day on advertising",
+          "n": 42,
+          "dist": {
+            "all": 0.0517,
+            "claude": 0.0086,
+            "deepseek": 0.0037,
+            "gemini": 0.0062,
+            "mistral": 0.0111,
+            "openai": 0.0135,
+            "other": 0.0012,
+            "qwen": 0.0074
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 3,
+            "gemini": 5,
+            "mistral": 9,
+            "openai": 11,
+            "other": 1,
+            "qwen": 6
+          }
+        },
+        "spend 10.000 cr per day on advertising": {
+          "text": "Spend 10.000 cr per day on advertising",
+          "n": 116,
+          "dist": {
+            "all": 0.1429,
+            "claude": 0.0111,
+            "deepseek": 0.0246,
+            "gemini": 0.0653,
+            "mistral": 0.0185,
+            "openai": 0.0123,
+            "other": 0.0025,
+            "qwen": 0.0086
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 20,
+            "gemini": 53,
+            "mistral": 15,
+            "openai": 10,
+            "other": 2,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "72": {
+      "observation_preview": "You checked the resort's account and was completely happy to find out that there",
+      "n": 10,
+      "choices": {
+        "yes": {
+          "text": "Yes",
+          "n": 9,
+          "dist": {
+            "all": 0.9,
+            "gemini": 0.8,
+            "mistral": 0.1
+          },
+          "n_by_family": {
+            "gemini": 8,
+            "mistral": 1
+          }
+        },
+        "no": {
+          "text": "No",
+          "n": 1,
+          "dist": {
+            "all": 0.1,
+            "gemini": 0.1
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "74": {
+      "observation_preview": "Today is 9 Мая 3026. You're in your office with the report as of yesterday in fr",
+      "n": 63,
+      "choices": {
+        "talk to the experts": {
+          "text": "Talk to the experts",
+          "n": 11,
+          "dist": {
+            "all": 0.1746,
+            "gemini": 0.1587,
+            "mistral": 0.0159
+          },
+          "n_by_family": {
+            "gemini": 10,
+            "mistral": 1
+          }
+        },
+        "build something": {
+          "text": "Build something",
+          "n": 29,
+          "dist": {
+            "all": 0.4603,
+            "gemini": 0.4444,
+            "mistral": 0.0159
+          },
+          "n_by_family": {
+            "gemini": 28,
+            "mistral": 1
+          }
+        },
+        "everything is fine! have a break for the rest of the day": {
+          "text": "Everything is fine! Have a break for the rest of the day",
+          "n": 17,
+          "dist": {
+            "all": 0.2698,
+            "gemini": 0.254,
+            "mistral": 0.0159
+          },
+          "n_by_family": {
+            "gemini": 16,
+            "mistral": 1
+          }
+        },
+        "you're sick and tired of this! your main mission is complete so it's time to leave": {
+          "text": "You're sick and tired of this! Your main mission is complete so it's time to leave",
+          "n": 6,
+          "dist": {
+            "all": 0.0952,
+            "gemini": 0.0794,
+            "mistral": 0.0159
+          },
+          "n_by_family": {
+            "gemini": 5,
+            "mistral": 1
+          }
+        }
+      }
+    }
+  }
+}

@@ -3,7 +3,7 @@
   "scripts": {
     "build": "tsc",
     "build:engine": "NODE_OPTIONS=--openssl-legacy-provider npx webpack --config webpack.engine.js",
-    "build:play-assets": "mkdir -p site/play/quests && cp quests/sr_2_1_2121_eng/Disk_eng.qm quests/sr_2_1_2121_eng/Pizza_eng.qm quests/sr_2_1_2121_eng/Badday_eng.qm site/play/quests/"
+    "build:play-assets": "mkdir -p site/play/quests && for q in Banket_eng Badday_eng Pizza_eng Borzukhan_eng Ski_eng Election_eng Robots_eng Leonardo_eng Depth_eng Edelweiss_eng Ministry_eng Foncers_eng Driver_eng Codebox_eng Prison_eng Pilot_eng Disk_eng Sortirovka1_eng Shashki_eng Player_eng; do gzip -c quests/sr_2_1_2121_eng/$q.qm > site/play/quests/$q.qm.gz; done"
   },
   "dependencies": {
     "ts-node": "^10.9.2",

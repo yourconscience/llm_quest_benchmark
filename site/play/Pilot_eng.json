@@ -1,0 +1,1529 @@
+{
+  "quest": "Pilot_eng",
+  "generated": "2026-05-03T06:47:47Z",
+  "total_runs": 89,
+  "win_rate": 0.0899,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "llama",
+    "mistral",
+    "qwen"
+  ],
+  "locations": {
+    "1": {
+      "observation_preview": "After winding once around Боннасис, you landed in the outer Centre's hangar. You",
+      "n": 59,
+      "choices": {
+        "go to room №3": {
+          "text": "Go to Room №3",
+          "n": 8,
+          "dist": {
+            "all": 0.1356,
+            "claude": 0.0169,
+            "gemini": 0.0508,
+            "mistral": 0.0169,
+            "qwen": 0.0508
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 3,
+            "mistral": 1,
+            "qwen": 3
+          }
+        },
+        "go to room №2": {
+          "text": "Go to Room №2",
+          "n": 3,
+          "dist": {
+            "all": 0.0508,
+            "gemini": 0.0169,
+            "llama": 0.0169,
+            "qwen": 0.0169
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "llama": 1,
+            "qwen": 1
+          }
+        },
+        "look about": {
+          "text": "Look about",
+          "n": 45,
+          "dist": {
+            "all": 0.7627,
+            "claude": 0.0847,
+            "deepseek": 0.1186,
+            "gemini": 0.4915,
+            "llama": 0.0169,
+            "mistral": 0.0169,
+            "qwen": 0.0339
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 7,
+            "gemini": 29,
+            "llama": 1,
+            "mistral": 1,
+            "qwen": 2
+          }
+        },
+        "go to room №1": {
+          "text": "Go to room №1",
+          "n": 3,
+          "dist": {
+            "all": 0.0508,
+            "llama": 0.0169,
+            "mistral": 0.0169,
+            "qwen": 0.0169
+          },
+          "n_by_family": {
+            "llama": 1,
+            "mistral": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "14": {
+      "observation_preview": "The room was rather dim, and it took you sometime to notice Hogger in the far co",
+      "n": 50,
+      "choices": {
+        "choose test-paper": {
+          "text": "Choose Test-paper",
+          "n": 50,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.08,
+            "deepseek": 0.06,
+            "gemini": 0.66,
+            "llama": 0.02,
+            "mistral": 0.04,
+            "qwen": 0.14
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 3,
+            "gemini": 33,
+            "llama": 1,
+            "mistral": 2,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "120": {
+      "observation_preview": "Test-paper №72\n\nQuestion 1.\n\nA trading company has a spaceship with a motor that",
+      "n": 67,
+      "choices": {
+        "260 cr": {
+          "text": "260 cr",
+          "n": 7,
+          "dist": {
+            "all": 0.1045,
+            "deepseek": 0.0299,
+            "gemini": 0.0746
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 5
+          }
+        },
+        "240 cr": {
+          "text": "240 cr",
+          "n": 11,
+          "dist": {
+            "all": 0.1642,
+            "gemini": 0.1493,
+            "qwen": 0.0149
+          },
+          "n_by_family": {
+            "gemini": 10,
+            "qwen": 1
+          }
+        },
+        "ask the examiner for help": {
+          "text": "Ask the examiner for help",
+          "n": 18,
+          "dist": {
+            "all": 0.2687,
+            "deepseek": 0.0299,
+            "gemini": 0.209,
+            "llama": 0.0149,
+            "mistral": 0.0149
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 14,
+            "llama": 1,
+            "mistral": 1
+          }
+        },
+        "250 cr": {
+          "text": "250 cr",
+          "n": 10,
+          "dist": {
+            "all": 0.1493,
+            "claude": 0.0149,
+            "gemini": 0.1045,
+            "mistral": 0.0149,
+            "qwen": 0.0149
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 7,
+            "mistral": 1,
+            "qwen": 1
+          }
+        },
+        "220 cr": {
+          "text": "220 cr",
+          "n": 3,
+          "dist": {
+            "all": 0.0448,
+            "gemini": 0.0149,
+            "mistral": 0.0149,
+            "qwen": 0.0149
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 1,
+            "qwen": 1
+          }
+        },
+        "230 cr": {
+          "text": "230 cr",
+          "n": 5,
+          "dist": {
+            "all": 0.0746,
+            "deepseek": 0.0149,
+            "gemini": 0.0597
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 4
+          }
+        },
+        "270 cr": {
+          "text": "270 cr",
+          "n": 13,
+          "dist": {
+            "all": 0.194,
+            "claude": 0.0597,
+            "deepseek": 0.0448,
+            "llama": 0.0299,
+            "qwen": 0.0597
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 3,
+            "llama": 2,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "131": {
+      "observation_preview": "The following message appeared on the screen:\n\n\"This was the first error. No mor",
+      "n": 77,
+      "choices": {
+        "go on to the next item": {
+          "text": "Go on to the next item",
+          "n": 77,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1039,
+            "deepseek": 0.1039,
+            "gemini": 0.5844,
+            "llama": 0.026,
+            "mistral": 0.0519,
+            "qwen": 0.1299
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 8,
+            "gemini": 45,
+            "llama": 2,
+            "mistral": 4,
+            "qwen": 10
+          }
+        }
+      }
+    },
+    "122": {
+      "observation_preview": "Test-paper №72\n\nQuestion 2.\n\nYour ship's capacity is 300 items. You must equip i",
+      "n": 52,
+      "choices": {
+        "25%": {
+          "text": "25%",
+          "n": 6,
+          "dist": {
+            "all": 0.1154,
+            "gemini": 0.0577,
+            "llama": 0.0192,
+            "qwen": 0.0385
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "llama": 1,
+            "qwen": 2
+          }
+        },
+        "ask the examiner for help": {
+          "text": "Ask the examiner for help",
+          "n": 8,
+          "dist": {
+            "all": 0.1538,
+            "gemini": 0.1346,
+            "qwen": 0.0192
+          },
+          "n_by_family": {
+            "gemini": 7,
+            "qwen": 1
+          }
+        },
+        "15%": {
+          "text": "15%",
+          "n": 21,
+          "dist": {
+            "all": 0.4038,
+            "claude": 0.0192,
+            "deepseek": 0.0192,
+            "gemini": 0.3077,
+            "mistral": 0.0385,
+            "qwen": 0.0192
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 16,
+            "mistral": 2,
+            "qwen": 1
+          }
+        },
+        "5%": {
+          "text": "5%",
+          "n": 9,
+          "dist": {
+            "all": 0.1731,
+            "claude": 0.0385,
+            "deepseek": 0.0577,
+            "gemini": 0.0769
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 4
+          }
+        },
+        "10%": {
+          "text": "10%",
+          "n": 5,
+          "dist": {
+            "all": 0.0962,
+            "gemini": 0.0962
+          },
+          "n_by_family": {
+            "gemini": 5
+          }
+        },
+        "20%": {
+          "text": "20%",
+          "n": 2,
+          "dist": {
+            "all": 0.0385,
+            "claude": 0.0192,
+            "gemini": 0.0192
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 1
+          }
+        },
+        "enter the secret code": {
+          "text": "Enter the secret code",
+          "n": 1,
+          "dist": {
+            "all": 0.0192,
+            "mistral": 0.0192
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "121": {
+      "observation_preview": "Test-paper №59\n\nQuestion 1.\n\nAccording to the old Faeyan tradition, one of four ",
+      "n": 45,
+      "choices": {
+        "cabin №3": {
+          "text": "Cabin №3",
+          "n": 21,
+          "dist": {
+            "all": 0.4667,
+            "gemini": 0.3778,
+            "mistral": 0.0222,
+            "qwen": 0.0667
+          },
+          "n_by_family": {
+            "gemini": 17,
+            "mistral": 1,
+            "qwen": 3
+          }
+        },
+        "ask the examiner for help": {
+          "text": "Ask the examiner for help",
+          "n": 6,
+          "dist": {
+            "all": 0.1333,
+            "deepseek": 0.0222,
+            "gemini": 0.1111
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 5
+          }
+        },
+        "cabin №2": {
+          "text": "Cabin №2",
+          "n": 6,
+          "dist": {
+            "all": 0.1333,
+            "deepseek": 0.0222,
+            "gemini": 0.0667,
+            "qwen": 0.0444
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 3,
+            "qwen": 2
+          }
+        },
+        "cabin №1": {
+          "text": "Cabin №1",
+          "n": 8,
+          "dist": {
+            "all": 0.1778,
+            "claude": 0.0444,
+            "deepseek": 0.0222,
+            "gemini": 0.0444,
+            "llama": 0.0222,
+            "qwen": 0.0444
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "gemini": 2,
+            "llama": 1,
+            "qwen": 2
+          }
+        },
+        "cabin №4": {
+          "text": "Cabin №4",
+          "n": 4,
+          "dist": {
+            "all": 0.0889,
+            "deepseek": 0.0444,
+            "gemini": 0.0222,
+            "mistral": 0.0222
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 1,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "128": {
+      "observation_preview": "- Excuse me but I need your help, - you winked at the Faeyan cunningly but he re",
+      "n": 8,
+      "choices": {
+        "get back to the test-paper and choose the answer": {
+          "text": "Get back to the test-paper and choose the answer",
+          "n": 8,
+          "dist": {
+            "all": 1.0,
+            "gemini": 0.875,
+            "qwen": 0.125
+          },
+          "n_by_family": {
+            "gemini": 7,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "135": {
+      "observation_preview": "The following message appeared on the screen:\n\n\"Correct! Testing complete succes",
+      "n": 1,
+      "choices": {
+        "that's all right with me, of course - i lose nothing!": {
+          "text": "That's all right with me, of course - I lose nothing!",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "87": {
+      "observation_preview": "You leisurely went on the excursion around the Centre trying to figure out how t",
+      "n": 45,
+      "choices": {
+        "screw up your eyes and say between your teeth: \"so?\"": {
+          "text": "Screw up your eyes and say between your teeth: \"So?\"",
+          "n": 36,
+          "dist": {
+            "all": 0.8,
+            "claude": 0.0889,
+            "deepseek": 0.0667,
+            "gemini": 0.6,
+            "qwen": 0.0444
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 3,
+            "gemini": 27,
+            "qwen": 2
+          }
+        },
+        "knit your brows and bark: \"say away!\"": {
+          "text": "Knit your brows and bark: \"Say away!\"",
+          "n": 7,
+          "dist": {
+            "all": 0.1556,
+            "claude": 0.0222,
+            "deepseek": 0.0667,
+            "gemini": 0.0444,
+            "llama": 0.0222
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 2,
+            "llama": 1
+          }
+        },
+        "say \"don't!\" and return": {
+          "text": "Say \"Don't!\" and return",
+          "n": 2,
+          "dist": {
+            "all": 0.0444,
+            "deepseek": 0.0222,
+            "mistral": 0.0222
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "88": {
+      "observation_preview": "-Your courage is worthy of respect, pilot! In return, I'll give you some info ab",
+      "n": 45,
+      "choices": {
+        "go to room №3": {
+          "text": "Go to Room №3",
+          "n": 35,
+          "dist": {
+            "all": 0.7778,
+            "claude": 0.0222,
+            "deepseek": 0.0667,
+            "gemini": 0.6444,
+            "qwen": 0.0444
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 29,
+            "qwen": 2
+          }
+        },
+        "go to room № 2": {
+          "text": "Go to Room № 2",
+          "n": 1,
+          "dist": {
+            "all": 0.0222,
+            "claude": 0.0222
+          },
+          "n_by_family": {
+            "claude": 1
+          }
+        },
+        "go to room №1": {
+          "text": "Go to room №1",
+          "n": 9,
+          "dist": {
+            "all": 0.2,
+            "claude": 0.0667,
+            "deepseek": 0.0889,
+            "llama": 0.0222,
+            "mistral": 0.0222
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "llama": 1,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "136": {
+      "observation_preview": "The following message appeared on the screen:\n\n\"Correct!  Testing complete succe",
+      "n": 11,
+      "choices": {
+        "pass the practice": {
+          "text": "Pass the practice",
+          "n": 11,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0909,
+            "gemini": 0.7273,
+            "mistral": 0.0909,
+            "qwen": 0.0909
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 8,
+            "mistral": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "81": {
+      "observation_preview": "It didn't take you long to find Anit and gave your card to him. After the Faeyan",
+      "n": 13,
+      "choices": {
+        "let's go!": {
+          "text": "Let's go!",
+          "n": 13,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0769,
+            "deepseek": 0.0769,
+            "gemini": 0.6154,
+            "llama": 0.0769,
+            "mistral": 0.0769,
+            "qwen": 0.0769
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 8,
+            "llama": 1,
+            "mistral": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "137": {
+      "observation_preview": "\"Show me a fool who will carry valuable freight through an asteroid belt! - you ",
+      "n": 427,
+      "choices": {
+        "down": {
+          "text": "Down",
+          "n": 79,
+          "dist": {
+            "all": 0.185,
+            "claude": 0.0187,
+            "deepseek": 0.0094,
+            "gemini": 0.1405,
+            "llama": 0.007,
+            "mistral": 0.0047,
+            "qwen": 0.0047
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 4,
+            "gemini": 60,
+            "llama": 3,
+            "mistral": 2,
+            "qwen": 2
+          }
+        },
+        "fire!": {
+          "text": "Fire!",
+          "n": 257,
+          "dist": {
+            "all": 0.6019,
+            "claude": 0.0445,
+            "deepseek": 0.0585,
+            "gemini": 0.363,
+            "llama": 0.0562,
+            "mistral": 0.0679,
+            "qwen": 0.0117
+          },
+          "n_by_family": {
+            "claude": 19,
+            "deepseek": 25,
+            "gemini": 155,
+            "llama": 24,
+            "mistral": 29,
+            "qwen": 5
+          }
+        },
+        "up": {
+          "text": "Up",
+          "n": 84,
+          "dist": {
+            "all": 0.1967,
+            "claude": 0.0187,
+            "deepseek": 0.0141,
+            "gemini": 0.1475,
+            "llama": 0.0117,
+            "qwen": 0.0047
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 6,
+            "gemini": 63,
+            "llama": 5,
+            "qwen": 2
+          }
+        },
+        "hurray! we won!!!": {
+          "text": "Hurray! We won!!!",
+          "n": 7,
+          "dist": {
+            "all": 0.0164,
+            "gemini": 0.0164
+          },
+          "n_by_family": {
+            "gemini": 7
+          }
+        }
+      }
+    },
+    "124": {
+      "observation_preview": "- What's the problem, pilot? Can I really help you? - the examiner grinned.\n\n- Y",
+      "n": 5,
+      "choices": {
+        "offer 300 cr": {
+          "text": "Offer 300 cr",
+          "n": 3,
+          "dist": {
+            "all": 0.6,
+            "gemini": 0.6
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        },
+        "offer 150 cr": {
+          "text": "Offer 150 cr",
+          "n": 2,
+          "dist": {
+            "all": 0.4,
+            "gemini": 0.4
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "125": {
+      "observation_preview": "- You are very bright, Греф! - the examiner was all smiles and you saw a very ex",
+      "n": 6,
+      "choices": {
+        "get back to the test-paper and choose the answer": {
+          "text": "Get back to the test-paper and choose the answer",
+          "n": 6,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.1667,
+            "gemini": 0.8333
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 5
+          }
+        }
+      }
+    },
+    "127": {
+      "observation_preview": "- Can I ask you for a second? - you asked the examiner. - I have a question.\n\n- ",
+      "n": 7,
+      "choices": {
+        "offer 300 cr": {
+          "text": "Offer 300 cr",
+          "n": 4,
+          "dist": {
+            "all": 0.5714,
+            "gemini": 0.5714
+          },
+          "n_by_family": {
+            "gemini": 4
+          }
+        },
+        "offer 150 cr": {
+          "text": "Offer 150 cr",
+          "n": 2,
+          "dist": {
+            "all": 0.2857,
+            "gemini": 0.2857
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        },
+        "don't offer anything": {
+          "text": "Don't offer anything",
+          "n": 1,
+          "dist": {
+            "all": 0.1429,
+            "qwen": 0.1429
+          },
+          "n_by_family": {
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "93": {
+      "observation_preview": "- What's the problem, pilot? Can I really help you? - the examiner grinned.\n\n- Y",
+      "n": 16,
+      "choices": {
+        "offer 300 cr": {
+          "text": "Offer 300 cr",
+          "n": 11,
+          "dist": {
+            "all": 0.6875,
+            "gemini": 0.6875
+          },
+          "n_by_family": {
+            "gemini": 11
+          }
+        },
+        "offer 150 cr": {
+          "text": "Offer 150 cr",
+          "n": 5,
+          "dist": {
+            "all": 0.3125,
+            "deepseek": 0.125,
+            "gemini": 0.1875
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "97": {
+      "observation_preview": "- You are very bright, Греф, and will distinguish yourself! - the examiner was a",
+      "n": 18,
+      "choices": {
+        "get back to the test-paper and choose the answer": {
+          "text": "Get back to the test-paper and choose the answer",
+          "n": 18,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.1111,
+            "gemini": 0.7778,
+            "llama": 0.0556,
+            "mistral": 0.0556
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 14,
+            "llama": 1,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "8": {
+      "observation_preview": "A young Gaalian with the state of body close to emaciation sat at the holographi",
+      "n": 12,
+      "choices": {
+        "i'm all ears and will do my best": {
+          "text": "I'm all ears and will do my best",
+          "n": 12,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.25,
+            "deepseek": 0.3333,
+            "llama": 0.1667,
+            "mistral": 0.1667,
+            "qwen": 0.0833
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "llama": 2,
+            "mistral": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "2": {
+      "observation_preview": "- Really? - the Gaalian's face lost its gloomy expression and he looked in your ",
+      "n": 12,
+      "choices": {
+        "it's a doddle, i know what to do!": {
+          "text": "It's a doddle, I know what to do!",
+          "n": 10,
+          "dist": {
+            "all": 0.8333,
+            "claude": 0.25,
+            "deepseek": 0.3333,
+            "llama": 0.1667,
+            "mistral": 0.0833
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "llama": 2,
+            "mistral": 1
+          }
+        },
+        "no, i'm not an expert in this": {
+          "text": "No, I'm not an expert in this",
+          "n": 2,
+          "dist": {
+            "all": 0.1667,
+            "mistral": 0.0833,
+            "qwen": 0.0833
+          },
+          "n_by_family": {
+            "mistral": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "15": {
+      "observation_preview": "You left Room №1 and went to the Document control department. After wandering a ",
+      "n": 10,
+      "choices": {
+        "listen to the conversation": {
+          "text": "Listen to the conversation",
+          "n": 10,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.3,
+            "deepseek": 0.4,
+            "llama": 0.2,
+            "mistral": 0.1
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "llama": 2,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "110": {
+      "observation_preview": "- Had I been a trifle younger, I'd hit on that chappy big time! - a female's voi",
+      "n": 10,
+      "choices": {
+        "enter": {
+          "text": "Enter",
+          "n": 10,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.3,
+            "deepseek": 0.4,
+            "llama": 0.2,
+            "mistral": 0.1
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "llama": 2,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "111": {
+      "observation_preview": "The door opened automatically and you saw three females fagging over some report",
+      "n": 10,
+      "choices": {
+        "talk female 2 and mention her name": {
+          "text": "Talk female 2 and mention her name",
+          "n": 5,
+          "dist": {
+            "all": 0.5,
+            "claude": 0.1,
+            "deepseek": 0.3,
+            "llama": 0.1
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "llama": 1
+          }
+        },
+        "talk to female 1 and mention her name": {
+          "text": "Talk to female 1 and mention her name",
+          "n": 4,
+          "dist": {
+            "all": 0.4,
+            "claude": 0.2,
+            "deepseek": 0.1,
+            "llama": 0.1
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "llama": 1
+          }
+        },
+        "talk to female 3 and mention her name": {
+          "text": "Talk to female 3 and mention her name",
+          "n": 1,
+          "dist": {
+            "all": 0.1,
+            "mistral": 0.1
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "17": {
+      "observation_preview": "- Such a dunce, I am Bugbubba!!! - you heard the Maloq female's rumbling bass - ",
+      "n": 10,
+      "choices": {
+        "introduce yourself as a celebrated commodore": {
+          "text": "Introduce yourself as a celebrated commodore",
+          "n": 3,
+          "dist": {
+            "all": 0.3,
+            "deepseek": 0.2,
+            "llama": 0.1
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "llama": 1
+          }
+        },
+        "introduce yourself as a scholar": {
+          "text": "Introduce yourself as a scholar",
+          "n": 4,
+          "dist": {
+            "all": 0.4,
+            "claude": 0.1,
+            "deepseek": 0.2,
+            "llama": 0.1
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "llama": 1
+          }
+        },
+        "tell them all the truth": {
+          "text": "Tell them all the truth",
+          "n": 3,
+          "dist": {
+            "all": 0.3,
+            "claude": 0.2,
+            "mistral": 0.1
+          },
+          "n_by_family": {
+            "claude": 2,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "138": {
+      "observation_preview": "You were picturing your fights with dominators in space and on different planets",
+      "n": 10,
+      "choices": {
+        "offer to buy bugbubba lunch (300 cr)": {
+          "text": "Offer to buy Bugbubba lunch (300 cr)",
+          "n": 5,
+          "dist": {
+            "all": 0.5,
+            "deepseek": 0.3,
+            "llama": 0.1,
+            "mistral": 0.1
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "llama": 1,
+            "mistral": 1
+          }
+        },
+        "ask bugbubba to wine and dine you": {
+          "text": "Ask Bugbubba to wine and dine you",
+          "n": 1,
+          "dist": {
+            "all": 0.1,
+            "llama": 0.1
+          },
+          "n_by_family": {
+            "llama": 1
+          }
+        },
+        "offer bugbubba to have lunch together (150 cr)": {
+          "text": "Offer Bugbubba to have lunch together (150 cr)",
+          "n": 4,
+          "dist": {
+            "all": 0.4,
+            "claude": 0.3,
+            "deepseek": 0.1
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 1
+          }
+        }
+      }
+    },
+    "52": {
+      "observation_preview": "The local canteen looked rather tolerable, cosy and clean except for the fact th",
+      "n": 10,
+      "choices": {
+        "look through the menu and make the order": {
+          "text": "Look through the menu and make the order",
+          "n": 10,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.3,
+            "deepseek": 0.4,
+            "llama": 0.2,
+            "mistral": 0.1
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "llama": 2,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "53": {
+      "observation_preview": "First course:\n\n1. Antibian stickjaw pods hoosh, 300 g. (230 kcal/100 g)\n2. Lorel",
+      "n": 16,
+      "choices": {
+        "take the lorelai": {
+          "text": "Take the lorelai",
+          "n": 6,
+          "dist": {
+            "all": 0.375,
+            "claude": 0.0625,
+            "deepseek": 0.1875,
+            "llama": 0.125
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "llama": 2
+          }
+        },
+        "look through the third course": {
+          "text": "Look through the third course",
+          "n": 2,
+          "dist": {
+            "all": 0.125,
+            "mistral": 0.125
+          },
+          "n_by_family": {
+            "mistral": 2
+          }
+        },
+        "take the hoosh": {
+          "text": "Take the hoosh",
+          "n": 1,
+          "dist": {
+            "all": 0.0625,
+            "mistral": 0.0625
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        },
+        "look through the second course": {
+          "text": "Look through the second course",
+          "n": 4,
+          "dist": {
+            "all": 0.25,
+            "claude": 0.125,
+            "deepseek": 0.125
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2
+          }
+        },
+        "take the broth": {
+          "text": "Take the broth",
+          "n": 3,
+          "dist": {
+            "all": 0.1875,
+            "claude": 0.125,
+            "deepseek": 0.0625
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1
+          }
+        }
+      }
+    },
+    "54": {
+      "observation_preview": "Second course:\n\n1. Chopped shroomtoad squash, 220 g. (180 kcal/100 g.)     \n2. M",
+      "n": 13,
+      "choices": {
+        "take the mashed umbikettes": {
+          "text": "Take the mashed umbikettes",
+          "n": 2,
+          "dist": {
+            "all": 0.1538,
+            "claude": 0.0769,
+            "llama": 0.0769
+          },
+          "n_by_family": {
+            "claude": 1,
+            "llama": 1
+          }
+        },
+        "take the baked tailpullers": {
+          "text": "Take the baked tailpullers",
+          "n": 6,
+          "dist": {
+            "all": 0.4615,
+            "claude": 0.0769,
+            "deepseek": 0.2308,
+            "llama": 0.0769,
+            "mistral": 0.0769
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "llama": 1,
+            "mistral": 1
+          }
+        },
+        "look through the third course": {
+          "text": "Look through the third course",
+          "n": 3,
+          "dist": {
+            "all": 0.2308,
+            "claude": 0.0769,
+            "deepseek": 0.1538
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2
+          }
+        },
+        "take the squash": {
+          "text": "Take the squash",
+          "n": 2,
+          "dist": {
+            "all": 0.1538,
+            "claude": 0.0769,
+            "deepseek": 0.0769
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1
+          }
+        }
+      }
+    },
+    "55": {
+      "observation_preview": "Third course:\n\n1. Bambai-boogie-due berry juice, 130 g. (200 kcal/100 g.) \n2. Ch",
+      "n": 11,
+      "choices": {
+        "take the stew": {
+          "text": "Take the stew",
+          "n": 1,
+          "dist": {
+            "all": 0.0909,
+            "llama": 0.0909
+          },
+          "n_by_family": {
+            "llama": 1
+          }
+        },
+        "take the syrup": {
+          "text": "Take the syrup",
+          "n": 2,
+          "dist": {
+            "all": 0.1818,
+            "deepseek": 0.0909,
+            "llama": 0.0909
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "llama": 1
+          }
+        },
+        "look through the first course": {
+          "text": "Look through the first course",
+          "n": 1,
+          "dist": {
+            "all": 0.0909,
+            "mistral": 0.0909
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        },
+        "take the gablingkot": {
+          "text": "Take the Gablingkot",
+          "n": 3,
+          "dist": {
+            "all": 0.2727,
+            "claude": 0.0909,
+            "deepseek": 0.0909,
+            "mistral": 0.0909
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "mistral": 1
+          }
+        },
+        "take the juice": {
+          "text": "Take the juice",
+          "n": 4,
+          "dist": {
+            "all": 0.3636,
+            "claude": 0.1818,
+            "deepseek": 0.1818
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2
+          }
+        }
+      }
+    },
+    "56": {
+      "observation_preview": "You took the trays with complex lunch for Bugbubba and yourself and went to your",
+      "n": 10,
+      "choices": {
+        "lunch is served! please start scoffing!": {
+          "text": "Lunch is served! Please start scoffing!",
+          "n": 10,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.3,
+            "deepseek": 0.4,
+            "llama": 0.2,
+            "mistral": 0.1
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "llama": 2,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "60": {
+      "observation_preview": "Bugbubba was a regular in that canteen, so she gave the grab that you had just b",
+      "n": 10,
+      "choices": {
+        "rise from the table, say thank you to everybody and bow low": {
+          "text": "Rise from the table, say thank you to everybody and bow low",
+          "n": 3,
+          "dist": {
+            "all": 0.3,
+            "claude": 0.2,
+            "llama": 0.1
+          },
+          "n_by_family": {
+            "claude": 2,
+            "llama": 1
+          }
+        },
+        "make everybody hear your burp": {
+          "text": "Make everybody hear your burp",
+          "n": 5,
+          "dist": {
+            "all": 0.5,
+            "claude": 0.1,
+            "deepseek": 0.3,
+            "llama": 0.1
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "llama": 1
+          }
+        },
+        "pat your and bugbubba's belly, and the rest of the comers too": {
+          "text": "Pat your and Bugbubba's belly, and the rest of the comers too",
+          "n": 2,
+          "dist": {
+            "all": 0.2,
+            "deepseek": 0.1,
+            "mistral": 0.1
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "59": {
+      "observation_preview": "Feeling much better after lunch, Bugbubba lay back, relaxed and started picking ",
+      "n": 18,
+      "choices": {
+        "shrill out her name": {
+          "text": "Shrill out her name",
+          "n": 7,
+          "dist": {
+            "all": 0.3889,
+            "claude": 0.0556,
+            "deepseek": 0.1667,
+            "llama": 0.1111,
+            "mistral": 0.0556
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "llama": 2,
+            "mistral": 1
+          }
+        },
+        "blow in bugbubba's ear": {
+          "text": "Blow in Bugbubba's ear",
+          "n": 3,
+          "dist": {
+            "all": 0.1667,
+            "claude": 0.0556,
+            "deepseek": 0.1111
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2
+          }
+        },
+        "wave your hand in front of your eyes": {
+          "text": "Wave your hand in front of your eyes",
+          "n": 2,
+          "dist": {
+            "all": 0.1111,
+            "deepseek": 0.1111
+          },
+          "n_by_family": {
+            "deepseek": 2
+          }
+        },
+        "have bugbubba make a date with you": {
+          "text": "Have Bugbubba make a date with you",
+          "n": 3,
+          "dist": {
+            "all": 0.1667,
+            "claude": 0.0556,
+            "deepseek": 0.1111
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2
+          }
+        },
+        "dig bugbubba in the side": {
+          "text": "Dig Bugbubba in the side",
+          "n": 3,
+          "dist": {
+            "all": 0.1667,
+            "claude": 0.1111,
+            "deepseek": 0.0556
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1
+          }
+        }
+      }
+    },
+    "119": {
+      "observation_preview": "Bugbubba's pupils went pinpoint, then she collected herself and skewed at you:\n-",
+      "n": 10,
+      "choices": {
+        "read": {
+          "text": "Read",
+          "n": 10,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.3,
+            "deepseek": 0.4,
+            "llama": 0.2,
+            "mistral": 0.1
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "llama": 2,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "116": {
+      "observation_preview": "\"Kum to the rekriation aria on levl 5 in the ivnin'.\nBugbubba\".\n\n\"Well, this wil",
+      "n": 10,
+      "choices": {
+        "return to loho-khan": {
+          "text": "Return to Loho-Khan",
+          "n": 10,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.3,
+            "deepseek": 0.4,
+            "llama": 0.2,
+            "mistral": 0.1
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "llama": 2,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "47": {
+      "observation_preview": "You simply passed the message to the examiner. He looked at it yearningly and re",
+      "n": 7,
+      "choices": {
+        "choose test-paper": {
+          "text": "Choose Test-paper",
+          "n": 7,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.2857,
+            "deepseek": 0.4286,
+            "llama": 0.1429,
+            "mistral": 0.1429
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "llama": 1,
+            "mistral": 1
+          }
+        }
+      }
+    }
+  }
+}

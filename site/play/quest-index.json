@@ -1,0 +1,184 @@
+{
+  "quests": [
+    {
+      "id": "Banket_eng",
+      "title": "Banquet",
+      "difficulty": "medium",
+      "description": "Navigate the politics of an interstellar banquet.",
+      "stepsRange": "15-25",
+      "win_rate": 0.0,
+      "total_runs": 272
+    },
+    {
+      "id": "Badday_eng",
+      "title": "Bad Day",
+      "difficulty": "hard",
+      "description": "Survive a day when everything goes wrong.",
+      "stepsRange": "20-40",
+      "win_rate": 0.2175,
+      "total_runs": 285
+    },
+    {
+      "id": "Pizza_eng",
+      "title": "Pizza Delivery",
+      "difficulty": "medium",
+      "description": "Deliver a pizza across a hostile space station.",
+      "stepsRange": "15-30",
+      "win_rate": 0.1717,
+      "total_runs": 297
+    },
+    {
+      "id": "Borzukhan_eng",
+      "title": "Borzukhan",
+      "difficulty": "hard",
+      "description": "Infiltrate a fortified enemy base.",
+      "stepsRange": "20-40",
+      "win_rate": 0.1667,
+      "total_runs": 6
+    },
+    {
+      "id": "Ski_eng",
+      "title": "Ski Resort",
+      "difficulty": "medium",
+      "description": "Manage a ski resort on an alien planet.",
+      "stepsRange": "15-25",
+      "win_rate": 0.0751,
+      "total_runs": 293
+    },
+    {
+      "id": "Election_eng",
+      "title": "Election",
+      "difficulty": "hard",
+      "description": "Win a planetary election campaign.",
+      "stepsRange": "25-50",
+      "win_rate": 0.042,
+      "total_runs": 286
+    },
+    {
+      "id": "Robots_eng",
+      "title": "Robots",
+      "difficulty": "hard",
+      "description": "Survive a robot uprising on a space station.",
+      "stepsRange": "20-40",
+      "win_rate": 0.0106,
+      "total_runs": 284
+    },
+    {
+      "id": "Leonardo_eng",
+      "title": "Leonardo",
+      "difficulty": "hard",
+      "description": "Solve mysteries in a Renaissance-themed quest.",
+      "stepsRange": "20-40",
+      "win_rate": 0.0251,
+      "total_runs": 279
+    },
+    {
+      "id": "Depth_eng",
+      "title": "Depth",
+      "difficulty": "medium",
+      "description": "Explore the depths of an underwater facility.",
+      "stepsRange": "15-30",
+      "win_rate": 0.0,
+      "total_runs": 271
+    },
+    {
+      "id": "Edelweiss_eng",
+      "title": "Edelweiss",
+      "difficulty": "medium",
+      "description": "Navigate a mountain expedition gone wrong.",
+      "stepsRange": "15-30",
+      "win_rate": 0.0,
+      "total_runs": 271
+    },
+    {
+      "id": "Ministry_eng",
+      "title": "Ministry",
+      "difficulty": "hard",
+      "description": "Navigate bureaucratic intrigue at a space ministry.",
+      "stepsRange": "20-35",
+      "win_rate": 0.0037,
+      "total_runs": 269
+    },
+    {
+      "id": "Foncers_eng",
+      "title": "Foncers",
+      "difficulty": "medium",
+      "description": "Compete in an underground racing league.",
+      "stepsRange": "10-20",
+      "win_rate": 0.0,
+      "total_runs": 269
+    },
+    {
+      "id": "Driver_eng",
+      "title": "Driver",
+      "difficulty": "hard",
+      "description": "Complete a dangerous cargo delivery run.",
+      "stepsRange": "25-50",
+      "win_rate": 0.0,
+      "total_runs": 265
+    },
+    {
+      "id": "Codebox_eng",
+      "title": "Code Box",
+      "difficulty": "easy",
+      "description": "Crack codes and solve puzzles.",
+      "stepsRange": "5-15",
+      "win_rate": 0.0,
+      "total_runs": 265
+    },
+    {
+      "id": "Prison_eng",
+      "title": "Prison",
+      "difficulty": "hard",
+      "description": "Escape from an alien prison complex.",
+      "stepsRange": "25-50",
+      "win_rate": 0.0,
+      "total_runs": 173
+    },
+    {
+      "id": "Pilot_eng",
+      "title": "Pilot",
+      "difficulty": "medium",
+      "description": "Pass the pilot certification exam.",
+      "stepsRange": "10-20",
+      "win_rate": 0.0899,
+      "total_runs": 89
+    },
+    {
+      "id": "Disk_eng",
+      "title": "Disk",
+      "difficulty": "easy",
+      "description": "Answer riddles from a malfunctioning ship computer.",
+      "stepsRange": "6-9",
+      "win_rate": 0.1765,
+      "total_runs": 85
+    },
+    {
+      "id": "Sortirovka1_eng",
+      "title": "Sorting",
+      "difficulty": "easy",
+      "description": "Sort items in a warehouse puzzle.",
+      "stepsRange": "5-10",
+      "win_rate": 0.0282,
+      "total_runs": 71
+    },
+    {
+      "id": "Shashki_eng",
+      "title": "Checkers",
+      "difficulty": "easy",
+      "description": "Play a game of space checkers.",
+      "stepsRange": "5-10",
+      "win_rate": 0.0435,
+      "total_runs": 69
+    },
+    {
+      "id": "Player_eng",
+      "title": "Player",
+      "difficulty": "easy",
+      "description": "A simple introductory quest.",
+      "stepsRange": "5-10",
+      "win_rate": 0.0,
+      "total_runs": 69
+    }
+  ]
+}

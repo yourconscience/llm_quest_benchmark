@@ -1,0 +1,4902 @@
+{
+  "quest": "Leonardo_eng",
+  "generated": "2026-05-03T06:47:46Z",
+  "total_runs": 279,
+  "win_rate": 0.0251,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "llama",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "1": {
+      "observation_preview": "You land at planet Боннасис's spaceport in the evening. It must have been very c",
+      "n": 152,
+      "choices": {
+        "follow the peleng": {
+          "text": "Follow the peleng",
+          "n": 152,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0789,
+            "deepseek": 0.1645,
+            "gemini": 0.3158,
+            "llama": 0.0197,
+            "mistral": 0.1776,
+            "openai": 0.1382,
+            "other": 0.0395,
+            "qwen": 0.0658
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 3,
+            "mistral": 27,
+            "openai": 21,
+            "other": 6,
+            "qwen": 10
+          }
+        }
+      }
+    },
+    "2": {
+      "observation_preview": "As you walk together to the gravicar, the peleng asks, \"Do you have any question",
+      "n": 893,
+      "choices": {
+        "what do the terms imagination, precision, and competence mean?": {
+          "text": "What do the terms imagination, precision, and competence mean?",
+          "n": 134,
+          "dist": {
+            "all": 0.1501,
+            "claude": 0.0134,
+            "deepseek": 0.0258,
+            "gemini": 0.0538,
+            "mistral": 0.0291,
+            "openai": 0.0179,
+            "qwen": 0.0101
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 23,
+            "gemini": 48,
+            "mistral": 26,
+            "openai": 16,
+            "qwen": 9
+          }
+        },
+        "who will i be competing against?": {
+          "text": "Who will I be competing against?",
+          "n": 151,
+          "dist": {
+            "all": 0.1691,
+            "claude": 0.0134,
+            "deepseek": 0.028,
+            "gemini": 0.0538,
+            "llama": 0.0034,
+            "mistral": 0.0358,
+            "openai": 0.0258,
+            "qwen": 0.009
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 3,
+            "mistral": 32,
+            "openai": 23,
+            "qwen": 8
+          }
+        },
+        "who's judging the competition?": {
+          "text": "Who's judging the competition?",
+          "n": 142,
+          "dist": {
+            "all": 0.159,
+            "claude": 0.0112,
+            "deepseek": 0.0258,
+            "gemini": 0.0538,
+            "llama": 0.0034,
+            "mistral": 0.0358,
+            "openai": 0.0202,
+            "qwen": 0.009
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 23,
+            "gemini": 48,
+            "llama": 3,
+            "mistral": 32,
+            "openai": 18,
+            "qwen": 8
+          }
+        },
+        "how will the competition be run?": {
+          "text": "How will the competition be run?",
+          "n": 156,
+          "dist": {
+            "all": 0.1747,
+            "claude": 0.0134,
+            "deepseek": 0.0258,
+            "gemini": 0.0538,
+            "llama": 0.0034,
+            "mistral": 0.037,
+            "openai": 0.0302,
+            "qwen": 0.0112
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 23,
+            "gemini": 48,
+            "llama": 3,
+            "mistral": 33,
+            "openai": 27,
+            "qwen": 10
+          }
+        },
+        "can you give me a piece of advice or some guidelines?": {
+          "text": "Can you give me a piece of advice or some guidelines?",
+          "n": 158,
+          "dist": {
+            "all": 0.1769,
+            "claude": 0.0134,
+            "deepseek": 0.028,
+            "gemini": 0.0538,
+            "llama": 0.0067,
+            "mistral": 0.0314,
+            "openai": 0.0358,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 6,
+            "mistral": 28,
+            "openai": 32,
+            "qwen": 7
+          }
+        },
+        "i don't have any more questions": {
+          "text": "I don't have any more questions",
+          "n": 152,
+          "dist": {
+            "all": 0.1702,
+            "claude": 0.0134,
+            "deepseek": 0.028,
+            "gemini": 0.0538,
+            "llama": 0.0034,
+            "mistral": 0.0302,
+            "openai": 0.0235,
+            "other": 0.0067,
+            "qwen": 0.0112
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 3,
+            "mistral": 27,
+            "openai": 21,
+            "other": 6,
+            "qwen": 10
+          }
+        }
+      }
+    },
+    "76": {
+      "observation_preview": "You start to get into the peleng's gravicar, but you are suddenly accosted by an",
+      "n": 297,
+      "choices": {
+        "buy \"how to draw without drawing even a single picture!\" (100 cr.)": {
+          "text": "Buy \"How to Draw Without Drawing Even a Single Picture!\" (100 cr.)",
+          "n": 134,
+          "dist": {
+            "all": 0.4512,
+            "claude": 0.0404,
+            "deepseek": 0.0774,
+            "gemini": 0.1616,
+            "mistral": 0.0875,
+            "openai": 0.0707,
+            "qwen": 0.0135
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 23,
+            "gemini": 48,
+            "mistral": 26,
+            "openai": 21,
+            "qwen": 4
+          }
+        },
+        "no, thanks. i don't want any of them": {
+          "text": "No, thanks. I don't want any of them",
+          "n": 66,
+          "dist": {
+            "all": 0.2222,
+            "claude": 0.0236,
+            "deepseek": 0.0505,
+            "gemini": 0.0202,
+            "mistral": 0.0741,
+            "openai": 0.0269,
+            "other": 0.0101,
+            "qwen": 0.0168
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 15,
+            "gemini": 6,
+            "mistral": 22,
+            "openai": 8,
+            "other": 3,
+            "qwen": 5
+          }
+        },
+        "buy \"s. lem. stories\" (100 cr.)": {
+          "text": "Buy \"S. Lem. Stories\" (100 cr.)",
+          "n": 73,
+          "dist": {
+            "all": 0.2458,
+            "claude": 0.0101,
+            "deepseek": 0.0101,
+            "gemini": 0.138,
+            "mistral": 0.0067,
+            "openai": 0.0438,
+            "other": 0.0202,
+            "qwen": 0.0168
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 3,
+            "gemini": 41,
+            "mistral": 2,
+            "openai": 13,
+            "other": 6,
+            "qwen": 5
+          }
+        },
+        "thanks, but i don't want any of these things.": {
+          "text": "Thanks, but I don't want any of these things.",
+          "n": 7,
+          "dist": {
+            "all": 0.0236,
+            "deepseek": 0.0034,
+            "llama": 0.0101,
+            "mistral": 0.0034,
+            "qwen": 0.0067
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "llama": 3,
+            "mistral": 1,
+            "qwen": 2
+          }
+        },
+        "buy \"embroidery manual\" (100 cr.)": {
+          "text": "Buy \"Embroidery Manual\" (100 cr.)",
+          "n": 17,
+          "dist": {
+            "all": 0.0572,
+            "claude": 0.0067,
+            "deepseek": 0.0236,
+            "gemini": 0.0034,
+            "mistral": 0.0067,
+            "other": 0.0101,
+            "qwen": 0.0067
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 7,
+            "gemini": 1,
+            "mistral": 2,
+            "other": 3,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "5": {
+      "observation_preview": "There is nothing interesting in the room. A wide bed sits in the middle with an ",
+      "n": 612,
+      "choices": {
+        "read \"world art history\"": {
+          "text": "Read \"World Art History\"",
+          "n": 253,
+          "dist": {
+            "all": 0.4134,
+            "claude": 0.0229,
+            "deepseek": 0.0507,
+            "gemini": 0.0964,
+            "llama": 0.0474,
+            "mistral": 0.0882,
+            "openai": 0.0458,
+            "other": 0.0131,
+            "qwen": 0.049
+          },
+          "n_by_family": {
+            "claude": 14,
+            "deepseek": 31,
+            "gemini": 59,
+            "llama": 29,
+            "mistral": 54,
+            "openai": 28,
+            "other": 8,
+            "qwen": 30
+          }
+        },
+        "read \"how to draw without drawing even a single picture\"": {
+          "text": "Read \"How to Draw Without Drawing Even a Single Picture\"",
+          "n": 129,
+          "dist": {
+            "all": 0.2108,
+            "claude": 0.018,
+            "deepseek": 0.0376,
+            "gemini": 0.0768,
+            "mistral": 0.0425,
+            "openai": 0.0327,
+            "qwen": 0.0033
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 23,
+            "gemini": 47,
+            "mistral": 26,
+            "openai": 20,
+            "qwen": 2
+          }
+        },
+        "sleep": {
+          "text": "Sleep",
+          "n": 139,
+          "dist": {
+            "all": 0.2271,
+            "claude": 0.0196,
+            "deepseek": 0.0392,
+            "gemini": 0.0784,
+            "llama": 0.0016,
+            "mistral": 0.0376,
+            "openai": 0.031,
+            "other": 0.0065,
+            "qwen": 0.0131
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 24,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 23,
+            "openai": 19,
+            "other": 4,
+            "qwen": 8
+          }
+        },
+        "read \"s. lem. stories\"": {
+          "text": "Read \"S. Lem. Stories\"",
+          "n": 71,
+          "dist": {
+            "all": 0.116,
+            "claude": 0.0033,
+            "deepseek": 0.0033,
+            "gemini": 0.0654,
+            "mistral": 0.0033,
+            "openai": 0.018,
+            "other": 0.0114,
+            "qwen": 0.0114
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 40,
+            "mistral": 2,
+            "openai": 11,
+            "other": 7,
+            "qwen": 7
+          }
+        },
+        "read \"embroidery manual\"": {
+          "text": "Read \"Embroidery Manual\"",
+          "n": 20,
+          "dist": {
+            "all": 0.0327,
+            "claude": 0.0033,
+            "deepseek": 0.0131,
+            "gemini": 0.0016,
+            "mistral": 0.0049,
+            "other": 0.0065,
+            "qwen": 0.0033
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 8,
+            "gemini": 1,
+            "mistral": 3,
+            "other": 4,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "78": {
+      "observation_preview": "You've been taken in by the book…\n\n...Realism is an artistic school of thought t",
+      "n": 249,
+      "choices": {
+        "but the book aside": {
+          "text": "But the book aside",
+          "n": 249,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0562,
+            "deepseek": 0.1245,
+            "gemini": 0.2369,
+            "llama": 0.1124,
+            "mistral": 0.2088,
+            "openai": 0.1124,
+            "other": 0.0321,
+            "qwen": 0.1165
+          },
+          "n_by_family": {
+            "claude": 14,
+            "deepseek": 31,
+            "gemini": 59,
+            "llama": 28,
+            "mistral": 52,
+            "openai": 28,
+            "other": 8,
+            "qwen": 29
+          }
+        }
+      }
+    },
+    "6": {
+      "observation_preview": "On the first page, you read: \"IT'S IMPOSSIBLE!\" The rest of the book has informa",
+      "n": 220,
+      "choices": {
+        "but the book aside": {
+          "text": "But the book aside",
+          "n": 212,
+          "dist": {
+            "all": 0.9636,
+            "claude": 0.0682,
+            "deepseek": 0.1455,
+            "gemini": 0.4,
+            "mistral": 0.1318,
+            "openai": 0.1318,
+            "other": 0.0409,
+            "qwen": 0.0455
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 32,
+            "gemini": 88,
+            "mistral": 29,
+            "openai": 29,
+            "other": 9,
+            "qwen": 10
+          }
+        },
+        "put the book down and go to sleep": {
+          "text": "Put the book down and go to sleep",
+          "n": 8,
+          "dist": {
+            "all": 0.0364,
+            "deepseek": 0.0045,
+            "mistral": 0.0091,
+            "openai": 0.0091,
+            "other": 0.0091,
+            "qwen": 0.0045
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "mistral": 2,
+            "openai": 2,
+            "other": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "7": {
+      "observation_preview": "You wake up ready for battle of every kind, even artistic combat. As soon as you",
+      "n": 146,
+      "choices": {
+        "take fluorescent paints": {
+          "text": "Take fluorescent paints",
+          "n": 67,
+          "dist": {
+            "all": 0.4589,
+            "claude": 0.0616,
+            "deepseek": 0.0548,
+            "gemini": 0.1096,
+            "mistral": 0.137,
+            "openai": 0.0342,
+            "other": 0.0205,
+            "qwen": 0.0411
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 8,
+            "gemini": 16,
+            "mistral": 20,
+            "openai": 5,
+            "other": 3,
+            "qwen": 6
+          }
+        },
+        "take the common paints": {
+          "text": "Take the common paints",
+          "n": 79,
+          "dist": {
+            "all": 0.5411,
+            "claude": 0.0205,
+            "deepseek": 0.1164,
+            "gemini": 0.2192,
+            "llama": 0.0068,
+            "mistral": 0.0342,
+            "openai": 0.1096,
+            "other": 0.0205,
+            "qwen": 0.0137
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 17,
+            "gemini": 32,
+            "llama": 1,
+            "mistral": 5,
+            "openai": 16,
+            "other": 3,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "9": {
+      "observation_preview": "After choosing your paints, you look around. The other participants have already",
+      "n": 146,
+      "choices": {
+        "surrealism": {
+          "text": "Surrealism",
+          "n": 114,
+          "dist": {
+            "all": 0.7808,
+            "claude": 0.0822,
+            "deepseek": 0.1301,
+            "gemini": 0.226,
+            "llama": 0.0068,
+            "mistral": 0.1712,
+            "openai": 0.1233,
+            "qwen": 0.0411
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 19,
+            "gemini": 33,
+            "llama": 1,
+            "mistral": 25,
+            "openai": 18,
+            "qwen": 6
+          }
+        },
+        "impressionism": {
+          "text": "Impressionism",
+          "n": 11,
+          "dist": {
+            "all": 0.0753,
+            "deepseek": 0.0137,
+            "gemini": 0.0068,
+            "openai": 0.0068,
+            "other": 0.0411,
+            "qwen": 0.0068
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 1,
+            "openai": 1,
+            "other": 6,
+            "qwen": 1
+          }
+        },
+        "primitivism": {
+          "text": "Primitivism",
+          "n": 20,
+          "dist": {
+            "all": 0.137,
+            "deepseek": 0.0274,
+            "gemini": 0.0959,
+            "openai": 0.0068,
+            "qwen": 0.0068
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 14,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "realism": {
+          "text": "Realism",
+          "n": 1,
+          "dist": {
+            "all": 0.0068,
+            "openai": 0.0068
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        }
+      }
+    },
+    "10": {
+      "observation_preview": "In front of you is an empty canvas. What do you want to paint?\n\nStatus:\nYou feel",
+      "n": 146,
+      "choices": {
+        "draw a sketch": {
+          "text": "Draw a sketch",
+          "n": 129,
+          "dist": {
+            "all": 0.8836,
+            "claude": 0.0685,
+            "deepseek": 0.1712,
+            "gemini": 0.3288,
+            "llama": 0.0068,
+            "mistral": 0.0685,
+            "openai": 0.1438,
+            "other": 0.0411,
+            "qwen": 0.0548
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 10,
+            "openai": 21,
+            "other": 6,
+            "qwen": 8
+          }
+        },
+        "i don't need any sketches! let's paint!": {
+          "text": "I don't need any sketches! Let's paint!",
+          "n": 17,
+          "dist": {
+            "all": 0.1164,
+            "claude": 0.0137,
+            "mistral": 0.1027
+          },
+          "n_by_family": {
+            "claude": 2,
+            "mistral": 15
+          }
+        }
+      }
+    },
+    "11": {
+      "observation_preview": "You've made an elaborate sketch of an animal. It will help you in your work.\n\nSt",
+      "n": 129,
+      "choices": {
+        "let's start using the paints!": {
+          "text": "Let's start using the paints!",
+          "n": 129,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0775,
+            "deepseek": 0.1938,
+            "gemini": 0.3721,
+            "llama": 0.0078,
+            "mistral": 0.0775,
+            "openai": 0.1628,
+            "other": 0.0465,
+            "qwen": 0.062
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 10,
+            "openai": 21,
+            "other": 6,
+            "qwen": 8
+          }
+        }
+      }
+    },
+    "12": {
+      "observation_preview": "The audience's eyes devour you. It's so difficult to work when somebody's watchi",
+      "n": 770,
+      "choices": {
+        "paint an animal's head": {
+          "text": "Paint an animal's head",
+          "n": 130,
+          "dist": {
+            "all": 0.1688,
+            "claude": 0.0156,
+            "deepseek": 0.0286,
+            "gemini": 0.0532,
+            "llama": 0.0013,
+            "mistral": 0.0312,
+            "openai": 0.0234,
+            "other": 0.0078,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 22,
+            "gemini": 41,
+            "llama": 1,
+            "mistral": 24,
+            "openai": 18,
+            "other": 6,
+            "qwen": 6
+          }
+        },
+        "paint the body": {
+          "text": "Paint the body",
+          "n": 137,
+          "dist": {
+            "all": 0.1779,
+            "claude": 0.0143,
+            "deepseek": 0.0299,
+            "gemini": 0.061,
+            "llama": 0.0013,
+            "mistral": 0.0273,
+            "openai": 0.0273,
+            "other": 0.0078,
+            "qwen": 0.0091
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 23,
+            "gemini": 47,
+            "llama": 1,
+            "mistral": 21,
+            "openai": 21,
+            "other": 6,
+            "qwen": 7
+          }
+        },
+        "paint the background": {
+          "text": "Paint the background",
+          "n": 127,
+          "dist": {
+            "all": 0.1649,
+            "claude": 0.0117,
+            "deepseek": 0.0299,
+            "gemini": 0.0468,
+            "llama": 0.0013,
+            "mistral": 0.0299,
+            "openai": 0.0273,
+            "other": 0.0078,
+            "qwen": 0.0104
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 23,
+            "gemini": 36,
+            "llama": 1,
+            "mistral": 23,
+            "openai": 21,
+            "other": 6,
+            "qwen": 8
+          }
+        },
+        "paint the animal's limbs": {
+          "text": "Paint the animal's limbs",
+          "n": 125,
+          "dist": {
+            "all": 0.1623,
+            "claude": 0.013,
+            "deepseek": 0.0299,
+            "gemini": 0.0468,
+            "llama": 0.0013,
+            "mistral": 0.0312,
+            "openai": 0.0234,
+            "other": 0.0078,
+            "qwen": 0.0091
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 23,
+            "gemini": 36,
+            "llama": 1,
+            "mistral": 24,
+            "openai": 18,
+            "other": 6,
+            "qwen": 7
+          }
+        },
+        "hand in your work": {
+          "text": "Hand in your work",
+          "n": 142,
+          "dist": {
+            "all": 0.1844,
+            "claude": 0.0117,
+            "deepseek": 0.0325,
+            "gemini": 0.0623,
+            "llama": 0.0013,
+            "mistral": 0.0325,
+            "openai": 0.0273,
+            "other": 0.0078,
+            "qwen": 0.0091
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 25,
+            "openai": 21,
+            "other": 6,
+            "qwen": 7
+          }
+        },
+        "repaint the animal's head": {
+          "text": "Repaint the animal's head",
+          "n": 35,
+          "dist": {
+            "all": 0.0455,
+            "claude": 0.0052,
+            "deepseek": 0.0026,
+            "gemini": 0.0013,
+            "llama": 0.0026,
+            "mistral": 0.0221,
+            "openai": 0.0078,
+            "qwen": 0.0039
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 2,
+            "gemini": 1,
+            "llama": 2,
+            "mistral": 17,
+            "openai": 6,
+            "qwen": 3
+          }
+        },
+        "repaint the body": {
+          "text": "Repaint the body",
+          "n": 29,
+          "dist": {
+            "all": 0.0377,
+            "claude": 0.0013,
+            "deepseek": 0.0039,
+            "gemini": 0.0143,
+            "mistral": 0.0117,
+            "openai": 0.0026,
+            "qwen": 0.0039
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 11,
+            "mistral": 9,
+            "openai": 2,
+            "qwen": 3
+          }
+        },
+        "repaint the background": {
+          "text": "Repaint the background",
+          "n": 41,
+          "dist": {
+            "all": 0.0532,
+            "claude": 0.0065,
+            "deepseek": 0.0169,
+            "gemini": 0.0169,
+            "mistral": 0.0065,
+            "openai": 0.0052,
+            "other": 0.0013
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 13,
+            "gemini": 13,
+            "mistral": 5,
+            "openai": 4,
+            "other": 1
+          }
+        },
+        "repaint the animal's limbs": {
+          "text": "Repaint the animal's limbs",
+          "n": 4,
+          "dist": {
+            "all": 0.0052,
+            "mistral": 0.0052
+          },
+          "n_by_family": {
+            "mistral": 4
+          }
+        }
+      }
+    },
+    "13": {
+      "observation_preview": "Some noise coming from the bleachers attracts your attention. A gaal is trying t",
+      "n": 165,
+      "choices": {
+        "paint quickly, but accurately": {
+          "text": "Paint quickly, but accurately",
+          "n": 54,
+          "dist": {
+            "all": 0.3273,
+            "claude": 0.0606,
+            "deepseek": 0.0485,
+            "gemini": 0.103,
+            "llama": 0.0121,
+            "mistral": 0.0424,
+            "openai": 0.0485,
+            "qwen": 0.0121
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 8,
+            "gemini": 17,
+            "llama": 2,
+            "mistral": 7,
+            "openai": 8,
+            "qwen": 2
+          }
+        },
+        "paint with precision, taking your time.": {
+          "text": "Paint with precision, taking your time.",
+          "n": 40,
+          "dist": {
+            "all": 0.2424,
+            "claude": 0.0182,
+            "deepseek": 0.0545,
+            "gemini": 0.0182,
+            "llama": 0.0061,
+            "mistral": 0.0848,
+            "openai": 0.0424,
+            "qwen": 0.0182
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 9,
+            "gemini": 3,
+            "llama": 1,
+            "mistral": 14,
+            "openai": 7,
+            "qwen": 3
+          }
+        },
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 40,
+          "dist": {
+            "all": 0.2424,
+            "claude": 0.0121,
+            "deepseek": 0.0242,
+            "gemini": 0.0909,
+            "mistral": 0.0606,
+            "openai": 0.0364,
+            "other": 0.0061,
+            "qwen": 0.0121
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 4,
+            "gemini": 15,
+            "mistral": 10,
+            "openai": 6,
+            "other": 1,
+            "qwen": 2
+          }
+        },
+        "paint quickly and carelessly": {
+          "text": "Paint quickly and carelessly",
+          "n": 31,
+          "dist": {
+            "all": 0.1879,
+            "claude": 0.0061,
+            "deepseek": 0.0182,
+            "gemini": 0.0424,
+            "mistral": 0.0606,
+            "openai": 0.0182,
+            "other": 0.0303,
+            "qwen": 0.0121
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 7,
+            "mistral": 10,
+            "openai": 3,
+            "other": 5,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "14": {
+      "observation_preview": "Using a medium-sized brush, you decide to quickly smear the head with paint and ",
+      "n": 165,
+      "choices": {
+        "paint a dragon's head": {
+          "text": "Paint a dragon's head",
+          "n": 122,
+          "dist": {
+            "all": 0.7394,
+            "claude": 0.0909,
+            "deepseek": 0.1273,
+            "gemini": 0.0788,
+            "llama": 0.0182,
+            "mistral": 0.2,
+            "openai": 0.1455,
+            "other": 0.0303,
+            "qwen": 0.0485
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 21,
+            "gemini": 13,
+            "llama": 3,
+            "mistral": 33,
+            "openai": 24,
+            "other": 5,
+            "qwen": 8
+          }
+        },
+        "paint a teakettle instead of a head": {
+          "text": "Paint a teakettle instead of a head",
+          "n": 37,
+          "dist": {
+            "all": 0.2242,
+            "deepseek": 0.0182,
+            "gemini": 0.1455,
+            "mistral": 0.0485,
+            "other": 0.0061,
+            "qwen": 0.0061
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 24,
+            "mistral": 8,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "paint the head of one of your maternal aunts": {
+          "text": "Paint the head of one of your maternal aunts",
+          "n": 6,
+          "dist": {
+            "all": 0.0364,
+            "claude": 0.0061,
+            "gemini": 0.0303
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 5
+          }
+        }
+      }
+    },
+    "30": {
+      "observation_preview": "Though it's not very original, it does look rather precise and accomplished.\n\nSt",
+      "n": 159,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 159,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0943,
+            "deepseek": 0.1509,
+            "gemini": 0.239,
+            "llama": 0.0189,
+            "mistral": 0.2579,
+            "openai": 0.1447,
+            "other": 0.0377,
+            "qwen": 0.0566
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 24,
+            "gemini": 38,
+            "llama": 3,
+            "mistral": 41,
+            "openai": 23,
+            "other": 6,
+            "qwen": 9
+          }
+        }
+      }
+    },
+    "15": {
+      "observation_preview": "You've chosen a color and started to wonder how you should paint it all...\n\nStat",
+      "n": 166,
+      "choices": {
+        "paint with precision, taking your time.": {
+          "text": "Paint with precision, taking your time.",
+          "n": 51,
+          "dist": {
+            "all": 0.3072,
+            "claude": 0.0482,
+            "deepseek": 0.0602,
+            "gemini": 0.0663,
+            "mistral": 0.0964,
+            "openai": 0.012,
+            "qwen": 0.0241
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 10,
+            "gemini": 11,
+            "mistral": 16,
+            "openai": 2,
+            "qwen": 4
+          }
+        },
+        "paint quickly, but accurately": {
+          "text": "Paint quickly, but accurately",
+          "n": 42,
+          "dist": {
+            "all": 0.253,
+            "claude": 0.0241,
+            "deepseek": 0.0301,
+            "gemini": 0.0663,
+            "llama": 0.006,
+            "mistral": 0.0482,
+            "openai": 0.0602,
+            "qwen": 0.0181
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 5,
+            "gemini": 11,
+            "llama": 1,
+            "mistral": 8,
+            "openai": 10,
+            "qwen": 3
+          }
+        },
+        "paint quickly and carelessly": {
+          "text": "Paint quickly and carelessly",
+          "n": 20,
+          "dist": {
+            "all": 0.1205,
+            "deepseek": 0.0241,
+            "gemini": 0.0241,
+            "mistral": 0.0181,
+            "openai": 0.006,
+            "other": 0.0361,
+            "qwen": 0.012
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 4,
+            "mistral": 3,
+            "openai": 1,
+            "other": 6,
+            "qwen": 2
+          }
+        },
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 53,
+          "dist": {
+            "all": 0.3193,
+            "deepseek": 0.0422,
+            "gemini": 0.1928,
+            "mistral": 0.0181,
+            "openai": 0.0602,
+            "qwen": 0.006
+          },
+          "n_by_family": {
+            "deepseek": 7,
+            "gemini": 32,
+            "mistral": 3,
+            "openai": 10,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "18": {
+      "observation_preview": "You decide that it will be okay to use a small brush to carefully paint the body",
+      "n": 166,
+      "choices": {
+        "paint the body of a dragon": {
+          "text": "Paint the body of a dragon",
+          "n": 99,
+          "dist": {
+            "all": 0.5964,
+            "claude": 0.0663,
+            "deepseek": 0.0904,
+            "gemini": 0.1024,
+            "llama": 0.006,
+            "mistral": 0.1506,
+            "openai": 0.1145,
+            "other": 0.0241,
+            "qwen": 0.0422
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 15,
+            "gemini": 17,
+            "llama": 1,
+            "mistral": 25,
+            "openai": 19,
+            "other": 4,
+            "qwen": 7
+          }
+        },
+        "draw the body of a coiled snake": {
+          "text": "Draw the body of a coiled snake",
+          "n": 21,
+          "dist": {
+            "all": 0.1265,
+            "deepseek": 0.0301,
+            "gemini": 0.0663,
+            "mistral": 0.012,
+            "openai": 0.012,
+            "qwen": 0.006
+          },
+          "n_by_family": {
+            "deepseek": 5,
+            "gemini": 11,
+            "mistral": 2,
+            "openai": 2,
+            "qwen": 1
+          }
+        },
+        "paint a couple more heads instead of the body": {
+          "text": "Paint a couple more heads instead of the body",
+          "n": 46,
+          "dist": {
+            "all": 0.2771,
+            "claude": 0.006,
+            "deepseek": 0.0361,
+            "gemini": 0.1807,
+            "mistral": 0.0181,
+            "openai": 0.012,
+            "other": 0.012,
+            "qwen": 0.012
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 6,
+            "gemini": 30,
+            "mistral": 3,
+            "openai": 2,
+            "other": 2,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "92": {
+      "observation_preview": "It is impossible to paint a dragon in the chosen style. The result is very stran",
+      "n": 94,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 94,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.117,
+            "deepseek": 0.1596,
+            "gemini": 0.1702,
+            "llama": 0.0106,
+            "mistral": 0.266,
+            "openai": 0.1809,
+            "other": 0.0213,
+            "qwen": 0.0745
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 15,
+            "gemini": 16,
+            "llama": 1,
+            "mistral": 25,
+            "openai": 17,
+            "other": 2,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "17": {
+      "observation_preview": "You observe Roo-bel as he paints. Looking more closely, you see that, instead of",
+      "n": 168,
+      "choices": {
+        "paint with precision": {
+          "text": "Paint with precision",
+          "n": 43,
+          "dist": {
+            "all": 0.256,
+            "claude": 0.0298,
+            "deepseek": 0.0655,
+            "gemini": 0.0357,
+            "mistral": 0.0536,
+            "openai": 0.0476,
+            "qwen": 0.0238
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 11,
+            "gemini": 6,
+            "mistral": 9,
+            "openai": 8,
+            "qwen": 4
+          }
+        },
+        "paint quickly, but accurately": {
+          "text": "Paint quickly, but accurately",
+          "n": 50,
+          "dist": {
+            "all": 0.2976,
+            "claude": 0.0417,
+            "deepseek": 0.0357,
+            "gemini": 0.1012,
+            "mistral": 0.0774,
+            "openai": 0.0298,
+            "qwen": 0.0119
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 6,
+            "gemini": 17,
+            "mistral": 13,
+            "openai": 5,
+            "qwen": 2
+          }
+        },
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 48,
+          "dist": {
+            "all": 0.2857,
+            "claude": 0.0119,
+            "deepseek": 0.0774,
+            "gemini": 0.0893,
+            "llama": 0.006,
+            "mistral": 0.0238,
+            "openai": 0.0714,
+            "qwen": 0.006
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 13,
+            "gemini": 15,
+            "llama": 1,
+            "mistral": 4,
+            "openai": 12,
+            "qwen": 1
+          }
+        },
+        "paint quickly and carelessly": {
+          "text": "Paint quickly and carelessly",
+          "n": 27,
+          "dist": {
+            "all": 0.1607,
+            "deepseek": 0.0357,
+            "gemini": 0.0655,
+            "mistral": 0.0119,
+            "other": 0.0417,
+            "qwen": 0.006
+          },
+          "n_by_family": {
+            "deepseek": 6,
+            "gemini": 11,
+            "mistral": 2,
+            "other": 7,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "20": {
+      "observation_preview": "You decide to work on the background.\n\nStatus:\nYou feel fresh as paint!\nYour abi",
+      "n": 168,
+      "choices": {
+        "fill the background with color": {
+          "text": "Fill the background with color",
+          "n": 59,
+          "dist": {
+            "all": 0.3512,
+            "claude": 0.0476,
+            "deepseek": 0.0833,
+            "gemini": 0.0714,
+            "llama": 0.006,
+            "mistral": 0.0357,
+            "openai": 0.0536,
+            "other": 0.0238,
+            "qwen": 0.0298
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 14,
+            "gemini": 12,
+            "llama": 1,
+            "mistral": 6,
+            "openai": 9,
+            "other": 4,
+            "qwen": 5
+          }
+        },
+        "paint a landscape": {
+          "text": "Paint a landscape",
+          "n": 46,
+          "dist": {
+            "all": 0.2738,
+            "claude": 0.006,
+            "deepseek": 0.0655,
+            "gemini": 0.0774,
+            "mistral": 0.0655,
+            "openai": 0.0417,
+            "other": 0.0119,
+            "qwen": 0.006
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 11,
+            "gemini": 13,
+            "mistral": 11,
+            "openai": 7,
+            "other": 2,
+            "qwen": 1
+          }
+        },
+        "paint outerspace": {
+          "text": "Paint outerspace",
+          "n": 63,
+          "dist": {
+            "all": 0.375,
+            "claude": 0.0298,
+            "deepseek": 0.0655,
+            "gemini": 0.1429,
+            "mistral": 0.0655,
+            "openai": 0.0536,
+            "other": 0.006,
+            "qwen": 0.0119
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 11,
+            "gemini": 24,
+            "mistral": 11,
+            "openai": 9,
+            "other": 1,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "28": {
+      "observation_preview": "Don't worry about painting something in detail. Better do with precision!\n\nStatu",
+      "n": 98,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 98,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0918,
+            "deepseek": 0.2449,
+            "gemini": 0.2347,
+            "llama": 0.0102,
+            "mistral": 0.1735,
+            "openai": 0.1633,
+            "other": 0.0306,
+            "qwen": 0.051
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 24,
+            "gemini": 23,
+            "llama": 1,
+            "mistral": 17,
+            "openai": 16,
+            "other": 3,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "16": {
+      "observation_preview": "You notice how Kasyak is working. He holds a huge brush in each of his four hand",
+      "n": 128,
+      "choices": {
+        "paint quickly, but accurately": {
+          "text": "Paint quickly, but accurately",
+          "n": 50,
+          "dist": {
+            "all": 0.3906,
+            "claude": 0.0625,
+            "deepseek": 0.0703,
+            "gemini": 0.1016,
+            "llama": 0.0078,
+            "mistral": 0.0547,
+            "openai": 0.0703,
+            "qwen": 0.0234
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 9,
+            "gemini": 13,
+            "llama": 1,
+            "mistral": 7,
+            "openai": 9,
+            "qwen": 3
+          }
+        },
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 37,
+          "dist": {
+            "all": 0.2891,
+            "deepseek": 0.0469,
+            "gemini": 0.1562,
+            "mistral": 0.0547,
+            "openai": 0.0234,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "deepseek": 6,
+            "gemini": 20,
+            "mistral": 7,
+            "openai": 3,
+            "qwen": 1
+          }
+        },
+        "paint everything as precisely as possible.": {
+          "text": "Paint everything as precisely as possible.",
+          "n": 26,
+          "dist": {
+            "all": 0.2031,
+            "claude": 0.0078,
+            "deepseek": 0.0391,
+            "gemini": 0.0156,
+            "mistral": 0.1094,
+            "openai": 0.0156,
+            "qwen": 0.0156
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 5,
+            "gemini": 2,
+            "mistral": 14,
+            "openai": 2,
+            "qwen": 2
+          }
+        },
+        "paint quickly and carelessly": {
+          "text": "Paint quickly and carelessly",
+          "n": 15,
+          "dist": {
+            "all": 0.1172,
+            "deepseek": 0.0234,
+            "gemini": 0.0078,
+            "openai": 0.0312,
+            "other": 0.0469,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 1,
+            "openai": 4,
+            "other": 6,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "19": {
+      "observation_preview": "You don't think you should paint the limbs in detail.\n\nStatus:\nYou feel fresh as",
+      "n": 128,
+      "choices": {
+        "paint dragon legs and wings": {
+          "text": "Paint dragon legs and wings",
+          "n": 51,
+          "dist": {
+            "all": 0.3984,
+            "claude": 0.0547,
+            "deepseek": 0.0469,
+            "gemini": 0.0234,
+            "llama": 0.0078,
+            "mistral": 0.125,
+            "openai": 0.0703,
+            "other": 0.0391,
+            "qwen": 0.0312
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 6,
+            "gemini": 3,
+            "llama": 1,
+            "mistral": 16,
+            "openai": 9,
+            "other": 5,
+            "qwen": 4
+          }
+        },
+        "paint serpentine hands and legs": {
+          "text": "Paint serpentine hands and legs",
+          "n": 44,
+          "dist": {
+            "all": 0.3438,
+            "deepseek": 0.0703,
+            "gemini": 0.1875,
+            "mistral": 0.0469,
+            "openai": 0.0312,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "deepseek": 9,
+            "gemini": 24,
+            "mistral": 6,
+            "openai": 4,
+            "qwen": 1
+          }
+        },
+        "paint hooked legs and wings": {
+          "text": "Paint hooked legs and wings",
+          "n": 33,
+          "dist": {
+            "all": 0.2578,
+            "claude": 0.0156,
+            "deepseek": 0.0625,
+            "gemini": 0.0703,
+            "mistral": 0.0469,
+            "openai": 0.0391,
+            "other": 0.0078,
+            "qwen": 0.0156
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 8,
+            "gemini": 9,
+            "mistral": 6,
+            "openai": 5,
+            "other": 1,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "90": {
+      "observation_preview": "This topic isn't a good match to your painting style. Unfortunately, all your at",
+      "n": 44,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 44,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1591,
+            "deepseek": 0.1136,
+            "gemini": 0.0455,
+            "llama": 0.0227,
+            "mistral": 0.3636,
+            "openai": 0.1818,
+            "other": 0.0227,
+            "qwen": 0.0909
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 5,
+            "gemini": 2,
+            "llama": 1,
+            "mistral": 16,
+            "openai": 8,
+            "other": 1,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "21": {
+      "observation_preview": "You stand up from your easel and remove your work. Then you place it in the spec",
+      "n": 376,
+      "choices": {
+        "wait for the first judge's score": {
+          "text": "Wait for the first judge's score",
+          "n": 376,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0691,
+            "deepseek": 0.1835,
+            "gemini": 0.3457,
+            "llama": 0.008,
+            "mistral": 0.1596,
+            "openai": 0.1596,
+            "other": 0.0293,
+            "qwen": 0.0452
+          },
+          "n_by_family": {
+            "claude": 26,
+            "deepseek": 69,
+            "gemini": 130,
+            "llama": 3,
+            "mistral": 60,
+            "openai": 60,
+            "other": 11,
+            "qwen": 17
+          }
+        }
+      }
+    },
+    "22": {
+      "observation_preview": "Leevi-taan's score:\n\n\"This is good work. I like it. The colors are pleasant, and",
+      "n": 312,
+      "choices": {
+        "wait for the second judge's score": {
+          "text": "Wait for the second judge's score",
+          "n": 312,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0705,
+            "deepseek": 0.1827,
+            "gemini": 0.3429,
+            "llama": 0.0096,
+            "mistral": 0.1506,
+            "openai": 0.1603,
+            "other": 0.0353,
+            "qwen": 0.0481
+          },
+          "n_by_family": {
+            "claude": 22,
+            "deepseek": 57,
+            "gemini": 107,
+            "llama": 3,
+            "mistral": 47,
+            "openai": 50,
+            "other": 11,
+            "qwen": 15
+          }
+        }
+      }
+    },
+    "24": {
+      "observation_preview": "Satimov's score:\n\n\"I have nothing to say. Words can't convey my feelings. 2.\"\n\nS",
+      "n": 312,
+      "choices": {
+        "wait for the third judge's score": {
+          "text": "Wait for the third judge's score",
+          "n": 312,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0705,
+            "deepseek": 0.1827,
+            "gemini": 0.3429,
+            "llama": 0.0096,
+            "mistral": 0.1506,
+            "openai": 0.1603,
+            "other": 0.0353,
+            "qwen": 0.0481
+          },
+          "n_by_family": {
+            "claude": 22,
+            "deepseek": 57,
+            "gemini": 107,
+            "llama": 3,
+            "mistral": 47,
+            "openai": 50,
+            "other": 11,
+            "qwen": 15
+          }
+        }
+      }
+    },
+    "25": {
+      "observation_preview": "B'Ugarra's score:\n\n\"Hmmm... Errrr... 5.\"\n\nStatus:\nYou feel fresh as paint!\nYour ",
+      "n": 311,
+      "choices": {
+        "results of the first round": {
+          "text": "Results of the first round",
+          "n": 97,
+          "dist": {
+            "all": 0.3119,
+            "claude": 0.0225,
+            "deepseek": 0.0579,
+            "gemini": 0.0804,
+            "llama": 0.0032,
+            "mistral": 0.0579,
+            "openai": 0.0547,
+            "other": 0.0193,
+            "qwen": 0.0161
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 18,
+            "gemini": 25,
+            "llama": 1,
+            "mistral": 18,
+            "openai": 17,
+            "other": 6,
+            "qwen": 5
+          }
+        },
+        "results of the second round": {
+          "text": "Results of the second round",
+          "n": 127,
+          "dist": {
+            "all": 0.4084,
+            "claude": 0.0257,
+            "deepseek": 0.0707,
+            "gemini": 0.1543,
+            "llama": 0.0032,
+            "mistral": 0.074,
+            "openai": 0.0514,
+            "other": 0.0096,
+            "qwen": 0.0193
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 22,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 23,
+            "openai": 16,
+            "other": 3,
+            "qwen": 6
+          }
+        },
+        "results for the third round": {
+          "text": "Results for the third round",
+          "n": 87,
+          "dist": {
+            "all": 0.2797,
+            "claude": 0.0225,
+            "deepseek": 0.0547,
+            "gemini": 0.1093,
+            "llama": 0.0032,
+            "mistral": 0.0193,
+            "openai": 0.0547,
+            "other": 0.0032,
+            "qwen": 0.0129
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 17,
+            "gemini": 34,
+            "llama": 1,
+            "mistral": 6,
+            "openai": 17,
+            "other": 1,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "26": {
+      "observation_preview": "You can see a message on the overhead digital display:\n\"Results of the first rou",
+      "n": 142,
+      "choices": {
+        "go to your room": {
+          "text": "Go to your room",
+          "n": 142,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0634,
+            "deepseek": 0.1761,
+            "gemini": 0.338,
+            "llama": 0.007,
+            "mistral": 0.1761,
+            "openai": 0.1479,
+            "other": 0.0423,
+            "qwen": 0.0493
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 25,
+            "openai": 21,
+            "other": 6,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "98": {
+      "observation_preview": "You arrive back at the hotel very quickly. You drag yourself to your room. Once ",
+      "n": 268,
+      "choices": {
+        "read \"world art history\"": {
+          "text": "Read \"World Art History\"",
+          "n": 127,
+          "dist": {
+            "all": 0.4739,
+            "claude": 0.0336,
+            "deepseek": 0.0821,
+            "gemini": 0.1679,
+            "llama": 0.0037,
+            "mistral": 0.0746,
+            "openai": 0.0709,
+            "other": 0.0187,
+            "qwen": 0.0224
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 22,
+            "gemini": 45,
+            "llama": 1,
+            "mistral": 20,
+            "openai": 19,
+            "other": 5,
+            "qwen": 6
+          }
+        },
+        "sleep": {
+          "text": "Sleep",
+          "n": 141,
+          "dist": {
+            "all": 0.5261,
+            "claude": 0.0336,
+            "deepseek": 0.0933,
+            "gemini": 0.1791,
+            "llama": 0.0037,
+            "mistral": 0.0933,
+            "openai": 0.0784,
+            "other": 0.0224,
+            "qwen": 0.0224
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 25,
+            "openai": 21,
+            "other": 6,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "99": {
+      "observation_preview": "You've been taken in by the book…\n\n...Realism is an artistic school of thought t",
+      "n": 127,
+      "choices": {
+        "but the book aside": {
+          "text": "But the book aside",
+          "n": 127,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0709,
+            "deepseek": 0.1732,
+            "gemini": 0.3543,
+            "llama": 0.0079,
+            "mistral": 0.1575,
+            "openai": 0.1496,
+            "other": 0.0394,
+            "qwen": 0.0472
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 22,
+            "gemini": 45,
+            "llama": 1,
+            "mistral": 20,
+            "openai": 19,
+            "other": 5,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "27": {
+      "observation_preview": "Everything is like yesterday morning: several journalists are waiting for you, t",
+      "n": 141,
+      "choices": {
+        "take the fluorescent paints": {
+          "text": "Take the fluorescent paints",
+          "n": 92,
+          "dist": {
+            "all": 0.6525,
+            "claude": 0.0567,
+            "deepseek": 0.0922,
+            "gemini": 0.2199,
+            "mistral": 0.1348,
+            "openai": 0.078,
+            "other": 0.0355,
+            "qwen": 0.0355
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 13,
+            "gemini": 31,
+            "mistral": 19,
+            "openai": 11,
+            "other": 5,
+            "qwen": 5
+          }
+        },
+        "take the common paints": {
+          "text": "Take the common paints",
+          "n": 49,
+          "dist": {
+            "all": 0.3475,
+            "claude": 0.0071,
+            "deepseek": 0.0851,
+            "gemini": 0.1206,
+            "llama": 0.0071,
+            "mistral": 0.0426,
+            "openai": 0.0709,
+            "other": 0.0071,
+            "qwen": 0.0071
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 12,
+            "gemini": 17,
+            "llama": 1,
+            "mistral": 6,
+            "openai": 10,
+            "other": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "32": {
+      "observation_preview": "You choose the set of vivid fluorescent paints - it will certainly be more inter",
+      "n": 141,
+      "choices": {
+        "surrealism": {
+          "text": "Surrealism",
+          "n": 93,
+          "dist": {
+            "all": 0.6596,
+            "claude": 0.0638,
+            "deepseek": 0.1206,
+            "gemini": 0.1915,
+            "llama": 0.0071,
+            "mistral": 0.1702,
+            "openai": 0.0851,
+            "qwen": 0.0213
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 17,
+            "gemini": 27,
+            "llama": 1,
+            "mistral": 24,
+            "openai": 12,
+            "qwen": 3
+          }
+        },
+        "cubism": {
+          "text": "Cubism",
+          "n": 5,
+          "dist": {
+            "all": 0.0355,
+            "gemini": 0.0142,
+            "mistral": 0.0071,
+            "openai": 0.0142
+          },
+          "n_by_family": {
+            "gemini": 2,
+            "mistral": 1,
+            "openai": 2
+          }
+        },
+        "realism": {
+          "text": "Realism",
+          "n": 29,
+          "dist": {
+            "all": 0.2057,
+            "deepseek": 0.0426,
+            "gemini": 0.0993,
+            "openai": 0.0496,
+            "qwen": 0.0142
+          },
+          "n_by_family": {
+            "deepseek": 6,
+            "gemini": 14,
+            "openai": 7,
+            "qwen": 2
+          }
+        },
+        "impressionism": {
+          "text": "Impressionism",
+          "n": 7,
+          "dist": {
+            "all": 0.0496,
+            "deepseek": 0.0071,
+            "other": 0.0426
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "other": 6
+          }
+        },
+        "primitivism": {
+          "text": "Primitivism",
+          "n": 7,
+          "dist": {
+            "all": 0.0496,
+            "deepseek": 0.0071,
+            "gemini": 0.0355,
+            "qwen": 0.0071
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 5,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "33": {
+      "observation_preview": "An absolutely empty canvas is in front of you. You can make a sketch with a penc",
+      "n": 141,
+      "choices": {
+        "draw a sketch": {
+          "text": "Draw a sketch",
+          "n": 135,
+          "dist": {
+            "all": 0.9574,
+            "claude": 0.0638,
+            "deepseek": 0.1773,
+            "gemini": 0.3404,
+            "llama": 0.0071,
+            "mistral": 0.1348,
+            "openai": 0.1489,
+            "other": 0.0426,
+            "qwen": 0.0426
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 19,
+            "openai": 21,
+            "other": 6,
+            "qwen": 6
+          }
+        },
+        "who cares about this painting? - i don't need it!": {
+          "text": "Who cares about this painting? - I don't need it!",
+          "n": 6,
+          "dist": {
+            "all": 0.0426,
+            "mistral": 0.0426
+          },
+          "n_by_family": {
+            "mistral": 6
+          }
+        }
+      }
+    },
+    "35": {
+      "observation_preview": "You pick up a pencil and sketch your best rendition of a highly dangerous destro",
+      "n": 135,
+      "choices": {
+        "now it's time to apply the paint.": {
+          "text": "Now it's time to apply the paint.",
+          "n": 135,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0667,
+            "deepseek": 0.1852,
+            "gemini": 0.3556,
+            "llama": 0.0074,
+            "mistral": 0.1407,
+            "openai": 0.1556,
+            "other": 0.0444,
+            "qwen": 0.0444
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 19,
+            "openai": 21,
+            "other": 6,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "34": {
+      "observation_preview": "You sit in front of the easel. The audience looks at you with curiosity.\n\"It's l",
+      "n": 791,
+      "choices": {
+        "paint the background": {
+          "text": "Paint the background",
+          "n": 134,
+          "dist": {
+            "all": 0.1694,
+            "claude": 0.0114,
+            "deepseek": 0.0303,
+            "gemini": 0.0607,
+            "llama": 0.0013,
+            "mistral": 0.0316,
+            "openai": 0.0202,
+            "other": 0.0063,
+            "qwen": 0.0076
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 24,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 25,
+            "openai": 16,
+            "other": 5,
+            "qwen": 6
+          }
+        },
+        "paint a flight deck": {
+          "text": "Paint a flight deck",
+          "n": 133,
+          "dist": {
+            "all": 0.1681,
+            "claude": 0.0114,
+            "deepseek": 0.0278,
+            "gemini": 0.0607,
+            "llama": 0.0013,
+            "mistral": 0.0291,
+            "openai": 0.0253,
+            "other": 0.0051,
+            "qwen": 0.0076
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 22,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 23,
+            "openai": 20,
+            "other": 4,
+            "qwen": 6
+          }
+        },
+        "paint a main deck": {
+          "text": "Paint a main deck",
+          "n": 138,
+          "dist": {
+            "all": 0.1745,
+            "claude": 0.0114,
+            "deepseek": 0.0316,
+            "gemini": 0.0607,
+            "llama": 0.0013,
+            "mistral": 0.0316,
+            "openai": 0.024,
+            "other": 0.0063,
+            "qwen": 0.0076
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 25,
+            "openai": 19,
+            "other": 5,
+            "qwen": 6
+          }
+        },
+        "paint wings, guns, and other parts.": {
+          "text": "Paint wings, guns, and other parts.",
+          "n": 139,
+          "dist": {
+            "all": 0.1757,
+            "claude": 0.0101,
+            "deepseek": 0.0316,
+            "gemini": 0.0607,
+            "llama": 0.0013,
+            "mistral": 0.0316,
+            "openai": 0.0265,
+            "other": 0.0063,
+            "qwen": 0.0076
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 25,
+            "openai": 21,
+            "other": 5,
+            "qwen": 6
+          }
+        },
+        "hand in your work": {
+          "text": "Hand in your work",
+          "n": 139,
+          "dist": {
+            "all": 0.1757,
+            "claude": 0.0114,
+            "deepseek": 0.0316,
+            "gemini": 0.0607,
+            "llama": 0.0013,
+            "mistral": 0.0316,
+            "openai": 0.0265,
+            "other": 0.0051,
+            "qwen": 0.0076
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 25,
+            "openai": 21,
+            "other": 4,
+            "qwen": 6
+          }
+        },
+        "repaint the wings, guns, and other parts": {
+          "text": "Repaint the wings, guns, and other parts",
+          "n": 31,
+          "dist": {
+            "all": 0.0392,
+            "deepseek": 0.0088,
+            "gemini": 0.0038,
+            "mistral": 0.0126,
+            "openai": 0.0114,
+            "other": 0.0013,
+            "qwen": 0.0013
+          },
+          "n_by_family": {
+            "deepseek": 7,
+            "gemini": 3,
+            "mistral": 10,
+            "openai": 9,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "repaint the background": {
+          "text": "Repaint the background",
+          "n": 31,
+          "dist": {
+            "all": 0.0392,
+            "claude": 0.0088,
+            "deepseek": 0.0038,
+            "gemini": 0.0152,
+            "mistral": 0.0063,
+            "openai": 0.0025,
+            "qwen": 0.0025
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 3,
+            "gemini": 12,
+            "mistral": 5,
+            "openai": 2,
+            "qwen": 2
+          }
+        },
+        "repaint the main deck": {
+          "text": "Repaint the main deck",
+          "n": 28,
+          "dist": {
+            "all": 0.0354,
+            "deepseek": 0.0076,
+            "gemini": 0.0164,
+            "llama": 0.0013,
+            "mistral": 0.0051,
+            "openai": 0.0051
+          },
+          "n_by_family": {
+            "deepseek": 6,
+            "gemini": 13,
+            "llama": 1,
+            "mistral": 4,
+            "openai": 4
+          }
+        },
+        "repaint the flight deck": {
+          "text": "Repaint the flight deck",
+          "n": 18,
+          "dist": {
+            "all": 0.0228,
+            "claude": 0.0013,
+            "deepseek": 0.0025,
+            "gemini": 0.0101,
+            "mistral": 0.0013,
+            "openai": 0.0051,
+            "qwen": 0.0025
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 8,
+            "mistral": 1,
+            "openai": 4,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "39": {
+      "observation_preview": "Background is a funny thing. Sometimes it's there, sometimes it's not.\n\nStatus:\n",
+      "n": 164,
+      "choices": {
+        "paint carefully and diligently": {
+          "text": "Paint carefully and diligently",
+          "n": 65,
+          "dist": {
+            "all": 0.3963,
+            "claude": 0.0305,
+            "deepseek": 0.0915,
+            "gemini": 0.1037,
+            "mistral": 0.0671,
+            "openai": 0.0671,
+            "qwen": 0.0366
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 15,
+            "gemini": 17,
+            "mistral": 11,
+            "openai": 11,
+            "qwen": 6
+          }
+        },
+        "paint quickly and carelessly": {
+          "text": "Paint quickly and carelessly",
+          "n": 17,
+          "dist": {
+            "all": 0.1037,
+            "claude": 0.0183,
+            "deepseek": 0.0244,
+            "gemini": 0.0244,
+            "mistral": 0.0061,
+            "openai": 0.0061,
+            "other": 0.0183,
+            "qwen": 0.0061
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "gemini": 4,
+            "mistral": 1,
+            "openai": 1,
+            "other": 3,
+            "qwen": 1
+          }
+        },
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 41,
+          "dist": {
+            "all": 0.25,
+            "claude": 0.0244,
+            "deepseek": 0.0305,
+            "gemini": 0.122,
+            "mistral": 0.0305,
+            "openai": 0.0305,
+            "other": 0.0061,
+            "qwen": 0.0061
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 5,
+            "gemini": 20,
+            "mistral": 5,
+            "openai": 5,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "paint quickly, but accurately": {
+          "text": "Paint quickly, but accurately",
+          "n": 41,
+          "dist": {
+            "all": 0.25,
+            "claude": 0.0244,
+            "deepseek": 0.0183,
+            "gemini": 0.1159,
+            "llama": 0.0061,
+            "mistral": 0.0793,
+            "openai": 0.0061
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 3,
+            "gemini": 19,
+            "llama": 1,
+            "mistral": 13,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "46": {
+      "observation_preview": "You decide to use a small brush to paint the background with fine strokes.\n\nStat",
+      "n": 164,
+      "choices": {
+        "paint outerspace": {
+          "text": "Paint outerspace",
+          "n": 134,
+          "dist": {
+            "all": 0.8171,
+            "claude": 0.0732,
+            "deepseek": 0.1524,
+            "gemini": 0.25,
+            "llama": 0.0061,
+            "mistral": 0.1707,
+            "openai": 0.1037,
+            "other": 0.0183,
+            "qwen": 0.0427
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 25,
+            "gemini": 41,
+            "llama": 1,
+            "mistral": 28,
+            "openai": 17,
+            "other": 3,
+            "qwen": 7
+          }
+        },
+        "just do a careful wash of paint": {
+          "text": "Just do a careful wash of paint",
+          "n": 18,
+          "dist": {
+            "all": 0.1098,
+            "claude": 0.0244,
+            "deepseek": 0.0122,
+            "gemini": 0.0549,
+            "mistral": 0.0061,
+            "openai": 0.0061,
+            "qwen": 0.0061
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 2,
+            "gemini": 9,
+            "mistral": 1,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "paint a woodland scene": {
+          "text": "Paint a woodland scene",
+          "n": 12,
+          "dist": {
+            "all": 0.0732,
+            "gemini": 0.061,
+            "mistral": 0.0061,
+            "other": 0.0061
+          },
+          "n_by_family": {
+            "gemini": 10,
+            "mistral": 1,
+            "other": 1
+          }
+        }
+      }
+    },
+    "47": {
+      "observation_preview": "You do your very best and end up with a painting of a beautiful and picturesque ",
+      "n": 117,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 117,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0684,
+            "deepseek": 0.1709,
+            "gemini": 0.4274,
+            "llama": 0.0085,
+            "mistral": 0.1026,
+            "openai": 0.1282,
+            "other": 0.0342,
+            "qwen": 0.0598
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 20,
+            "gemini": 50,
+            "llama": 1,
+            "mistral": 12,
+            "openai": 15,
+            "other": 4,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "36": {
+      "observation_preview": "You remember an artist you saw once at a spaceport. He was drawing a spaceship f",
+      "n": 151,
+      "choices": {
+        "paint with precision, taking your time.": {
+          "text": "Paint with precision, taking your time.",
+          "n": 70,
+          "dist": {
+            "all": 0.4636,
+            "claude": 0.0265,
+            "deepseek": 0.0795,
+            "gemini": 0.1722,
+            "mistral": 0.0927,
+            "openai": 0.0728,
+            "qwen": 0.0199
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 12,
+            "gemini": 26,
+            "mistral": 14,
+            "openai": 11,
+            "qwen": 3
+          }
+        },
+        "paint quickly, but accurately": {
+          "text": "Paint quickly, but accurately",
+          "n": 42,
+          "dist": {
+            "all": 0.2781,
+            "claude": 0.0331,
+            "deepseek": 0.0464,
+            "gemini": 0.1126,
+            "llama": 0.0066,
+            "mistral": 0.0397,
+            "openai": 0.0331,
+            "qwen": 0.0066
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 7,
+            "gemini": 17,
+            "llama": 1,
+            "mistral": 6,
+            "openai": 5,
+            "qwen": 1
+          }
+        },
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 23,
+          "dist": {
+            "all": 0.1523,
+            "deepseek": 0.0066,
+            "gemini": 0.0795,
+            "mistral": 0.0199,
+            "openai": 0.0397,
+            "qwen": 0.0066
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 12,
+            "mistral": 3,
+            "openai": 6,
+            "qwen": 1
+          }
+        },
+        "paint quickly and carelessly": {
+          "text": "Paint quickly and carelessly",
+          "n": 16,
+          "dist": {
+            "all": 0.106,
+            "claude": 0.0066,
+            "deepseek": 0.0265,
+            "gemini": 0.0066,
+            "mistral": 0.0066,
+            "openai": 0.0132,
+            "other": 0.0265,
+            "qwen": 0.0199
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 2,
+            "other": 4,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "40": {
+      "observation_preview": "You decide to try your best.\n\nStatus:\nYou feel fresh as paint!\nYour abilities:\nI",
+      "n": 151,
+      "choices": {
+        "paint the klissan flight deck you've seen in the gaaldock museum": {
+          "text": "Paint the Klissan flight deck you've seen in the Gaaldock Museum",
+          "n": 97,
+          "dist": {
+            "all": 0.6424,
+            "claude": 0.053,
+            "deepseek": 0.0861,
+            "gemini": 0.1589,
+            "llama": 0.0066,
+            "mistral": 0.1391,
+            "openai": 0.1523,
+            "other": 0.0066,
+            "qwen": 0.0397
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 13,
+            "gemini": 24,
+            "llama": 1,
+            "mistral": 21,
+            "openai": 23,
+            "other": 1,
+            "qwen": 6
+          }
+        },
+        "paint a flight deck that looks like a gaalian destroyer": {
+          "text": "Paint a flight deck that looks like a gaalian destroyer",
+          "n": 49,
+          "dist": {
+            "all": 0.3245,
+            "claude": 0.0132,
+            "deepseek": 0.0662,
+            "gemini": 0.1921,
+            "mistral": 0.0199,
+            "openai": 0.0066,
+            "other": 0.0199,
+            "qwen": 0.0066
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 10,
+            "gemini": 29,
+            "mistral": 3,
+            "openai": 1,
+            "other": 3,
+            "qwen": 1
+          }
+        },
+        "paint something random": {
+          "text": "Paint something random",
+          "n": 5,
+          "dist": {
+            "all": 0.0331,
+            "deepseek": 0.0066,
+            "gemini": 0.0199,
+            "qwen": 0.0066
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 3,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "41": {
+      "observation_preview": "The stylish, metallic flight deck with greenish reflections looks wonderful, and",
+      "n": 114,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 114,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0702,
+            "deepseek": 0.1228,
+            "gemini": 0.3509,
+            "llama": 0.0088,
+            "mistral": 0.1842,
+            "openai": 0.2018,
+            "other": 0.0088,
+            "qwen": 0.0526
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 14,
+            "gemini": 40,
+            "llama": 1,
+            "mistral": 21,
+            "openai": 23,
+            "other": 1,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "37": {
+      "observation_preview": "You remember that in your boyhood you made small models of Coalition and Klissan",
+      "n": 166,
+      "choices": {
+        "paint with precision, taking your time.": {
+          "text": "Paint with precision, taking your time.",
+          "n": 63,
+          "dist": {
+            "all": 0.3795,
+            "claude": 0.012,
+            "deepseek": 0.1205,
+            "gemini": 0.1024,
+            "llama": 0.006,
+            "mistral": 0.0904,
+            "openai": 0.0241,
+            "other": 0.006,
+            "qwen": 0.0181
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 20,
+            "gemini": 17,
+            "llama": 1,
+            "mistral": 15,
+            "openai": 4,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "paint quickly, but accurately": {
+          "text": "Paint quickly, but accurately",
+          "n": 45,
+          "dist": {
+            "all": 0.2711,
+            "claude": 0.0422,
+            "deepseek": 0.0181,
+            "gemini": 0.0843,
+            "llama": 0.006,
+            "mistral": 0.0482,
+            "openai": 0.0602,
+            "qwen": 0.012
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 3,
+            "gemini": 14,
+            "llama": 1,
+            "mistral": 8,
+            "openai": 10,
+            "qwen": 2
+          }
+        },
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 45,
+          "dist": {
+            "all": 0.2711,
+            "deepseek": 0.0181,
+            "gemini": 0.1747,
+            "mistral": 0.0301,
+            "openai": 0.0422,
+            "qwen": 0.006
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 29,
+            "mistral": 5,
+            "openai": 7,
+            "qwen": 1
+          }
+        },
+        "paint quickly and carelessly": {
+          "text": "Paint quickly and carelessly",
+          "n": 13,
+          "dist": {
+            "all": 0.0783,
+            "deepseek": 0.0301,
+            "gemini": 0.006,
+            "mistral": 0.006,
+            "openai": 0.012,
+            "other": 0.0241
+          },
+          "n_by_family": {
+            "deepseek": 5,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 2,
+            "other": 4
+          }
+        }
+      }
+    },
+    "42": {
+      "observation_preview": "You think it will be okay to use a small brush to paint everything in precise de",
+      "n": 166,
+      "choices": {
+        "paint some stylish stickers on the main hull": {
+          "text": "Paint some stylish stickers on the main hull",
+          "n": 42,
+          "dist": {
+            "all": 0.253,
+            "claude": 0.0241,
+            "deepseek": 0.0723,
+            "gemini": 0.0361,
+            "mistral": 0.0783,
+            "openai": 0.012,
+            "other": 0.0181,
+            "qwen": 0.012
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 12,
+            "gemini": 6,
+            "mistral": 13,
+            "openai": 2,
+            "other": 3,
+            "qwen": 2
+          }
+        },
+        "remember how you used to paint ships as a child": {
+          "text": "Remember how you used to paint ships as a child",
+          "n": 59,
+          "dist": {
+            "all": 0.3554,
+            "claude": 0.012,
+            "deepseek": 0.0542,
+            "gemini": 0.1024,
+            "llama": 0.006,
+            "mistral": 0.0843,
+            "openai": 0.0843,
+            "other": 0.006,
+            "qwen": 0.006
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 9,
+            "gemini": 17,
+            "llama": 1,
+            "mistral": 14,
+            "openai": 14,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "paint the main part to look like an ancient stealth aircraft.": {
+          "text": "Paint the main part to look like an ancient stealth aircraft.",
+          "n": 65,
+          "dist": {
+            "all": 0.3916,
+            "claude": 0.0181,
+            "deepseek": 0.0602,
+            "gemini": 0.2289,
+            "llama": 0.006,
+            "mistral": 0.012,
+            "openai": 0.0422,
+            "other": 0.006,
+            "qwen": 0.0181
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 10,
+            "gemini": 38,
+            "llama": 1,
+            "mistral": 2,
+            "openai": 7,
+            "other": 1,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "43": {
+      "observation_preview": "The colorful part of the spaceship fits beautifully into its surroundings.\n\nStat",
+      "n": 113,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 113,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0531,
+            "deepseek": 0.1947,
+            "gemini": 0.2832,
+            "llama": 0.0088,
+            "mistral": 0.2478,
+            "openai": 0.1239,
+            "other": 0.0442,
+            "qwen": 0.0442
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 22,
+            "gemini": 32,
+            "llama": 1,
+            "mistral": 28,
+            "openai": 14,
+            "other": 5,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "38": {
+      "observation_preview": "After searching your memory, you can recall how your artist friend painted wings",
+      "n": 170,
+      "choices": {
+        "paint with precision, taking your time.": {
+          "text": "Paint with precision, taking your time.",
+          "n": 66,
+          "dist": {
+            "all": 0.3882,
+            "claude": 0.0176,
+            "deepseek": 0.1176,
+            "gemini": 0.0529,
+            "llama": 0.0059,
+            "mistral": 0.1,
+            "openai": 0.0706,
+            "qwen": 0.0235
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 20,
+            "gemini": 9,
+            "llama": 1,
+            "mistral": 17,
+            "openai": 12,
+            "qwen": 4
+          }
+        },
+        "paint quickly and carelessly": {
+          "text": "Paint quickly and carelessly",
+          "n": 19,
+          "dist": {
+            "all": 0.1118,
+            "deepseek": 0.0118,
+            "mistral": 0.0353,
+            "openai": 0.0294,
+            "other": 0.0294,
+            "qwen": 0.0059
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "mistral": 6,
+            "openai": 5,
+            "other": 5,
+            "qwen": 1
+          }
+        },
+        "paint quickly, but don't forget about precision": {
+          "text": "Paint quickly, but don't forget about precision",
+          "n": 54,
+          "dist": {
+            "all": 0.3176,
+            "claude": 0.0294,
+            "deepseek": 0.0294,
+            "gemini": 0.1529,
+            "mistral": 0.0471,
+            "openai": 0.0471,
+            "other": 0.0059,
+            "qwen": 0.0059
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 5,
+            "gemini": 26,
+            "mistral": 8,
+            "openai": 8,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 31,
+          "dist": {
+            "all": 0.1824,
+            "deepseek": 0.0294,
+            "gemini": 0.0941,
+            "mistral": 0.0235,
+            "openai": 0.0294,
+            "qwen": 0.0059
+          },
+          "n_by_family": {
+            "deepseek": 5,
+            "gemini": 16,
+            "mistral": 4,
+            "openai": 5,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "44": {
+      "observation_preview": "You have enough time to paint everything with a small brush.\n\nStatus:\nYou feel f",
+      "n": 170,
+      "choices": {
+        "paint wings that resemble those of the faeyan ranger corps and add some other cool features": {
+          "text": "Paint wings that resemble those of the Faeyan Ranger Corps and add some other cool features",
+          "n": 116,
+          "dist": {
+            "all": 0.6824,
+            "claude": 0.0412,
+            "deepseek": 0.1059,
+            "gemini": 0.1765,
+            "llama": 0.0059,
+            "mistral": 0.1529,
+            "openai": 0.1588,
+            "other": 0.0118,
+            "qwen": 0.0294
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 18,
+            "gemini": 30,
+            "llama": 1,
+            "mistral": 26,
+            "openai": 27,
+            "other": 2,
+            "qwen": 5
+          }
+        },
+        "paint butterfly wings.": {
+          "text": "Paint butterfly wings.",
+          "n": 37,
+          "dist": {
+            "all": 0.2176,
+            "claude": 0.0059,
+            "deepseek": 0.0471,
+            "gemini": 0.1059,
+            "mistral": 0.0412,
+            "openai": 0.0059,
+            "other": 0.0059,
+            "qwen": 0.0059
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 8,
+            "gemini": 18,
+            "mistral": 7,
+            "openai": 1,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "don't paint wings. instead, paint an aggressive-looking hull with spikes on the bottom": {
+          "text": "Don't paint wings. Instead, paint an aggressive-looking hull with spikes on the bottom",
+          "n": 17,
+          "dist": {
+            "all": 0.1,
+            "deepseek": 0.0353,
+            "gemini": 0.0176,
+            "mistral": 0.0118,
+            "openai": 0.0118,
+            "other": 0.0176,
+            "qwen": 0.0059
+          },
+          "n_by_family": {
+            "deepseek": 6,
+            "gemini": 3,
+            "mistral": 2,
+            "openai": 2,
+            "other": 3,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "45": {
+      "observation_preview": "Now you have very nice and neat purple winglets on both sides of your ship.\n\nSta",
+      "n": 156,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 156,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0513,
+            "deepseek": 0.1731,
+            "gemini": 0.2885,
+            "llama": 0.0064,
+            "mistral": 0.2244,
+            "openai": 0.1859,
+            "other": 0.0385,
+            "qwen": 0.0321
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 27,
+            "gemini": 45,
+            "llama": 1,
+            "mistral": 35,
+            "openai": 29,
+            "other": 6,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "49": {
+      "observation_preview": "You return to your room and lie down on the sagging bed. The tattered volume of ",
+      "n": 154,
+      "choices": {
+        "watch the documentary about art history": {
+          "text": "Watch the documentary about art history",
+          "n": 138,
+          "dist": {
+            "all": 0.8961,
+            "claude": 0.0584,
+            "deepseek": 0.1623,
+            "gemini": 0.3117,
+            "llama": 0.0065,
+            "mistral": 0.1623,
+            "openai": 0.1364,
+            "other": 0.0195,
+            "qwen": 0.039
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 25,
+            "gemini": 48,
+            "llama": 1,
+            "mistral": 25,
+            "openai": 21,
+            "other": 3,
+            "qwen": 6
+          }
+        },
+        "read \"world art history\"": {
+          "text": "Read \"World Art History\"",
+          "n": 16,
+          "dist": {
+            "all": 0.1039,
+            "claude": 0.013,
+            "deepseek": 0.013,
+            "gemini": 0.0195,
+            "openai": 0.0195,
+            "other": 0.0195,
+            "qwen": 0.0195
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 3,
+            "openai": 3,
+            "other": 3,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "50": {
+      "observation_preview": "Some bookish guy on the stereovision is wearing glasses and explaining the expre",
+      "n": 137,
+      "choices": {
+        "try to pick the peleng's pocket": {
+          "text": "Try to pick the peleng's pocket",
+          "n": 85,
+          "dist": {
+            "all": 0.6204,
+            "claude": 0.0073,
+            "deepseek": 0.1241,
+            "gemini": 0.2628,
+            "llama": 0.0073,
+            "mistral": 0.146,
+            "openai": 0.0511,
+            "qwen": 0.0219
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 17,
+            "gemini": 36,
+            "llama": 1,
+            "mistral": 20,
+            "openai": 7,
+            "qwen": 3
+          }
+        },
+        "do nothing and proceed to the competition": {
+          "text": "Do nothing and proceed to the competition",
+          "n": 52,
+          "dist": {
+            "all": 0.3796,
+            "claude": 0.0584,
+            "deepseek": 0.0584,
+            "gemini": 0.0876,
+            "mistral": 0.0365,
+            "openai": 0.1022,
+            "other": 0.0146,
+            "qwen": 0.0219
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 8,
+            "gemini": 12,
+            "mistral": 5,
+            "openai": 14,
+            "other": 2,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "52": {
+      "observation_preview": "As you pretend to read something written on the wall, you reach over to pick Kas",
+      "n": 104,
+      "choices": {
+        "search for something else": {
+          "text": "Search for something else",
+          "n": 19,
+          "dist": {
+            "all": 0.1827,
+            "claude": 0.0096,
+            "gemini": 0.125,
+            "openai": 0.0481
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 13,
+            "openai": 5
+          }
+        },
+        "plunge deeper into the pocket": {
+          "text": "Plunge deeper into the pocket",
+          "n": 60,
+          "dist": {
+            "all": 0.5769,
+            "claude": 0.0096,
+            "deepseek": 0.0962,
+            "gemini": 0.2019,
+            "llama": 0.0096,
+            "mistral": 0.1827,
+            "openai": 0.0481,
+            "qwen": 0.0288
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 10,
+            "gemini": 21,
+            "llama": 1,
+            "mistral": 19,
+            "openai": 5,
+            "qwen": 3
+          }
+        },
+        "pull out your hand": {
+          "text": "Pull out your hand",
+          "n": 25,
+          "dist": {
+            "all": 0.2404,
+            "deepseek": 0.0673,
+            "gemini": 0.1442,
+            "mistral": 0.0096,
+            "openai": 0.0192
+          },
+          "n_by_family": {
+            "deepseek": 7,
+            "gemini": 15,
+            "mistral": 1,
+            "openai": 2
+          }
+        }
+      }
+    },
+    "53": {
+      "observation_preview": "You move your hand in even deeper, but you haven't quite reached the bottom of t",
+      "n": 52,
+      "choices": {
+        "reach to the bottom of the pocket": {
+          "text": "Reach to the bottom of the pocket",
+          "n": 51,
+          "dist": {
+            "all": 0.9808,
+            "claude": 0.0192,
+            "deepseek": 0.1731,
+            "gemini": 0.3077,
+            "llama": 0.0192,
+            "mistral": 0.3077,
+            "openai": 0.0962,
+            "qwen": 0.0577
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 9,
+            "gemini": 16,
+            "llama": 1,
+            "mistral": 16,
+            "openai": 5,
+            "qwen": 3
+          }
+        },
+        "pull out your hand": {
+          "text": "Pull out your hand",
+          "n": 1,
+          "dist": {
+            "all": 0.0192,
+            "deepseek": 0.0192
+          },
+          "n_by_family": {
+            "deepseek": 1
+          }
+        }
+      }
+    },
+    "55": {
+      "observation_preview": "You carefully reach the bottom of the pocket.\n\nStatus:\nYou feel fresh as paint!\n",
+      "n": 30,
+      "choices": {
+        "search for something else": {
+          "text": "Search for something else",
+          "n": 26,
+          "dist": {
+            "all": 0.8667,
+            "claude": 0.0333,
+            "deepseek": 0.2,
+            "gemini": 0.2333,
+            "mistral": 0.2667,
+            "openai": 0.0667,
+            "qwen": 0.0667
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 6,
+            "gemini": 7,
+            "mistral": 8,
+            "openai": 2,
+            "qwen": 2
+          }
+        },
+        "pull out your hand": {
+          "text": "Pull out your hand",
+          "n": 4,
+          "dist": {
+            "all": 0.1333,
+            "deepseek": 0.0333,
+            "gemini": 0.0333,
+            "llama": 0.0333,
+            "mistral": 0.0333
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "llama": 1,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "51": {
+      "observation_preview": "You begin probing the walls and suddenly feel something stiff. You carefully tak",
+      "n": 99,
+      "choices": {
+        "take the fluorescent paints": {
+          "text": "Take the fluorescent paints",
+          "n": 64,
+          "dist": {
+            "all": 0.6465,
+            "claude": 0.0505,
+            "deepseek": 0.1313,
+            "gemini": 0.2929,
+            "mistral": 0.0707,
+            "openai": 0.0606,
+            "other": 0.0202,
+            "qwen": 0.0202
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 13,
+            "gemini": 29,
+            "mistral": 7,
+            "openai": 6,
+            "other": 2,
+            "qwen": 2
+          }
+        },
+        "take the common paints": {
+          "text": "Take the common paints",
+          "n": 35,
+          "dist": {
+            "all": 0.3535,
+            "claude": 0.0404,
+            "deepseek": 0.0707,
+            "gemini": 0.0505,
+            "llama": 0.0101,
+            "mistral": 0.0303,
+            "openai": 0.1212,
+            "qwen": 0.0303
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 7,
+            "gemini": 5,
+            "llama": 1,
+            "mistral": 3,
+            "openai": 12,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "56": {
+      "observation_preview": "You decide to make something original and choose the fluorescent paints. The lig",
+      "n": 99,
+      "choices": {
+        "surrealism": {
+          "text": "Surrealism",
+          "n": 77,
+          "dist": {
+            "all": 0.7778,
+            "claude": 0.0808,
+            "deepseek": 0.1616,
+            "gemini": 0.2424,
+            "llama": 0.0101,
+            "mistral": 0.101,
+            "openai": 0.1313,
+            "qwen": 0.0505
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 16,
+            "gemini": 24,
+            "llama": 1,
+            "mistral": 10,
+            "openai": 13,
+            "qwen": 5
+          }
+        },
+        "primitivism": {
+          "text": "Primitivism",
+          "n": 11,
+          "dist": {
+            "all": 0.1111,
+            "deepseek": 0.0101,
+            "gemini": 0.0909,
+            "openai": 0.0101
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 9,
+            "openai": 1
+          }
+        },
+        "cubism": {
+          "text": "Cubism",
+          "n": 1,
+          "dist": {
+            "all": 0.0101,
+            "openai": 0.0101
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        },
+        "impressionism": {
+          "text": "Impressionism",
+          "n": 3,
+          "dist": {
+            "all": 0.0303,
+            "deepseek": 0.0101,
+            "other": 0.0202
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "other": 2
+          }
+        },
+        "realism": {
+          "text": "Realism",
+          "n": 7,
+          "dist": {
+            "all": 0.0707,
+            "claude": 0.0101,
+            "deepseek": 0.0202,
+            "gemini": 0.0101,
+            "openai": 0.0303
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 1,
+            "openai": 3
+          }
+        }
+      }
+    },
+    "57": {
+      "observation_preview": "There is an empty canvas in front of you. You can make a sketch with a pencil fi",
+      "n": 99,
+      "choices": {
+        "pencils, schmencils. give me the paints now!": {
+          "text": "Pencils, schmencils. Give me the paints now!",
+          "n": 8,
+          "dist": {
+            "all": 0.0808,
+            "claude": 0.0101,
+            "gemini": 0.0101,
+            "mistral": 0.0404,
+            "openai": 0.0101,
+            "qwen": 0.0101
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 1,
+            "mistral": 4,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "draw a sketch with a pencil": {
+          "text": "Draw a sketch with a pencil",
+          "n": 91,
+          "dist": {
+            "all": 0.9192,
+            "claude": 0.0808,
+            "deepseek": 0.202,
+            "gemini": 0.3333,
+            "llama": 0.0101,
+            "mistral": 0.0606,
+            "openai": 0.1717,
+            "other": 0.0202,
+            "qwen": 0.0404
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 20,
+            "gemini": 33,
+            "llama": 1,
+            "mistral": 6,
+            "openai": 17,
+            "other": 2,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "59": {
+      "observation_preview": "The audience's eyes devour you. It's so difficult to work when somebody's watchi",
+      "n": 546,
+      "choices": {
+        "paint facial contours, ears, hair, and so on": {
+          "text": "Paint facial contours, ears, hair, and so on",
+          "n": 98,
+          "dist": {
+            "all": 0.1795,
+            "claude": 0.0165,
+            "deepseek": 0.0366,
+            "gemini": 0.0623,
+            "llama": 0.0018,
+            "mistral": 0.0165,
+            "openai": 0.033,
+            "other": 0.0037,
+            "qwen": 0.0092
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 20,
+            "gemini": 34,
+            "llama": 1,
+            "mistral": 9,
+            "openai": 18,
+            "other": 2,
+            "qwen": 5
+          }
+        },
+        "paint eyes": {
+          "text": "Paint eyes",
+          "n": 97,
+          "dist": {
+            "all": 0.1777,
+            "claude": 0.0165,
+            "deepseek": 0.0348,
+            "gemini": 0.0623,
+            "llama": 0.0018,
+            "mistral": 0.0183,
+            "openai": 0.033,
+            "other": 0.0037,
+            "qwen": 0.0073
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 19,
+            "gemini": 34,
+            "llama": 1,
+            "mistral": 10,
+            "openai": 18,
+            "other": 2,
+            "qwen": 4
+          }
+        },
+        "paint a nose": {
+          "text": "Paint a nose",
+          "n": 93,
+          "dist": {
+            "all": 0.1703,
+            "claude": 0.0165,
+            "deepseek": 0.0348,
+            "gemini": 0.0623,
+            "llama": 0.0018,
+            "mistral": 0.0128,
+            "openai": 0.0311,
+            "other": 0.0037,
+            "qwen": 0.0073
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 19,
+            "gemini": 34,
+            "llama": 1,
+            "mistral": 7,
+            "openai": 17,
+            "other": 2,
+            "qwen": 4
+          }
+        },
+        "paint a mouth": {
+          "text": "Paint a mouth",
+          "n": 92,
+          "dist": {
+            "all": 0.1685,
+            "claude": 0.0147,
+            "deepseek": 0.0311,
+            "gemini": 0.0623,
+            "llama": 0.0018,
+            "mistral": 0.0165,
+            "openai": 0.033,
+            "other": 0.0018,
+            "qwen": 0.0073
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 17,
+            "gemini": 34,
+            "llama": 1,
+            "mistral": 9,
+            "openai": 18,
+            "other": 1,
+            "qwen": 4
+          }
+        },
+        "hand in your work": {
+          "text": "Hand in your work",
+          "n": 95,
+          "dist": {
+            "all": 0.174,
+            "claude": 0.0147,
+            "deepseek": 0.0348,
+            "gemini": 0.0623,
+            "llama": 0.0018,
+            "mistral": 0.0183,
+            "openai": 0.033,
+            "other": 0.0018,
+            "qwen": 0.0073
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 19,
+            "gemini": 34,
+            "llama": 1,
+            "mistral": 10,
+            "openai": 18,
+            "other": 1,
+            "qwen": 4
+          }
+        },
+        "repaint the facial contours, ears, hair, and so on": {
+          "text": "Repaint the facial contours, ears, hair, and so on",
+          "n": 36,
+          "dist": {
+            "all": 0.0659,
+            "claude": 0.011,
+            "deepseek": 0.0092,
+            "gemini": 0.011,
+            "mistral": 0.011,
+            "openai": 0.0165,
+            "qwen": 0.0073
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 5,
+            "gemini": 6,
+            "mistral": 6,
+            "openai": 9,
+            "qwen": 4
+          }
+        },
+        "repaint the eyes": {
+          "text": "Repaint the eyes",
+          "n": 27,
+          "dist": {
+            "all": 0.0495,
+            "claude": 0.0073,
+            "deepseek": 0.0018,
+            "gemini": 0.0018,
+            "llama": 0.0018,
+            "mistral": 0.0311,
+            "other": 0.0018,
+            "qwen": 0.0037
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 1,
+            "gemini": 1,
+            "llama": 1,
+            "mistral": 17,
+            "other": 1,
+            "qwen": 2
+          }
+        },
+        "repaint the mouth": {
+          "text": "Repaint the mouth",
+          "n": 7,
+          "dist": {
+            "all": 0.0128,
+            "deepseek": 0.0037,
+            "gemini": 0.0055,
+            "mistral": 0.0018,
+            "openai": 0.0018
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 3,
+            "mistral": 1,
+            "openai": 1
+          }
+        },
+        "repaint the nose": {
+          "text": "Repaint the nose",
+          "n": 1,
+          "dist": {
+            "all": 0.0018,
+            "gemini": 0.0018
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "63": {
+      "observation_preview": "Just a few moments left before your victory!\n\nStatus:\nYou feel fresh as paint!\nY",
+      "n": 134,
+      "choices": {
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 42,
+          "dist": {
+            "all": 0.3134,
+            "claude": 0.0299,
+            "deepseek": 0.0448,
+            "gemini": 0.1567,
+            "mistral": 0.0149,
+            "openai": 0.0448,
+            "qwen": 0.0224
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 6,
+            "gemini": 21,
+            "mistral": 2,
+            "openai": 6,
+            "qwen": 3
+          }
+        },
+        "paint with precision": {
+          "text": "Paint with precision",
+          "n": 26,
+          "dist": {
+            "all": 0.194,
+            "claude": 0.0075,
+            "deepseek": 0.0821,
+            "gemini": 0.0149,
+            "mistral": 0.0224,
+            "openai": 0.0597,
+            "qwen": 0.0075
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 11,
+            "gemini": 2,
+            "mistral": 3,
+            "openai": 8,
+            "qwen": 1
+          }
+        },
+        "paint quickly, but accurately": {
+          "text": "Paint quickly, but accurately",
+          "n": 43,
+          "dist": {
+            "all": 0.3209,
+            "claude": 0.0522,
+            "deepseek": 0.0448,
+            "gemini": 0.097,
+            "llama": 0.0075,
+            "mistral": 0.0522,
+            "openai": 0.0597,
+            "qwen": 0.0075
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 6,
+            "gemini": 13,
+            "llama": 1,
+            "mistral": 7,
+            "openai": 8,
+            "qwen": 1
+          }
+        },
+        "paint quickly and carelessly": {
+          "text": "Paint quickly and carelessly",
+          "n": 23,
+          "dist": {
+            "all": 0.1716,
+            "claude": 0.0224,
+            "deepseek": 0.0149,
+            "gemini": 0.0299,
+            "mistral": 0.0224,
+            "openai": 0.0373,
+            "other": 0.0149,
+            "qwen": 0.0299
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 2,
+            "gemini": 4,
+            "mistral": 3,
+            "openai": 5,
+            "other": 2,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "70": {
+      "observation_preview": "Since you have time, you should paint it more accurately.\n\nStatus:\nYou feel fres",
+      "n": 134,
+      "choices": {
+        "paint snakes instead of hair and make it look like medusa's head": {
+          "text": "Paint snakes instead of hair and make it look like Medusa's head",
+          "n": 95,
+          "dist": {
+            "all": 0.709,
+            "claude": 0.0821,
+            "deepseek": 0.1194,
+            "gemini": 0.2537,
+            "llama": 0.0075,
+            "mistral": 0.1119,
+            "openai": 0.0821,
+            "other": 0.0075,
+            "qwen": 0.0448
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 16,
+            "gemini": 34,
+            "llama": 1,
+            "mistral": 15,
+            "openai": 11,
+            "other": 1,
+            "qwen": 6
+          }
+        },
+        "paint a bowler hat and a toothbrush moustache": {
+          "text": "Paint a bowler hat and a toothbrush moustache",
+          "n": 11,
+          "dist": {
+            "all": 0.0821,
+            "deepseek": 0.0149,
+            "gemini": 0.0149,
+            "openai": 0.0299,
+            "qwen": 0.0224
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 2,
+            "openai": 4,
+            "qwen": 3
+          }
+        },
+        "paint a low-key haircut": {
+          "text": "Paint a low-key haircut",
+          "n": 28,
+          "dist": {
+            "all": 0.209,
+            "claude": 0.0299,
+            "deepseek": 0.0522,
+            "gemini": 0.0299,
+            "openai": 0.0896,
+            "other": 0.0075
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 7,
+            "gemini": 4,
+            "openai": 12,
+            "other": 1
+          }
+        }
+      }
+    },
+    "71": {
+      "observation_preview": "The intricately-detailed coiled snakes look very modern on the white background.",
+      "n": 133,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 133,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1128,
+            "deepseek": 0.188,
+            "gemini": 0.3008,
+            "llama": 0.0075,
+            "mistral": 0.1128,
+            "openai": 0.203,
+            "other": 0.015,
+            "qwen": 0.0602
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 25,
+            "gemini": 40,
+            "llama": 1,
+            "mistral": 15,
+            "openai": 27,
+            "other": 2,
+            "qwen": 8
+          }
+        }
+      }
+    },
+    "60": {
+      "observation_preview": "You look around and notice Khmelev's painting. It is very detailed, but it is fr",
+      "n": 124,
+      "choices": {
+        "paint precisely and take your time": {
+          "text": "Paint precisely and take your time",
+          "n": 24,
+          "dist": {
+            "all": 0.1935,
+            "claude": 0.0242,
+            "deepseek": 0.0645,
+            "gemini": 0.0161,
+            "llama": 0.0161,
+            "mistral": 0.0323,
+            "openai": 0.0323,
+            "qwen": 0.0081
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 8,
+            "gemini": 2,
+            "llama": 2,
+            "mistral": 4,
+            "openai": 4,
+            "qwen": 1
+          }
+        },
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 51,
+          "dist": {
+            "all": 0.4113,
+            "claude": 0.0484,
+            "deepseek": 0.0403,
+            "gemini": 0.1774,
+            "mistral": 0.0484,
+            "openai": 0.0887,
+            "qwen": 0.0081
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 5,
+            "gemini": 22,
+            "mistral": 6,
+            "openai": 11,
+            "qwen": 1
+          }
+        },
+        "paint quickly, but accurately": {
+          "text": "Paint quickly, but accurately",
+          "n": 38,
+          "dist": {
+            "all": 0.3065,
+            "claude": 0.0323,
+            "deepseek": 0.0484,
+            "gemini": 0.0806,
+            "mistral": 0.0887,
+            "openai": 0.0242,
+            "other": 0.0081,
+            "qwen": 0.0242
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 6,
+            "gemini": 10,
+            "mistral": 11,
+            "openai": 3,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "paint quickly and carelessly": {
+          "text": "Paint quickly and carelessly",
+          "n": 11,
+          "dist": {
+            "all": 0.0887,
+            "deepseek": 0.0081,
+            "gemini": 0.0081,
+            "mistral": 0.0484,
+            "other": 0.0161,
+            "qwen": 0.0081
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 6,
+            "other": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "64": {
+      "observation_preview": "You decide that you should use the small brush to paint the eyes very carefully ",
+      "n": 124,
+      "choices": {
+        "paint three eyes like gaals have": {
+          "text": "Paint three eyes like gaals have",
+          "n": 68,
+          "dist": {
+            "all": 0.5484,
+            "claude": 0.0484,
+            "deepseek": 0.1048,
+            "gemini": 0.1613,
+            "mistral": 0.121,
+            "openai": 0.0806,
+            "other": 0.0081,
+            "qwen": 0.0242
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 13,
+            "gemini": 20,
+            "mistral": 15,
+            "openai": 10,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "paint ordinary human eyes": {
+          "text": "Paint ordinary human eyes",
+          "n": 22,
+          "dist": {
+            "all": 0.1774,
+            "claude": 0.0242,
+            "deepseek": 0.0403,
+            "gemini": 0.0081,
+            "llama": 0.0081,
+            "mistral": 0.0161,
+            "openai": 0.0645,
+            "other": 0.0161
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 5,
+            "gemini": 1,
+            "llama": 1,
+            "mistral": 2,
+            "openai": 8,
+            "other": 2
+          }
+        },
+        "paint the eyes like those of a maloq who hasn't slept in a month.": {
+          "text": "Paint the eyes like those of a maloq who hasn't slept in a month.",
+          "n": 34,
+          "dist": {
+            "all": 0.2742,
+            "claude": 0.0323,
+            "deepseek": 0.0161,
+            "gemini": 0.1129,
+            "llama": 0.0081,
+            "mistral": 0.0806,
+            "qwen": 0.0242
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 2,
+            "gemini": 14,
+            "llama": 1,
+            "mistral": 10,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "65": {
+      "observation_preview": "The painting is rather precise and beautiful.\n\nStatus:\nYou feel fresh as paint!\n",
+      "n": 124,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 124,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1048,
+            "deepseek": 0.1613,
+            "gemini": 0.2823,
+            "llama": 0.0161,
+            "mistral": 0.2177,
+            "openai": 0.1452,
+            "other": 0.0242,
+            "qwen": 0.0484
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 20,
+            "gemini": 35,
+            "llama": 2,
+            "mistral": 27,
+            "openai": 18,
+            "other": 3,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "61": {
+      "observation_preview": "While looking at your paints, a strange label on them catches your eye. It says ",
+      "n": 94,
+      "choices": {
+        "paint with precision": {
+          "text": "Paint with precision",
+          "n": 22,
+          "dist": {
+            "all": 0.234,
+            "claude": 0.0213,
+            "deepseek": 0.0957,
+            "gemini": 0.0426,
+            "mistral": 0.0213,
+            "openai": 0.0426,
+            "qwen": 0.0106
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 9,
+            "gemini": 4,
+            "mistral": 2,
+            "openai": 4,
+            "qwen": 1
+          }
+        },
+        "paint quickly, but accurately": {
+          "text": "Paint quickly, but accurately",
+          "n": 39,
+          "dist": {
+            "all": 0.4149,
+            "claude": 0.0745,
+            "deepseek": 0.0638,
+            "gemini": 0.1064,
+            "llama": 0.0106,
+            "mistral": 0.0426,
+            "openai": 0.1064,
+            "qwen": 0.0106
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 6,
+            "gemini": 10,
+            "llama": 1,
+            "mistral": 4,
+            "openai": 10,
+            "qwen": 1
+          }
+        },
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 28,
+          "dist": {
+            "all": 0.2979,
+            "deepseek": 0.0319,
+            "gemini": 0.2128,
+            "mistral": 0.0106,
+            "openai": 0.0319,
+            "qwen": 0.0106
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 20,
+            "mistral": 1,
+            "openai": 3,
+            "qwen": 1
+          }
+        },
+        "paint rapidly and haphazardly": {
+          "text": "Paint rapidly and haphazardly",
+          "n": 5,
+          "dist": {
+            "all": 0.0532,
+            "deepseek": 0.0106,
+            "gemini": 0.0106,
+            "other": 0.0213,
+            "qwen": 0.0106
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "other": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "66": {
+      "observation_preview": "You decide to paint the nose in great detail.\n\nStatus:\nYou feel fresh as paint!\n",
+      "n": 93,
+      "choices": {
+        "paint a nose that looks like that of anta claus, an ancient idol.": {
+          "text": "Paint a nose that looks like that of Anta Claus, an ancient idol.",
+          "n": 49,
+          "dist": {
+            "all": 0.5269,
+            "claude": 0.043,
+            "deepseek": 0.0538,
+            "gemini": 0.3011,
+            "llama": 0.0108,
+            "mistral": 0.0323,
+            "openai": 0.0538,
+            "qwen": 0.0323
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 5,
+            "gemini": 28,
+            "llama": 1,
+            "mistral": 3,
+            "openai": 5,
+            "qwen": 3
+          }
+        },
+        "paint an ordinary human nose": {
+          "text": "Paint an ordinary human nose",
+          "n": 22,
+          "dist": {
+            "all": 0.2366,
+            "claude": 0.0323,
+            "deepseek": 0.0538,
+            "gemini": 0.0215,
+            "openai": 0.1183,
+            "qwen": 0.0108
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 5,
+            "gemini": 2,
+            "openai": 11,
+            "qwen": 1
+          }
+        },
+        "paint a round clown nose": {
+          "text": "Paint a round clown nose",
+          "n": 22,
+          "dist": {
+            "all": 0.2366,
+            "claude": 0.0215,
+            "deepseek": 0.086,
+            "gemini": 0.0538,
+            "mistral": 0.043,
+            "openai": 0.0108,
+            "other": 0.0215
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 8,
+            "gemini": 5,
+            "mistral": 4,
+            "openai": 1,
+            "other": 2
+          }
+        }
+      }
+    },
+    "67": {
+      "observation_preview": "It looks more like a drunk maloq's nose, but it's inflamed reddish-purple color ",
+      "n": 93,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 93,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0968,
+            "deepseek": 0.1935,
+            "gemini": 0.3763,
+            "llama": 0.0108,
+            "mistral": 0.0753,
+            "openai": 0.1828,
+            "other": 0.0215,
+            "qwen": 0.043
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 18,
+            "gemini": 35,
+            "llama": 1,
+            "mistral": 7,
+            "openai": 17,
+            "other": 2,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "62": {
+      "observation_preview": "What a shame you didn't bring a mirror with you!\n\nStatus:\nYou feel fresh as pain",
+      "n": 99,
+      "choices": {
+        "paint with precision": {
+          "text": "Paint with precision",
+          "n": 47,
+          "dist": {
+            "all": 0.4747,
+            "claude": 0.0505,
+            "deepseek": 0.101,
+            "gemini": 0.1515,
+            "mistral": 0.0505,
+            "openai": 0.1111,
+            "qwen": 0.0101
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 10,
+            "gemini": 15,
+            "mistral": 5,
+            "openai": 11,
+            "qwen": 1
+          }
+        },
+        "paint quickly, but accurately": {
+          "text": "Paint quickly, but accurately",
+          "n": 22,
+          "dist": {
+            "all": 0.2222,
+            "claude": 0.0303,
+            "deepseek": 0.0404,
+            "gemini": 0.0505,
+            "llama": 0.0101,
+            "mistral": 0.0505,
+            "openai": 0.0303,
+            "qwen": 0.0101
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "gemini": 5,
+            "llama": 1,
+            "mistral": 5,
+            "openai": 3,
+            "qwen": 1
+          }
+        },
+        "paint quickly and carelessly": {
+          "text": "Paint quickly and carelessly",
+          "n": 10,
+          "dist": {
+            "all": 0.101,
+            "deepseek": 0.0303,
+            "gemini": 0.0404,
+            "openai": 0.0101,
+            "other": 0.0101,
+            "qwen": 0.0101
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 4,
+            "openai": 1,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "paint regularly": {
+          "text": "Paint regularly",
+          "n": 20,
+          "dist": {
+            "all": 0.202,
+            "deepseek": 0.0202,
+            "gemini": 0.1313,
+            "openai": 0.0404,
+            "qwen": 0.0101
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 13,
+            "openai": 4,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "68": {
+      "observation_preview": "You've done everything perfectly.\n\nStatus:\nYou feel fresh as paint!\nYour abiliti",
+      "n": 99,
+      "choices": {
+        "portray beautifully-shaped lips": {
+          "text": "Portray beautifully-shaped lips",
+          "n": 50,
+          "dist": {
+            "all": 0.5051,
+            "claude": 0.0707,
+            "deepseek": 0.101,
+            "gemini": 0.0707,
+            "llama": 0.0101,
+            "mistral": 0.0505,
+            "openai": 0.1919,
+            "qwen": 0.0101
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 10,
+            "gemini": 7,
+            "llama": 1,
+            "mistral": 5,
+            "openai": 19,
+            "qwen": 1
+          }
+        },
+        "paint the jaws of a maloq": {
+          "text": "Paint the jaws of a maloq",
+          "n": 38,
+          "dist": {
+            "all": 0.3838,
+            "deepseek": 0.0404,
+            "gemini": 0.303,
+            "mistral": 0.0101,
+            "other": 0.0101,
+            "qwen": 0.0202
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 30,
+            "mistral": 1,
+            "other": 1,
+            "qwen": 2
+          }
+        },
+        "paint puckered lips": {
+          "text": "Paint puckered lips",
+          "n": 11,
+          "dist": {
+            "all": 0.1111,
+            "claude": 0.0101,
+            "deepseek": 0.0505,
+            "mistral": 0.0404,
+            "qwen": 0.0101
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 5,
+            "mistral": 4,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "69": {
+      "observation_preview": "You've been having a bit of trouble with the lips, but ultimately you're able to",
+      "n": 99,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 99,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0808,
+            "deepseek": 0.1919,
+            "gemini": 0.3737,
+            "llama": 0.0101,
+            "mistral": 0.101,
+            "openai": 0.1919,
+            "other": 0.0101,
+            "qwen": 0.0404
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 19,
+            "gemini": 37,
+            "llama": 1,
+            "mistral": 10,
+            "openai": 19,
+            "other": 1,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "96": {
+      "observation_preview": "You decide it would be better for your library to buy a book of good fiction ins",
+      "n": 79,
+      "choices": {
+        "go to the gravicar": {
+          "text": "Go to the gravicar",
+          "n": 79,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0633,
+            "deepseek": 0.1139,
+            "gemini": 0.5316,
+            "mistral": 0.0506,
+            "openai": 0.1646,
+            "other": 0.038,
+            "qwen": 0.038
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 9,
+            "gemini": 42,
+            "mistral": 4,
+            "openai": 13,
+            "other": 3,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "89": {
+      "observation_preview": "It's almost impossible to draw outerspace in the style you chose. It looks very ",
+      "n": 70,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 70,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0714,
+            "deepseek": 0.1714,
+            "gemini": 0.3714,
+            "mistral": 0.1571,
+            "openai": 0.1286,
+            "other": 0.0571,
+            "qwen": 0.0429
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 12,
+            "gemini": 26,
+            "mistral": 11,
+            "openai": 9,
+            "other": 4,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "95": {
+      "observation_preview": "You fail to paint outerspace in the surrealistic style. Although the background ",
+      "n": 47,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 47,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1702,
+            "deepseek": 0.1489,
+            "gemini": 0.2128,
+            "mistral": 0.383,
+            "openai": 0.0638,
+            "qwen": 0.0213
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 7,
+            "gemini": 10,
+            "mistral": 18,
+            "openai": 3,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "100": {
+      "observation_preview": "You've been taken in by the book…\n\n...Realism is an artistic school of thought t",
+      "n": 16,
+      "choices": {
+        "but the book aside": {
+          "text": "But the book aside",
+          "n": 16,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.125,
+            "deepseek": 0.125,
+            "gemini": 0.1875,
+            "openai": 0.1875,
+            "other": 0.1875,
+            "qwen": 0.1875
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 3,
+            "openai": 3,
+            "other": 3,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "58": {
+      "observation_preview": "You take out a pencil and outline the place for a head on your canvas.\n\nStatus:\n",
+      "n": 91,
+      "choices": {
+        "now it's time to apply the paint.": {
+          "text": "Now it's time to apply the paint.",
+          "n": 91,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0879,
+            "deepseek": 0.2198,
+            "gemini": 0.3626,
+            "llama": 0.011,
+            "mistral": 0.0659,
+            "openai": 0.1868,
+            "other": 0.022,
+            "qwen": 0.044
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 20,
+            "gemini": 33,
+            "llama": 1,
+            "mistral": 6,
+            "openai": 17,
+            "other": 2,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "29": {
+      "observation_preview": "Strange, but original!\n\nStatus:\nYou aren't tired\nYour abilities:\nImagination: 4\n",
+      "n": 82,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 82,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0122,
+            "deepseek": 0.2195,
+            "gemini": 0.4146,
+            "mistral": 0.1463,
+            "openai": 0.122,
+            "other": 0.061,
+            "qwen": 0.0244
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 18,
+            "gemini": 34,
+            "mistral": 12,
+            "openai": 10,
+            "other": 5,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "94": {
+      "observation_preview": "There is no possibility of painting a cubic form in the surrealistic style. You ",
+      "n": 67,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 67,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0448,
+            "deepseek": 0.209,
+            "gemini": 0.5224,
+            "llama": 0.0149,
+            "mistral": 0.0149,
+            "openai": 0.1493,
+            "qwen": 0.0448
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 14,
+            "gemini": 35,
+            "llama": 1,
+            "mistral": 1,
+            "openai": 10,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "31": {
+      "observation_preview": "The spiral coil looks very stylish and fits well in the overall composition.\n\nSt",
+      "n": 71,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 71,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.1549,
+            "gemini": 0.5915,
+            "mistral": 0.0704,
+            "openai": 0.0845,
+            "other": 0.0563,
+            "qwen": 0.0423
+          },
+          "n_by_family": {
+            "deepseek": 11,
+            "gemini": 42,
+            "mistral": 5,
+            "openai": 6,
+            "other": 4,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "93": {
+      "observation_preview": "You try to depict a flight deck in your chosen style, but you just can't. After ",
+      "n": 37,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 37,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0541,
+            "deepseek": 0.2703,
+            "gemini": 0.4324,
+            "mistral": 0.0811,
+            "openai": 0.027,
+            "other": 0.0811,
+            "qwen": 0.0541
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 10,
+            "gemini": 16,
+            "mistral": 3,
+            "openai": 1,
+            "other": 3,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "91": {
+      "observation_preview": "You try to paint according to your plan, but what you produce doesn't look anyth",
+      "n": 6,
+      "choices": {
+        "continue working": {
+          "text": "Continue working",
+          "n": 6,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1667,
+            "gemini": 0.6667,
+            "openai": 0.1667
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 4,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "83": {
+      "observation_preview": "The judges whisper between themselves for a long time and then call for the mast",
+      "n": 1,
+      "choices": {
+        "open the envelope": {
+          "text": "Open the envelope",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "85": {
+      "observation_preview": "Inside, there is a piece of brown paper. \n\nSo what's the minimum number of times",
+      "n": 1,
+      "choices": {
+        "3": {
+          "text": "3",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    }
+  }
+}

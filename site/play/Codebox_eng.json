@@ -1,0 +1,1431 @@
+{
+  "quest": "Codebox_eng",
+  "generated": "2026-05-03T06:47:46Z",
+  "total_runs": 265,
+  "win_rate": 0.0,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "41": {
+      "observation_preview": "At the spaceport on planet Боннасис you were greeted by deafeningly loud music a",
+      "n": 137,
+      "choices": {
+        "go up to the safe": {
+          "text": "Go up to the safe",
+          "n": 137,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0949,
+            "deepseek": 0.146,
+            "gemini": 0.3504,
+            "mistral": 0.1752,
+            "openai": 0.1533,
+            "other": 0.0438,
+            "qwen": 0.0365
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 20,
+            "gemini": 48,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "29": {
+      "observation_preview": "Together with Ikss, you go up several floors, and enter a small room with lowere",
+      "n": 363,
+      "choices": {
+        "look at the piece of paper with the password": {
+          "text": "Look at the piece of paper with the password",
+          "n": 128,
+          "dist": {
+            "all": 0.3526,
+            "claude": 0.0358,
+            "deepseek": 0.0496,
+            "gemini": 0.124,
+            "mistral": 0.0661,
+            "openai": 0.0579,
+            "other": 0.0083,
+            "qwen": 0.011
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 18,
+            "gemini": 45,
+            "mistral": 24,
+            "openai": 21,
+            "other": 3,
+            "qwen": 4
+          }
+        },
+        "ask for clarification about 'switches'": {
+          "text": "Ask for clarification about 'switches'",
+          "n": 98,
+          "dist": {
+            "all": 0.27,
+            "claude": 0.0275,
+            "deepseek": 0.0496,
+            "gemini": 0.1322,
+            "mistral": 0.0496,
+            "openai": 0.0055,
+            "qwen": 0.0055
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 18,
+            "gemini": 48,
+            "mistral": 18,
+            "openai": 2,
+            "qwen": 2
+          }
+        },
+        "start solving": {
+          "text": "Start solving",
+          "n": 137,
+          "dist": {
+            "all": 0.3774,
+            "claude": 0.0358,
+            "deepseek": 0.0551,
+            "gemini": 0.1322,
+            "mistral": 0.0661,
+            "openai": 0.0579,
+            "other": 0.0165,
+            "qwen": 0.0138
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 20,
+            "gemini": 48,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "34": {
+      "observation_preview": "<fix>Password                      Example\n _______________        _____________",
+      "n": 1594,
+      "choices": {
+        "decline to fulfill the mission": {
+          "text": "Decline to fulfill the mission",
+          "n": 54,
+          "dist": {
+            "all": 0.0339,
+            "claude": 0.005,
+            "deepseek": 0.0069,
+            "gemini": 0.0075,
+            "mistral": 0.0094,
+            "openai": 0.0044,
+            "qwen": 0.0006
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 11,
+            "gemini": 12,
+            "mistral": 15,
+            "openai": 7,
+            "qwen": 1
+          }
+        },
+        "fragment 8 to the left of the empty cell.": {
+          "text": "Fragment 8 to the left of the empty cell.",
+          "n": 99,
+          "dist": {
+            "all": 0.0621,
+            "claude": 0.0019,
+            "deepseek": 0.0038,
+            "gemini": 0.0345,
+            "mistral": 0.0138,
+            "openai": 0.0063,
+            "qwen": 0.0019
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 6,
+            "gemini": 55,
+            "mistral": 22,
+            "openai": 10,
+            "qwen": 3
+          }
+        },
+        "fragment 1 above the empty cell.": {
+          "text": "Fragment 1 above the empty cell.",
+          "n": 72,
+          "dist": {
+            "all": 0.0452,
+            "claude": 0.0019,
+            "deepseek": 0.0044,
+            "gemini": 0.0238,
+            "mistral": 0.0038,
+            "openai": 0.0082,
+            "other": 0.0025,
+            "qwen": 0.0006
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 7,
+            "gemini": 38,
+            "mistral": 6,
+            "openai": 13,
+            "other": 4,
+            "qwen": 1
+          }
+        },
+        "fragment 2 above the empty cell.": {
+          "text": "Fragment 2 above the empty cell.",
+          "n": 93,
+          "dist": {
+            "all": 0.0583,
+            "claude": 0.0044,
+            "deepseek": 0.0082,
+            "gemini": 0.0245,
+            "mistral": 0.0088,
+            "openai": 0.0082,
+            "other": 0.0019,
+            "qwen": 0.0025
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 13,
+            "gemini": 39,
+            "mistral": 14,
+            "openai": 13,
+            "other": 3,
+            "qwen": 4
+          }
+        },
+        "fragment 2 to the left of the empty cell.": {
+          "text": "Fragment 2 to the left of the empty cell.",
+          "n": 39,
+          "dist": {
+            "all": 0.0245,
+            "claude": 0.0013,
+            "deepseek": 0.0025,
+            "gemini": 0.0113,
+            "mistral": 0.0044,
+            "openai": 0.0038,
+            "qwen": 0.0013
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 4,
+            "gemini": 18,
+            "mistral": 7,
+            "openai": 6,
+            "qwen": 2
+          }
+        },
+        "fragment 3 below the empty cell.": {
+          "text": "Fragment 3 below the empty cell.",
+          "n": 13,
+          "dist": {
+            "all": 0.0082,
+            "claude": 0.0006,
+            "deepseek": 0.0006,
+            "gemini": 0.0031,
+            "mistral": 0.0025,
+            "openai": 0.0013
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 5,
+            "mistral": 4,
+            "openai": 2
+          }
+        },
+        "fragment 3 above the empty cell.": {
+          "text": "Fragment 3 above the empty cell.",
+          "n": 38,
+          "dist": {
+            "all": 0.0238,
+            "claude": 0.0013,
+            "deepseek": 0.0038,
+            "gemini": 0.005,
+            "mistral": 0.0038,
+            "openai": 0.0056,
+            "other": 0.0038,
+            "qwen": 0.0006
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 6,
+            "gemini": 8,
+            "mistral": 6,
+            "openai": 9,
+            "other": 6,
+            "qwen": 1
+          }
+        },
+        "fragment 1 to the right of the empty cell.": {
+          "text": "Fragment 1 to the right of the empty cell.",
+          "n": 89,
+          "dist": {
+            "all": 0.0558,
+            "claude": 0.0019,
+            "deepseek": 0.0082,
+            "gemini": 0.0251,
+            "mistral": 0.0119,
+            "openai": 0.0063,
+            "qwen": 0.0025
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 13,
+            "gemini": 40,
+            "mistral": 19,
+            "openai": 10,
+            "qwen": 4
+          }
+        },
+        "fragment 1 to the left of the empty cell.": {
+          "text": "Fragment 1 to the left of the empty cell.",
+          "n": 98,
+          "dist": {
+            "all": 0.0615,
+            "claude": 0.0019,
+            "deepseek": 0.0075,
+            "gemini": 0.0282,
+            "mistral": 0.0119,
+            "openai": 0.0094,
+            "qwen": 0.0025
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 12,
+            "gemini": 45,
+            "mistral": 19,
+            "openai": 15,
+            "qwen": 4
+          }
+        },
+        "fragment 4 above the empty cell.": {
+          "text": "Fragment 4 above the empty cell.",
+          "n": 39,
+          "dist": {
+            "all": 0.0245,
+            "claude": 0.0006,
+            "deepseek": 0.0031,
+            "gemini": 0.0075,
+            "mistral": 0.0025,
+            "openai": 0.0069,
+            "other": 0.0025,
+            "qwen": 0.0013
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 5,
+            "gemini": 12,
+            "mistral": 4,
+            "openai": 11,
+            "other": 4,
+            "qwen": 2
+          }
+        },
+        "fragment 5 above the empty cell.": {
+          "text": "Fragment 5 above the empty cell.",
+          "n": 143,
+          "dist": {
+            "all": 0.0897,
+            "claude": 0.0019,
+            "deepseek": 0.005,
+            "gemini": 0.0527,
+            "mistral": 0.0125,
+            "openai": 0.0119,
+            "other": 0.0025,
+            "qwen": 0.0031
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 8,
+            "gemini": 84,
+            "mistral": 20,
+            "openai": 19,
+            "other": 4,
+            "qwen": 5
+          }
+        },
+        "fragment 2 to the right of the empty cell.": {
+          "text": "Fragment 2 to the right of the empty cell.",
+          "n": 37,
+          "dist": {
+            "all": 0.0232,
+            "claude": 0.0013,
+            "deepseek": 0.0031,
+            "gemini": 0.0094,
+            "mistral": 0.005,
+            "openai": 0.0031,
+            "qwen": 0.0013
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 5,
+            "gemini": 15,
+            "mistral": 8,
+            "openai": 5,
+            "qwen": 2
+          }
+        },
+        "fragment 8 below the empty cell.": {
+          "text": "Fragment 8 below the empty cell.",
+          "n": 32,
+          "dist": {
+            "all": 0.0201,
+            "claude": 0.0006,
+            "deepseek": 0.0025,
+            "gemini": 0.0094,
+            "mistral": 0.0038,
+            "openai": 0.0031,
+            "qwen": 0.0006
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 15,
+            "mistral": 6,
+            "openai": 5,
+            "qwen": 1
+          }
+        },
+        "fragment 3 to the left of the empty cell.": {
+          "text": "Fragment 3 to the left of the empty cell.",
+          "n": 21,
+          "dist": {
+            "all": 0.0132,
+            "deepseek": 0.0019,
+            "gemini": 0.0025,
+            "mistral": 0.0031,
+            "openai": 0.0056
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 4,
+            "mistral": 5,
+            "openai": 9
+          }
+        },
+        "fragment 8 above the empty cell.": {
+          "text": "Fragment 8 above the empty cell.",
+          "n": 86,
+          "dist": {
+            "all": 0.054,
+            "claude": 0.0013,
+            "deepseek": 0.0044,
+            "gemini": 0.0307,
+            "mistral": 0.0082,
+            "openai": 0.0082,
+            "qwen": 0.0013
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 7,
+            "gemini": 49,
+            "mistral": 13,
+            "openai": 13,
+            "qwen": 2
+          }
+        },
+        "fragment 5 to the right of the empty cell.": {
+          "text": "Fragment 5 to the right of the empty cell.",
+          "n": 46,
+          "dist": {
+            "all": 0.0289,
+            "claude": 0.0013,
+            "deepseek": 0.0006,
+            "gemini": 0.0132,
+            "mistral": 0.0038,
+            "openai": 0.0031,
+            "qwen": 0.0069
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "gemini": 21,
+            "mistral": 6,
+            "openai": 5,
+            "qwen": 11
+          }
+        },
+        "fragment 5 to the left of the empty cell.": {
+          "text": "Fragment 5 to the left of the empty cell.",
+          "n": 43,
+          "dist": {
+            "all": 0.027,
+            "claude": 0.0013,
+            "deepseek": 0.0006,
+            "gemini": 0.0107,
+            "mistral": 0.0038,
+            "openai": 0.0044,
+            "qwen": 0.0063
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "gemini": 17,
+            "mistral": 6,
+            "openai": 7,
+            "qwen": 10
+          }
+        },
+        "fragment 4 below the empty cell.": {
+          "text": "Fragment 4 below the empty cell.",
+          "n": 12,
+          "dist": {
+            "all": 0.0075,
+            "deepseek": 0.0006,
+            "gemini": 0.0025,
+            "mistral": 0.0013,
+            "openai": 0.0025,
+            "qwen": 0.0006
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 4,
+            "mistral": 2,
+            "openai": 4,
+            "qwen": 1
+          }
+        },
+        "fragment 3 to the right of the empty cell.": {
+          "text": "Fragment 3 to the right of the empty cell.",
+          "n": 16,
+          "dist": {
+            "all": 0.01,
+            "deepseek": 0.0019,
+            "gemini": 0.0013,
+            "mistral": 0.0025,
+            "openai": 0.0044
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 2,
+            "mistral": 4,
+            "openai": 7
+          }
+        },
+        "fragment 4 to the left of the empty cell.": {
+          "text": "Fragment 4 to the left of the empty cell.",
+          "n": 18,
+          "dist": {
+            "all": 0.0113,
+            "claude": 0.0006,
+            "deepseek": 0.0019,
+            "gemini": 0.0031,
+            "mistral": 0.0031,
+            "openai": 0.0019,
+            "qwen": 0.0006
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 5,
+            "mistral": 5,
+            "openai": 3,
+            "qwen": 1
+          }
+        },
+        "fragment 7 above the empty cell.": {
+          "text": "Fragment 7 above the empty cell.",
+          "n": 66,
+          "dist": {
+            "all": 0.0414,
+            "claude": 0.0025,
+            "deepseek": 0.0025,
+            "gemini": 0.0226,
+            "mistral": 0.0044,
+            "openai": 0.0063,
+            "other": 0.0006,
+            "qwen": 0.0025
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 4,
+            "gemini": 36,
+            "mistral": 7,
+            "openai": 10,
+            "other": 1,
+            "qwen": 4
+          }
+        },
+        "fragment 2 below the empty cell.": {
+          "text": "Fragment 2 below the empty cell.",
+          "n": 50,
+          "dist": {
+            "all": 0.0314,
+            "claude": 0.0031,
+            "deepseek": 0.0069,
+            "gemini": 0.0125,
+            "mistral": 0.0044,
+            "openai": 0.0025,
+            "qwen": 0.0019
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 11,
+            "gemini": 20,
+            "mistral": 7,
+            "openai": 4,
+            "qwen": 3
+          }
+        },
+        "fragment 8 to the right of the empty cell.": {
+          "text": "Fragment 8 to the right of the empty cell.",
+          "n": 86,
+          "dist": {
+            "all": 0.054,
+            "claude": 0.0006,
+            "deepseek": 0.005,
+            "gemini": 0.0295,
+            "mistral": 0.0132,
+            "openai": 0.005,
+            "qwen": 0.0006
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 8,
+            "gemini": 47,
+            "mistral": 21,
+            "openai": 8,
+            "qwen": 1
+          }
+        },
+        "fragment 4 to the right of the empty cell.": {
+          "text": "Fragment 4 to the right of the empty cell.",
+          "n": 14,
+          "dist": {
+            "all": 0.0088,
+            "claude": 0.0006,
+            "deepseek": 0.0013,
+            "gemini": 0.0013,
+            "mistral": 0.0031,
+            "openai": 0.0019,
+            "qwen": 0.0006
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 2,
+            "mistral": 5,
+            "openai": 3,
+            "qwen": 1
+          }
+        },
+        "fragment 7 to the right of the empty cell.": {
+          "text": "Fragment 7 to the right of the empty cell.",
+          "n": 46,
+          "dist": {
+            "all": 0.0289,
+            "claude": 0.0013,
+            "deepseek": 0.0063,
+            "gemini": 0.01,
+            "mistral": 0.0056,
+            "openai": 0.0031,
+            "qwen": 0.0025
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 10,
+            "gemini": 16,
+            "mistral": 9,
+            "openai": 5,
+            "qwen": 4
+          }
+        },
+        "fragment 7 to the left of the empty cell.": {
+          "text": "Fragment 7 to the left of the empty cell.",
+          "n": 69,
+          "dist": {
+            "all": 0.0433,
+            "claude": 0.0019,
+            "deepseek": 0.0063,
+            "gemini": 0.0213,
+            "mistral": 0.0069,
+            "openai": 0.0038,
+            "qwen": 0.0031
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 10,
+            "gemini": 34,
+            "mistral": 11,
+            "openai": 6,
+            "qwen": 5
+          }
+        },
+        "fragment 7 below the empty cell.": {
+          "text": "Fragment 7 below the empty cell.",
+          "n": 42,
+          "dist": {
+            "all": 0.0263,
+            "claude": 0.0019,
+            "deepseek": 0.0013,
+            "gemini": 0.0182,
+            "mistral": 0.0025,
+            "openai": 0.0013,
+            "qwen": 0.0013
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 2,
+            "gemini": 29,
+            "mistral": 4,
+            "openai": 2,
+            "qwen": 2
+          }
+        },
+        "fragment 5 below the empty cell.": {
+          "text": "Fragment 5 below the empty cell.",
+          "n": 81,
+          "dist": {
+            "all": 0.0508,
+            "claude": 0.0013,
+            "deepseek": 0.0031,
+            "gemini": 0.0314,
+            "mistral": 0.0082,
+            "openai": 0.0056,
+            "qwen": 0.0013
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 5,
+            "gemini": 50,
+            "mistral": 13,
+            "openai": 9,
+            "qwen": 2
+          }
+        },
+        "fragment 1 below the empty cell.": {
+          "text": "Fragment 1 below the empty cell.",
+          "n": 52,
+          "dist": {
+            "all": 0.0326,
+            "claude": 0.0013,
+            "deepseek": 0.0019,
+            "gemini": 0.0194,
+            "mistral": 0.0031,
+            "openai": 0.0056,
+            "qwen": 0.0013
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 31,
+            "mistral": 5,
+            "openai": 9,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "33": {
+      "observation_preview": "<fix>Password                      Example\n _______________        _____________",
+      "n": 967,
+      "choices": {
+        "fragment 1 to the left of the empty cell.": {
+          "text": "Fragment 1 to the left of the empty cell.",
+          "n": 13,
+          "dist": {
+            "all": 0.0134,
+            "claude": 0.001,
+            "deepseek": 0.001,
+            "gemini": 0.0072,
+            "mistral": 0.001,
+            "openai": 0.0021,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 7,
+            "mistral": 1,
+            "openai": 2,
+            "qwen": 1
+          }
+        },
+        "fragment 1 to the right of the empty cell.": {
+          "text": "Fragment 1 to the right of the empty cell.",
+          "n": 7,
+          "dist": {
+            "all": 0.0072,
+            "claude": 0.001,
+            "gemini": 0.0031,
+            "mistral": 0.001,
+            "openai": 0.0021
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 3,
+            "mistral": 1,
+            "openai": 2
+          }
+        },
+        "fragment 4 above the empty cell.": {
+          "text": "Fragment 4 above the empty cell.",
+          "n": 12,
+          "dist": {
+            "all": 0.0124,
+            "claude": 0.001,
+            "gemini": 0.0062,
+            "mistral": 0.001,
+            "openai": 0.0041
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 6,
+            "mistral": 1,
+            "openai": 4
+          }
+        },
+        "fragment 3 to the right of the empty cell.": {
+          "text": "Fragment 3 to the right of the empty cell.",
+          "n": 17,
+          "dist": {
+            "all": 0.0176,
+            "claude": 0.001,
+            "deepseek": 0.0041,
+            "gemini": 0.0021,
+            "mistral": 0.001,
+            "openai": 0.0041,
+            "other": 0.0041,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 2,
+            "mistral": 1,
+            "openai": 4,
+            "other": 4,
+            "qwen": 1
+          }
+        },
+        "fragment 3 to the left of the empty cell.": {
+          "text": "Fragment 3 to the left of the empty cell.",
+          "n": 21,
+          "dist": {
+            "all": 0.0217,
+            "claude": 0.001,
+            "deepseek": 0.0052,
+            "gemini": 0.0062,
+            "mistral": 0.001,
+            "openai": 0.0031,
+            "other": 0.0041,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 5,
+            "gemini": 6,
+            "mistral": 1,
+            "openai": 3,
+            "other": 4,
+            "qwen": 1
+          }
+        },
+        "fragment 4 below the empty cell.": {
+          "text": "Fragment 4 below the empty cell.",
+          "n": 29,
+          "dist": {
+            "all": 0.03,
+            "claude": 0.0021,
+            "deepseek": 0.0031,
+            "gemini": 0.0134,
+            "mistral": 0.001,
+            "openai": 0.0103
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 13,
+            "mistral": 1,
+            "openai": 10
+          }
+        },
+        "fragment 2 below the empty cell.": {
+          "text": "Fragment 2 below the empty cell.",
+          "n": 40,
+          "dist": {
+            "all": 0.0414,
+            "claude": 0.0021,
+            "deepseek": 0.0031,
+            "gemini": 0.0207,
+            "mistral": 0.0041,
+            "openai": 0.0072,
+            "other": 0.0021,
+            "qwen": 0.0021
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 20,
+            "mistral": 4,
+            "openai": 7,
+            "other": 2,
+            "qwen": 2
+          }
+        },
+        "fragment 6 above the empty cell.": {
+          "text": "Fragment 6 above the empty cell.",
+          "n": 32,
+          "dist": {
+            "all": 0.0331,
+            "claude": 0.001,
+            "deepseek": 0.0041,
+            "gemini": 0.0145,
+            "mistral": 0.0041,
+            "openai": 0.0062,
+            "other": 0.0021,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 14,
+            "mistral": 4,
+            "openai": 6,
+            "other": 2,
+            "qwen": 1
+          }
+        },
+        "fragment 5 to the left of the empty cell.": {
+          "text": "Fragment 5 to the left of the empty cell.",
+          "n": 50,
+          "dist": {
+            "all": 0.0517,
+            "claude": 0.001,
+            "deepseek": 0.0062,
+            "gemini": 0.0155,
+            "mistral": 0.0093,
+            "openai": 0.0124,
+            "other": 0.0062,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 6,
+            "gemini": 15,
+            "mistral": 9,
+            "openai": 12,
+            "other": 6,
+            "qwen": 1
+          }
+        },
+        "fragment 5 to the right of the empty cell.": {
+          "text": "Fragment 5 to the right of the empty cell.",
+          "n": 52,
+          "dist": {
+            "all": 0.0538,
+            "claude": 0.001,
+            "deepseek": 0.0083,
+            "gemini": 0.0165,
+            "mistral": 0.0083,
+            "openai": 0.0114,
+            "other": 0.0062,
+            "qwen": 0.0021
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 8,
+            "gemini": 16,
+            "mistral": 8,
+            "openai": 11,
+            "other": 6,
+            "qwen": 2
+          }
+        },
+        "fragment 6 below the empty cell.": {
+          "text": "Fragment 6 below the empty cell.",
+          "n": 29,
+          "dist": {
+            "all": 0.03,
+            "claude": 0.001,
+            "deepseek": 0.0041,
+            "gemini": 0.0124,
+            "mistral": 0.0031,
+            "openai": 0.0062,
+            "other": 0.0021,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 12,
+            "mistral": 3,
+            "openai": 6,
+            "other": 2,
+            "qwen": 1
+          }
+        },
+        "fragment 7 to the left of the empty cell.": {
+          "text": "Fragment 7 to the left of the empty cell.",
+          "n": 31,
+          "dist": {
+            "all": 0.0321,
+            "deepseek": 0.0031,
+            "gemini": 0.0093,
+            "mistral": 0.001,
+            "openai": 0.0093,
+            "other": 0.0062,
+            "qwen": 0.0031
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 9,
+            "mistral": 1,
+            "openai": 9,
+            "other": 6,
+            "qwen": 3
+          }
+        },
+        "fragment 5 above the empty cell.": {
+          "text": "Fragment 5 above the empty cell.",
+          "n": 24,
+          "dist": {
+            "all": 0.0248,
+            "claude": 0.0021,
+            "deepseek": 0.0041,
+            "gemini": 0.0052,
+            "mistral": 0.0021,
+            "openai": 0.0062,
+            "other": 0.0041,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 4,
+            "gemini": 5,
+            "mistral": 2,
+            "openai": 6,
+            "other": 4,
+            "qwen": 1
+          }
+        },
+        "fragment 5 below the empty cell.": {
+          "text": "Fragment 5 below the empty cell.",
+          "n": 44,
+          "dist": {
+            "all": 0.0455,
+            "claude": 0.0021,
+            "deepseek": 0.0031,
+            "gemini": 0.0145,
+            "mistral": 0.0052,
+            "openai": 0.0124,
+            "other": 0.0072,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 14,
+            "mistral": 5,
+            "openai": 12,
+            "other": 7,
+            "qwen": 1
+          }
+        },
+        "fragment 7 to the right of the empty cell.": {
+          "text": "Fragment 7 to the right of the empty cell.",
+          "n": 27,
+          "dist": {
+            "all": 0.0279,
+            "deepseek": 0.0021,
+            "gemini": 0.0072,
+            "mistral": 0.0021,
+            "openai": 0.0093,
+            "other": 0.0062,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 7,
+            "mistral": 2,
+            "openai": 9,
+            "other": 6,
+            "qwen": 1
+          }
+        },
+        "fragment 1 below the empty cell.": {
+          "text": "Fragment 1 below the empty cell.",
+          "n": 42,
+          "dist": {
+            "all": 0.0434,
+            "claude": 0.001,
+            "deepseek": 0.0072,
+            "gemini": 0.0196,
+            "mistral": 0.0031,
+            "openai": 0.0041,
+            "other": 0.0072,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 7,
+            "gemini": 19,
+            "mistral": 3,
+            "openai": 4,
+            "other": 7,
+            "qwen": 1
+          }
+        },
+        "fragment 6 to the left of the empty cell.": {
+          "text": "Fragment 6 to the left of the empty cell.",
+          "n": 34,
+          "dist": {
+            "all": 0.0352,
+            "claude": 0.0021,
+            "deepseek": 0.0031,
+            "gemini": 0.0103,
+            "mistral": 0.0021,
+            "openai": 0.0124,
+            "other": 0.0041,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 10,
+            "mistral": 2,
+            "openai": 12,
+            "other": 4,
+            "qwen": 1
+          }
+        },
+        "fragment 1 above the empty cell.": {
+          "text": "Fragment 1 above the empty cell.",
+          "n": 12,
+          "dist": {
+            "all": 0.0124,
+            "deepseek": 0.0021,
+            "gemini": 0.0052,
+            "openai": 0.001,
+            "other": 0.0031,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 5,
+            "openai": 1,
+            "other": 3,
+            "qwen": 1
+          }
+        },
+        "fragment 6 to the right of the empty cell.": {
+          "text": "Fragment 6 to the right of the empty cell.",
+          "n": 43,
+          "dist": {
+            "all": 0.0445,
+            "claude": 0.0021,
+            "deepseek": 0.0031,
+            "gemini": 0.0207,
+            "mistral": 0.0021,
+            "openai": 0.0103,
+            "other": 0.0041,
+            "qwen": 0.0021
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 20,
+            "mistral": 2,
+            "openai": 10,
+            "other": 4,
+            "qwen": 2
+          }
+        },
+        "fragment 8 below the empty cell.": {
+          "text": "Fragment 8 below the empty cell.",
+          "n": 66,
+          "dist": {
+            "all": 0.0683,
+            "deepseek": 0.0021,
+            "gemini": 0.0393,
+            "mistral": 0.0072,
+            "openai": 0.0134,
+            "other": 0.0041,
+            "qwen": 0.0021
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 38,
+            "mistral": 7,
+            "openai": 13,
+            "other": 4,
+            "qwen": 2
+          }
+        },
+        "fragment 7 above the empty cell.": {
+          "text": "Fragment 7 above the empty cell.",
+          "n": 51,
+          "dist": {
+            "all": 0.0527,
+            "claude": 0.001,
+            "deepseek": 0.0238,
+            "gemini": 0.0124,
+            "mistral": 0.0021,
+            "openai": 0.0072,
+            "other": 0.0052,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 23,
+            "gemini": 12,
+            "mistral": 2,
+            "openai": 7,
+            "other": 5,
+            "qwen": 1
+          }
+        },
+        "fragment 7 below the empty cell.": {
+          "text": "Fragment 7 below the empty cell.",
+          "n": 58,
+          "dist": {
+            "all": 0.06,
+            "claude": 0.0021,
+            "deepseek": 0.0228,
+            "gemini": 0.0114,
+            "mistral": 0.0041,
+            "openai": 0.0134,
+            "other": 0.0062
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 22,
+            "gemini": 11,
+            "mistral": 4,
+            "openai": 13,
+            "other": 6
+          }
+        },
+        "fragment 3 below the empty cell.": {
+          "text": "Fragment 3 below the empty cell.",
+          "n": 48,
+          "dist": {
+            "all": 0.0496,
+            "claude": 0.001,
+            "deepseek": 0.0072,
+            "gemini": 0.0155,
+            "mistral": 0.0031,
+            "openai": 0.0124,
+            "other": 0.0062,
+            "qwen": 0.0041
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 7,
+            "gemini": 15,
+            "mistral": 3,
+            "openai": 12,
+            "other": 6,
+            "qwen": 4
+          }
+        },
+        "decline to fulfill the mission": {
+          "text": "Decline to fulfill the mission",
+          "n": 12,
+          "dist": {
+            "all": 0.0124,
+            "claude": 0.0021,
+            "deepseek": 0.0021,
+            "mistral": 0.0021,
+            "openai": 0.0041,
+            "other": 0.0021
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "mistral": 2,
+            "openai": 4,
+            "other": 2
+          }
+        },
+        "fragment 3 above the empty cell.": {
+          "text": "Fragment 3 above the empty cell.",
+          "n": 23,
+          "dist": {
+            "all": 0.0238,
+            "claude": 0.001,
+            "deepseek": 0.0031,
+            "gemini": 0.0093,
+            "mistral": 0.001,
+            "openai": 0.0072,
+            "qwen": 0.0021
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 9,
+            "mistral": 1,
+            "openai": 7,
+            "qwen": 2
+          }
+        },
+        "fragment 4 to the left of the empty cell.": {
+          "text": "Fragment 4 to the left of the empty cell.",
+          "n": 22,
+          "dist": {
+            "all": 0.0228,
+            "deepseek": 0.0041,
+            "gemini": 0.0062,
+            "mistral": 0.0041,
+            "openai": 0.0021,
+            "other": 0.0031,
+            "qwen": 0.0031
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 6,
+            "mistral": 4,
+            "openai": 2,
+            "other": 3,
+            "qwen": 3
+          }
+        },
+        "fragment 4 to the right of the empty cell.": {
+          "text": "Fragment 4 to the right of the empty cell.",
+          "n": 31,
+          "dist": {
+            "all": 0.0321,
+            "deepseek": 0.0041,
+            "gemini": 0.0155,
+            "mistral": 0.0041,
+            "openai": 0.0021,
+            "other": 0.0031,
+            "qwen": 0.0031
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 15,
+            "mistral": 4,
+            "openai": 2,
+            "other": 3,
+            "qwen": 3
+          }
+        },
+        "fragment 2 to the left of the empty cell.": {
+          "text": "Fragment 2 to the left of the empty cell.",
+          "n": 11,
+          "dist": {
+            "all": 0.0114,
+            "deepseek": 0.001,
+            "gemini": 0.0041,
+            "mistral": 0.0021,
+            "openai": 0.0021,
+            "other": 0.001,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 4,
+            "mistral": 2,
+            "openai": 2,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "fragment 8 to the right of the empty cell.": {
+          "text": "Fragment 8 to the right of the empty cell.",
+          "n": 29,
+          "dist": {
+            "all": 0.03,
+            "claude": 0.001,
+            "deepseek": 0.0041,
+            "gemini": 0.0124,
+            "mistral": 0.0021,
+            "openai": 0.0072,
+            "other": 0.0031
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 12,
+            "mistral": 2,
+            "openai": 7,
+            "other": 3
+          }
+        },
+        "fragment 8 to the left of the empty cell.": {
+          "text": "Fragment 8 to the left of the empty cell.",
+          "n": 30,
+          "dist": {
+            "all": 0.031,
+            "claude": 0.001,
+            "deepseek": 0.0031,
+            "gemini": 0.0124,
+            "mistral": 0.0041,
+            "openai": 0.0062,
+            "other": 0.0041
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 12,
+            "mistral": 4,
+            "openai": 6,
+            "other": 4
+          }
+        },
+        "fragment 8 above the empty cell.": {
+          "text": "Fragment 8 above the empty cell.",
+          "n": 11,
+          "dist": {
+            "all": 0.0114,
+            "gemini": 0.001,
+            "openai": 0.0062,
+            "other": 0.0041
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "openai": 6,
+            "other": 4
+          }
+        },
+        "fragment 2 to the right of the empty cell.": {
+          "text": "Fragment 2 to the right of the empty cell.",
+          "n": 8,
+          "dist": {
+            "all": 0.0083,
+            "gemini": 0.0031,
+            "mistral": 0.001,
+            "openai": 0.0031,
+            "other": 0.001
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "mistral": 1,
+            "openai": 3,
+            "other": 1
+          }
+        },
+        "fragment 2 above the empty cell.": {
+          "text": "Fragment 2 above the empty cell.",
+          "n": 8,
+          "dist": {
+            "all": 0.0083,
+            "gemini": 0.0031,
+            "openai": 0.0031,
+            "other": 0.0021
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "openai": 3,
+            "other": 2
+          }
+        }
+      }
+    }
+  }
+}

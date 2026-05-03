@@ -1,0 +1,1285 @@
+{
+  "quest": "Edelweiss_eng",
+  "generated": "2026-05-03T06:47:46Z",
+  "total_runs": 271,
+  "win_rate": 0.0,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "42": {
+      "observation_preview": "The chief geological researcher from planet Земля came on the line, gave you the",
+      "n": 140,
+      "choices": {
+        "go down the ramp": {
+          "text": "Go down the ramp",
+          "n": 140,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0929,
+            "deepseek": 0.1429,
+            "gemini": 0.3643,
+            "mistral": 0.1714,
+            "openai": 0.15,
+            "other": 0.0429,
+            "qwen": 0.0357
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "27": {
+      "observation_preview": "Heat from your ship's engines is spreading throughout the small hangar. The door",
+      "n": 210,
+      "choices": {
+        "to the corridor": {
+          "text": "To the corridor",
+          "n": 174,
+          "dist": {
+            "all": 0.8286,
+            "claude": 0.0667,
+            "deepseek": 0.1238,
+            "gemini": 0.281,
+            "mistral": 0.1952,
+            "openai": 0.1095,
+            "other": 0.0286,
+            "qwen": 0.0238
+          },
+          "n_by_family": {
+            "claude": 14,
+            "deepseek": 26,
+            "gemini": 59,
+            "mistral": 41,
+            "openai": 23,
+            "other": 6,
+            "qwen": 5
+          }
+        },
+        "climb up into the ship": {
+          "text": "Climb up into the ship",
+          "n": 36,
+          "dist": {
+            "all": 0.1714,
+            "claude": 0.0048,
+            "deepseek": 0.019,
+            "gemini": 0.0429,
+            "mistral": 0.0714,
+            "openai": 0.0095,
+            "other": 0.0238
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 9,
+            "mistral": 15,
+            "openai": 2,
+            "other": 5
+          }
+        }
+      }
+    },
+    "3": {
+      "observation_preview": "The well-lit corridor is empty. Only the shallow drumming of rubble and the hiss",
+      "n": 1198,
+      "choices": {
+        "to the equipment": {
+          "text": "To the equipment",
+          "n": 526,
+          "dist": {
+            "all": 0.4391,
+            "claude": 0.0292,
+            "deepseek": 0.0693,
+            "gemini": 0.1761,
+            "mistral": 0.0401,
+            "openai": 0.1035,
+            "other": 0.0058,
+            "qwen": 0.015
+          },
+          "n_by_family": {
+            "claude": 35,
+            "deepseek": 83,
+            "gemini": 211,
+            "mistral": 48,
+            "openai": 124,
+            "other": 7,
+            "qwen": 18
+          }
+        },
+        "to the lock chamber": {
+          "text": "To the lock chamber",
+          "n": 262,
+          "dist": {
+            "all": 0.2187,
+            "claude": 0.0134,
+            "deepseek": 0.0334,
+            "gemini": 0.086,
+            "mistral": 0.0351,
+            "openai": 0.0292,
+            "other": 0.0109,
+            "qwen": 0.0109
+          },
+          "n_by_family": {
+            "claude": 16,
+            "deepseek": 40,
+            "gemini": 103,
+            "mistral": 42,
+            "openai": 35,
+            "other": 13,
+            "qwen": 13
+          }
+        },
+        "to the hangar": {
+          "text": "To the hangar",
+          "n": 68,
+          "dist": {
+            "all": 0.0568,
+            "claude": 0.0033,
+            "deepseek": 0.0125,
+            "gemini": 0.0192,
+            "mistral": 0.0142,
+            "openai": 0.0058,
+            "other": 0.0008,
+            "qwen": 0.0008
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 15,
+            "gemini": 23,
+            "mistral": 17,
+            "openai": 7,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "to the geologist's bunkroom": {
+          "text": "To the geologist's bunkroom",
+          "n": 269,
+          "dist": {
+            "all": 0.2245,
+            "claude": 0.01,
+            "deepseek": 0.0434,
+            "gemini": 0.086,
+            "mistral": 0.0584,
+            "openai": 0.02,
+            "other": 0.0025,
+            "qwen": 0.0042
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 52,
+            "gemini": 103,
+            "mistral": 70,
+            "openai": 24,
+            "other": 3,
+            "qwen": 5
+          }
+        },
+        "to your bunkroom": {
+          "text": "To your bunkroom",
+          "n": 73,
+          "dist": {
+            "all": 0.0609,
+            "claude": 0.0017,
+            "deepseek": 0.0167,
+            "gemini": 0.0309,
+            "mistral": 0.0025,
+            "openai": 0.0067,
+            "qwen": 0.0025
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 20,
+            "gemini": 37,
+            "mistral": 3,
+            "openai": 8,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "28": {
+      "observation_preview": "You are at a stand with various geological equipment.\n\nStatus:\nYour health: 100%",
+      "n": 1871,
+      "choices": {
+        "take the analyzer": {
+          "text": "Take the analyzer",
+          "n": 488,
+          "dist": {
+            "all": 0.2608,
+            "claude": 0.0257,
+            "deepseek": 0.0406,
+            "gemini": 0.0973,
+            "mistral": 0.0321,
+            "openai": 0.0551,
+            "other": 0.0037,
+            "qwen": 0.0064
+          },
+          "n_by_family": {
+            "claude": 48,
+            "deepseek": 76,
+            "gemini": 182,
+            "mistral": 60,
+            "openai": 103,
+            "other": 7,
+            "qwen": 12
+          }
+        },
+        "take the edelweiss unit": {
+          "text": "Take the Edelweiss unit",
+          "n": 460,
+          "dist": {
+            "all": 0.2459,
+            "claude": 0.023,
+            "deepseek": 0.0374,
+            "gemini": 0.1005,
+            "mistral": 0.0251,
+            "openai": 0.0502,
+            "other": 0.0037,
+            "qwen": 0.0059
+          },
+          "n_by_family": {
+            "claude": 43,
+            "deepseek": 70,
+            "gemini": 188,
+            "mistral": 47,
+            "openai": 94,
+            "other": 7,
+            "qwen": 11
+          }
+        },
+        "to the corridor": {
+          "text": "To the corridor",
+          "n": 383,
+          "dist": {
+            "all": 0.2047,
+            "claude": 0.0102,
+            "deepseek": 0.0342,
+            "gemini": 0.0861,
+            "mistral": 0.0214,
+            "openai": 0.0433,
+            "other": 0.0037,
+            "qwen": 0.0059
+          },
+          "n_by_family": {
+            "claude": 19,
+            "deepseek": 64,
+            "gemini": 161,
+            "mistral": 40,
+            "openai": 81,
+            "other": 7,
+            "qwen": 11
+          }
+        },
+        "put the spacesuit on": {
+          "text": "Put the spacesuit on",
+          "n": 156,
+          "dist": {
+            "all": 0.0834,
+            "claude": 0.0048,
+            "deepseek": 0.0096,
+            "gemini": 0.0476,
+            "mistral": 0.0053,
+            "openai": 0.0144,
+            "qwen": 0.0016
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 18,
+            "gemini": 89,
+            "mistral": 10,
+            "openai": 27,
+            "qwen": 3
+          }
+        },
+        "to the air lock": {
+          "text": "To the air lock",
+          "n": 294,
+          "dist": {
+            "all": 0.1571,
+            "claude": 0.015,
+            "deepseek": 0.0198,
+            "gemini": 0.062,
+            "mistral": 0.0075,
+            "openai": 0.0449,
+            "other": 0.0011,
+            "qwen": 0.0069
+          },
+          "n_by_family": {
+            "claude": 28,
+            "deepseek": 37,
+            "gemini": 116,
+            "mistral": 14,
+            "openai": 84,
+            "other": 2,
+            "qwen": 13
+          }
+        },
+        "replenish the spacesuit's reserves": {
+          "text": "Replenish the spacesuit's reserves",
+          "n": 10,
+          "dist": {
+            "all": 0.0053,
+            "claude": 0.0016,
+            "gemini": 0.0027,
+            "openai": 0.0011
+          },
+          "n_by_family": {
+            "claude": 3,
+            "gemini": 5,
+            "openai": 2
+          }
+        },
+        "remove the spacesuit": {
+          "text": "Remove the spacesuit",
+          "n": 80,
+          "dist": {
+            "all": 0.0428,
+            "claude": 0.0011,
+            "deepseek": 0.0069,
+            "gemini": 0.0241,
+            "mistral": 0.0011,
+            "openai": 0.0086,
+            "qwen": 0.0011
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 13,
+            "gemini": 45,
+            "mistral": 2,
+            "openai": 16,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "26": {
+      "observation_preview": "The doors close, and the lock chamber falls silent.\n\nStatus:\nYour health: 100%\nY",
+      "n": 716,
+      "choices": {
+        "to the equipment": {
+          "text": "To the equipment",
+          "n": 158,
+          "dist": {
+            "all": 0.2207,
+            "claude": 0.0196,
+            "deepseek": 0.0265,
+            "gemini": 0.0964,
+            "mistral": 0.0084,
+            "openai": 0.0587,
+            "other": 0.0028,
+            "qwen": 0.0084
+          },
+          "n_by_family": {
+            "claude": 14,
+            "deepseek": 19,
+            "gemini": 69,
+            "mistral": 6,
+            "openai": 42,
+            "other": 2,
+            "qwen": 6
+          }
+        },
+        "to the surface": {
+          "text": "To the surface",
+          "n": 284,
+          "dist": {
+            "all": 0.3966,
+            "claude": 0.0349,
+            "deepseek": 0.0642,
+            "gemini": 0.1383,
+            "mistral": 0.0489,
+            "openai": 0.0726,
+            "other": 0.0196,
+            "qwen": 0.0182
+          },
+          "n_by_family": {
+            "claude": 25,
+            "deepseek": 46,
+            "gemini": 99,
+            "mistral": 35,
+            "openai": 52,
+            "other": 14,
+            "qwen": 13
+          }
+        },
+        "to the corridor": {
+          "text": "To the corridor",
+          "n": 274,
+          "dist": {
+            "all": 0.3827,
+            "claude": 0.0265,
+            "deepseek": 0.0587,
+            "gemini": 0.148,
+            "mistral": 0.0363,
+            "openai": 0.0796,
+            "other": 0.0112,
+            "qwen": 0.0223
+          },
+          "n_by_family": {
+            "claude": 19,
+            "deepseek": 42,
+            "gemini": 106,
+            "mistral": 26,
+            "openai": 57,
+            "other": 8,
+            "qwen": 16
+          }
+        }
+      }
+    },
+    "4": {
+      "observation_preview": "You can't figure out which way to go because of the poor visibility caused by th",
+      "n": 639,
+      "choices": {
+        "go east": {
+          "text": "Go east",
+          "n": 125,
+          "dist": {
+            "all": 0.1956,
+            "claude": 0.0579,
+            "deepseek": 0.0172,
+            "gemini": 0.0344,
+            "mistral": 0.0016,
+            "openai": 0.0548,
+            "other": 0.0219,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "claude": 37,
+            "deepseek": 11,
+            "gemini": 22,
+            "mistral": 1,
+            "openai": 35,
+            "other": 14,
+            "qwen": 5
+          }
+        },
+        "go south": {
+          "text": "Go south",
+          "n": 132,
+          "dist": {
+            "all": 0.2066,
+            "claude": 0.0532,
+            "deepseek": 0.0172,
+            "gemini": 0.0454,
+            "mistral": 0.0016,
+            "openai": 0.0563,
+            "other": 0.0219,
+            "qwen": 0.011
+          },
+          "n_by_family": {
+            "claude": 34,
+            "deepseek": 11,
+            "gemini": 29,
+            "mistral": 1,
+            "openai": 36,
+            "other": 14,
+            "qwen": 7
+          }
+        },
+        "go north": {
+          "text": "Go north",
+          "n": 161,
+          "dist": {
+            "all": 0.252,
+            "claude": 0.0516,
+            "deepseek": 0.0219,
+            "gemini": 0.0579,
+            "mistral": 0.0016,
+            "openai": 0.0798,
+            "other": 0.0219,
+            "qwen": 0.0172
+          },
+          "n_by_family": {
+            "claude": 33,
+            "deepseek": 14,
+            "gemini": 37,
+            "mistral": 1,
+            "openai": 51,
+            "other": 14,
+            "qwen": 11
+          }
+        },
+        "go west": {
+          "text": "Go west",
+          "n": 94,
+          "dist": {
+            "all": 0.1471,
+            "claude": 0.0376,
+            "deepseek": 0.0141,
+            "gemini": 0.0329,
+            "mistral": 0.0016,
+            "openai": 0.0438,
+            "other": 0.011,
+            "qwen": 0.0063
+          },
+          "n_by_family": {
+            "claude": 24,
+            "deepseek": 9,
+            "gemini": 21,
+            "mistral": 1,
+            "openai": 28,
+            "other": 7,
+            "qwen": 4
+          }
+        },
+        "go back to the base": {
+          "text": "Go back to the base",
+          "n": 127,
+          "dist": {
+            "all": 0.1987,
+            "claude": 0.0235,
+            "deepseek": 0.025,
+            "gemini": 0.061,
+            "mistral": 0.011,
+            "openai": 0.0516,
+            "other": 0.0125,
+            "qwen": 0.0141
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 16,
+            "gemini": 39,
+            "mistral": 7,
+            "openai": 33,
+            "other": 8,
+            "qwen": 9
+          }
+        }
+      }
+    },
+    "72": {
+      "observation_preview": "The door opening is too small for your spacesuit to pass through!\n\nStatus:\nYour ",
+      "n": 149,
+      "choices": {
+        "step away from the door": {
+          "text": "Step away from the door",
+          "n": 149,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0671,
+            "deepseek": 0.1611,
+            "gemini": 0.5369,
+            "mistral": 0.0403,
+            "openai": 0.1611,
+            "qwen": 0.0336
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 24,
+            "gemini": 80,
+            "mistral": 6,
+            "openai": 24,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "82": {
+      "observation_preview": "Guyolak's eyes narrow, then he suddenly puts on an affected grin. \n\"Heh, heh. It",
+      "n": 575,
+      "choices": {
+        "ask about the engineer who died": {
+          "text": "Ask about the engineer who died",
+          "n": 89,
+          "dist": {
+            "all": 0.1548,
+            "claude": 0.007,
+            "deepseek": 0.0261,
+            "gemini": 0.0678,
+            "mistral": 0.0417,
+            "openai": 0.0087,
+            "other": 0.0017,
+            "qwen": 0.0017
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 15,
+            "gemini": 39,
+            "mistral": 24,
+            "openai": 5,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "ask about the edelweiss installation": {
+          "text": "Ask about the Edelweiss installation",
+          "n": 87,
+          "dist": {
+            "all": 0.1513,
+            "claude": 0.0052,
+            "deepseek": 0.0243,
+            "gemini": 0.0678,
+            "mistral": 0.0417,
+            "openai": 0.0087,
+            "other": 0.0017,
+            "qwen": 0.0017
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 14,
+            "gemini": 39,
+            "mistral": 24,
+            "openai": 5,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "hint that his cooperation is required": {
+          "text": "Hint that his cooperation is required",
+          "n": 61,
+          "dist": {
+            "all": 0.1061,
+            "claude": 0.0052,
+            "deepseek": 0.0191,
+            "gemini": 0.033,
+            "mistral": 0.0383,
+            "openai": 0.007,
+            "other": 0.0017,
+            "qwen": 0.0017
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 11,
+            "gemini": 19,
+            "mistral": 22,
+            "openai": 4,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "ask about a radar unit": {
+          "text": "Ask about a radar unit",
+          "n": 89,
+          "dist": {
+            "all": 0.1548,
+            "claude": 0.007,
+            "deepseek": 0.0261,
+            "gemini": 0.0678,
+            "mistral": 0.0417,
+            "openai": 0.0087,
+            "other": 0.0017,
+            "qwen": 0.0017
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 15,
+            "gemini": 39,
+            "mistral": 24,
+            "openai": 5,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "ask about the worm": {
+          "text": "Ask about the worm",
+          "n": 76,
+          "dist": {
+            "all": 0.1322,
+            "claude": 0.0052,
+            "deepseek": 0.0191,
+            "gemini": 0.0539,
+            "mistral": 0.0417,
+            "openai": 0.0087,
+            "other": 0.0017,
+            "qwen": 0.0017
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 11,
+            "gemini": 31,
+            "mistral": 24,
+            "openai": 5,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "apologize for your intrusion": {
+          "text": "Apologize for your intrusion",
+          "n": 50,
+          "dist": {
+            "all": 0.087,
+            "claude": 0.0052,
+            "deepseek": 0.0209,
+            "gemini": 0.0226,
+            "mistral": 0.0278,
+            "openai": 0.007,
+            "other": 0.0017,
+            "qwen": 0.0017
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 12,
+            "gemini": 13,
+            "mistral": 16,
+            "openai": 4,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "suggest that the geologist should come outside": {
+          "text": "Suggest that the geologist should come outside",
+          "n": 34,
+          "dist": {
+            "all": 0.0591,
+            "claude": 0.0035,
+            "deepseek": 0.0087,
+            "gemini": 0.0139,
+            "mistral": 0.0243,
+            "openai": 0.0052,
+            "other": 0.0017,
+            "qwen": 0.0017
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 5,
+            "gemini": 8,
+            "mistral": 14,
+            "openai": 3,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "walk away from the door": {
+          "text": "Walk away from the door",
+          "n": 89,
+          "dist": {
+            "all": 0.1548,
+            "claude": 0.007,
+            "deepseek": 0.0261,
+            "gemini": 0.0678,
+            "mistral": 0.0417,
+            "openai": 0.0087,
+            "other": 0.0017,
+            "qwen": 0.0017
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 15,
+            "gemini": 39,
+            "mistral": 24,
+            "openai": 5,
+            "other": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "55": {
+      "observation_preview": "The local atmosphere is suffocating you, but you carry on through the clouds of ",
+      "n": 208,
+      "choices": {
+        "go north": {
+          "text": "Go north",
+          "n": 73,
+          "dist": {
+            "all": 0.351,
+            "claude": 0.0096,
+            "deepseek": 0.0337,
+            "gemini": 0.2212,
+            "mistral": 0.0769,
+            "openai": 0.0096
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 7,
+            "gemini": 46,
+            "mistral": 16,
+            "openai": 2
+          }
+        },
+        "go east": {
+          "text": "Go east",
+          "n": 35,
+          "dist": {
+            "all": 0.1683,
+            "claude": 0.0096,
+            "deepseek": 0.0192,
+            "gemini": 0.0721,
+            "mistral": 0.0577,
+            "openai": 0.0048,
+            "qwen": 0.0048
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 4,
+            "gemini": 15,
+            "mistral": 12,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "go south": {
+          "text": "Go south",
+          "n": 53,
+          "dist": {
+            "all": 0.2548,
+            "claude": 0.024,
+            "deepseek": 0.0192,
+            "gemini": 0.1394,
+            "mistral": 0.0481,
+            "openai": 0.0048,
+            "qwen": 0.0192
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 4,
+            "gemini": 29,
+            "mistral": 10,
+            "openai": 1,
+            "qwen": 4
+          }
+        },
+        "go west": {
+          "text": "Go west",
+          "n": 20,
+          "dist": {
+            "all": 0.0962,
+            "claude": 0.0048,
+            "deepseek": 0.0192,
+            "gemini": 0.0192,
+            "mistral": 0.0385,
+            "openai": 0.0048,
+            "qwen": 0.0096
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 4,
+            "mistral": 8,
+            "openai": 1,
+            "qwen": 2
+          }
+        },
+        "go back to the base": {
+          "text": "Go back to the base",
+          "n": 27,
+          "dist": {
+            "all": 0.1298,
+            "claude": 0.0048,
+            "deepseek": 0.0385,
+            "gemini": 0.0673,
+            "mistral": 0.0144,
+            "openai": 0.0048
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 8,
+            "gemini": 14,
+            "mistral": 3,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "29": {
+      "observation_preview": "You hear a circular saw can heard from time to time behind the door. But the geo",
+      "n": 104,
+      "choices": {
+        "to the corridor": {
+          "text": "To the corridor",
+          "n": 100,
+          "dist": {
+            "all": 0.9615,
+            "claude": 0.0192,
+            "deepseek": 0.2596,
+            "gemini": 0.1923,
+            "mistral": 0.4038,
+            "openai": 0.0481,
+            "other": 0.0192,
+            "qwen": 0.0192
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 27,
+            "gemini": 20,
+            "mistral": 42,
+            "openai": 5,
+            "other": 2,
+            "qwen": 2
+          }
+        },
+        "force open the door": {
+          "text": "Force open the door",
+          "n": 4,
+          "dist": {
+            "all": 0.0385,
+            "deepseek": 0.0192,
+            "gemini": 0.0096,
+            "openai": 0.0096
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 1,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "2": {
+      "observation_preview": "The computer, as usual, is on the table. The medical device on the wall heartily",
+      "n": 100,
+      "choices": {
+        "take the multi-tool screwdriver": {
+          "text": "Take the multi-tool screwdriver",
+          "n": 21,
+          "dist": {
+            "all": 0.21,
+            "claude": 0.01,
+            "deepseek": 0.07,
+            "gemini": 0.1,
+            "mistral": 0.01,
+            "openai": 0.02
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 7,
+            "gemini": 10,
+            "mistral": 1,
+            "openai": 2
+          }
+        },
+        "to the corridor": {
+          "text": "To the corridor",
+          "n": 32,
+          "dist": {
+            "all": 0.32,
+            "claude": 0.01,
+            "deepseek": 0.13,
+            "gemini": 0.13,
+            "mistral": 0.01,
+            "openai": 0.03,
+            "qwen": 0.01
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 13,
+            "gemini": 13,
+            "mistral": 1,
+            "openai": 3,
+            "qwen": 1
+          }
+        },
+        "read the instructions for the edelweiss installation": {
+          "text": "Read the instructions for the Edelweiss installation",
+          "n": 43,
+          "dist": {
+            "all": 0.43,
+            "claude": 0.01,
+            "deepseek": 0.18,
+            "gemini": 0.16,
+            "mistral": 0.01,
+            "openai": 0.06,
+            "qwen": 0.01
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 18,
+            "gemini": 16,
+            "mistral": 1,
+            "openai": 6,
+            "qwen": 1
+          }
+        },
+        "use the medical device": {
+          "text": "Use the medical device",
+          "n": 4,
+          "dist": {
+            "all": 0.04,
+            "deepseek": 0.01,
+            "gemini": 0.02,
+            "qwen": 0.01
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "56": {
+      "observation_preview": "The local atmosphere is suffocating you, but you carry on through the clouds of ",
+      "n": 340,
+      "choices": {
+        "go back to the base": {
+          "text": "Go back to the base",
+          "n": 16,
+          "dist": {
+            "all": 0.0471,
+            "claude": 0.0059,
+            "deepseek": 0.0176,
+            "gemini": 0.0088,
+            "mistral": 0.0118,
+            "other": 0.0029
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 6,
+            "gemini": 3,
+            "mistral": 4,
+            "other": 1
+          }
+        },
+        "go north": {
+          "text": "Go north",
+          "n": 123,
+          "dist": {
+            "all": 0.3618,
+            "claude": 0.0118,
+            "deepseek": 0.0824,
+            "gemini": 0.1294,
+            "mistral": 0.1118,
+            "openai": 0.0206,
+            "other": 0.0059
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 28,
+            "gemini": 44,
+            "mistral": 38,
+            "openai": 7,
+            "other": 2
+          }
+        },
+        "go south": {
+          "text": "Go south",
+          "n": 65,
+          "dist": {
+            "all": 0.1912,
+            "claude": 0.0088,
+            "deepseek": 0.0412,
+            "gemini": 0.0529,
+            "mistral": 0.0676,
+            "openai": 0.0147,
+            "other": 0.0059
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 14,
+            "gemini": 18,
+            "mistral": 23,
+            "openai": 5,
+            "other": 2
+          }
+        },
+        "go east": {
+          "text": "Go east",
+          "n": 86,
+          "dist": {
+            "all": 0.2529,
+            "claude": 0.0088,
+            "deepseek": 0.05,
+            "gemini": 0.0941,
+            "mistral": 0.0824,
+            "openai": 0.0118,
+            "other": 0.0059
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 17,
+            "gemini": 32,
+            "mistral": 28,
+            "openai": 4,
+            "other": 2
+          }
+        },
+        "go west": {
+          "text": "Go west",
+          "n": 50,
+          "dist": {
+            "all": 0.1471,
+            "claude": 0.0088,
+            "deepseek": 0.0382,
+            "gemini": 0.0353,
+            "mistral": 0.0471,
+            "openai": 0.0118,
+            "other": 0.0059
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 13,
+            "gemini": 12,
+            "mistral": 16,
+            "openai": 4,
+            "other": 2
+          }
+        }
+      }
+    },
+    "5": {
+      "observation_preview": "You ascend the ladder, put your hand to the scanner, and open the door. All syst",
+      "n": 61,
+      "choices": {
+        "fly the ship above the sandstorm in order to talk with the government": {
+          "text": "Fly the ship above the sandstorm in order to talk with the government",
+          "n": 25,
+          "dist": {
+            "all": 0.4098,
+            "claude": 0.0164,
+            "deepseek": 0.0164,
+            "gemini": 0.082,
+            "mistral": 0.2295,
+            "openai": 0.0328,
+            "other": 0.0328
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 5,
+            "mistral": 14,
+            "openai": 2,
+            "other": 2
+          }
+        },
+        "go down the ramp": {
+          "text": "Go down the ramp",
+          "n": 34,
+          "dist": {
+            "all": 0.5574,
+            "claude": 0.0164,
+            "deepseek": 0.0492,
+            "gemini": 0.1475,
+            "mistral": 0.2459,
+            "openai": 0.0328,
+            "other": 0.0656
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 9,
+            "mistral": 15,
+            "openai": 2,
+            "other": 4
+          }
+        },
+        "decline to fulfill the mission": {
+          "text": "Decline to fulfill the mission",
+          "n": 2,
+          "dist": {
+            "all": 0.0328,
+            "deepseek": 0.0164,
+            "other": 0.0164
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "other": 1
+          }
+        }
+      }
+    },
+    "41": {
+      "observation_preview": "After leaving the dense clouds of sand and dust below, you are able to contact t",
+      "n": 68,
+      "choices": {
+        "clarify your mission": {
+          "text": "Clarify your mission",
+          "n": 29,
+          "dist": {
+            "all": 0.4265,
+            "claude": 0.0147,
+            "deepseek": 0.0147,
+            "gemini": 0.0588,
+            "mistral": 0.2941,
+            "openai": 0.0294,
+            "other": 0.0147
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 4,
+            "mistral": 20,
+            "openai": 2,
+            "other": 1
+          }
+        },
+        "land in the station hangar": {
+          "text": "Land in the station hangar",
+          "n": 25,
+          "dist": {
+            "all": 0.3676,
+            "claude": 0.0147,
+            "deepseek": 0.0147,
+            "gemini": 0.0735,
+            "mistral": 0.2059,
+            "openai": 0.0294,
+            "other": 0.0294
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 5,
+            "mistral": 14,
+            "openai": 2,
+            "other": 2
+          }
+        },
+        "mention the geologist's radar": {
+          "text": "Mention the geologist's radar",
+          "n": 8,
+          "dist": {
+            "all": 0.1176,
+            "deepseek": 0.0147,
+            "gemini": 0.0147,
+            "mistral": 0.0735,
+            "openai": 0.0147
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 5,
+            "openai": 1
+          }
+        },
+        "describe the geologist's activities on the surface": {
+          "text": "Describe the geologist's activities on the surface",
+          "n": 6,
+          "dist": {
+            "all": 0.0882,
+            "gemini": 0.0147,
+            "mistral": 0.0735
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 5
+          }
+        }
+      }
+    },
+    "76": {
+      "observation_preview": "The speakers emit only an annoying \"Psh-psh-psh-psh\" sound. You can't make out a",
+      "n": 8,
+      "choices": {
+        "turn off the transmitter": {
+          "text": "Turn off the transmitter",
+          "n": 8,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.5,
+            "gemini": 0.375,
+            "mistral": 0.125
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 3,
+            "mistral": 1
+          }
+        }
+      }
+    }
+  }
+}

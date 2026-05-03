@@ -1,0 +1,148 @@
+{
+  "quest": "Shashki_eng",
+  "generated": "2026-05-03T06:47:47Z",
+  "total_runs": 69,
+  "win_rate": 0.0435,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "qwen"
+  ],
+  "locations": {
+    "4": {
+      "observation_preview": "You went to the Боннасис' sports centre right upon arrival to the planet.\n\n - He",
+      "n": 39,
+      "choices": {
+        "go to the hotel library": {
+          "text": "Go to the hotel library",
+          "n": 39,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0513,
+            "deepseek": 0.0513,
+            "gemini": 0.8462,
+            "qwen": 0.0513
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 33,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "10": {
+      "observation_preview": "In the morning, after a light breakfast, you went to the sports centre.\n\n- Hewo,",
+      "n": 580,
+      "choices": {
+        "3d": {
+          "text": "3d",
+          "n": 108,
+          "dist": {
+            "all": 0.1862,
+            "claude": 0.0052,
+            "gemini": 0.1759,
+            "qwen": 0.0052
+          },
+          "n_by_family": {
+            "claude": 3,
+            "gemini": 102,
+            "qwen": 3
+          }
+        },
+        "4th": {
+          "text": "4th",
+          "n": 116,
+          "dist": {
+            "all": 0.2,
+            "claude": 0.019,
+            "gemini": 0.1621,
+            "qwen": 0.019
+          },
+          "n_by_family": {
+            "claude": 11,
+            "gemini": 94,
+            "qwen": 11
+          }
+        },
+        "2nd": {
+          "text": "2nd",
+          "n": 81,
+          "dist": {
+            "all": 0.1397,
+            "claude": 0.0017,
+            "deepseek": 0.0276,
+            "gemini": 0.1052,
+            "qwen": 0.0052
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 16,
+            "gemini": 61,
+            "qwen": 3
+          }
+        },
+        "5th": {
+          "text": "5th",
+          "n": 113,
+          "dist": {
+            "all": 0.1948,
+            "claude": 0.0172,
+            "gemini": 0.1638,
+            "qwen": 0.0138
+          },
+          "n_by_family": {
+            "claude": 10,
+            "gemini": 95,
+            "qwen": 8
+          }
+        },
+        "1st": {
+          "text": "1st",
+          "n": 30,
+          "dist": {
+            "all": 0.0517,
+            "claude": 0.0017,
+            "deepseek": 0.0241,
+            "gemini": 0.0224,
+            "qwen": 0.0034
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 14,
+            "gemini": 13,
+            "qwen": 2
+          }
+        },
+        "6th": {
+          "text": "6th",
+          "n": 85,
+          "dist": {
+            "all": 0.1466,
+            "claude": 0.0017,
+            "gemini": 0.1431,
+            "qwen": 0.0017
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 83,
+            "qwen": 1
+          }
+        },
+        "7th": {
+          "text": "7th",
+          "n": 47,
+          "dist": {
+            "all": 0.081,
+            "gemini": 0.081
+          },
+          "n_by_family": {
+            "gemini": 47
+          }
+        }
+      }
+    }
+  }
+}
