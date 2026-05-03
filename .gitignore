@@ -5,18 +5,18 @@ results/
 logs/
 
 # Quest files and utils
-quests/
-!quests/boat.qm
+/quests/
+!/quests/boat.qm
 tge/
 
 # Local IDE
 .vscode/
-.idea/
 
 # Local config
 .env
 .DS_Store
-.ra-aid/
+.claude/
+.omx/
 
 # Python
 *.py[cod]
@@ -40,8 +40,8 @@ gunicorn.ctl
 
 # Database
 metrics.db
-instance/
-.omx/
+instance
+site/traces/
 
 # Research (intermediate results, drafts, notes)
 research/

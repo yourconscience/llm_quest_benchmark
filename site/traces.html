@@ -476,6 +476,19 @@ a { color: var(--accent); }
       if (memo) {
         reasoningHtml += `<div class="detail-label mt-3">Memo</div><div class="reasoning-text">${esc(memo)}</div>`;
       }
+      const toolCalls = dec.tool_calls;
+      if (toolCalls && toolCalls.length > 0) {
+        const tcHtml = toolCalls.map(tc => {
+          const args = tc.operation ? `${tc.tool}(${tc.operation}, ${tc.content || tc.input})` : `${tc.tool}(${tc.input})`;
+          return esc(args);
+        }).join('<br>');
+        reasoningHtml += `<div class="detail-label mt-3">Tool Calls</div><div class="reasoning-text" style="font-family:monospace;font-size:0.82rem">${tcHtml}</div>`;
+      }
+      const toolResults = dec.tool_results;
+      if (toolResults && toolResults.length > 0) {
+        const trHtml = toolResults.map(tr => esc(typeof tr === 'string' ? tr : JSON.stringify(tr))).join('<br>');
+        reasoningHtml += `<div class="detail-label mt-3">Tool Results</div><div class="reasoning-text" style="font-family:monospace;font-size:0.82rem">${trHtml}</div>`;
+      }
 
       item.innerHTML = `
         <div class="step-header">

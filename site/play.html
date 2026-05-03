@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Play - LLM-Quest Benchmark</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+:root { --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --muted: #c9d1d9; --accent: #58a6ff; --green: #3fb950; --orange: #d29922; --red: #f85149; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+.navbar { background: var(--surface); border-bottom: 1px solid var(--border); }
+.card { background: var(--surface); border: 1px solid var(--border); }
+a { color: var(--accent); }
+.text-muted { color: var(--muted) !important; }
+
+.quest-card { cursor: pointer; transition: border-color 0.15s, transform 0.1s; }
+.quest-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+.diff-badge {
+  font-size: 0.75rem; font-weight: 700;
+  padding: 0.2em 0.7em; border-radius: 12px;
+  border: 1px solid currentColor;
+}
+
+.obs-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;
+  line-height: 1.7; white-space: pre-wrap;
+}
+
+.params-strip {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.param-pill {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 0.2rem 0.6rem;
+  font-size: 0.78rem; color: var(--muted);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.choice-btn {
+  display: block; width: 100%; text-align: left;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); padding: 0.75rem 1rem; margin-bottom: 0.5rem;
+  border-radius: 6px; cursor: pointer; font-size: 0.95rem;
+  transition: border-color 0.15s;
+}
+.choice-btn:hover:not(:disabled) { border-color: var(--accent); }
+.choice-btn.inactive { opacity: 0.4; cursor: default; }
+.choice-btn:disabled { cursor: default; }
+
+#cohort-panel {
+  display: none; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1.25rem; margin-top: 1rem;
+}
+
+.family-pill {
+  background: var(--bg); border: 1px solid var(--border);
+  color: var(--muted); padding: 0.2em 0.65em; border-radius: 12px;
+  font-size: 0.75rem; cursor: pointer; transition: all 0.15s;
+}
+.family-pill:hover, .family-pill.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+.cohort-row { margin-bottom: 0.65rem; }
+.cohort-row.player-choice {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.5rem;
+  background: rgba(88,166,255,0.06);
+  border-radius: 0 4px 4px 0;
+}
+.cohort-label { font-size: 0.85rem; margin-bottom: 0.25rem; color: var(--text); }
+.cohort-bar-wrap { display: flex; align-items: center; gap: 0.5rem; }
+.success-bar { height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; flex: 1; }
+.success-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.3s; }
+.cohort-pct { font-size: 0.8rem; color: var(--muted); min-width: 3rem; text-align: right; }
+
+.outcome-badge {
+  font-size: 1.1rem; font-weight: 700; padding: 0.4em 1.1em;
+  border-radius: 6px; letter-spacing: 0.03em;
+}
+.outcome-SUCCESS { background: var(--green); color: #0d1117; }
+.outcome-FAILURE { background: var(--red); color: #fff; }
+.outcome-DEAD { background: var(--red); color: #fff; }
+
+.path-table { font-size: 0.88rem; }
+.agree-yes { color: var(--green); }
+.agree-no { color: var(--muted); }
+
+.spinner-wrap { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 2rem; }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark py-3">
+  <div class="container">
+    <span class="navbar-brand mb-0 h1">LLM-Quest Benchmark</span>
+    <div>
+      <a href="about.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">About</a>
+      <a href="index.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">Leaderboard</a>
+      <a href="traces.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">Traces</a>
+      <a href="play.html" class="text-decoration-none" style="color:var(--accent); margin-left:1.5rem">Play</a>
+      <a href="paper.html" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">Paper</a>
+      <a href="https://github.com/yourconscience/llm_quest_benchmark" class="text-decoration-none" style="color:var(--muted); margin-left:1.5rem">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Screen 1: Quest Selection -->
+<div id="select-screen" class="container py-5" style="max-width:860px">
+  <div class="mb-4">
+    <h2>Play a Quest</h2>
+    <p class="text-muted">Pick a quest, make your choices, then see what AI models chose at each decision point.</p>
+  </div>
+  <div id="quest-cards" class="row g-3"></div>
+  <div id="loading-spinner" class="spinner-wrap" style="display:none">
+    <div class="spinner-border text-secondary" role="status"></div>
+    <span class="text-muted">Loading quest...</span>
+  </div>
+</div>
+
+<!-- Screen 2: Playing -->
+<div id="play-screen" style="display:none">
+  <div class="container py-4" style="max-width:800px">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div>
+        <h4 id="play-quest-title" class="mb-0"></h4>
+        <span id="play-step-counter" class="text-muted" style="font-size:0.85rem"></span>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary" onclick="showScreen('select')">&#8592; Quit</button>
+    </div>
+
+    <div id="params-strip" class="params-strip" style="display:none"></div>
+    <div id="obs-text" class="obs-panel"></div>
+    <div id="choices-list"></div>
+
+    <div id="cohort-panel">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+        <span style="font-size:0.85rem; color:var(--muted)">What AI models chose here (<span id="cohort-n"></span> runs)</span>
+        <div id="family-filters" style="display:flex; gap:0.4rem; flex-wrap:wrap;"></div>
+      </div>
+      <div id="cohort-bars"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen 3: End Screen -->
+<div id="end-screen" style="display:none">
+  <div class="container py-5 text-center" style="max-width:700px">
+    <div id="end-outcome" class="outcome-badge mb-3 d-inline-block"></div>
+    <p id="end-cohort-line" class="text-muted mb-4"></p>
+
+    <h5 class="text-start mb-2">Your path</h5>
+    <div class="card mb-4">
+      <table class="table table-sm path-table mb-0">
+        <thead><tr>
+          <th style="color:var(--muted); font-size:0.78rem; text-transform:uppercase; padding:0.5rem 1rem">Step</th>
+          <th style="color:var(--muted); font-size:0.78rem; text-transform:uppercase">Choice</th>
+          <th style="color:var(--muted); font-size:0.78rem; text-transform:uppercase">AI agreed?</th>
+        </tr></thead>
+        <tbody id="path-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="d-flex gap-3 justify-content-center">
+      <button class="btn btn-primary" id="btn-play-again">Play Again</button>
+      <button class="btn btn-outline-secondary" onclick="showScreen('select')">Try Another Quest</button>
+    </div>
+  </div>
+</div>
+
+<script src="play/qmengine.js"></script>
+<script>
+(function () {
+'use strict';
+
+const QUESTS = [
+  { id: 'Disk_eng', title: 'Disk', difficulty: 'Easy', diffColor: 'var(--green)', desc: 'Answer riddles from a malfunctioning ship computer.', steps: '6-9' },
+  { id: 'Pizza_eng', title: 'Pizza Delivery', difficulty: 'Medium', diffColor: 'var(--orange)', desc: 'Deliver a pizza across a hostile space station.', steps: '15-30' },
+  { id: 'Badday_eng', title: 'Bad Day', difficulty: 'Hard', diffColor: 'var(--red)', desc: 'Survive a day when everything goes wrong.', steps: '20-40' },
+];
+
+let state = {
+  screen: 'select',
+  quest: null,
+  player: null,
+  cohortData: null,
+  stepNum: 0,
+  path: [],
+  activeFamily: 'all',
+};
+
+function stripClr(s) {
+  return String(s == null ? '' : s).replace(/<clr>|<clrEnd>/g, '');
+}
+
+function esc(s) {
+  return stripClr(String(s == null ? '' : s))
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function normalize(text) { return stripClr(text).trim().toLowerCase(); }
+
+function getCohortLocation(locationId) {
+  if (!state.cohortData || !state.cohortData.locations) return null;
+  return state.cohortData.locations[String(locationId)] || null;
+}
+
+// ── Screen transitions ──────────────────────────────────────────────────────
+function showScreen(name) {
+  ['select', 'play', 'end'].forEach(s => {
+    document.getElementById(s + '-screen').style.display = s === name ? '' : 'none';
+  });
+  state.screen = name;
+}
+
+// ── Screen 1: Quest selection ───────────────────────────────────────────────
+function buildSelectScreen() {
+  const container = document.getElementById('quest-cards');
+  container.innerHTML = '';
+  QUESTS.forEach(q => {
+    const col = document.createElement('div');
+    col.className = 'col-md-4';
+    col.innerHTML = `
+      <div class="card quest-card h-100 p-3" data-id="${esc(q.id)}">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h5 class="mb-0">${esc(q.title)}</h5>
+          <span class="diff-badge" style="color:${q.diffColor}">${esc(q.difficulty)}</span>
+        </div>
+        <p class="text-muted mb-2" style="font-size:0.88rem">${esc(q.desc)}</p>
+        <div style="font-size:0.82rem; color:var(--muted); margin-bottom:0.5rem">~${esc(q.steps)} steps</div>
+        <div id="winrate-${esc(q.id)}" style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem">Loading...</div>
+        <button class="btn btn-sm btn-outline-primary mt-auto" data-id="${esc(q.id)}">Play</button>
+      </div>`;
+    container.appendChild(col);
+
+    // Load win rate
+    fetch('play/' + q.id + '.json')
+      .then(r => r.json())
+      .then(data => {
+        const el = document.getElementById('winrate-' + q.id);
+        if (el) el.textContent = 'AI win rate: ' + Math.round((data.win_rate || 0) * 100) + '%';
+      })
+      .catch(() => {
+        const el = document.getElementById('winrate-' + q.id);
+        if (el) el.textContent = '';
+      });
+  });
+
+  container.addEventListener('click', e => {
+    const btn = e.target.closest('[data-id]');
+    if (!btn) return;
+    const qid = btn.dataset.id;
+    const quest = QUESTS.find(q => q.id === qid);
+    if (quest) startQuest(quest);
+  });
+}
+
+function startQuest(quest) {
+  document.getElementById('loading-spinner').style.display = '';
+  document.getElementById('quest-cards').style.display = 'none';
+
+  Promise.all([
+    fetch('play/quests/' + quest.id + '.qm').then(r => r.arrayBuffer()),
+    fetch('play/' + quest.id + '.json').then(r => r.json()),
+  ]).then(([buf, cohort]) => {
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('quest-cards').style.display = '';
+
+    const qm = QMEngine.parse(Buffer.from(buf));
+    const player = new QMEngine.QMPlayer(qm, 'eng');
+    player.start();
+
+    state.quest = quest;
+    state.player = player;
+    state.cohortData = cohort;
+    state.stepNum = 0;
+    state.path = [];
+    state.activeFamily = 'all';
+
+    document.getElementById('play-quest-title').textContent = quest.title;
+    buildFamilyFilters();
+    showScreen('play');
+    renderStep();
+  }).catch(err => {
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('quest-cards').style.display = '';
+    console.error('Failed to load quest:', err);
+    alert('Failed to load quest. Check console for details.');
+  });
+}
+
+// ── Screen 2: Playing ───────────────────────────────────────────────────────
+function buildFamilyFilters() {
+  const families = (state.cohortData && state.cohortData.model_families) || [];
+  const container = document.getElementById('family-filters');
+  container.innerHTML = '';
+  ['all', ...families].forEach(fam => {
+    const btn = document.createElement('button');
+    btn.className = 'family-pill' + (fam === state.activeFamily ? ' active' : '');
+    btn.textContent = fam === 'all' ? 'All' : fam;
+    btn.dataset.family = fam;
+    btn.addEventListener('click', () => {
+      state.activeFamily = fam;
+      container.querySelectorAll('.family-pill').forEach(b => {
+        b.classList.toggle('active', b.dataset.family === fam);
+      });
+      renderCohortBars(lastCohortContext.locationId, lastCohortContext.playerChoiceNorm);
+    });
+    container.appendChild(btn);
+  });
+}
+
+let lastCohortContext = { locationId: null, playerChoiceNorm: null };
+
+function renderStep() {
+  window.scrollTo(0, 0);
+  const s = state.player.getState();
+  state.stepNum++;
+  document.getElementById('play-step-counter').textContent = 'Step ' + state.stepNum;
+
+  // Params strip
+  const params = (s.paramsState || []).filter(p => p && p.trim());
+  const paramsEl = document.getElementById('params-strip');
+  if (params.length > 0) {
+    paramsEl.style.display = '';
+    paramsEl.innerHTML = params.map(p => `<span class="param-pill">${esc(p)}</span>`).join('');
+  } else {
+    paramsEl.style.display = 'none';
+  }
+
+  // Observation
+  document.getElementById('obs-text').textContent = stripClr(s.text || '');
+
+  // Choices
+  const choices = s.choices || [];
+  const activeChoices = choices.filter(c => c.active);
+  const choicesList = document.getElementById('choices-list');
+  choicesList.innerHTML = '';
+
+  document.getElementById('cohort-panel').style.display = 'none';
+
+  choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (choice.active ? '' : ' inactive');
+    btn.textContent = stripClr(choice.text);
+    if (!choice.active) {
+      btn.disabled = true;
+    } else {
+      btn.addEventListener('click', () => handleChoice(choice, activeChoices.length));
+    }
+    choicesList.appendChild(btn);
+  });
+
+  // Check terminal state
+  const gs = s.gameState;
+  if (gs === 'win' || gs === 'fail' || gs === 'dead') {
+    // Disable all buttons, transition to end
+    choicesList.querySelectorAll('button').forEach(b => b.disabled = true);
+    setTimeout(() => showEndScreen(gs), 500);
+  }
+}
+
+function handleChoice(choice, numActive) {
+  // Disable all buttons during dwell
+  document.getElementById('choices-list').querySelectorAll('button').forEach(b => b.disabled = true);
+
+  const locationId = state.player.getSaving().locationId;
+  const choiceNorm = normalize(choice.text);
+  // Record path entry
+  const cohortLoc = getCohortLocation(locationId);
+  const isBranching = numActive >= 2;
+  const majority = (isBranching && cohortLoc) ? getMajorityChoice(cohortLoc, 'all') : null;
+  state.path.push({
+    step: state.stepNum,
+    choiceText: stripClr(choice.text),
+    cohortMajority: majority,
+    agreed: majority ? normalize(majority) === choiceNorm : null,
+  });
+
+  // Perform jump
+  state.player.performJump(choice.jumpId);
+
+  const nextState = state.player.getState();
+  const gs = nextState.gameState;
+  const isTerminal = gs === 'win' || gs === 'fail' || gs === 'dead';
+
+  if (numActive >= 2 && cohortLoc) {
+    lastCohortContext = { locationId, playerChoiceNorm: choiceNorm };
+    renderCohortBars(locationId, choiceNorm);
+    var cohortEl = document.getElementById('cohort-panel');
+    cohortEl.style.display = 'block';
+    cohortEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    setTimeout(() => {
+      document.getElementById('cohort-panel').style.display = 'none';
+      if (isTerminal) {
+        showEndScreen(gs);
+      } else {
+        renderStep();
+      }
+    }, 1500);
+  } else {
+    if (isTerminal) {
+      showEndScreen(gs);
+    } else {
+      renderStep();
+    }
+  }
+}
+
+function getMajorityChoice(cohortLoc, family) {
+  const choices = cohortLoc.choices || {};
+  let bestKey = null, bestVal = -1;
+  Object.entries(choices).forEach(([key, data]) => {
+    const val = family === 'all' ? (data.dist && data.dist.all != null ? data.dist.all : 0)
+      : (data.dist && data.dist[family] != null ? data.dist[family] : 0);
+    if (val > bestVal) { bestVal = val; bestKey = key; }
+  });
+  return bestKey; // normalized key
+}
+
+function renderCohortBars(locationId, playerChoiceNorm) {
+  const cohortLoc = getCohortLocation(locationId);
+  const barsEl = document.getElementById('cohort-bars');
+  const nEl = document.getElementById('cohort-n');
+
+  if (!cohortLoc || cohortLoc.n < 5) {
+    barsEl.innerHTML = '<span style="color:var(--muted); font-size:0.85rem">Insufficient data for this location.</span>';
+    nEl.textContent = cohortLoc ? cohortLoc.n : '0';
+    return;
+  }
+
+  const family = state.activeFamily;
+  const choices = cohortLoc.choices || {};
+
+  // Compute total for this family to normalize
+  let total = 0;
+  Object.values(choices).forEach(data => {
+    const n = family === 'all'
+      ? (data.n || 0)
+      : (data.n_by_family && data.n_by_family[family] != null ? data.n_by_family[family] : 0);
+    total += n;
+  });
+
+  nEl.textContent = family === 'all' ? cohortLoc.n : total;
+
+  barsEl.innerHTML = '';
+  Object.entries(choices).forEach(([key, data]) => {
+    const isPlayer = normalize(key) === normalize(playerChoiceNorm || '');
+    const n = family === 'all'
+      ? (data.n || 0)
+      : (data.n_by_family && data.n_by_family[family] != null ? data.n_by_family[family] : 0);
+    const pct = total > 0 ? Math.round(n / total * 100) : 0;
+
+    const row = document.createElement('div');
+    row.className = 'cohort-row' + (isPlayer ? ' player-choice' : '');
+    row.innerHTML = `
+      <div class="cohort-label">${esc(data.text || key)}</div>
+      <div class="cohort-bar-wrap">
+        <div class="success-bar"><div class="success-fill" style="width:${pct}%"></div></div>
+        <span class="cohort-pct">${pct}%</span>
+      </div>`;
+    barsEl.appendChild(row);
+  });
+}
+
+// ── Screen 3: End ───────────────────────────────────────────────────────────
+function showEndScreen(gameState) {
+  const outcomeMap = { win: 'SUCCESS', fail: 'FAILURE', dead: 'DEAD' };
+  const outcome = outcomeMap[gameState] || 'FAILURE';
+
+  const outcomeBadge = document.getElementById('end-outcome');
+  outcomeBadge.textContent = outcome;
+  outcomeBadge.className = 'outcome-badge outcome-' + outcome;
+
+  const winRate = state.cohortData ? Math.round((state.cohortData.win_rate || 0) * 100) : null;
+  const cohortLine = document.getElementById('end-cohort-line');
+  if (winRate != null) {
+    cohortLine.textContent = 'AI cohort: ' + winRate + '% won this quest.';
+  } else {
+    cohortLine.textContent = '';
+  }
+
+  // Path table
+  const tbody = document.getElementById('path-tbody');
+  tbody.innerHTML = '';
+  state.path.forEach(entry => {
+    const tr = document.createElement('tr');
+    let agreeHtml = '<span class="agree-no">-</span>';
+    if (entry.agreed === true) agreeHtml = '<span class="agree-yes">Yes</span>';
+    else if (entry.agreed === false) agreeHtml = '<span class="agree-no">No</span>';
+    tr.innerHTML = `
+      <td style="padding:0.4rem 1rem; color:var(--muted)">${esc(entry.step)}</td>
+      <td style="padding:0.4rem 0">${esc(entry.choiceText)}</td>
+      <td style="padding:0.4rem 0">${agreeHtml}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('btn-play-again').onclick = () => startQuest(state.quest);
+
+  showScreen('end');
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+buildSelectScreen();
+showScreen('select');
+
+})();
+</script>
+</body>
+</html>

@@ -1,13 +1,19 @@
 {
   "private": true,
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "build:engine": "NODE_OPTIONS=--openssl-legacy-provider npx webpack --config webpack.engine.js",
+    "build:play-assets": "mkdir -p site/play/quests && cp quests/sr_2_1_2121_eng/Disk_eng.qm quests/sr_2_1_2121_eng/Pizza_eng.qm quests/sr_2_1_2121_eng/Badday_eng.qm site/play/quests/"
   },
   "dependencies": {
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   },
   "devDependencies": {
-    "@types/node": "^22.13.5"
+    "@types/node": "^22.13.5",
+    "buffer": "^6.0.3",
+    "ts-loader": "^9.5.7",
+    "webpack": "^5.106.2",
+    "webpack-cli": "^7.0.2"
   }
 }

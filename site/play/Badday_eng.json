@@ -1,0 +1,1641 @@
+{
+  "quest": "Badday_eng",
+  "generated": "2026-05-03T00:29:17Z",
+  "total_runs": 285,
+  "win_rate": 0.2175,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "1": {
+      "observation_preview": "You leave the ship, squinting your eyes from the bright light of the star Процио",
+      "n": 151,
+      "choices": {
+        "chat with the bartender.": {
+          "text": "Chat with the bartender.",
+          "n": 135,
+          "dist": {
+            "all": 0.894,
+            "claude": 0.1325,
+            "deepseek": 0.1391,
+            "gemini": 0.3179,
+            "mistral": 0.1523,
+            "openai": 0.0927,
+            "other": 0.0132,
+            "qwen": 0.0464
+          },
+          "n_by_family": {
+            "claude": 20,
+            "deepseek": 21,
+            "gemini": 48,
+            "mistral": 23,
+            "openai": 14,
+            "other": 2,
+            "qwen": 7
+          }
+        },
+        "wander over to the spaceport to look for your escorts.": {
+          "text": "Wander over to the spaceport to look for your escorts.",
+          "n": 16,
+          "dist": {
+            "all": 0.106,
+            "deepseek": 0.0066,
+            "gemini": 0.0199,
+            "mistral": 0.0066,
+            "openai": 0.0464,
+            "other": 0.0265
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 3,
+            "mistral": 1,
+            "openai": 7,
+            "other": 4
+          }
+        }
+      }
+    },
+    "4": {
+      "observation_preview": "You bang your glass on the counter to attract the bartender's attention. Since n",
+      "n": 149,
+      "choices": {
+        "go to the specified address.": {
+          "text": "Go to the specified address.",
+          "n": 146,
+          "dist": {
+            "all": 0.9799,
+            "claude": 0.1342,
+            "deepseek": 0.1477,
+            "gemini": 0.3289,
+            "mistral": 0.1611,
+            "openai": 0.1409,
+            "other": 0.0201,
+            "qwen": 0.047
+          },
+          "n_by_family": {
+            "claude": 20,
+            "deepseek": 22,
+            "gemini": 49,
+            "mistral": 24,
+            "openai": 21,
+            "other": 3,
+            "qwen": 7
+          }
+        },
+        "don't leave. stay and wait.": {
+          "text": "Don't leave. Stay and wait.",
+          "n": 3,
+          "dist": {
+            "all": 0.0201,
+            "other": 0.0201
+          },
+          "n_by_family": {
+            "other": 3
+          }
+        }
+      }
+    },
+    "8": {
+      "observation_preview": "You reach the nearest surface station and take the express train to Nevits & Gni",
+      "n": 149,
+      "choices": {
+        "start looking for the company's location.": {
+          "text": "Start looking for the company's location.",
+          "n": 149,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1342,
+            "deepseek": 0.1477,
+            "gemini": 0.3289,
+            "mistral": 0.1611,
+            "openai": 0.1409,
+            "other": 0.0403,
+            "qwen": 0.047
+          },
+          "n_by_family": {
+            "claude": 20,
+            "deepseek": 22,
+            "gemini": 49,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "11": {
+      "observation_preview": "You don’t have to search for long. There's a holographic banner with the company",
+      "n": 263,
+      "choices": {
+        "knock.": {
+          "text": "Knock.",
+          "n": 114,
+          "dist": {
+            "all": 0.4335,
+            "claude": 0.0722,
+            "deepseek": 0.0722,
+            "gemini": 0.1825,
+            "mistral": 0.0418,
+            "openai": 0.0266,
+            "other": 0.0152,
+            "qwen": 0.0228
+          },
+          "n_by_family": {
+            "claude": 19,
+            "deepseek": 19,
+            "gemini": 48,
+            "mistral": 11,
+            "openai": 7,
+            "other": 4,
+            "qwen": 6
+          }
+        },
+        "enter.": {
+          "text": "Enter.",
+          "n": 149,
+          "dist": {
+            "all": 0.5665,
+            "claude": 0.076,
+            "deepseek": 0.0837,
+            "gemini": 0.1863,
+            "mistral": 0.0913,
+            "openai": 0.0798,
+            "other": 0.0228,
+            "qwen": 0.0266
+          },
+          "n_by_family": {
+            "claude": 20,
+            "deepseek": 22,
+            "gemini": 49,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "13": {
+      "observation_preview": "You're in a dismal but spacious hall. At a distance, there are two semicircular ",
+      "n": 512,
+      "choices": {
+        "enter the middle door.": {
+          "text": "Enter the middle door.",
+          "n": 122,
+          "dist": {
+            "all": 0.2383,
+            "claude": 0.0273,
+            "deepseek": 0.0391,
+            "gemini": 0.0879,
+            "mistral": 0.0254,
+            "openai": 0.0312,
+            "other": 0.0137,
+            "qwen": 0.0137
+          },
+          "n_by_family": {
+            "claude": 14,
+            "deepseek": 20,
+            "gemini": 45,
+            "mistral": 13,
+            "openai": 16,
+            "other": 7,
+            "qwen": 7
+          }
+        },
+        "enter the left door.": {
+          "text": "Enter the left door.",
+          "n": 121,
+          "dist": {
+            "all": 0.2363,
+            "claude": 0.0234,
+            "deepseek": 0.0469,
+            "gemini": 0.0898,
+            "mistral": 0.0215,
+            "openai": 0.0234,
+            "other": 0.0176,
+            "qwen": 0.0137
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 24,
+            "gemini": 46,
+            "mistral": 11,
+            "openai": 12,
+            "other": 9,
+            "qwen": 7
+          }
+        },
+        "enter the right door.": {
+          "text": "Enter the right door.",
+          "n": 106,
+          "dist": {
+            "all": 0.207,
+            "claude": 0.0234,
+            "deepseek": 0.0391,
+            "gemini": 0.0898,
+            "mistral": 0.0098,
+            "openai": 0.0195,
+            "other": 0.0137,
+            "qwen": 0.0117
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 20,
+            "gemini": 46,
+            "mistral": 5,
+            "openai": 10,
+            "other": 7,
+            "qwen": 6
+          }
+        },
+        "go up the left stairs.": {
+          "text": "Go up the left stairs.",
+          "n": 143,
+          "dist": {
+            "all": 0.2793,
+            "claude": 0.0332,
+            "deepseek": 0.043,
+            "gemini": 0.0938,
+            "mistral": 0.0449,
+            "openai": 0.041,
+            "other": 0.0117,
+            "qwen": 0.0117
+          },
+          "n_by_family": {
+            "claude": 17,
+            "deepseek": 22,
+            "gemini": 48,
+            "mistral": 23,
+            "openai": 21,
+            "other": 6,
+            "qwen": 6
+          }
+        },
+        "go up the stairs on your right.": {
+          "text": "Go up the stairs on your right.",
+          "n": 20,
+          "dist": {
+            "all": 0.0391,
+            "claude": 0.0117,
+            "deepseek": 0.002,
+            "gemini": 0.002,
+            "mistral": 0.002,
+            "openai": 0.0117,
+            "other": 0.0078,
+            "qwen": 0.002
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 6,
+            "other": 4,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "18": {
+      "observation_preview": "You head to the middle door, stepping cautiously across the creaking floorboards",
+      "n": 178,
+      "choices": {
+        "hit the bell with your fist.": {
+          "text": "Hit the bell with your fist.",
+          "n": 48,
+          "dist": {
+            "all": 0.2697,
+            "claude": 0.0449,
+            "deepseek": 0.0843,
+            "gemini": 0.0169,
+            "mistral": 0.0618,
+            "openai": 0.0225,
+            "other": 0.0112,
+            "qwen": 0.0281
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 15,
+            "gemini": 3,
+            "mistral": 11,
+            "openai": 4,
+            "other": 2,
+            "qwen": 5
+          }
+        },
+        "leave the room.": {
+          "text": "Leave the room.",
+          "n": 122,
+          "dist": {
+            "all": 0.6854,
+            "claude": 0.0787,
+            "deepseek": 0.1124,
+            "gemini": 0.2528,
+            "mistral": 0.073,
+            "openai": 0.0899,
+            "other": 0.0393,
+            "qwen": 0.0393
+          },
+          "n_by_family": {
+            "claude": 14,
+            "deepseek": 20,
+            "gemini": 45,
+            "mistral": 13,
+            "openai": 16,
+            "other": 7,
+            "qwen": 7
+          }
+        },
+        "hit the bell with the bottle of water.": {
+          "text": "Hit the bell with the bottle of water.",
+          "n": 4,
+          "dist": {
+            "all": 0.0225,
+            "gemini": 0.0056,
+            "other": 0.0169
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "other": 3
+          }
+        },
+        "hit the bell with the bottle of alcohol.": {
+          "text": "Hit the bell with the bottle of alcohol.",
+          "n": 4,
+          "dist": {
+            "all": 0.0225,
+            "gemini": 0.0056,
+            "mistral": 0.0056,
+            "openai": 0.0056,
+            "other": 0.0056
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1,
+            "other": 1
+          }
+        }
+      }
+    },
+    "34": {
+      "observation_preview": "You approach the right door and pull on it. The door doesn’t give. Examining it ",
+      "n": 105,
+      "choices": {
+        "move away from the door.": {
+          "text": "Move away from the door.",
+          "n": 104,
+          "dist": {
+            "all": 0.9905,
+            "claude": 0.1048,
+            "deepseek": 0.1905,
+            "gemini": 0.4381,
+            "mistral": 0.0476,
+            "openai": 0.0857,
+            "other": 0.0667,
+            "qwen": 0.0571
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 20,
+            "gemini": 46,
+            "mistral": 5,
+            "openai": 9,
+            "other": 7,
+            "qwen": 6
+          }
+        },
+        "insert the magnetic key into the slot.": {
+          "text": "Insert the magnetic key into the slot.",
+          "n": 1,
+          "dist": {
+            "all": 0.0095,
+            "openai": 0.0095
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        }
+      }
+    },
+    "23": {
+      "observation_preview": "You begin to go up the left stairs. After rising only a couple of steps, the sta",
+      "n": 142,
+      "choices": {
+        "go forward along the tunnel.": {
+          "text": "Go forward along the tunnel.",
+          "n": 142,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1127,
+            "deepseek": 0.1549,
+            "gemini": 0.338,
+            "mistral": 0.162,
+            "openai": 0.1479,
+            "other": 0.0423,
+            "qwen": 0.0423
+          },
+          "n_by_family": {
+            "claude": 16,
+            "deepseek": 22,
+            "gemini": 48,
+            "mistral": 23,
+            "openai": 21,
+            "other": 6,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "51": {
+      "observation_preview": "You pass through the tunnel, holding to the rough earthen wall. The slightly ill",
+      "n": 142,
+      "choices": {
+        "attack the spider.": {
+          "text": "Attack the spider.",
+          "n": 132,
+          "dist": {
+            "all": 0.9296,
+            "claude": 0.1127,
+            "deepseek": 0.1479,
+            "gemini": 0.331,
+            "mistral": 0.162,
+            "openai": 0.1197,
+            "other": 0.0141,
+            "qwen": 0.0423
+          },
+          "n_by_family": {
+            "claude": 16,
+            "deepseek": 21,
+            "gemini": 47,
+            "mistral": 23,
+            "openai": 17,
+            "other": 2,
+            "qwen": 6
+          }
+        },
+        "distract the spider by throwing it the sandwich.": {
+          "text": "Distract the spider by throwing it the sandwich.",
+          "n": 8,
+          "dist": {
+            "all": 0.0563,
+            "deepseek": 0.007,
+            "gemini": 0.007,
+            "openai": 0.0141,
+            "other": 0.0282
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "openai": 2,
+            "other": 4
+          }
+        },
+        "distract the spider by throwing it the bread.": {
+          "text": "Distract the spider by throwing it the bread.",
+          "n": 2,
+          "dist": {
+            "all": 0.0141,
+            "openai": 0.0141
+          },
+          "n_by_family": {
+            "openai": 2
+          }
+        }
+      }
+    },
+    "53": {
+      "observation_preview": "You run into the middle of the room and stand motionless. The spider hesitates f",
+      "n": 796,
+      "choices": {
+        "kick with your leg.": {
+          "text": "Kick with your leg.",
+          "n": 658,
+          "dist": {
+            "all": 0.8266,
+            "claude": 0.0992,
+            "deepseek": 0.1231,
+            "gemini": 0.3254,
+            "mistral": 0.1344,
+            "openai": 0.108,
+            "other": 0.0138,
+            "qwen": 0.0226
+          },
+          "n_by_family": {
+            "claude": 79,
+            "deepseek": 98,
+            "gemini": 259,
+            "mistral": 107,
+            "openai": 86,
+            "other": 11,
+            "qwen": 18
+          }
+        },
+        "hit the spider with your fists.": {
+          "text": "Hit the spider with your fists.",
+          "n": 132,
+          "dist": {
+            "all": 0.1658,
+            "claude": 0.0138,
+            "deepseek": 0.0327,
+            "gemini": 0.0251,
+            "mistral": 0.044,
+            "openai": 0.0226,
+            "other": 0.005,
+            "qwen": 0.0226
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 26,
+            "gemini": 20,
+            "mistral": 35,
+            "openai": 18,
+            "other": 4,
+            "qwen": 18
+          }
+        },
+        "strike with your weapon at an angle.": {
+          "text": "Strike with your weapon at an angle.",
+          "n": 4,
+          "dist": {
+            "all": 0.005,
+            "mistral": 0.005
+          },
+          "n_by_family": {
+            "mistral": 4
+          }
+        },
+        "attack with your weapon.": {
+          "text": "Attack with your weapon.",
+          "n": 2,
+          "dist": {
+            "all": 0.0025,
+            "mistral": 0.0025
+          },
+          "n_by_family": {
+            "mistral": 2
+          }
+        }
+      }
+    },
+    "54": {
+      "observation_preview": "You kick the spider, trying to make contact with its vulnerable eyes. The spider",
+      "n": 790,
+      "choices": {
+        "go on": {
+          "text": "Go on",
+          "n": 790,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1139,
+            "deepseek": 0.1557,
+            "gemini": 0.3494,
+            "mistral": 0.1861,
+            "openai": 0.1304,
+            "other": 0.019,
+            "qwen": 0.0456
+          },
+          "n_by_family": {
+            "claude": 90,
+            "deepseek": 123,
+            "gemini": 276,
+            "mistral": 147,
+            "openai": 103,
+            "other": 15,
+            "qwen": 36
+          }
+        }
+      }
+    },
+    "5": {
+      "observation_preview": "You tear yourself away from the chair and stroll back to the spaceport to look f",
+      "n": 78,
+      "choices": {
+        "buy a bottle of mineral water (15 cr.).": {
+          "text": "Buy a bottle of mineral water (15 cr.).",
+          "n": 10,
+          "dist": {
+            "all": 0.1282,
+            "gemini": 0.0385,
+            "openai": 0.0513,
+            "other": 0.0385
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "openai": 4,
+            "other": 3
+          }
+        },
+        "buy a loaf of bread (18 cr.).": {
+          "text": "Buy a loaf of bread (18 cr.).",
+          "n": 9,
+          "dist": {
+            "all": 0.1154,
+            "gemini": 0.0385,
+            "openai": 0.0385,
+            "other": 0.0385
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "openai": 3,
+            "other": 3
+          }
+        },
+        "buy a juicy meat sandwich (20 cr.).": {
+          "text": "Buy a juicy meat sandwich (20 cr.).",
+          "n": 11,
+          "dist": {
+            "all": 0.141,
+            "deepseek": 0.0128,
+            "gemini": 0.0385,
+            "openai": 0.0385,
+            "other": 0.0513
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 3,
+            "openai": 3,
+            "other": 4
+          }
+        },
+        "buy a bottle of medicinal alcohol (50 cr.).": {
+          "text": "Buy a bottle of medicinal alcohol (50 cr.).",
+          "n": 7,
+          "dist": {
+            "all": 0.0897,
+            "gemini": 0.0385,
+            "mistral": 0.0128,
+            "openai": 0.0256,
+            "other": 0.0128
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "mistral": 1,
+            "openai": 2,
+            "other": 1
+          }
+        },
+        "return to the bar.": {
+          "text": "Return to the bar.",
+          "n": 41,
+          "dist": {
+            "all": 0.5256,
+            "deepseek": 0.0128,
+            "gemini": 0.2949,
+            "mistral": 0.0128,
+            "openai": 0.141,
+            "other": 0.0641
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 23,
+            "mistral": 1,
+            "openai": 11,
+            "other": 5
+          }
+        }
+      }
+    },
+    "6": {
+      "observation_preview": "Deep in thought, you perch yourself at a bar counter. A maloq bartender is lazil",
+      "n": 42,
+      "choices": {
+        "chat with the bartender.": {
+          "text": "Chat with the bartender.",
+          "n": 14,
+          "dist": {
+            "all": 0.3333,
+            "deepseek": 0.0238,
+            "gemini": 0.0238,
+            "mistral": 0.0238,
+            "openai": 0.1667,
+            "other": 0.0952
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 7,
+            "other": 4
+          }
+        },
+        "wander over to the spaceport to look for your escorts.": {
+          "text": "Wander over to the spaceport to look for your escorts.",
+          "n": 25,
+          "dist": {
+            "all": 0.5952,
+            "gemini": 0.4762,
+            "openai": 0.0952,
+            "other": 0.0238
+          },
+          "n_by_family": {
+            "gemini": 20,
+            "openai": 4,
+            "other": 1
+          }
+        },
+        "go to the specified address.": {
+          "text": "Go to the specified address.",
+          "n": 3,
+          "dist": {
+            "all": 0.0714,
+            "other": 0.0714
+          },
+          "n_by_family": {
+            "other": 3
+          }
+        }
+      }
+    },
+    "19": {
+      "observation_preview": "You take the bottled water from the pocket of your trusty Ranger overalls and ap",
+      "n": 8,
+      "choices": {
+        "keep the sharp glass.": {
+          "text": "Keep the sharp glass.",
+          "n": 6,
+          "dist": {
+            "all": 0.75,
+            "gemini": 0.125,
+            "mistral": 0.125,
+            "openai": 0.125,
+            "other": 0.375
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1,
+            "other": 3
+          }
+        },
+        "get rid of the sharp glass.": {
+          "text": "Get rid of the sharp glass.",
+          "n": 2,
+          "dist": {
+            "all": 0.25,
+            "gemini": 0.125,
+            "other": 0.125
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "other": 1
+          }
+        }
+      }
+    },
+    "52": {
+      "observation_preview": "You examine the well-lit room, which has two doors. One of them is made of wood ",
+      "n": 25,
+      "choices": {
+        "go to the wooden door.": {
+          "text": "Go to the wooden door.",
+          "n": 7,
+          "dist": {
+            "all": 0.28,
+            "deepseek": 0.08,
+            "openai": 0.16,
+            "other": 0.04
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "openai": 4,
+            "other": 1
+          }
+        },
+        "go to the metal door.": {
+          "text": "Go to the metal door.",
+          "n": 9,
+          "dist": {
+            "all": 0.36,
+            "deepseek": 0.04,
+            "openai": 0.16,
+            "other": 0.16
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "openai": 4,
+            "other": 4
+          }
+        },
+        "go through the metal door.": {
+          "text": "Go through the metal door.",
+          "n": 9,
+          "dist": {
+            "all": 0.36,
+            "deepseek": 0.08,
+            "openai": 0.16,
+            "other": 0.12
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "openai": 4,
+            "other": 3
+          }
+        }
+      }
+    },
+    "55": {
+      "observation_preview": "You come to the wooden door and examine the lock critically. Everything is corre",
+      "n": 7,
+      "choices": {
+        "move away from the door.": {
+          "text": "Move away from the door.",
+          "n": 7,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.2857,
+            "openai": 0.5714,
+            "other": 0.1429
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "openai": 4,
+            "other": 1
+          }
+        }
+      }
+    },
+    "14": {
+      "observation_preview": "You are in an empty and dreary passage. There are stairs behind you that lead to",
+      "n": 80,
+      "choices": {
+        "enter the third door.": {
+          "text": "Enter the third door.",
+          "n": 13,
+          "dist": {
+            "all": 0.1625,
+            "claude": 0.025,
+            "deepseek": 0.0125,
+            "gemini": 0.0125,
+            "mistral": 0.0125,
+            "openai": 0.05,
+            "other": 0.05
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 4,
+            "other": 4
+          }
+        },
+        "go downstairs.": {
+          "text": "Go downstairs.",
+          "n": 10,
+          "dist": {
+            "all": 0.125,
+            "claude": 0.0625,
+            "deepseek": 0.0125,
+            "openai": 0.0375,
+            "qwen": 0.0125
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 1,
+            "openai": 3,
+            "qwen": 1
+          }
+        },
+        "enter the first door.": {
+          "text": "Enter the first door.",
+          "n": 23,
+          "dist": {
+            "all": 0.2875,
+            "claude": 0.05,
+            "gemini": 0.025,
+            "mistral": 0.025,
+            "openai": 0.0625,
+            "other": 0.1125,
+            "qwen": 0.0125
+          },
+          "n_by_family": {
+            "claude": 4,
+            "gemini": 2,
+            "mistral": 2,
+            "openai": 5,
+            "other": 9,
+            "qwen": 1
+          }
+        },
+        "enter the fifth door.": {
+          "text": "Enter the fifth door.",
+          "n": 11,
+          "dist": {
+            "all": 0.1375,
+            "claude": 0.025,
+            "gemini": 0.0125,
+            "mistral": 0.0125,
+            "openai": 0.075,
+            "other": 0.0125
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 6,
+            "other": 1
+          }
+        },
+        "enter the second door.": {
+          "text": "Enter the second door.",
+          "n": 9,
+          "dist": {
+            "all": 0.1125,
+            "claude": 0.0125,
+            "openai": 0.0375,
+            "other": 0.0625
+          },
+          "n_by_family": {
+            "claude": 1,
+            "openai": 3,
+            "other": 5
+          }
+        },
+        "enter the fourth door.": {
+          "text": "Enter the fourth door.",
+          "n": 14,
+          "dist": {
+            "all": 0.175,
+            "claude": 0.0375,
+            "gemini": 0.0125,
+            "openai": 0.075,
+            "other": 0.05
+          },
+          "n_by_family": {
+            "claude": 3,
+            "gemini": 1,
+            "openai": 6,
+            "other": 4
+          }
+        }
+      }
+    },
+    "15": {
+      "observation_preview": "You enter and close the door tightly behind you. The furnishings in the third ro",
+      "n": 13,
+      "choices": {
+        "kick the hand.": {
+          "text": "Kick the hand.",
+          "n": 10,
+          "dist": {
+            "all": 0.7692,
+            "claude": 0.1538,
+            "deepseek": 0.0769,
+            "gemini": 0.0769,
+            "mistral": 0.0769,
+            "openai": 0.0769,
+            "other": 0.3077
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1,
+            "other": 4
+          }
+        },
+        "run!": {
+          "text": "Run!",
+          "n": 2,
+          "dist": {
+            "all": 0.1538,
+            "openai": 0.1538
+          },
+          "n_by_family": {
+            "openai": 2
+          }
+        },
+        "try to use the meat sandwich to entice the creature behind the door.": {
+          "text": "Try to use the meat sandwich to entice the creature behind the door.",
+          "n": 1,
+          "dist": {
+            "all": 0.0769,
+            "openai": 0.0769
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        }
+      }
+    },
+    "17": {
+      "observation_preview": "The beast tosses the gnawed leg aside and approaches the mirror, touching it wit",
+      "n": 10,
+      "choices": {
+        "run!": {
+          "text": "Run!",
+          "n": 10,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.2,
+            "deepseek": 0.1,
+            "gemini": 0.1,
+            "mistral": 0.1,
+            "openai": 0.1,
+            "other": 0.4
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1,
+            "other": 4
+          }
+        }
+      }
+    },
+    "26": {
+      "observation_preview": "As you approach the first door, a click sounds suddenly from deep inside and a s",
+      "n": 23,
+      "choices": {
+        "step aside.": {
+          "text": "Step aside.",
+          "n": 18,
+          "dist": {
+            "all": 0.7826,
+            "claude": 0.1304,
+            "gemini": 0.0435,
+            "mistral": 0.0435,
+            "openai": 0.1739,
+            "other": 0.3478,
+            "qwen": 0.0435
+          },
+          "n_by_family": {
+            "claude": 3,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 4,
+            "other": 8,
+            "qwen": 1
+          }
+        },
+        "insert the card into the slot.": {
+          "text": "Insert the card into the slot.",
+          "n": 5,
+          "dist": {
+            "all": 0.2174,
+            "claude": 0.0435,
+            "gemini": 0.0435,
+            "mistral": 0.0435,
+            "openai": 0.0435,
+            "other": 0.0435
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1,
+            "other": 1
+          }
+        }
+      }
+    },
+    "21": {
+      "observation_preview": "You approach the fifth door. It's an automated door that senses your approach; i",
+      "n": 25,
+      "choices": {
+        "search the table.": {
+          "text": "Search the table.",
+          "n": 6,
+          "dist": {
+            "all": 0.24,
+            "claude": 0.08,
+            "gemini": 0.04,
+            "mistral": 0.04,
+            "openai": 0.04,
+            "other": 0.04
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1,
+            "other": 1
+          }
+        },
+        "watch the photo album.": {
+          "text": "Watch the photo album.",
+          "n": 3,
+          "dist": {
+            "all": 0.12,
+            "claude": 0.08,
+            "mistral": 0.04
+          },
+          "n_by_family": {
+            "claude": 2,
+            "mistral": 1
+          }
+        },
+        "call somebody using the videophone.": {
+          "text": "Call somebody using the videophone.",
+          "n": 5,
+          "dist": {
+            "all": 0.2,
+            "claude": 0.04,
+            "gemini": 0.04,
+            "mistral": 0.04,
+            "openai": 0.04,
+            "other": 0.04
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1,
+            "other": 1
+          }
+        },
+        "go out to the passage.": {
+          "text": "Go out to the passage.",
+          "n": 11,
+          "dist": {
+            "all": 0.44,
+            "claude": 0.08,
+            "gemini": 0.04,
+            "mistral": 0.04,
+            "openai": 0.24,
+            "other": 0.04
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 6,
+            "other": 1
+          }
+        }
+      }
+    },
+    "27": {
+      "observation_preview": "You bring the card to the crack and suddenly it gets sucked inside. After a loud",
+      "n": 17,
+      "choices": {
+        "that's me, cesska ritz!": {
+          "text": "That's me, Cesska Ritz!",
+          "n": 5,
+          "dist": {
+            "all": 0.2941,
+            "claude": 0.0588,
+            "gemini": 0.0588,
+            "mistral": 0.0588,
+            "openai": 0.0588,
+            "other": 0.0588
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1,
+            "other": 1
+          }
+        },
+        "it's shitzka. so you remember me?": {
+          "text": "It's Shitzka. So you remember me?",
+          "n": 4,
+          "dist": {
+            "all": 0.2353,
+            "claude": 0.0588,
+            "gemini": 0.0588,
+            "mistral": 0.0588,
+            "openai": 0.0588
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1
+          }
+        },
+        "it's your parents!": {
+          "text": "It's your parents!",
+          "n": 3,
+          "dist": {
+            "all": 0.1765,
+            "claude": 0.0588,
+            "mistral": 0.0588,
+            "openai": 0.0588
+          },
+          "n_by_family": {
+            "claude": 1,
+            "mistral": 1,
+            "openai": 1
+          }
+        },
+        "i'm the best lyakusha you know!": {
+          "text": "I'm the best lyakusha you know!",
+          "n": 5,
+          "dist": {
+            "all": 0.2941,
+            "gemini": 0.0588,
+            "mistral": 0.0588,
+            "openai": 0.1176,
+            "other": 0.0588
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 2,
+            "other": 1
+          }
+        }
+      }
+    },
+    "29": {
+      "observation_preview": "\"What?... Is that you?\" The voice in the speaker becomes warmer. \"Cesska Ritz?\"\n",
+      "n": 5,
+      "choices": {
+        "yes, it's me!": {
+          "text": "Yes, it's me!",
+          "n": 3,
+          "dist": {
+            "all": 0.6,
+            "gemini": 0.2,
+            "mistral": 0.2,
+            "openai": 0.2
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1
+          }
+        },
+        "no, a different lyakusha!": {
+          "text": "No, a different lyakusha!",
+          "n": 2,
+          "dist": {
+            "all": 0.4,
+            "openai": 0.2,
+            "other": 0.2
+          },
+          "n_by_family": {
+            "openai": 1,
+            "other": 1
+          }
+        }
+      }
+    },
+    "68": {
+      "observation_preview": "You insert the magnetic key into the slot - it fits. The magnetic locks disengag",
+      "n": 1,
+      "choices": {
+        "try to solve the puzzle.": {
+          "text": "Try to solve the puzzle.",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "openai": 1.0
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        }
+      }
+    },
+    "36": {
+      "observation_preview": "Which ring should be removed now?\n\nStatus:\nYour money: 1930 cr.\nYou're panicked.",
+      "n": 7,
+      "choices": {
+        "remove the ring from the first row.": {
+          "text": "Remove the ring from the first row.",
+          "n": 3,
+          "dist": {
+            "all": 0.4286,
+            "openai": 0.4286
+          },
+          "n_by_family": {
+            "openai": 3
+          }
+        },
+        "remove the ring from the third row.": {
+          "text": "Remove the ring from the third row.",
+          "n": 2,
+          "dist": {
+            "all": 0.2857,
+            "openai": 0.2857
+          },
+          "n_by_family": {
+            "openai": 2
+          }
+        },
+        "take the ring from the second row.": {
+          "text": "Take the ring from the second row.",
+          "n": 1,
+          "dist": {
+            "all": 0.1429,
+            "openai": 0.1429
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        },
+        "leave the room.": {
+          "text": "Leave the room.",
+          "n": 1,
+          "dist": {
+            "all": 0.1429,
+            "openai": 0.1429
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        }
+      }
+    },
+    "37": {
+      "observation_preview": "You pull a heavy stone ring from the top row. The relief images of skulls dig in",
+      "n": 3,
+      "choices": {
+        "hang it on the second row.": {
+          "text": "Hang it on the second row.",
+          "n": 1,
+          "dist": {
+            "all": 0.3333,
+            "openai": 0.3333
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        },
+        "hang it on the third row.": {
+          "text": "Hang it on the third row.",
+          "n": 1,
+          "dist": {
+            "all": 0.3333,
+            "openai": 0.3333
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        },
+        "put it back.": {
+          "text": "Put it back.",
+          "n": 1,
+          "dist": {
+            "all": 0.3333,
+            "openai": 0.3333
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        }
+      }
+    },
+    "39": {
+      "observation_preview": "You pull a ring from the bottom row and placing it edgewise on the floor. You le",
+      "n": 2,
+      "choices": {
+        "put it back.": {
+          "text": "Put it back.",
+          "n": 1,
+          "dist": {
+            "all": 0.5,
+            "openai": 0.5
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        },
+        "hang it on the second row.": {
+          "text": "Hang it on the second row.",
+          "n": 1,
+          "dist": {
+            "all": 0.5,
+            "openai": 0.5
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        }
+      }
+    },
+    "38": {
+      "observation_preview": "You pull a stone ring off of the middle pole and, struggling to keep it in your ",
+      "n": 1,
+      "choices": {
+        "hang it on the third row.": {
+          "text": "Hang it on the third row.",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "openai": 1.0
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        }
+      }
+    },
+    "61": {
+      "observation_preview": "You come to the second door that was nailed with boards. You pull on it. It's no",
+      "n": 9,
+      "choices": {
+        "move away from the door.": {
+          "text": "Move away from the door.",
+          "n": 9,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1111,
+            "openai": 0.3333,
+            "other": 0.5556
+          },
+          "n_by_family": {
+            "claude": 1,
+            "openai": 3,
+            "other": 5
+          }
+        }
+      }
+    },
+    "44": {
+      "observation_preview": "Most of the room contains wide bookcases with old, shabby books. Some hemispheri",
+      "n": 63,
+      "choices": {
+        "read the book lying near the pot.": {
+          "text": "Read the book lying near the pot.",
+          "n": 21,
+          "dist": {
+            "all": 0.3333,
+            "claude": 0.0476,
+            "gemini": 0.0159,
+            "openai": 0.1587,
+            "other": 0.1111
+          },
+          "n_by_family": {
+            "claude": 3,
+            "gemini": 1,
+            "openai": 10,
+            "other": 7
+          }
+        },
+        "examine the pot.": {
+          "text": "Examine the pot.",
+          "n": 17,
+          "dist": {
+            "all": 0.2698,
+            "claude": 0.0317,
+            "gemini": 0.0159,
+            "openai": 0.1429,
+            "other": 0.0794
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 1,
+            "openai": 9,
+            "other": 5
+          }
+        },
+        "read books from the bookcases.": {
+          "text": "Read books from the bookcases.",
+          "n": 12,
+          "dist": {
+            "all": 0.1905,
+            "claude": 0.0317,
+            "gemini": 0.0159,
+            "openai": 0.0952,
+            "other": 0.0476
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 1,
+            "openai": 6,
+            "other": 3
+          }
+        },
+        "leave the room.": {
+          "text": "Leave the room.",
+          "n": 13,
+          "dist": {
+            "all": 0.2063,
+            "claude": 0.0476,
+            "gemini": 0.0159,
+            "openai": 0.0952,
+            "other": 0.0476
+          },
+          "n_by_family": {
+            "claude": 3,
+            "gemini": 1,
+            "openai": 6,
+            "other": 3
+          }
+        }
+      }
+    },
+    "46": {
+      "observation_preview": "The hemispherical object is a huge. blackened pot sitting on a plasma heater. A ",
+      "n": 19,
+      "choices": {
+        "step away from the pot.": {
+          "text": "Step away from the pot.",
+          "n": 7,
+          "dist": {
+            "all": 0.3684,
+            "claude": 0.1053,
+            "gemini": 0.0526,
+            "openai": 0.1579,
+            "other": 0.0526
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 1,
+            "openai": 3,
+            "other": 1
+          }
+        },
+        "throw bread in the pot.": {
+          "text": "Throw bread in the pot.",
+          "n": 3,
+          "dist": {
+            "all": 0.1579,
+            "openai": 0.0526,
+            "other": 0.1053
+          },
+          "n_by_family": {
+            "openai": 1,
+            "other": 2
+          }
+        },
+        "switch the plasma heater on.": {
+          "text": "Switch the plasma heater on.",
+          "n": 5,
+          "dist": {
+            "all": 0.2632,
+            "openai": 0.1579,
+            "other": 0.1053
+          },
+          "n_by_family": {
+            "openai": 3,
+            "other": 2
+          }
+        },
+        "add water to the pot.": {
+          "text": "Add water to the pot.",
+          "n": 3,
+          "dist": {
+            "all": 0.1579,
+            "openai": 0.1579
+          },
+          "n_by_family": {
+            "openai": 3
+          }
+        },
+        "add alcohol to the pot.": {
+          "text": "Add alcohol to the pot.",
+          "n": 1,
+          "dist": {
+            "all": 0.0526,
+            "openai": 0.0526
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        }
+      }
+    },
+    "69": {
+      "observation_preview": "The lamentable results of your experiment in alchemy are smoking in the pot. The",
+      "n": 5,
+      "choices": {
+        "finish the examination.": {
+          "text": "Finish the examination.",
+          "n": 5,
+          "dist": {
+            "all": 1.0,
+            "openai": 0.6,
+            "other": 0.4
+          },
+          "n_by_family": {
+            "openai": 3,
+            "other": 2
+          }
+        }
+      }
+    },
+    "16": {
+      "observation_preview": "You are about to leave the room before the creature returns. You turn back to th",
+      "n": 1,
+      "choices": {
+        "run!": {
+          "text": "Run!",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "openai": 1.0
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        }
+      }
+    }
+  }
+}

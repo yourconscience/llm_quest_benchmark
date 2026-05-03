@@ -1,0 +1,352 @@
+{
+  "quest": "Disk_eng",
+  "generated": "2026-05-03T00:29:17Z",
+  "total_runs": 85,
+  "win_rate": 0.1765,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "llama",
+    "mistral",
+    "qwen"
+  ],
+  "locations": {
+    "1": {
+      "observation_preview": "You left your ship behind and entered the spaceport building, remembering that y",
+      "n": 56,
+      "choices": {
+        "half-baked fried chicken, dumbhead!": {
+          "text": "Half-baked fried chicken, dumbhead!",
+          "n": 56,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0893,
+            "deepseek": 0.125,
+            "gemini": 0.5714,
+            "llama": 0.0536,
+            "mistral": 0.0536,
+            "qwen": 0.1071
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 7,
+            "gemini": 32,
+            "llama": 3,
+            "mistral": 3,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "7": {
+      "observation_preview": "\"I see! Well, that's what I'll write: the same, just stupider!\" exclaimed the jo",
+      "n": 56,
+      "choices": {
+        "agree and follow the peleng": {
+          "text": "Agree and follow the peleng",
+          "n": 53,
+          "dist": {
+            "all": 0.9464,
+            "claude": 0.0893,
+            "deepseek": 0.0893,
+            "gemini": 0.5714,
+            "llama": 0.0536,
+            "mistral": 0.0357,
+            "qwen": 0.1071
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 5,
+            "gemini": 32,
+            "llama": 3,
+            "mistral": 2,
+            "qwen": 6
+          }
+        },
+        "give the journalist a shiner!": {
+          "text": "Give the journalist a shiner!",
+          "n": 3,
+          "dist": {
+            "all": 0.0536,
+            "deepseek": 0.0357,
+            "mistral": 0.0179
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "2": {
+      "observation_preview": "You left the spaceport building and turned around the corner. The ships on the t",
+      "n": 53,
+      "choices": {
+        "revive yourself": {
+          "text": "Revive yourself",
+          "n": 53,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0943,
+            "deepseek": 0.0943,
+            "gemini": 0.6038,
+            "llama": 0.0566,
+            "mistral": 0.0377,
+            "qwen": 0.1132
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 5,
+            "gemini": 32,
+            "llama": 3,
+            "mistral": 2,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "14": {
+      "observation_preview": "You came to, fettered in the manacles of an iron - and clearly electric - chair.",
+      "n": 53,
+      "choices": {
+        "i understand!": {
+          "text": "I understand!",
+          "n": 53,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0943,
+            "deepseek": 0.0943,
+            "gemini": 0.6038,
+            "llama": 0.0566,
+            "mistral": 0.0377,
+            "qwen": 0.1132
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 5,
+            "gemini": 32,
+            "llama": 3,
+            "mistral": 2,
+            "qwen": 6
+          }
+        }
+      }
+    },
+    "5": {
+      "observation_preview": "\"Splendid! If you have a clear conscience and noble intentions, then nothing mor",
+      "n": 15,
+      "choices": {
+        "two!": {
+          "text": "Two!",
+          "n": 10,
+          "dist": {
+            "all": 0.6667,
+            "gemini": 0.6,
+            "qwen": 0.0667
+          },
+          "n_by_family": {
+            "gemini": 9,
+            "qwen": 1
+          }
+        },
+        "five!": {
+          "text": "Five!",
+          "n": 3,
+          "dist": {
+            "all": 0.2,
+            "claude": 0.1333,
+            "gemini": 0.0667
+          },
+          "n_by_family": {
+            "claude": 2,
+            "gemini": 1
+          }
+        },
+        "not one!": {
+          "text": "Not one!",
+          "n": 2,
+          "dist": {
+            "all": 0.1333,
+            "claude": 0.0667,
+            "deepseek": 0.0667
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1
+          }
+        }
+      }
+    },
+    "3": {
+      "observation_preview": "\"Splendid! If you have a clear conscience and noble intentions, then nothing mor",
+      "n": 23,
+      "choices": {
+        "to the first!": {
+          "text": "To the first!",
+          "n": 18,
+          "dist": {
+            "all": 0.7826,
+            "gemini": 0.6957,
+            "mistral": 0.087
+          },
+          "n_by_family": {
+            "gemini": 16,
+            "mistral": 2
+          }
+        },
+        "to the second!": {
+          "text": "To the second!",
+          "n": 1,
+          "dist": {
+            "all": 0.0435,
+            "llama": 0.0435
+          },
+          "n_by_family": {
+            "llama": 1
+          }
+        },
+        "none!": {
+          "text": "None!",
+          "n": 1,
+          "dist": {
+            "all": 0.0435,
+            "llama": 0.0435
+          },
+          "n_by_family": {
+            "llama": 1
+          }
+        },
+        "to the top!": {
+          "text": "To the top!",
+          "n": 2,
+          "dist": {
+            "all": 0.087,
+            "qwen": 0.087
+          },
+          "n_by_family": {
+            "qwen": 2
+          }
+        },
+        "to the zeroth floor! to the basement!": {
+          "text": "To the zeroth floor! To the basement!",
+          "n": 1,
+          "dist": {
+            "all": 0.0435,
+            "qwen": 0.0435
+          },
+          "n_by_family": {
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "4": {
+      "observation_preview": "\"Splendid! If you have a clear conscience and noble intentions, then nothing mor",
+      "n": 15,
+      "choices": {
+        "five minutes!": {
+          "text": "Five minutes!",
+          "n": 11,
+          "dist": {
+            "all": 0.7333,
+            "claude": 0.0667,
+            "deepseek": 0.1333,
+            "gemini": 0.4,
+            "llama": 0.0667,
+            "qwen": 0.0667
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 6,
+            "llama": 1,
+            "qwen": 1
+          }
+        },
+        "not at all!": {
+          "text": "Not at all!",
+          "n": 4,
+          "dist": {
+            "all": 0.2667,
+            "claude": 0.0667,
+            "deepseek": 0.1333,
+            "qwen": 0.0667
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "9": {
+      "observation_preview": "\"To the first! Humans have an irresistible reflex to leave a building through th",
+      "n": 7,
+      "choices": {
+        "wake up": {
+          "text": "Wake up",
+          "n": 7,
+          "dist": {
+            "all": 1.0,
+            "gemini": 0.4286,
+            "llama": 0.1429,
+            "mistral": 0.1429,
+            "qwen": 0.2857
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "llama": 1,
+            "mistral": 1,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "11": {
+      "observation_preview": "\"Five minutes! Humans prefer to fight one on one! So changing the number of oppo",
+      "n": 4,
+      "choices": {
+        "wake up": {
+          "text": "Wake up",
+          "n": 4,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.25,
+            "gemini": 0.25,
+            "llama": 0.25,
+            "qwen": 0.25
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "llama": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "13": {
+      "observation_preview": "\"Two! The extinguished candles won't burn up all the way!\"- Your answer apparent",
+      "n": 4,
+      "choices": {
+        "wake up": {
+          "text": "Wake up",
+          "n": 4,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.25,
+            "gemini": 0.5,
+            "qwen": 0.25
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 2,
+            "qwen": 1
+          }
+        }
+      }
+    }
+  }
+}
