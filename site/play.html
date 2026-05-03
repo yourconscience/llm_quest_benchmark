@@ -402,9 +402,10 @@ function QuestPlay({ quest, cohortData, onQuit }) {
   const timerRef = useRef(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
-    fetch('play/quests/' + quest.id + '.qm.gz')
+    fetch('play/quests/' + quest.id + '.qm.gz', { signal: controller.signal })
       .then(r => r.arrayBuffer())
       .then(buf => {
         const ungzipped = pako.ungzip(new Uint8Array(buf));
@@ -417,9 +418,14 @@ function QuestPlay({ quest, cohortData, onQuit }) {
         setLoading(false);
       })
       .catch(err => {
+        if (err.name === 'AbortError') return;
         setError('Failed to load quest: ' + err.message);
         setLoading(false);
       });
+    return () => {
+      controller.abort();
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [quest.id]);
 
   const families = (cohortData && cohortData.model_families) || [];
@@ -701,15 +707,21 @@ function App() {
   const [screen, setScreen] = useState('select');
   const [selectedQuest, setSelectedQuest] = useState(null);
   const [cohortData, setCohortData] = useState(null);
+  const cohortReqSeq = useRef(0);
 
   function handleSelectQuest(quest) {
+    const reqId = ++cohortReqSeq.current;
     setSelectedQuest(quest);
     setCohortData(null);
     setScreen('play');
     fetch('play/' + quest.id + '.json')
-      .then(r => r.json())
-      .then(data => setCohortData(data))
-      .catch(() => {});
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (cohortReqSeq.current === reqId) setCohortData(data);
+      })
+      .catch(() => {
+        if (cohortReqSeq.current === reqId) setCohortData(null);
+      });
   }
 
   if (screen === 'select') {

@@ -299,7 +299,7 @@ def build_quest_data(conn: sqlite3.Connection, quest_name: str) -> dict:
         chosen_text = chosen.get("text", "")
         if has_cyrillic(chosen_text):
             continue
-        norm_text = chosen_text.strip().lower()
+        norm_text = re.sub(r"<[^>]+>", "", chosen_text).strip().lower()
 
         _, _, family = runs[run_id]
 
