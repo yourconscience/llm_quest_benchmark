@@ -16,6 +16,8 @@ from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
+from llm_quest_benchmark.core.quest_lang import EN_TO_RU_QUEST_MAP
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = REPO_ROOT / "metrics.db"
 OUT_DIR = REPO_ROOT / "site" / "play"
@@ -400,7 +402,9 @@ def main() -> None:
     finally:
         conn.close()
 
-    # Build quest-index.json from generated cohort files
+    # Build quest-index.json from generated cohort files. RU quest cards reuse
+    # canonical EN metrics so the language toggle presents the same recorded AI
+    # data end to end while loading localized quest text.
     print("\nBuilding quest-index.json...")
     index_quests = []
     for quest_name in TARGET_QUESTS:
@@ -410,17 +414,28 @@ def main() -> None:
             continue
         cohort = json.loads(cohort_path.read_text(encoding="utf-8"))
         meta = QUEST_METADATA.get(quest_name, {})
-        index_quests.append(
-            {
-                "id": quest_name,
-                "title": meta.get("title", quest_name),
-                "difficulty": meta.get("difficulty", "unknown"),
-                "description": meta.get("description", ""),
-                "stepsRange": meta.get("stepsRange", ""),
-                "win_rate": cohort.get("win_rate", 0.0),
-                "total_runs": cohort.get("total_runs", 0),
-            }
-        )
+        quest_entry = {
+            "id": quest_name,
+            "lang": "en",
+            "canonical_id": quest_name,
+            "title": meta.get("title", quest_name),
+            "difficulty": meta.get("difficulty", "unknown"),
+            "description": meta.get("description", ""),
+            "stepsRange": meta.get("stepsRange", ""),
+            "win_rate": cohort.get("win_rate", 0.0),
+            "total_runs": cohort.get("total_runs", 0),
+        }
+        index_quests.append(quest_entry)
+
+        ru_quest_id = EN_TO_RU_QUEST_MAP.get(quest_name)
+        if ru_quest_id:
+            index_quests.append(
+                {
+                    **quest_entry,
+                    "id": ru_quest_id,
+                    "lang": "ru",
+                }
+            )
 
     index_path = OUT_DIR / "quest-index.json"
     index_path.write_text(
