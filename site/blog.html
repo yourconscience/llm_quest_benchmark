@@ -49,7 +49,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 </div>
 
 <p>
-  Most LLM benchmarks hold the agent architecture constant and vary the model. We did the opposite: same models, five different agent wrappers, dozens of text quests. The results surprised us.
+  Most LLM benchmarks hold the agent architecture constant and vary the model. We did the opposite: same models, four different agent wrappers, 15 text quests. The results were messier than the neat story I wanted.
 </p>
 
 <div style="display: flex; gap: 2rem; flex-wrap: wrap; margin: 2rem 0;">
@@ -58,73 +58,72 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
     <div class="key-label">models tested</div>
   </div>
   <div style="flex: 1; min-width: 120px; text-align: center;">
-    <div class="key-number">5</div>
+    <div class="key-number">4</div>
     <div class="key-label">agent architectures</div>
   </div>
   <div style="flex: 1; min-width: 120px; text-align: center;">
-    <div class="key-number">19</div>
+    <div class="key-number">15</div>
     <div class="key-label">quests</div>
   </div>
   <div style="flex: 1; min-width: 120px; text-align: center;">
-    <div class="key-number">360+</div>
+    <div class="key-number">360</div>
     <div class="key-label">total runs</div>
   </div>
 </div>
 
 <h2>The setup</h2>
 <p>
-  Give an LLM a text adventure: read the situation, pick from a list of actions, repeat for 10-50 turns until you win or lose. Now do the same thing five different ways:
+  Give an LLM a text adventure: read the situation, pick from a list of actions, repeat for 10-50 turns until you win or lose. Now do the same thing four different ways:
 </p>
 <ul>
   <li><strong>Baseline (A)</strong> - bare prompt, just pick a number</li>
   <li><strong>Reasoning (B)</strong> - structured chain-of-thought before choosing</li>
   <li><strong>Knowledge (C)</strong> - reasoning plus domain hints about game mechanics</li>
   <li><strong>Planner (D)</strong> - multi-turn planning with strategy updates</li>
-  <li><strong>Tools (E)</strong> - reasoning plus state tracker, calculator, quest history</li>
 </ul>
 <p>
   The quests come from <a href="https://spacerangers.gitlab.io/#/quests">Space Rangers</a>, a corpus of community-authored text adventures with branching narratives and non-obvious optimal paths. They were not designed for LLM evaluation, which is part of why they work: the difficulty is organic, not synthetic.
 </p>
 <p>
-  We tested six mid-tier production models - the tier developers actually deploy, not frontier flagships. All in the ELO 1400-1475 range, $0.01-0.04 per run.
+  We tested six production models across 15 quests and four wrappers. Each cell has one run in the current public leaderboard, so treat this as a v1.0 slice, not a final statistical claim.
 </p>
 
 <h2>What we found</h2>
 
 <div class="finding-card">
-  <h3>Prompted reasoning is the single biggest unlock</h3>
-  <p>Moving from bare prompting (A) to structured reasoning (B) produced the largest jump in success rate across all models. Simply asking the model to analyze before choosing was worth more than switching to a more expensive model.</p>
+  <h3>Knowledge hints beat raw reasoning, but barely</h3>
+  <p>Lightweight knowledge hints (C) reached 21.1% success, ahead of prompted reasoning (17.8%) and the bare baseline (16.7%). The effect is real enough to care about, but not big enough to declare victory.</p>
 </div>
 
 <div class="finding-card">
-  <h3>Models get stuck in loops - and it predicts failure</h3>
-  <p>A repetition rate above 0.6 (repeating recent actions more than 60% of the time) predicted 0% success rate across every model we tested. Loop detection could serve as a cheap early stopping signal.</p>
+  <h3>Agents get stuck in loops</h3>
+  <p>The traces are full of agents revisiting the same states and re-picking familiar actions. Loop detection is still the most obvious cheap early stopping signal, but v1.0 reports it as a diagnostic, not a proven predictor.</p>
 </div>
 
 <div class="finding-card">
   <h3>Different architectures help different problem types</h3>
-  <p>Spatial puzzles need tools (state tracking). Long quests need planning (to avoid loops). Domain-scored quests need knowledge injection. No single architecture dominates across all quest types.</p>
+  <p>No wrapper dominates. Knowledge helps a little on average, planning is not automatically better, and some quests remain mostly unsolved. The useful signal is per-quest, not one magic architecture.</p>
 </div>
 
 <div class="finding-card">
   <h3>Cost-performance tradeoffs are real</h3>
-  <p>DeepSeek V3.2 at $0.01/run with good scaffolding outperformed more expensive models with minimal scaffolding. The cheapest model is not always the worst choice if you invest in the wrapper.</p>
+  <p>DeepSeek, GPT-5.4, and GPT-5.4 Mini tie at 20% success in this slice. That is the annoying but useful lesson: wrapper changes and quest variance can swamp small model differences.</p>
 </div>
 
 <div class="callout">
-  <p>The practical takeaway: if you are building an LLM agent, spend time on the architecture before upgrading the model. A structured prompt template costs nothing and often delivers more than a tier jump in model capability.</p>
+  <p>The practical takeaway: run the ablation before buying a bigger model. In this benchmark, the wrapper matters, but the effect is jagged. Architecture helps, then the quest punches it in the mouth.</p>
 </div>
 
 <h2>The failure taxonomy</h2>
 <p>
-  Analyzing 261 runs across the hardest quests revealed four distinct failure categories, each addressable by a different architectural intervention:
+  Reading the traces showed four recurring failure shapes. These are not solved yet; they are the next places to attack:
 </p>
 
 <table class="table table-sm" style="font-size: 0.9rem;">
   <thead><tr><th>Failure type</th><th>What happens</th><th>What helps</th></tr></thead>
   <tbody>
-    <tr><td><strong>Spatial confusion</strong></td><td>Model cannot track coordinates or grid state</td><td>State tracker tool (E)</td></tr>
-    <tr><td><strong>Constraint overload</strong></td><td>Model drops constraints when juggling multiple goals</td><td>Calculator + constraints (E)</td></tr>
+    <tr><td><strong>Spatial confusion</strong></td><td>Model cannot track coordinates or grid state</td><td>State tracker tool (future Mode E)</td></tr>
+    <tr><td><strong>Constraint overload</strong></td><td>Model drops constraints when juggling multiple goals</td><td>Calculator + constraint log (future Mode E)</td></tr>
     <tr><td><strong>Decision loops</strong></td><td>Model revisits same locations after 15-20 steps</td><td>Planner with visit log (D)</td></tr>
     <tr><td><strong>Missing domain knowledge</strong></td><td>Model lacks game-specific scoring rules</td><td>Knowledge hints (C)</td></tr>
   </tbody>
@@ -140,7 +139,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 
 <figure>
   <img src="img/early_benchmark.jpg" alt="Early version of the LLM Quest Benchmark, March 2025" class="img-fluid" style="max-width: 100%;">
-  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests. The benchmark has since grown to 6 models, 19 quests, 5 agent architectures, and 360+ runs.</figcaption>
+  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests. The benchmark has since grown to 6 models, 15 quests, 4 agent architectures, and 360 public runs.</figcaption>
 </figure>
 
 <h2>What's next</h2>
