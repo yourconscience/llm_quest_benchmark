@@ -2,7 +2,6 @@
 
 import logging
 import os
-import re
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
