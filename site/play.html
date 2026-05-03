@@ -92,6 +92,11 @@ a { color: var(--accent); }
 
 .spinner-wrap { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 3rem; }
 
+.lang-toggle { display: flex; gap: 0.3rem; }
+.lang-pill { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 0.3em 0.8em; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.lang-pill:hover { border-color: var(--accent); color: var(--text); }
+.lang-pill.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
 .search-input { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 0.5rem 0.9rem; width: 100%; font-size: 0.95rem; outline: none; }
 .search-input:focus { border-color: var(--accent); }
 .search-input::placeholder { color: var(--muted); }

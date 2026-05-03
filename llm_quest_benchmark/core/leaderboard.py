@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from llm_quest_benchmark.core.quest_lang import canonical_quest_id
 from llm_quest_benchmark.llm.client import parse_model_name
 
 TEMPLATE_TO_MODE = {
@@ -164,8 +165,9 @@ def generate_leaderboard(benchmark_dirs: list[str], output_path: str) -> dict[st
             template = str(result_row.get("template") or "")
             mode_id, mode_label = _mode_from_template(template)
             quest_path = str(result_row.get("quest") or "")
-            quest_id = _quest_id_from_path(quest_path)
-            quest_lang = _detect_quest_lang(quest_path)
+            raw_quest_id = _quest_id_from_path(quest_path)
+            quest_id = canonical_quest_id(raw_quest_id)
+            source_lang = _detect_quest_lang(quest_path)
             outcome = str(result_row.get("outcome") or "UNKNOWN")
 
             # TODO: cost tracking is broken - run_summary.json usage data is not populated by OpenRouter runs
@@ -210,7 +212,20 @@ def generate_leaderboard(benchmark_dirs: list[str], output_path: str) -> dict[st
                 "label": _model_label(label_source),
             }
             mode_entries[mode_id] = {"id": mode_id, "label": mode_label}
-            quest_entries[quest_id] = {"id": quest_id, "lang": quest_lang}
+            if raw_quest_id != quest_id:
+                existing_quest = quest_entries.setdefault(quest_id, {"id": quest_id, "lang": "EN", "source_langs": []})
+                source_langs = existing_quest.setdefault("source_langs", [existing_quest.get("lang", "EN")])
+                existing_quest["lang"] = "EN"
+                if source_lang not in source_langs:
+                    source_langs.append(source_lang)
+            else:
+                existing_quest = quest_entries.get(quest_id)
+                if existing_quest and "source_langs" in existing_quest:
+                    existing_quest["lang"] = "EN"
+                    if source_lang not in existing_quest["source_langs"]:
+                        existing_quest["source_langs"].append(source_lang)
+                else:
+                    quest_entries[quest_id] = {"id": quest_id, "lang": source_lang}
 
     agg_results = []
     for (model, mode_id, quest_id), rows in sorted(grouped_rows.items()):
