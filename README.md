@@ -63,8 +63,11 @@ llm-quest analyze-run --run-summary results/<agent>/<quest>/run_<id>/run_summary
 # Play as human in terminal
 llm-quest play --quest quests/Boat.qm
 
-# Build static site play assets
+# Build static site JS assets
 pnpm run build
+
+# Rebuild compressed Play quest assets after refreshing local quest files
+pnpm run build:play-assets
 ```
 
 ## Project Structure
