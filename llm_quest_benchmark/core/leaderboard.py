@@ -213,7 +213,7 @@ def generate_leaderboard(benchmark_dirs: list[str], output_path: str) -> dict[st
             }
             mode_entries[mode_id] = {"id": mode_id, "label": mode_label}
             if raw_quest_id != quest_id:
-                existing_quest = quest_entries.setdefault(quest_id, {"id": quest_id, "lang": "EN", "source_langs": []})
+                existing_quest = quest_entries.setdefault(quest_id, {"id": quest_id, "lang": "EN"})
                 source_langs = existing_quest.setdefault("source_langs", [existing_quest.get("lang", "EN")])
                 existing_quest["lang"] = "EN"
                 if source_lang not in source_langs:
