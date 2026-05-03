@@ -314,6 +314,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [player, setPlayer] = useState(null);
+  const [canonicalPlayer, setCanonicalPlayer] = useState(null);
   const [gameState, setGameState] = useState(null);
   const [stepHistory, setStepHistory] = useState([]);
   const [stepNum, setStepNum] = useState(0);
@@ -332,7 +333,11 @@ function QuestPlay({ quest, cohortData, onQuit }) {
         const qm = QMEngine.parse(Buffer.from(ungzipped));
         const p = new QMEngine.QMPlayer(qm, questEngineLang(quest));
         p.start();
+        return loadCanonicalPlayer(quest, p, controller.signal).then(canonical => ({ p, canonical }));
+      })
+      .then(({ p, canonical }) => {
         setPlayer(p);
+        setCanonicalPlayer(canonical);
         setGameState(p.getState());
         setStepNum(1);
         setLoading(false);
@@ -362,9 +367,16 @@ function QuestPlay({ quest, cohortData, onQuit }) {
     return bestKey;
   }
 
+  function canonicalChoiceNorm(choice) {
+    if (!canonicalPlayer) return normalizeChoice(choice.text);
+    const canonicalState = canonicalPlayer.getState();
+    const canonicalChoice = (canonicalState.choices || []).find(c => c.jumpId === choice.jumpId);
+    return normalizeChoice((canonicalChoice && canonicalChoice.text) || choice.text);
+  }
+
   function handleChoice(choice, activeChoices) {
     const locationId = player.getSaving().locationId;
-    const choiceNorm = normalizeChoice(choice.text);
+    const choiceNorm = canonicalChoiceNorm(choice);
     const cohortLoc = getCohortLoc(locationId);
     const isBranching = activeChoices.length >= 2;
     const majority = (isBranching && cohortLoc) ? getMajorityChoice(cohortLoc) : null;
@@ -378,8 +390,12 @@ function QuestPlay({ quest, cohortData, onQuit }) {
       playerChoiceNorm: isBranching ? choiceNorm : null,
     }]);
 
-    setStepHistory(prev => [...prev, player.getSaving()]);
+    setStepHistory(prev => [...prev, {
+      player: player.getSaving(),
+      canonicalPlayer: canonicalPlayer ? canonicalPlayer.getSaving() : null,
+    }]);
     player.performJump(choice.jumpId);
+    if (canonicalPlayer) canonicalPlayer.performJump(choice.jumpId);
 
     const nextState = player.getState();
     const gs = nextState.gameState;
@@ -397,7 +413,10 @@ function QuestPlay({ quest, cohortData, onQuit }) {
   function handleBack() {
     if (stepHistory.length === 0) return;
     const prevSaving = stepHistory[stepHistory.length - 1];
-    player.loadSaving(prevSaving);
+    player.loadSaving(prevSaving.player || prevSaving);
+    if (canonicalPlayer && prevSaving.canonicalPlayer) {
+      canonicalPlayer.loadSaving(prevSaving.canonicalPlayer);
+    }
     setStepHistory(prev => prev.slice(0, -1));
     setGameState(player.getState());
     setStepNum(n => Math.max(1, n - 1));
@@ -432,6 +451,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
         path={path}
         onPlayAgain={() => {
           player.start();
+          if (canonicalPlayer) canonicalPlayer.loadSaving(player.getSaving());
           setGameState(player.getState());
           setStepNum(1);
           setPath([]);
@@ -497,6 +517,23 @@ function QuestPlay({ quest, cohortData, onQuit }) {
 
 function questEngineLang(quest) {
   return (quest.lang === 'ru') ? 'rus' : 'eng';
+}
+
+function loadCanonicalPlayer(quest, player, signal) {
+  if (!quest.canonical_id || quest.canonical_id === quest.id) {
+    return Promise.resolve(null);
+  }
+  return fetch('play/quests/' + quest.canonical_id + '.qm.gz', { signal })
+    .then(r => r.ok ? r.arrayBuffer() : null)
+    .then(buf => {
+      if (!buf) return null;
+      const ungzipped = pako.ungzip(new Uint8Array(buf));
+      const qm = QMEngine.parse(Buffer.from(ungzipped));
+      const canonical = new QMEngine.QMPlayer(qm, 'eng');
+      canonical.loadSaving(player.getSaving());
+      return canonical;
+    })
+    .catch(() => null);
 }
 
 // ---- QuestSelect ----
