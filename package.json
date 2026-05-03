@@ -1,8 +1,9 @@
 {
   "private": true,
+  "packageManager": "pnpm@10.33.2",
   "scripts": {
-    "build": "tsc",
-    "build:engine": "NODE_OPTIONS=--openssl-legacy-provider npx webpack --config webpack.engine.js",
+    "build": "pnpm run build:engine && pnpm run build:play-jsx",
+    "build:engine": "NODE_OPTIONS=--openssl-legacy-provider webpack --config webpack.engine.js",
     "build:play-jsx": "babel --presets @babel/preset-react site/play/app.jsx -o site/play/app.js",
     "build:play-assets": "mkdir -p site/play/quests && for q in Banket_eng Badday_eng Pizza_eng Borzukhan_eng Ski_eng Election_eng Robots_eng Leonardo_eng Depth_eng Edelweiss_eng Ministry_eng Foncers_eng Driver_eng Codebox_eng Pilot_eng Disk_eng Sortirovka1_eng Shashki_eng Player_eng; do gzip -c quests/sr_2_1_2121_eng/$q.qm > site/play/quests/$q.qm.gz; done"
   },
