@@ -70,7 +70,8 @@ def is_excluded(agent_id: str) -> bool:
     return any(pat in a for pat in EXCLUDE_PATTERNS)
 
 
-_CYRILLIC_RE = re.compile(r'[Ѐ-ӿ]')
+_CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
+
 
 def has_cyrillic(text: str) -> bool:
     return bool(_CYRILLIC_RE.search(text))
@@ -186,9 +187,7 @@ def build_quest_data(conn: sqlite3.Connection, quest_name: str) -> dict:
         family_total_steps[family] += 1
 
     # Determine which families have enough data
-    included_families = sorted(
-        fam for fam, count in family_total_steps.items() if count >= MIN_FAMILY_STEPS
-    )
+    included_families = sorted(fam for fam, count in family_total_steps.items() if count >= MIN_FAMILY_STEPS)
 
     # Build output locations dict
     output_locations: dict[str, dict] = {}
