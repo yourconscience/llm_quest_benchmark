@@ -1,0 +1,1663 @@
+{
+  "quest": "Banket_eng",
+  "generated": "2026-05-03T07:07:43Z",
+  "total_runs": 272,
+  "win_rate": 0.0,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "1": {
+      "observation_preview": "You arrived on the planet of Боннасис early in the morning and landed your ship ",
+      "n": 641,
+      "choices": {
+        "i don't think, i have any questions, let me pick my suit": {
+          "text": "I don't think, I have any questions, let me pick my suit",
+          "n": 141,
+          "dist": {
+            "all": 0.22,
+            "claude": 0.0203,
+            "deepseek": 0.0328,
+            "gemini": 0.0796,
+            "mistral": 0.0374,
+            "openai": 0.0328,
+            "other": 0.0094,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 21,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        },
+        "tell me about prince tardym": {
+          "text": "Tell me about Prince Tardym",
+          "n": 132,
+          "dist": {
+            "all": 0.2059,
+            "claude": 0.0203,
+            "deepseek": 0.0312,
+            "gemini": 0.0749,
+            "mistral": 0.0374,
+            "openai": 0.0296,
+            "other": 0.0047,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 20,
+            "gemini": 48,
+            "mistral": 24,
+            "openai": 19,
+            "other": 3,
+            "qwen": 5
+          }
+        },
+        "what can you tell me about the prince's wife?": {
+          "text": "What can you tell me about the Prince's wife?",
+          "n": 126,
+          "dist": {
+            "all": 0.1966,
+            "claude": 0.0203,
+            "deepseek": 0.0312,
+            "gemini": 0.0749,
+            "mistral": 0.0374,
+            "openai": 0.0265,
+            "qwen": 0.0062
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 20,
+            "gemini": 48,
+            "mistral": 24,
+            "openai": 17,
+            "qwen": 4
+          }
+        },
+        "what is the structure of the ceremony?": {
+          "text": "What is the structure of the ceremony?",
+          "n": 129,
+          "dist": {
+            "all": 0.2012,
+            "claude": 0.0203,
+            "deepseek": 0.0296,
+            "gemini": 0.0749,
+            "mistral": 0.0374,
+            "openai": 0.0328,
+            "qwen": 0.0062
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 19,
+            "gemini": 48,
+            "mistral": 24,
+            "openai": 21,
+            "qwen": 4
+          }
+        },
+        "what can you say about maloqs in general?": {
+          "text": "What can you say about Maloqs in general?",
+          "n": 113,
+          "dist": {
+            "all": 0.1763,
+            "claude": 0.0203,
+            "deepseek": 0.0281,
+            "gemini": 0.064,
+            "mistral": 0.0374,
+            "openai": 0.0218,
+            "qwen": 0.0047
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 18,
+            "gemini": 41,
+            "mistral": 24,
+            "openai": 14,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "2": {
+      "observation_preview": "You approach a huge wardrobe, which, as it seemed to you, contains everything th",
+      "n": 141,
+      "choices": {
+        "pull on a magnificently-scenting fashionable jacket, decorated with precious stones": {
+          "text": "Pull on a magnificently-scenting fashionable jacket, decorated with precious stones",
+          "n": 15,
+          "dist": {
+            "all": 0.1064,
+            "deepseek": 0.0142,
+            "gemini": 0.0284,
+            "openai": 0.0071,
+            "other": 0.0426,
+            "qwen": 0.0142
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 4,
+            "openai": 1,
+            "other": 6,
+            "qwen": 2
+          }
+        },
+        "put on a tuxedo": {
+          "text": "Put on a tuxedo",
+          "n": 31,
+          "dist": {
+            "all": 0.2199,
+            "claude": 0.0567,
+            "deepseek": 0.0426,
+            "gemini": 0.0071,
+            "mistral": 0.0355,
+            "openai": 0.0709,
+            "qwen": 0.0071
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 6,
+            "gemini": 1,
+            "mistral": 5,
+            "openai": 10,
+            "qwen": 1
+          }
+        },
+        "put on a butler suit, like all the other servants": {
+          "text": "Put on a butler suit, like all the other servants",
+          "n": 6,
+          "dist": {
+            "all": 0.0426,
+            "deepseek": 0.0071,
+            "openai": 0.0355
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "openai": 5
+          }
+        },
+        "put on a strangely designed suit made of belts, sheathes, and swordbelts": {
+          "text": "Put on a strangely designed suit made of belts, sheathes, and swordbelts",
+          "n": 54,
+          "dist": {
+            "all": 0.383,
+            "claude": 0.0071,
+            "deepseek": 0.0284,
+            "gemini": 0.305,
+            "mistral": 0.0355,
+            "qwen": 0.0071
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 43,
+            "mistral": 5,
+            "qwen": 1
+          }
+        },
+        "put on a set of light armour": {
+          "text": "Put on a set of light armour",
+          "n": 32,
+          "dist": {
+            "all": 0.227,
+            "claude": 0.0284,
+            "deepseek": 0.0426,
+            "gemini": 0.0213,
+            "mistral": 0.0922,
+            "openai": 0.0355,
+            "qwen": 0.0071
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 6,
+            "gemini": 3,
+            "mistral": 13,
+            "openai": 5,
+            "qwen": 1
+          }
+        },
+        "stay in your space-suit": {
+          "text": "Stay in your space-suit",
+          "n": 3,
+          "dist": {
+            "all": 0.0213,
+            "deepseek": 0.0142,
+            "mistral": 0.0071
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "mistral": 1
+          }
+        }
+      }
+    },
+    "4": {
+      "observation_preview": "Alright truly , now you are prepared to meet the dear guests... Although, you ne",
+      "n": 141,
+      "choices": {
+        "listen my brood man... i mean - my good man, maybe you know...": {
+          "text": "Listen my brood man... I mean - my good man, maybe you know...",
+          "n": 141,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0922,
+            "deepseek": 0.1489,
+            "gemini": 0.3617,
+            "mistral": 0.1702,
+            "openai": 0.1489,
+            "other": 0.0426,
+            "qwen": 0.0355
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 21,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "47": {
+      "observation_preview": "- Two hundred... - the Peleng responded and winked at you trickily.\n- Nice to me",
+      "n": 141,
+      "choices": {
+        "stick your greediness where the sun never shines!": {
+          "text": "Stick your greediness where the sun never shines!",
+          "n": 7,
+          "dist": {
+            "all": 0.0496,
+            "gemini": 0.0213,
+            "other": 0.0284
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "other": 4
+          }
+        },
+        "what's the best way to greet the maloq embassy? (200 creds)": {
+          "text": "What's the best way to greet the Maloq embassy? (200 creds)",
+          "n": 123,
+          "dist": {
+            "all": 0.8723,
+            "claude": 0.0851,
+            "deepseek": 0.1277,
+            "gemini": 0.3404,
+            "mistral": 0.1702,
+            "openai": 0.0993,
+            "other": 0.0142,
+            "qwen": 0.0355
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 18,
+            "gemini": 48,
+            "mistral": 24,
+            "openai": 14,
+            "other": 2,
+            "qwen": 5
+          }
+        },
+        "what's the best way to greet the maloq embassy? (100 creds)": {
+          "text": "What's the best way to greet the Maloq embassy? (100 creds)",
+          "n": 11,
+          "dist": {
+            "all": 0.078,
+            "claude": 0.0071,
+            "deepseek": 0.0213,
+            "openai": 0.0496
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "openai": 7
+          }
+        }
+      }
+    },
+    "5": {
+      "observation_preview": "Soon the sound of the trumpets... or, to be more exact, a gobzaurus with a sore ",
+      "n": 141,
+      "choices": {
+        "meet the maloq envoys as fits properly": {
+          "text": "Meet the Maloq envoys as fits properly",
+          "n": 134,
+          "dist": {
+            "all": 0.9504,
+            "claude": 0.0922,
+            "deepseek": 0.1489,
+            "gemini": 0.3404,
+            "mistral": 0.1702,
+            "openai": 0.1489,
+            "other": 0.0142,
+            "qwen": 0.0355
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 21,
+            "gemini": 48,
+            "mistral": 24,
+            "openai": 21,
+            "other": 2,
+            "qwen": 5
+          }
+        },
+        "pull out your blasters and \"surprise\" the envoys with an unexpected appearance": {
+          "text": "Pull out your blasters and \"surprise\" the envoys with an unexpected appearance",
+          "n": 7,
+          "dist": {
+            "all": 0.0496,
+            "gemini": 0.0213,
+            "other": 0.0284
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "other": 4
+          }
+        }
+      }
+    },
+    "11": {
+      "observation_preview": "You slowly approached the Maloqs accompanied by a suit of bodyguards, trying to ",
+      "n": 134,
+      "choices": {
+        "greet the maloq princess": {
+          "text": "Greet the Maloq Princess",
+          "n": 43,
+          "dist": {
+            "all": 0.3209,
+            "claude": 0.0299,
+            "deepseek": 0.0597,
+            "gemini": 0.0075,
+            "mistral": 0.097,
+            "openai": 0.0896,
+            "other": 0.0149,
+            "qwen": 0.0224
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 8,
+            "gemini": 1,
+            "mistral": 13,
+            "openai": 12,
+            "other": 2,
+            "qwen": 3
+          }
+        },
+        "greet the prince first": {
+          "text": "Greet the Prince first",
+          "n": 91,
+          "dist": {
+            "all": 0.6791,
+            "claude": 0.0672,
+            "deepseek": 0.097,
+            "gemini": 0.3507,
+            "mistral": 0.0821,
+            "openai": 0.0672,
+            "qwen": 0.0149
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 13,
+            "gemini": 47,
+            "mistral": 11,
+            "openai": 9,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "7": {
+      "observation_preview": "You carefully approached Princess Hanna ge-de Ka'Boom (who knows, what if someth",
+      "n": 257,
+      "choices": {
+        "kiss the princess's hand": {
+          "text": "Kiss the Princess's hand",
+          "n": 27,
+          "dist": {
+            "all": 0.1051,
+            "claude": 0.0272,
+            "deepseek": 0.0233,
+            "gemini": 0.0039,
+            "mistral": 0.0233,
+            "openai": 0.0117,
+            "other": 0.0078,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 6,
+            "gemini": 1,
+            "mistral": 6,
+            "openai": 3,
+            "other": 2,
+            "qwen": 2
+          }
+        },
+        "now greet the prince himself": {
+          "text": "Now greet the Prince himself",
+          "n": 43,
+          "dist": {
+            "all": 0.1673,
+            "claude": 0.0156,
+            "deepseek": 0.0311,
+            "gemini": 0.0039,
+            "mistral": 0.0506,
+            "openai": 0.0467,
+            "other": 0.0078,
+            "qwen": 0.0117
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 8,
+            "gemini": 1,
+            "mistral": 13,
+            "openai": 12,
+            "other": 2,
+            "qwen": 3
+          }
+        },
+        "slightly jab the princess on the jaw": {
+          "text": "Slightly jab the Princess on the jaw",
+          "n": 23,
+          "dist": {
+            "all": 0.0895,
+            "claude": 0.0117,
+            "deepseek": 0.0078,
+            "gemini": 0.0545,
+            "mistral": 0.0039,
+            "openai": 0.0078,
+            "qwen": 0.0039
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 2,
+            "gemini": 14,
+            "mistral": 1,
+            "openai": 2,
+            "qwen": 1
+          }
+        },
+        "lead them to the banquet hall": {
+          "text": "Lead them to the banquet hall",
+          "n": 80,
+          "dist": {
+            "all": 0.3113,
+            "claude": 0.035,
+            "deepseek": 0.0506,
+            "gemini": 0.1401,
+            "mistral": 0.0428,
+            "openai": 0.035,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 13,
+            "gemini": 36,
+            "mistral": 11,
+            "openai": 9,
+            "qwen": 2
+          }
+        },
+        "give the princess a flower and bow": {
+          "text": "Give the Princess a flower and bow",
+          "n": 43,
+          "dist": {
+            "all": 0.1673,
+            "claude": 0.0039,
+            "deepseek": 0.0428,
+            "gemini": 0.0117,
+            "mistral": 0.0545,
+            "openai": 0.0506,
+            "qwen": 0.0039
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 11,
+            "gemini": 3,
+            "mistral": 14,
+            "openai": 13,
+            "qwen": 1
+          }
+        },
+        "punch the princess in the shoulder": {
+          "text": "Punch the Princess in the shoulder",
+          "n": 31,
+          "dist": {
+            "all": 0.1206,
+            "claude": 0.0078,
+            "deepseek": 0.0078,
+            "gemini": 0.0895,
+            "mistral": 0.0039,
+            "openai": 0.0117
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 23,
+            "mistral": 1,
+            "openai": 3
+          }
+        },
+        "jab the princess full swing on the cheek": {
+          "text": "Jab the Princess full swing on the cheek",
+          "n": 10,
+          "dist": {
+            "all": 0.0389,
+            "gemini": 0.0272,
+            "mistral": 0.0078,
+            "qwen": 0.0039
+          },
+          "n_by_family": {
+            "gemini": 7,
+            "mistral": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "6": {
+      "observation_preview": "Prince Tardym Whatsitcalled. With a Prince like that his subjects should have no",
+      "n": 268,
+      "choices": {
+        "shake the prince's hand": {
+          "text": "Shake the Prince's hand",
+          "n": 39,
+          "dist": {
+            "all": 0.1455,
+            "claude": 0.0261,
+            "deepseek": 0.0336,
+            "gemini": 0.0037,
+            "mistral": 0.0373,
+            "openai": 0.0336,
+            "other": 0.0075,
+            "qwen": 0.0037
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 9,
+            "gemini": 1,
+            "mistral": 10,
+            "openai": 9,
+            "other": 2,
+            "qwen": 1
+          }
+        },
+        "lead them to the banquet hall": {
+          "text": "Lead them to the banquet hall",
+          "n": 43,
+          "dist": {
+            "all": 0.1604,
+            "claude": 0.0149,
+            "deepseek": 0.0299,
+            "gemini": 0.0037,
+            "mistral": 0.0485,
+            "openai": 0.0448,
+            "other": 0.0075,
+            "qwen": 0.0112
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 8,
+            "gemini": 1,
+            "mistral": 13,
+            "openai": 12,
+            "other": 2,
+            "qwen": 3
+          }
+        },
+        "slightly punch the prince on the jaw": {
+          "text": "Slightly punch the Prince on the jaw",
+          "n": 13,
+          "dist": {
+            "all": 0.0485,
+            "claude": 0.0149,
+            "deepseek": 0.0149,
+            "gemini": 0.0037,
+            "mistral": 0.0037,
+            "openai": 0.0112
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 4,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 3
+          }
+        },
+        "now greet the prince's wife": {
+          "text": "Now greet the Prince's wife",
+          "n": 91,
+          "dist": {
+            "all": 0.3396,
+            "claude": 0.0336,
+            "deepseek": 0.0485,
+            "gemini": 0.1754,
+            "mistral": 0.041,
+            "openai": 0.0336,
+            "qwen": 0.0075
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 13,
+            "gemini": 47,
+            "mistral": 11,
+            "openai": 9,
+            "qwen": 2
+          }
+        },
+        "punch the prince in the shoulder with all your might": {
+          "text": "Punch the Prince in the shoulder with all your might",
+          "n": 25,
+          "dist": {
+            "all": 0.0933,
+            "claude": 0.0037,
+            "deepseek": 0.0112,
+            "gemini": 0.056,
+            "mistral": 0.0037,
+            "openai": 0.0149,
+            "qwen": 0.0037
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 15,
+            "mistral": 1,
+            "openai": 4,
+            "qwen": 1
+          }
+        },
+        "bow to the prince 33 times": {
+          "text": "Bow to the Prince 33 times",
+          "n": 22,
+          "dist": {
+            "all": 0.0821,
+            "deepseek": 0.0112,
+            "gemini": 0.0075,
+            "mistral": 0.0373,
+            "openai": 0.0187,
+            "qwen": 0.0075
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 2,
+            "mistral": 10,
+            "openai": 5,
+            "qwen": 2
+          }
+        },
+        "jab the prince full-force on the jaw": {
+          "text": "Jab the Prince full-force on the jaw",
+          "n": 35,
+          "dist": {
+            "all": 0.1306,
+            "claude": 0.0037,
+            "deepseek": 0.0075,
+            "gemini": 0.1082,
+            "mistral": 0.0075,
+            "qwen": 0.0037
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 29,
+            "mistral": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "10": {
+      "observation_preview": "You enter the main banquet hall. There the preparations for the reception have b",
+      "n": 123,
+      "choices": {
+        "put the basin in the middle, knife on the right and fork on the left": {
+          "text": "Put the basin in the middle, knife on the right and fork on the left",
+          "n": 56,
+          "dist": {
+            "all": 0.4553,
+            "claude": 0.0569,
+            "deepseek": 0.1382,
+            "gemini": 0.0163,
+            "mistral": 0.065,
+            "openai": 0.1382,
+            "other": 0.0163,
+            "qwen": 0.0244
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 17,
+            "gemini": 2,
+            "mistral": 8,
+            "openai": 17,
+            "other": 2,
+            "qwen": 3
+          }
+        },
+        "put the basin in the middle, fork on the left, and drive the knife into the table on the right": {
+          "text": "Put the basin in the middle, fork on the left, and drive the knife into the table on the right",
+          "n": 54,
+          "dist": {
+            "all": 0.439,
+            "claude": 0.0488,
+            "deepseek": 0.0325,
+            "gemini": 0.2114,
+            "mistral": 0.1138,
+            "openai": 0.0163,
+            "qwen": 0.0163
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 4,
+            "gemini": 26,
+            "mistral": 14,
+            "openai": 2,
+            "qwen": 2
+          }
+        },
+        "put the basin in the middle, knife on the left and fork on the right": {
+          "text": "Put the basin in the middle, knife on the left and fork on the right",
+          "n": 2,
+          "dist": {
+            "all": 0.0163,
+            "gemini": 0.0081,
+            "openai": 0.0081
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "openai": 1
+          }
+        },
+        "put the basin in the middle, and stick both the knife and the fork (what the heck?) into the table on both sides": {
+          "text": "Put the basin in the middle, and stick both the knife and the fork (what the heck?) into the table on both sides",
+          "n": 11,
+          "dist": {
+            "all": 0.0894,
+            "gemini": 0.065,
+            "mistral": 0.0163,
+            "openai": 0.0081
+          },
+          "n_by_family": {
+            "gemini": 8,
+            "mistral": 2,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "12": {
+      "observation_preview": "Prince Tardym did not pay any attention to this layout of the tableware, althoug",
+      "n": 123,
+      "choices": {
+        "bring the first course from the kitchen": {
+          "text": "Bring the first course from the kitchen",
+          "n": 123,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1057,
+            "deepseek": 0.1707,
+            "gemini": 0.3008,
+            "mistral": 0.1951,
+            "openai": 0.1707,
+            "other": 0.0163,
+            "qwen": 0.0407
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 21,
+            "gemini": 37,
+            "mistral": 24,
+            "openai": 21,
+            "other": 2,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "13": {
+      "observation_preview": "Now was the time to serve the Maloq food. I rushed out into the dining room foll",
+      "n": 240,
+      "choices": {
+        "take the sour milk": {
+          "text": "Take the sour milk",
+          "n": 101,
+          "dist": {
+            "all": 0.4208,
+            "claude": 0.0375,
+            "deepseek": 0.0833,
+            "gemini": 0.125,
+            "mistral": 0.0875,
+            "openai": 0.075,
+            "qwen": 0.0125
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 20,
+            "gemini": 30,
+            "mistral": 21,
+            "openai": 18,
+            "qwen": 3
+          }
+        },
+        "ask the young maloq for advice before he left": {
+          "text": "Ask the young Maloq for advice before he left",
+          "n": 97,
+          "dist": {
+            "all": 0.4042,
+            "claude": 0.0542,
+            "deepseek": 0.0875,
+            "gemini": 0.075,
+            "mistral": 0.0958,
+            "openai": 0.0792,
+            "qwen": 0.0125
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 21,
+            "gemini": 18,
+            "mistral": 23,
+            "openai": 19,
+            "qwen": 3
+          }
+        },
+        "take the barmy juice": {
+          "text": "Take the barmy juice",
+          "n": 11,
+          "dist": {
+            "all": 0.0458,
+            "claude": 0.0167,
+            "deepseek": 0.0042,
+            "gemini": 0.0083,
+            "mistral": 0.0042,
+            "openai": 0.0042,
+            "other": 0.0042,
+            "qwen": 0.0042
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 1,
+            "gemini": 2,
+            "mistral": 1,
+            "openai": 1,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "take the fresh blood": {
+          "text": "Take the fresh blood",
+          "n": 11,
+          "dist": {
+            "all": 0.0458,
+            "gemini": 0.0208,
+            "mistral": 0.0083,
+            "openai": 0.0083,
+            "other": 0.0042,
+            "qwen": 0.0042
+          },
+          "n_by_family": {
+            "gemini": 5,
+            "mistral": 2,
+            "openai": 2,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "buy the info from the passing by peleng-waiter (200 creds)": {
+          "text": "Buy the info from the passing by Peleng-waiter (200 creds)",
+          "n": 20,
+          "dist": {
+            "all": 0.0833,
+            "gemini": 0.075,
+            "qwen": 0.0083
+          },
+          "n_by_family": {
+            "gemini": 18,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "16": {
+      "observation_preview": "You carefully placed the glasses on the tray, took the plates with the \"salad\" i",
+      "n": 123,
+      "choices": {
+        "stand between the prince and his wife and wait till the first course is over": {
+          "text": "Stand between the Prince and his wife and wait till the first course is over",
+          "n": 9,
+          "dist": {
+            "all": 0.0732,
+            "claude": 0.0081,
+            "deepseek": 0.0081,
+            "gemini": 0.0325,
+            "mistral": 0.0081,
+            "other": 0.0163
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 4,
+            "mistral": 1,
+            "other": 2
+          }
+        },
+        "stand to the side of the princess and wait till the first course is over": {
+          "text": "Stand to the side of the Princess and wait till the first course is over",
+          "n": 39,
+          "dist": {
+            "all": 0.3171,
+            "claude": 0.0569,
+            "deepseek": 0.0325,
+            "gemini": 0.0569,
+            "mistral": 0.0732,
+            "openai": 0.0976
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 4,
+            "gemini": 7,
+            "mistral": 9,
+            "openai": 12
+          }
+        },
+        "stand behind the prince and wait till the first course is over": {
+          "text": "Stand behind the Prince and wait till the first course is over",
+          "n": 51,
+          "dist": {
+            "all": 0.4146,
+            "claude": 0.0325,
+            "deepseek": 0.0732,
+            "gemini": 0.187,
+            "mistral": 0.0813,
+            "openai": 0.0081,
+            "qwen": 0.0325
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 9,
+            "gemini": 23,
+            "mistral": 10,
+            "openai": 1,
+            "qwen": 4
+          }
+        },
+        "stand to the side of the prince and wait till the first course is over": {
+          "text": "Stand to the side of the Prince and wait till the first course is over",
+          "n": 24,
+          "dist": {
+            "all": 0.1951,
+            "claude": 0.0081,
+            "deepseek": 0.0569,
+            "gemini": 0.0244,
+            "mistral": 0.0325,
+            "openai": 0.065,
+            "qwen": 0.0081
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 7,
+            "gemini": 3,
+            "mistral": 4,
+            "openai": 8,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "21": {
+      "observation_preview": "Unfazed, you stood between the Prince and his wife. He looked at you disapprovin",
+      "n": 84,
+      "choices": {
+        "continue": {
+          "text": "Continue",
+          "n": 84,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0714,
+            "deepseek": 0.2024,
+            "gemini": 0.3571,
+            "mistral": 0.1786,
+            "openai": 0.1071,
+            "other": 0.0238,
+            "qwen": 0.0595
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 17,
+            "gemini": 30,
+            "mistral": 15,
+            "openai": 9,
+            "other": 2,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "24": {
+      "observation_preview": "Meanwhile the guests started a casual conversation, everyone wanted to tell some",
+      "n": 118,
+      "choices": {
+        "tell them about your scalp collection that you took from the most arrant thugs and pirates of this galaxy": {
+          "text": "Tell them about your scalp collection that you took from the most arrant thugs and pirates of this Galaxy",
+          "n": 35,
+          "dist": {
+            "all": 0.2966,
+            "claude": 0.0085,
+            "deepseek": 0.0508,
+            "gemini": 0.1525,
+            "mistral": 0.0254,
+            "openai": 0.0424,
+            "other": 0.0169
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 6,
+            "gemini": 18,
+            "mistral": 3,
+            "openai": 5,
+            "other": 2
+          }
+        },
+        "remember a romantic story of your feelings towards a princess who had been kidnapped by hyper-pirates": {
+          "text": "Remember a romantic story of your feelings towards a Princess who had been kidnapped by hyper-pirates",
+          "n": 41,
+          "dist": {
+            "all": 0.3475,
+            "claude": 0.1017,
+            "deepseek": 0.0593,
+            "gemini": 0.0424,
+            "mistral": 0.0932,
+            "openai": 0.0508
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 7,
+            "gemini": 5,
+            "mistral": 11,
+            "openai": 6
+          }
+        },
+        "tell them how much tribute you have collected from the merchants over the past month, and how many you killed at that": {
+          "text": "Tell them how much tribute you have collected from the merchants over the past month, and how many you killed at that",
+          "n": 2,
+          "dist": {
+            "all": 0.0169,
+            "openai": 0.0169
+          },
+          "n_by_family": {
+            "openai": 2
+          }
+        },
+        "tell them how you captured the super-mega-brain of the dominators and subjected it to cruel torments": {
+          "text": "Tell them how you captured the Super-Mega-Brain of the Dominators and subjected it to cruel torments",
+          "n": 18,
+          "dist": {
+            "all": 0.1525,
+            "deepseek": 0.0508,
+            "gemini": 0.0169,
+            "mistral": 0.0254,
+            "openai": 0.0254,
+            "qwen": 0.0339
+          },
+          "n_by_family": {
+            "deepseek": 6,
+            "gemini": 2,
+            "mistral": 3,
+            "openai": 3,
+            "qwen": 4
+          }
+        },
+        "boast about the order you cut out for yourself with a blaster from terron's hull": {
+          "text": "Boast about the order you cut out for yourself with a blaster from Terron's hull",
+          "n": 22,
+          "dist": {
+            "all": 0.1864,
+            "deepseek": 0.0169,
+            "gemini": 0.0847,
+            "mistral": 0.0593,
+            "openai": 0.0169,
+            "qwen": 0.0085
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 10,
+            "mistral": 7,
+            "openai": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "25": {
+      "observation_preview": "The Maloq military seemed to like your story - as it turned out scalping the ene",
+      "n": 113,
+      "choices": {
+        "bring the strong brings and relevant food": {
+          "text": "Bring the strong brings and relevant food",
+          "n": 113,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1062,
+            "deepseek": 0.177,
+            "gemini": 0.3097,
+            "mistral": 0.2124,
+            "openai": 0.1327,
+            "other": 0.0177,
+            "qwen": 0.0442
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 20,
+            "gemini": 35,
+            "mistral": 24,
+            "openai": 15,
+            "other": 2,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "26": {
+      "observation_preview": "The array of alcoholic and conditionally alcoholic drinks was quite impressive. ",
+      "n": 113,
+      "choices": {
+        "off him 200 creds as rent for the cart and promise to be careful with it": {
+          "text": "Off him 200 creds as rent for the cart and promise to be careful with it",
+          "n": 77,
+          "dist": {
+            "all": 0.6814,
+            "claude": 0.0796,
+            "deepseek": 0.1681,
+            "gemini": 0.1062,
+            "mistral": 0.1327,
+            "openai": 0.1327,
+            "other": 0.0177,
+            "qwen": 0.0442
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 19,
+            "gemini": 12,
+            "mistral": 15,
+            "openai": 15,
+            "other": 2,
+            "qwen": 5
+          }
+        },
+        "show him your blood-shot eyes, start producing foam from your mouth, in short put some psychological pressure on the guy": {
+          "text": "Show him your blood-shot eyes, start producing foam from your mouth, in short put some psychological pressure on the guy",
+          "n": 20,
+          "dist": {
+            "all": 0.177,
+            "claude": 0.0265,
+            "deepseek": 0.0088,
+            "gemini": 0.0619,
+            "mistral": 0.0796
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 1,
+            "gemini": 7,
+            "mistral": 9
+          }
+        },
+        "backhand him right into the ear just for the kicks of it and hint that his face could suffer a lot of damage from mr. iron-tray here": {
+          "text": "Backhand him right into the ear just for the kicks of it and hint that his face could suffer a lot of damage from Mr. Iron-tray here",
+          "n": 16,
+          "dist": {
+            "all": 0.1416,
+            "gemini": 0.1416
+          },
+          "n_by_family": {
+            "gemini": 16
+          }
+        }
+      }
+    },
+    "27": {
+      "observation_preview": "Without taking his time to think, the cook agreed and took the money.\n\n- Huckste",
+      "n": 102,
+      "choices": {
+        "serve the drinks and food on the table": {
+          "text": "Serve the drinks and food on the table",
+          "n": 2,
+          "dist": {
+            "all": 0.0196,
+            "gemini": 0.0098,
+            "other": 0.0098
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "other": 1
+          }
+        },
+        "listen to what the cook has to offer": {
+          "text": "Listen to what the cook has to offer",
+          "n": 100,
+          "dist": {
+            "all": 0.9804,
+            "claude": 0.1078,
+            "deepseek": 0.1471,
+            "gemini": 0.3235,
+            "mistral": 0.2353,
+            "openai": 0.1275,
+            "other": 0.0098,
+            "qwen": 0.0294
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 15,
+            "gemini": 33,
+            "mistral": 24,
+            "openai": 13,
+            "other": 1,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "29": {
+      "observation_preview": "The Maloqs met the brought alcohol with much enthusiasm. Appropriate drinks were",
+      "n": 3,
+      "choices": {
+        "to just get drunk and then even the maloq women would look like beautiful furies, i mean houris": {
+          "text": "To just get drunk and then even the Maloq women would look like beautiful furies, I mean houris",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 0.3333,
+            "other": 0.6667
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "other": 2
+          }
+        }
+      }
+    },
+    "46": {
+      "observation_preview": "- Say, Taiga, how do Maloqs normally greet each other?\n\nThe Peleng snatched the ",
+      "n": 134,
+      "choices": {
+        "run to the palace entrance to meet the prince": {
+          "text": "Run to the palace entrance to meet the Prince",
+          "n": 134,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.097,
+            "deepseek": 0.1567,
+            "gemini": 0.3582,
+            "mistral": 0.1791,
+            "openai": 0.1567,
+            "other": 0.0149,
+            "qwen": 0.0373
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 21,
+            "gemini": 48,
+            "mistral": 24,
+            "openai": 21,
+            "other": 2,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "22": {
+      "observation_preview": "Unfazed, you stood on the left side of the Princess (Tardym sat on her other sid",
+      "n": 73,
+      "choices": {
+        "from here it's is just more convenient to serve the lady at the table, you know pass her sauces, wipe her dirty mug": {
+          "text": "From here it's is just more convenient to serve the lady at the table, you know pass her sauces, wipe her dirty mug",
+          "n": 26,
+          "dist": {
+            "all": 0.3562,
+            "claude": 0.0822,
+            "deepseek": 0.0411,
+            "gemini": 0.0137,
+            "mistral": 0.0822,
+            "openai": 0.137
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 3,
+            "gemini": 1,
+            "mistral": 6,
+            "openai": 10
+          }
+        },
+        "continue": {
+          "text": "Continue",
+          "n": 34,
+          "dist": {
+            "all": 0.4658,
+            "claude": 0.0959,
+            "deepseek": 0.0548,
+            "gemini": 0.0685,
+            "mistral": 0.1233,
+            "openai": 0.1233
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 4,
+            "gemini": 5,
+            "mistral": 9,
+            "openai": 9
+          }
+        },
+        "in case anything happens, it's easier to bring ammo from here, and take away the enemy bodies": {
+          "text": "In case anything happens, it's easier to bring ammo from here, and take away the enemy bodies",
+          "n": 11,
+          "dist": {
+            "all": 0.1507,
+            "claude": 0.0137,
+            "deepseek": 0.0137,
+            "gemini": 0.0822,
+            "mistral": 0.0411
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 6,
+            "mistral": 3
+          }
+        },
+        "this way it is more convenient to pick something from her pockets": {
+          "text": "This way it is more convenient to pick something from her pockets",
+          "n": 2,
+          "dist": {
+            "all": 0.0274,
+            "openai": 0.0274
+          },
+          "n_by_family": {
+            "openai": 2
+          }
+        }
+      }
+    },
+    "45": {
+      "observation_preview": "- The point is that this whole banquet is organised in accordance with the Maloq",
+      "n": 100,
+      "choices": {
+        "alright, give me the recipe and the ingredients. let's make some tequila-boom for this ka'boom!": {
+          "text": "Alright, give me the recipe and the ingredients. Let's make some tequila-boom for this Ka'Boom!",
+          "n": 99,
+          "dist": {
+            "all": 0.99,
+            "claude": 0.11,
+            "deepseek": 0.15,
+            "gemini": 0.33,
+            "mistral": 0.24,
+            "openai": 0.13,
+            "qwen": 0.03
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 15,
+            "gemini": 33,
+            "mistral": 24,
+            "openai": 13,
+            "qwen": 3
+          }
+        },
+        "nah! for all i know you could be a dominator spy who wants to use me to poison the prince?": {
+          "text": "Nah! For all I know you could be a Dominator spy who wants to use me to poison the Prince?",
+          "n": 1,
+          "dist": {
+            "all": 0.01,
+            "other": 0.01
+          },
+          "n_by_family": {
+            "other": 1
+          }
+        }
+      }
+    },
+    "48": {
+      "observation_preview": "- Excellent! Here you go. The recipe could not be simpler take barmy faryuk juic",
+      "n": 99,
+      "choices": {
+        "start": {
+          "text": "Start",
+          "n": 99,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1111,
+            "deepseek": 0.1515,
+            "gemini": 0.3333,
+            "mistral": 0.2424,
+            "openai": 0.1313,
+            "qwen": 0.0303
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 15,
+            "gemini": 33,
+            "mistral": 24,
+            "openai": 13,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "49": {
+      "observation_preview": "So you have: \n- absorblob: 5 ccm; \n- hiphops: 5 ccm; \n- repusator: 5 ccm; \n- wat",
+      "n": 489,
+      "choices": {
+        "add 1 ccm of repusator": {
+          "text": "Add 1 ccm of repusator",
+          "n": 79,
+          "dist": {
+            "all": 0.1616,
+            "claude": 0.0184,
+            "deepseek": 0.0245,
+            "gemini": 0.0409,
+            "mistral": 0.0491,
+            "openai": 0.0266,
+            "qwen": 0.002
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 12,
+            "gemini": 20,
+            "mistral": 24,
+            "openai": 13,
+            "qwen": 1
+          }
+        },
+        "add 1 ccm of hiphops": {
+          "text": "Add 1 ccm of hiphops",
+          "n": 150,
+          "dist": {
+            "all": 0.3067,
+            "claude": 0.0307,
+            "deepseek": 0.0327,
+            "gemini": 0.1431,
+            "mistral": 0.0593,
+            "openai": 0.0307,
+            "qwen": 0.0102
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 16,
+            "gemini": 70,
+            "mistral": 29,
+            "openai": 15,
+            "qwen": 5
+          }
+        },
+        "add 1 ccm of water": {
+          "text": "Add 1 ccm of water",
+          "n": 73,
+          "dist": {
+            "all": 0.1493,
+            "claude": 0.0184,
+            "deepseek": 0.0245,
+            "gemini": 0.0286,
+            "mistral": 0.0491,
+            "openai": 0.0266,
+            "qwen": 0.002
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 12,
+            "gemini": 14,
+            "mistral": 24,
+            "openai": 13,
+            "qwen": 1
+          }
+        },
+        "add 1 ccm of absorblob": {
+          "text": "Add 1 ccm of absorblob",
+          "n": 187,
+          "dist": {
+            "all": 0.3824,
+            "claude": 0.0286,
+            "deepseek": 0.0757,
+            "gemini": 0.1247,
+            "mistral": 0.0879,
+            "openai": 0.0511,
+            "qwen": 0.0143
+          },
+          "n_by_family": {
+            "claude": 14,
+            "deepseek": 37,
+            "gemini": 61,
+            "mistral": 43,
+            "openai": 25,
+            "qwen": 7
+          }
+        }
+      }
+    },
+    "30": {
+      "observation_preview": "Had it not been for the stopping gesture of the Maloq Prince, you would have suf",
+      "n": 1,
+      "choices": {
+        "kill your glass in one swing, providing your heirs with a considerable insurance policy": {
+          "text": "Kill your glass in one swing, providing your heirs with a considerable insurance policy",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "other": 1.0
+          },
+          "n_by_family": {
+            "other": 1
+          }
+        }
+      }
+    },
+    "32": {
+      "observation_preview": "Mentally you said farewell to all your friends, and promised all your enemies to",
+      "n": 1,
+      "choices": {
+        "continue": {
+          "text": "Continue",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "other": 1.0
+          },
+          "n_by_family": {
+            "other": 1
+          }
+        }
+      }
+    },
+    "41": {
+      "observation_preview": "But as it turned out this was not the end of surprises. The Prince delivered ano",
+      "n": 4,
+      "choices": {
+        "give the super-rifle to prince tardym": {
+          "text": "Give the super-rifle to Prince Tardym",
+          "n": 1,
+          "dist": {
+            "all": 0.25,
+            "other": 0.25
+          },
+          "n_by_family": {
+            "other": 1
+          }
+        },
+        "give the strange backpack to princess hanna": {
+          "text": "Give the strange backpack to Princess Hanna",
+          "n": 1,
+          "dist": {
+            "all": 0.25,
+            "other": 0.25
+          },
+          "n_by_family": {
+            "other": 1
+          }
+        },
+        "give the beautiful shells to the prince's sons": {
+          "text": "Give the beautiful shells to the Prince's sons",
+          "n": 1,
+          "dist": {
+            "all": 0.25,
+            "other": 0.25
+          },
+          "n_by_family": {
+            "other": 1
+          }
+        },
+        "continue": {
+          "text": "Continue",
+          "n": 1,
+          "dist": {
+            "all": 0.25,
+            "other": 0.25
+          },
+          "n_by_family": {
+            "other": 1
+          }
+        }
+      }
+    },
+    "33": {
+      "observation_preview": "So, all the gifts have been given now, and all the plates have been finished... ",
+      "n": 1,
+      "choices": {
+        "well, to be completely frank with you, i'd easily go on a recon mission with her. and i'd follow her to the attack too, right behind her back, this would be the safest place": {
+          "text": "Well, to be completely frank with you, I'd easily go on a recon mission with her. And I'd follow her to the attack too, right behind her back, this would be the safest place",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "other": 1.0
+          },
+          "n_by_family": {
+            "other": 1
+          }
+        }
+      }
+    },
+    "34": {
+      "observation_preview": "- Exactly! That's what I am always saying, ranger, - the Maloq smacked you on th",
+      "n": 1,
+      "choices": {
+        "continue": {
+          "text": "Continue",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "other": 1.0
+          },
+          "n_by_family": {
+            "other": 1
+          }
+        }
+      }
+    }
+  }
+}

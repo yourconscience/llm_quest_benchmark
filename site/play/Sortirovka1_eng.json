@@ -1,0 +1,469 @@
+{
+  "quest": "Sortirovka1_eng",
+  "generated": "2026-05-03T07:07:45Z",
+  "total_runs": 71,
+  "win_rate": 0.0282,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "qwen"
+  ],
+  "locations": {
+    "1": {
+      "observation_preview": "You returned to the planet's orbit. The military base was a gigantic iron box, a",
+      "n": 114,
+      "choices": {
+        "can you tell me more about the locotractors?": {
+          "text": "Can you tell me more about the locotractors?",
+          "n": 34,
+          "dist": {
+            "all": 0.2982,
+            "claude": 0.0088,
+            "gemini": 0.2807,
+            "qwen": 0.0088
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 32,
+            "qwen": 1
+          }
+        },
+        "i didn't understand the system with the different types of railcars...": {
+          "text": "I didn't understand the system with the different types of railcars...",
+          "n": 36,
+          "dist": {
+            "all": 0.3158,
+            "claude": 0.0175,
+            "deepseek": 0.0175,
+            "gemini": 0.2719,
+            "qwen": 0.0088
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 31,
+            "qwen": 1
+          }
+        },
+        "i'll take it!": {
+          "text": "I'll take it!",
+          "n": 41,
+          "dist": {
+            "all": 0.3596,
+            "claude": 0.0175,
+            "deepseek": 0.0175,
+            "gemini": 0.2895,
+            "qwen": 0.0351
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 33,
+            "qwen": 4
+          }
+        },
+        "i don't really get the main point of the mission": {
+          "text": "I don't really get the main point of the mission",
+          "n": 3,
+          "dist": {
+            "all": 0.0263,
+            "deepseek": 0.0088,
+            "gemini": 0.0088,
+            "qwen": 0.0088
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "2": {
+      "observation_preview": "You noticed a young peleng in military uniform marching around the cabin. You ca",
+      "n": 1178,
+      "choices": {
+        "wait for a train": {
+          "text": "Wait for a train",
+          "n": 875,
+          "dist": {
+            "all": 0.7428,
+            "claude": 0.0153,
+            "deepseek": 0.0195,
+            "gemini": 0.6698,
+            "qwen": 0.0382
+          },
+          "n_by_family": {
+            "claude": 18,
+            "deepseek": 23,
+            "gemini": 789,
+            "qwen": 45
+          }
+        },
+        "use locotractors": {
+          "text": "Use locotractors",
+          "n": 303,
+          "dist": {
+            "all": 0.2572,
+            "claude": 0.0025,
+            "deepseek": 0.0204,
+            "gemini": 0.2216,
+            "qwen": 0.0127
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 24,
+            "gemini": 261,
+            "qwen": 15
+          }
+        }
+      }
+    },
+    "4": {
+      "observation_preview": "You heard a soft buzz and invited the errand boy in. When he came in, you asked,",
+      "n": 746,
+      "choices": {
+        "put it on the first track": {
+          "text": "Put it on the first track",
+          "n": 215,
+          "dist": {
+            "all": 0.2882,
+            "claude": 0.008,
+            "deepseek": 0.0161,
+            "gemini": 0.252,
+            "qwen": 0.0121
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 12,
+            "gemini": 188,
+            "qwen": 9
+          }
+        },
+        "put it on the second track": {
+          "text": "Put it on the second track",
+          "n": 196,
+          "dist": {
+            "all": 0.2627,
+            "claude": 0.0067,
+            "deepseek": 0.0027,
+            "gemini": 0.2426,
+            "qwen": 0.0107
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 2,
+            "gemini": 181,
+            "qwen": 8
+          }
+        },
+        "put it on the third track": {
+          "text": "Put it on the third track",
+          "n": 177,
+          "dist": {
+            "all": 0.2373,
+            "claude": 0.0027,
+            "deepseek": 0.0027,
+            "gemini": 0.2145,
+            "qwen": 0.0174
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 160,
+            "qwen": 13
+          }
+        },
+        "put it on the fourth track": {
+          "text": "Put it on the fourth track",
+          "n": 158,
+          "dist": {
+            "all": 0.2118,
+            "claude": 0.0067,
+            "deepseek": 0.0013,
+            "gemini": 0.193,
+            "qwen": 0.0107
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 1,
+            "gemini": 144,
+            "qwen": 8
+          }
+        }
+      }
+    },
+    "10": {
+      "observation_preview": "You watched the screen to the right of the levers. Through the dusty, greasy gla",
+      "n": 303,
+      "choices": {
+        "use the sanleo locotractor": {
+          "text": "Use the Sanleo locotractor",
+          "n": 32,
+          "dist": {
+            "all": 0.1056,
+            "claude": 0.0033,
+            "deepseek": 0.0066,
+            "gemini": 0.0924,
+            "qwen": 0.0033
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 28,
+            "qwen": 1
+          }
+        },
+        "use the isou locotractor": {
+          "text": "Use the Isou locotractor",
+          "n": 38,
+          "dist": {
+            "all": 0.1254,
+            "claude": 0.0066,
+            "deepseek": 0.0066,
+            "gemini": 0.1023,
+            "qwen": 0.0099
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 31,
+            "qwen": 3
+          }
+        },
+        "use the tosharak locotractor": {
+          "text": "Use the Tosharak locotractor",
+          "n": 53,
+          "dist": {
+            "all": 0.1749,
+            "deepseek": 0.0132,
+            "gemini": 0.1551,
+            "qwen": 0.0066
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 47,
+            "qwen": 2
+          }
+        },
+        "use the tshaipyu locotractor": {
+          "text": "Use the Tshaipyu locotractor",
+          "n": 67,
+          "dist": {
+            "all": 0.2211,
+            "deepseek": 0.0198,
+            "gemini": 0.1914,
+            "qwen": 0.0099
+          },
+          "n_by_family": {
+            "deepseek": 6,
+            "gemini": 58,
+            "qwen": 3
+          }
+        },
+        "use the argberger locotractor": {
+          "text": "Use the Argberger locotractor",
+          "n": 69,
+          "dist": {
+            "all": 0.2277,
+            "deepseek": 0.0231,
+            "gemini": 0.1914,
+            "qwen": 0.0132
+          },
+          "n_by_family": {
+            "deepseek": 7,
+            "gemini": 58,
+            "qwen": 4
+          }
+        },
+        "do not use locotractors": {
+          "text": "Do not use locotractors",
+          "n": 44,
+          "dist": {
+            "all": 0.1452,
+            "deepseek": 0.0099,
+            "gemini": 0.1287,
+            "qwen": 0.0066
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 39,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "11": {
+      "observation_preview": "The Sanleo locotractor looked like an iron chest with an engine. It had seen bet",
+      "n": 257,
+      "choices": {
+        "put it on the fourth track": {
+          "text": "Put it on the fourth track",
+          "n": 55,
+          "dist": {
+            "all": 0.214,
+            "claude": 0.0039,
+            "gemini": 0.1946,
+            "qwen": 0.0156
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 50,
+            "qwen": 4
+          }
+        },
+        "put it on the third track": {
+          "text": "Put it on the third track",
+          "n": 79,
+          "dist": {
+            "all": 0.3074,
+            "gemini": 0.2996,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "gemini": 77,
+            "qwen": 2
+          }
+        },
+        "put it on the second track": {
+          "text": "Put it on the second track",
+          "n": 58,
+          "dist": {
+            "all": 0.2257,
+            "claude": 0.0039,
+            "gemini": 0.2062,
+            "qwen": 0.0156
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 53,
+            "qwen": 4
+          }
+        },
+        "put it on the first track": {
+          "text": "Put it on the first track",
+          "n": 65,
+          "dist": {
+            "all": 0.2529,
+            "deepseek": 0.0817,
+            "gemini": 0.1634,
+            "qwen": 0.0078
+          },
+          "n_by_family": {
+            "deepseek": 21,
+            "gemini": 42,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "5": {
+      "observation_preview": "The boy ran into your cabin and shouted, \"There's a locotractor coming!\" though ",
+      "n": 122,
+      "choices": {
+        "put it on the first track": {
+          "text": "Put it on the first track",
+          "n": 39,
+          "dist": {
+            "all": 0.3197,
+            "deepseek": 0.0328,
+            "gemini": 0.2787,
+            "qwen": 0.0082
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 34,
+            "qwen": 1
+          }
+        },
+        "put it on the third track": {
+          "text": "Put it on the third track",
+          "n": 29,
+          "dist": {
+            "all": 0.2377,
+            "gemini": 0.2213,
+            "qwen": 0.0164
+          },
+          "n_by_family": {
+            "gemini": 27,
+            "qwen": 2
+          }
+        },
+        "put it on the second track": {
+          "text": "Put it on the second track",
+          "n": 40,
+          "dist": {
+            "all": 0.3279,
+            "deepseek": 0.0082,
+            "gemini": 0.3033,
+            "qwen": 0.0164
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 37,
+            "qwen": 2
+          }
+        },
+        "put it on the fourth track": {
+          "text": "Put it on the fourth track",
+          "n": 14,
+          "dist": {
+            "all": 0.1148,
+            "gemini": 0.1066,
+            "qwen": 0.0082
+          },
+          "n_by_family": {
+            "gemini": 13,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "7": {
+      "observation_preview": "You pushed the lever with all your might, and it obediently surrendered.",
+      "n": 4,
+      "choices": {
+        "decline": {
+          "text": "Decline",
+          "n": 1,
+          "dist": {
+            "all": 0.25,
+            "gemini": 0.25
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        },
+        "accept": {
+          "text": "Accept",
+          "n": 3,
+          "dist": {
+            "all": 0.75,
+            "gemini": 0.75
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "13": {
+      "observation_preview": "\"Okay, agreed then! By the way, since you're not a commanding officer, there won",
+      "n": 3,
+      "choices": {
+        "get to work": {
+          "text": "Get to work",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    }
+  }
+}

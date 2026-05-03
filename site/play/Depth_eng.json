@@ -1,0 +1,785 @@
+{
+  "quest": "Depth_eng",
+  "generated": "2026-05-03T07:07:44Z",
+  "total_runs": 271,
+  "win_rate": 0.0,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "37": {
+      "observation_preview": "Apparently the cold season has begun on planet Боннасис. As you marched towards ",
+      "n": 326,
+      "choices": {
+        "what dangers can i encounter?": {
+          "text": "What dangers can I encounter?",
+          "n": 99,
+          "dist": {
+            "all": 0.3037,
+            "claude": 0.0307,
+            "deepseek": 0.0368,
+            "gemini": 0.1564,
+            "mistral": 0.0521,
+            "openai": 0.0184,
+            "qwen": 0.0092
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 12,
+            "gemini": 51,
+            "mistral": 17,
+            "openai": 6,
+            "qwen": 3
+          }
+        },
+        "alright. i can help you. where is your bathyscaph?": {
+          "text": "Alright. I can help you. Where is your bathyscaph?",
+          "n": 140,
+          "dist": {
+            "all": 0.4294,
+            "claude": 0.0399,
+            "deepseek": 0.0613,
+            "gemini": 0.1564,
+            "mistral": 0.0736,
+            "openai": 0.0644,
+            "other": 0.0184,
+            "qwen": 0.0153
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        },
+        "what is this r i-00-m thing? never heard of it": {
+          "text": "What is this R I-00-M thing? Never heard of it",
+          "n": 87,
+          "dist": {
+            "all": 0.2669,
+            "claude": 0.0184,
+            "deepseek": 0.0337,
+            "gemini": 0.1472,
+            "mistral": 0.0337,
+            "openai": 0.0184,
+            "other": 0.0092,
+            "qwen": 0.0061
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 11,
+            "gemini": 48,
+            "mistral": 11,
+            "openai": 6,
+            "other": 3,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "8": {
+      "observation_preview": "- Excellent. You can head for the \"Mermaid\" naval base straight away. You will d",
+      "n": 507,
+      "choices": {
+        "how do i find the object once i'm on the plateau?": {
+          "text": "How do I find the object once I'm on the plateau?",
+          "n": 135,
+          "dist": {
+            "all": 0.2663,
+            "claude": 0.0256,
+            "deepseek": 0.0414,
+            "gemini": 0.1065,
+            "mistral": 0.0493,
+            "openai": 0.0355,
+            "qwen": 0.0079
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 21,
+            "gemini": 54,
+            "mistral": 25,
+            "openai": 18,
+            "qwen": 4
+          }
+        },
+        "tell me about the bottom relief": {
+          "text": "Tell me about the bottom relief",
+          "n": 123,
+          "dist": {
+            "all": 0.2426,
+            "claude": 0.0158,
+            "deepseek": 0.0434,
+            "gemini": 0.1065,
+            "mistral": 0.0276,
+            "openai": 0.0375,
+            "qwen": 0.0118
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 22,
+            "gemini": 54,
+            "mistral": 14,
+            "openai": 19,
+            "qwen": 6
+          }
+        },
+        "no more questions, sir. i am ready to dive": {
+          "text": "No more questions, sir. I am ready to dive",
+          "n": 140,
+          "dist": {
+            "all": 0.2761,
+            "claude": 0.0256,
+            "deepseek": 0.0394,
+            "gemini": 0.1006,
+            "mistral": 0.0473,
+            "openai": 0.0414,
+            "other": 0.0118,
+            "qwen": 0.0099
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        },
+        "tell me more about the co-ordinate system": {
+          "text": "Tell me more about the co-ordinate system",
+          "n": 90,
+          "dist": {
+            "all": 0.1775,
+            "claude": 0.0059,
+            "deepseek": 0.0355,
+            "gemini": 0.0947,
+            "mistral": 0.0178,
+            "openai": 0.0197,
+            "qwen": 0.0039
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 18,
+            "gemini": 48,
+            "mistral": 9,
+            "openai": 10,
+            "qwen": 2
+          }
+        },
+        "i seem to be a bit on the slow side today... can you explain to me what is it exactly that you want me to do?!": {
+          "text": "I seem to be a bit on the slow side today... Can you explain to me what is it exactly that you want me to do?!",
+          "n": 19,
+          "dist": {
+            "all": 0.0375,
+            "deepseek": 0.0138,
+            "gemini": 0.0178,
+            "openai": 0.002,
+            "qwen": 0.0039
+          },
+          "n_by_family": {
+            "deepseek": 7,
+            "gemini": 9,
+            "openai": 1,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "15": {
+      "observation_preview": "The bathyscaph was located on the front deck and was ready for the dive. Inside ",
+      "n": 140,
+      "choices": {
+        "thanks!!!": {
+          "text": "Thanks!!!",
+          "n": 140,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0929,
+            "deepseek": 0.1429,
+            "gemini": 0.3643,
+            "mistral": 0.1714,
+            "openai": 0.15,
+            "other": 0.0429,
+            "qwen": 0.0357
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "12": {
+      "observation_preview": "In front of you, you saw the bathyscaph control knobs and the instrumentation di",
+      "n": 2295,
+      "choices": {
+        "increase thrust by 10 m/min": {
+          "text": "Increase thrust by 10 m/min",
+          "n": 637,
+          "dist": {
+            "all": 0.2776,
+            "claude": 0.0209,
+            "deepseek": 0.0322,
+            "gemini": 0.1246,
+            "mistral": 0.0458,
+            "openai": 0.0366,
+            "other": 0.0105,
+            "qwen": 0.007
+          },
+          "n_by_family": {
+            "claude": 48,
+            "deepseek": 74,
+            "gemini": 286,
+            "mistral": 105,
+            "openai": 84,
+            "other": 24,
+            "qwen": 16
+          }
+        },
+        "do nothing": {
+          "text": "Do nothing",
+          "n": 254,
+          "dist": {
+            "all": 0.1107,
+            "claude": 0.0139,
+            "deepseek": 0.0113,
+            "gemini": 0.054,
+            "mistral": 0.01,
+            "openai": 0.0196,
+            "qwen": 0.0017
+          },
+          "n_by_family": {
+            "claude": 32,
+            "deepseek": 26,
+            "gemini": 124,
+            "mistral": 23,
+            "openai": 45,
+            "qwen": 4
+          }
+        },
+        "drop the ballast": {
+          "text": "Drop the ballast",
+          "n": 467,
+          "dist": {
+            "all": 0.2035,
+            "claude": 0.0214,
+            "deepseek": 0.0331,
+            "gemini": 0.0488,
+            "mistral": 0.0436,
+            "openai": 0.0353,
+            "other": 0.0139,
+            "qwen": 0.0074
+          },
+          "n_by_family": {
+            "claude": 49,
+            "deepseek": 76,
+            "gemini": 112,
+            "mistral": 100,
+            "openai": 81,
+            "other": 32,
+            "qwen": 17
+          }
+        },
+        "decrease thrust by 10 m/min": {
+          "text": "Decrease thrust by 10 m/min",
+          "n": 298,
+          "dist": {
+            "all": 0.1298,
+            "claude": 0.0126,
+            "deepseek": 0.0135,
+            "gemini": 0.0322,
+            "mistral": 0.0296,
+            "openai": 0.0257,
+            "other": 0.01,
+            "qwen": 0.0061
+          },
+          "n_by_family": {
+            "claude": 29,
+            "deepseek": 31,
+            "gemini": 74,
+            "mistral": 68,
+            "openai": 59,
+            "other": 23,
+            "qwen": 14
+          }
+        },
+        "turn the bathyscaph": {
+          "text": "Turn the bathyscaph",
+          "n": 460,
+          "dist": {
+            "all": 0.2004,
+            "claude": 0.0096,
+            "deepseek": 0.0261,
+            "gemini": 0.0632,
+            "mistral": 0.0497,
+            "openai": 0.0392,
+            "other": 0.01,
+            "qwen": 0.0026
+          },
+          "n_by_family": {
+            "claude": 22,
+            "deepseek": 60,
+            "gemini": 145,
+            "mistral": 114,
+            "openai": 90,
+            "other": 23,
+            "qwen": 6
+          }
+        },
+        "turn on the searchlights": {
+          "text": "Turn on the searchlights",
+          "n": 92,
+          "dist": {
+            "all": 0.0401,
+            "claude": 0.0039,
+            "deepseek": 0.0061,
+            "gemini": 0.01,
+            "mistral": 0.01,
+            "openai": 0.0074,
+            "other": 0.0017,
+            "qwen": 0.0009
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 14,
+            "gemini": 23,
+            "mistral": 23,
+            "openai": 17,
+            "other": 4,
+            "qwen": 2
+          }
+        },
+        "turn off the searchlights": {
+          "text": "Turn off the searchlights",
+          "n": 35,
+          "dist": {
+            "all": 0.0153,
+            "claude": 0.0004,
+            "deepseek": 0.0031,
+            "gemini": 0.0057,
+            "mistral": 0.0031,
+            "openai": 0.0031
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 7,
+            "gemini": 13,
+            "mistral": 7,
+            "openai": 7
+          }
+        },
+        "transmit sos signal!!!": {
+          "text": "Transmit SOS signal!!!",
+          "n": 52,
+          "dist": {
+            "all": 0.0227,
+            "claude": 0.0004,
+            "deepseek": 0.0022,
+            "gemini": 0.0026,
+            "mistral": 0.0148,
+            "openai": 0.0026
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 5,
+            "gemini": 6,
+            "mistral": 34,
+            "openai": 6
+          }
+        }
+      }
+    },
+    "18": {
+      "observation_preview": "How much do you intend to drop?\n\nStatus:\ncurrent: south to north\ncurrent speed: ",
+      "n": 446,
+      "choices": {
+        "50 kg": {
+          "text": "50 kg",
+          "n": 230,
+          "dist": {
+            "all": 0.5157,
+            "claude": 0.0561,
+            "deepseek": 0.0964,
+            "gemini": 0.1502,
+            "mistral": 0.0695,
+            "openai": 0.0762,
+            "other": 0.0516,
+            "qwen": 0.0157
+          },
+          "n_by_family": {
+            "claude": 25,
+            "deepseek": 43,
+            "gemini": 67,
+            "mistral": 31,
+            "openai": 34,
+            "other": 23,
+            "qwen": 7
+          }
+        },
+        "20 kg": {
+          "text": "20 kg",
+          "n": 93,
+          "dist": {
+            "all": 0.2085,
+            "claude": 0.0314,
+            "deepseek": 0.0314,
+            "gemini": 0.0336,
+            "mistral": 0.0404,
+            "openai": 0.0471,
+            "other": 0.0157,
+            "qwen": 0.009
+          },
+          "n_by_family": {
+            "claude": 14,
+            "deepseek": 14,
+            "gemini": 15,
+            "mistral": 18,
+            "openai": 21,
+            "other": 7,
+            "qwen": 4
+          }
+        },
+        "10 kg": {
+          "text": "10 kg",
+          "n": 48,
+          "dist": {
+            "all": 0.1076,
+            "claude": 0.0112,
+            "deepseek": 0.009,
+            "gemini": 0.0112,
+            "mistral": 0.0314,
+            "openai": 0.0336,
+            "qwen": 0.0112
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 4,
+            "gemini": 5,
+            "mistral": 14,
+            "openai": 15,
+            "qwen": 5
+          }
+        },
+        "change your mind": {
+          "text": "Change your mind",
+          "n": 21,
+          "dist": {
+            "all": 0.0471,
+            "claude": 0.0022,
+            "deepseek": 0.0157,
+            "gemini": 0.0269,
+            "openai": 0.0022
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 7,
+            "gemini": 12,
+            "openai": 1
+          }
+        },
+        "5 kg": {
+          "text": "5 kg",
+          "n": 9,
+          "dist": {
+            "all": 0.0202,
+            "mistral": 0.0112,
+            "openai": 0.009
+          },
+          "n_by_family": {
+            "mistral": 5,
+            "openai": 4
+          }
+        },
+        "1 kg": {
+          "text": "1 kg",
+          "n": 36,
+          "dist": {
+            "all": 0.0807,
+            "deepseek": 0.009,
+            "gemini": 0.0135,
+            "mistral": 0.0471,
+            "openai": 0.009,
+            "qwen": 0.0022
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 6,
+            "mistral": 21,
+            "openai": 4,
+            "qwen": 1
+          }
+        },
+        "2 kg": {
+          "text": "2 kg",
+          "n": 9,
+          "dist": {
+            "all": 0.0202,
+            "deepseek": 0.0045,
+            "mistral": 0.0157
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "mistral": 7
+          }
+        }
+      }
+    },
+    "21": {
+      "observation_preview": "You looked down at the no-contact sensor panel with arrow buttons, pointing in a",
+      "n": 434,
+      "choices": {
+        "north-eastwards": {
+          "text": "North-eastwards",
+          "n": 69,
+          "dist": {
+            "all": 0.159,
+            "claude": 0.0253,
+            "deepseek": 0.0207,
+            "gemini": 0.0276,
+            "mistral": 0.0438,
+            "openai": 0.0392,
+            "qwen": 0.0023
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 9,
+            "gemini": 12,
+            "mistral": 19,
+            "openai": 17,
+            "qwen": 1
+          }
+        },
+        "south-eastwards": {
+          "text": "South-eastwards",
+          "n": 55,
+          "dist": {
+            "all": 0.1267,
+            "claude": 0.0069,
+            "deepseek": 0.0069,
+            "gemini": 0.0369,
+            "mistral": 0.0438,
+            "openai": 0.0323
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 3,
+            "gemini": 16,
+            "mistral": 19,
+            "openai": 14
+          }
+        },
+        "eastwards": {
+          "text": "Eastwards",
+          "n": 52,
+          "dist": {
+            "all": 0.1198,
+            "claude": 0.0069,
+            "deepseek": 0.0115,
+            "gemini": 0.0346,
+            "mistral": 0.0438,
+            "openai": 0.023
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 5,
+            "gemini": 15,
+            "mistral": 19,
+            "openai": 10
+          }
+        },
+        "south-westwards": {
+          "text": "South-westwards",
+          "n": 44,
+          "dist": {
+            "all": 0.1014,
+            "claude": 0.0023,
+            "deepseek": 0.0046,
+            "gemini": 0.0461,
+            "mistral": 0.0253,
+            "openai": 0.0207,
+            "qwen": 0.0023
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 20,
+            "mistral": 11,
+            "openai": 9,
+            "qwen": 1
+          }
+        },
+        "southwards": {
+          "text": "Southwards",
+          "n": 42,
+          "dist": {
+            "all": 0.0968,
+            "deepseek": 0.0115,
+            "gemini": 0.0461,
+            "mistral": 0.0207,
+            "openai": 0.0184
+          },
+          "n_by_family": {
+            "deepseek": 5,
+            "gemini": 20,
+            "mistral": 9,
+            "openai": 8
+          }
+        },
+        "northwards": {
+          "text": "Northwards",
+          "n": 63,
+          "dist": {
+            "all": 0.1452,
+            "claude": 0.0046,
+            "deepseek": 0.023,
+            "gemini": 0.0253,
+            "mistral": 0.0323,
+            "openai": 0.03,
+            "other": 0.0276,
+            "qwen": 0.0023
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 10,
+            "gemini": 11,
+            "mistral": 14,
+            "openai": 13,
+            "other": 12,
+            "qwen": 1
+          }
+        },
+        "change your mind": {
+          "text": "Change your mind",
+          "n": 12,
+          "dist": {
+            "all": 0.0276,
+            "deepseek": 0.0115,
+            "gemini": 0.0046,
+            "mistral": 0.0046,
+            "openai": 0.0069
+          },
+          "n_by_family": {
+            "deepseek": 5,
+            "gemini": 2,
+            "mistral": 2,
+            "openai": 3
+          }
+        },
+        "northwestwards": {
+          "text": "Northwestwards",
+          "n": 39,
+          "dist": {
+            "all": 0.0899,
+            "claude": 0.0046,
+            "deepseek": 0.0207,
+            "gemini": 0.023,
+            "mistral": 0.0092,
+            "openai": 0.0138,
+            "other": 0.0138,
+            "qwen": 0.0046
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 9,
+            "gemini": 10,
+            "mistral": 4,
+            "openai": 6,
+            "other": 6,
+            "qwen": 2
+          }
+        },
+        "westwards": {
+          "text": "Westwards",
+          "n": 58,
+          "dist": {
+            "all": 0.1336,
+            "deepseek": 0.0207,
+            "gemini": 0.0714,
+            "mistral": 0.0253,
+            "openai": 0.0115,
+            "other": 0.0046
+          },
+          "n_by_family": {
+            "deepseek": 9,
+            "gemini": 31,
+            "mistral": 11,
+            "openai": 5,
+            "other": 2
+          }
+        }
+      }
+    },
+    "13": {
+      "observation_preview": "- May-Day, May-Day! - you screamed hysterically into the transmitter. \n- What ha",
+      "n": 51,
+      "choices": {
+        "get me out of here - quick!": {
+          "text": "Get me out of here - quick!",
+          "n": 31,
+          "dist": {
+            "all": 0.6078,
+            "deepseek": 0.0588,
+            "gemini": 0.0196,
+            "mistral": 0.4706,
+            "openai": 0.0588
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 1,
+            "mistral": 24,
+            "openai": 3
+          }
+        },
+        "i don't know what to do. this damn iron tin just wouldn't listen to me!": {
+          "text": "I don't know what to do. This damn iron tin just wouldn't listen to me!",
+          "n": 11,
+          "dist": {
+            "all": 0.2157,
+            "deepseek": 0.0392,
+            "gemini": 0.0784,
+            "mistral": 0.0784,
+            "openai": 0.0196
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 4,
+            "mistral": 4,
+            "openai": 1
+          }
+        },
+        "i am attacked by a monster!": {
+          "text": "I am attacked by a monster!",
+          "n": 9,
+          "dist": {
+            "all": 0.1765,
+            "claude": 0.0196,
+            "gemini": 0.0196,
+            "mistral": 0.1176,
+            "openai": 0.0196
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 1,
+            "mistral": 6,
+            "openai": 1
+          }
+        }
+      }
+    }
+  }
+}

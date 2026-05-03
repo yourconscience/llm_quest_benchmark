@@ -1,13 +1,19 @@
 {
   "private": true,
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "build:engine": "NODE_OPTIONS=--openssl-legacy-provider npx webpack --config webpack.engine.js",
+    "build:play-assets": "mkdir -p site/play/quests && for q in Banket_eng Badday_eng Pizza_eng Borzukhan_eng Ski_eng Election_eng Robots_eng Leonardo_eng Depth_eng Edelweiss_eng Ministry_eng Foncers_eng Driver_eng Codebox_eng Pilot_eng Disk_eng Sortirovka1_eng Shashki_eng Player_eng; do gzip -c quests/sr_2_1_2121_eng/$q.qm > site/play/quests/$q.qm.gz; done"
   },
   "dependencies": {
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   },
   "devDependencies": {
-    "@types/node": "^22.13.5"
+    "@types/node": "^22.13.5",
+    "buffer": "^6.0.3",
+    "ts-loader": "^9.5.7",
+    "webpack": "^5.106.2",
+    "webpack-cli": "^7.0.2"
   }
 }

@@ -1,0 +1,1646 @@
+{
+  "quest": "Pizza_eng",
+  "generated": "2026-05-03T07:07:43Z",
+  "total_runs": 297,
+  "win_rate": 0.1717,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "1": {
+      "observation_preview": "Anyone who'd arrive to the planet of Боннасис at this time, couldn't but notice ",
+      "n": 157,
+      "choices": {
+        "visit \"pizza-hack\"": {
+          "text": "Visit \"Pizza-Hack\"",
+          "n": 129,
+          "dist": {
+            "all": 0.8217,
+            "claude": 0.0828,
+            "deepseek": 0.0701,
+            "gemini": 0.3822,
+            "mistral": 0.1529,
+            "openai": 0.0828,
+            "qwen": 0.051
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 11,
+            "gemini": 60,
+            "mistral": 24,
+            "openai": 13,
+            "qwen": 8
+          }
+        },
+        "go to the tournament": {
+          "text": "Go to the tournament",
+          "n": 28,
+          "dist": {
+            "all": 0.1783,
+            "claude": 0.0191,
+            "deepseek": 0.0701,
+            "openai": 0.051,
+            "other": 0.0382
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 11,
+            "openai": 8,
+            "other": 6
+          }
+        }
+      }
+    },
+    "10": {
+      "observation_preview": "Nice quiet music played inside the \"Pizza-Hack\" restaurant. The ultra-photon lam",
+      "n": 525,
+      "choices": {
+        "\"stunning\" (humans) (20 cr)": {
+          "text": "\"Stunning\" (Humans) (20 cr)",
+          "n": 87,
+          "dist": {
+            "all": 0.1657,
+            "claude": 0.0133,
+            "deepseek": 0.0076,
+            "gemini": 0.1124,
+            "mistral": 0.0133,
+            "openai": 0.0152,
+            "qwen": 0.0038
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 4,
+            "gemini": 59,
+            "mistral": 7,
+            "openai": 8,
+            "qwen": 2
+          }
+        },
+        "leave the restaurant and head for the competition": {
+          "text": "Leave the restaurant and head for the competition",
+          "n": 120,
+          "dist": {
+            "all": 0.2286,
+            "claude": 0.0248,
+            "deepseek": 0.0171,
+            "gemini": 0.1086,
+            "mistral": 0.0457,
+            "openai": 0.0171,
+            "qwen": 0.0152
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 9,
+            "gemini": 57,
+            "mistral": 24,
+            "openai": 9,
+            "qwen": 8
+          }
+        },
+        "\"heavenly\" (gaalians) (20 cr)": {
+          "text": "\"Heavenly\" (Gaalians) (20 cr)",
+          "n": 65,
+          "dist": {
+            "all": 0.1238,
+            "claude": 0.0095,
+            "deepseek": 0.0038,
+            "gemini": 0.0838,
+            "mistral": 0.0248,
+            "qwen": 0.0019
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 2,
+            "gemini": 44,
+            "mistral": 13,
+            "qwen": 1
+          }
+        },
+        "\"king-size\" (maloqs) (25 cr)": {
+          "text": "\"King-size\" (Maloqs) (25 cr)",
+          "n": 92,
+          "dist": {
+            "all": 0.1752,
+            "claude": 0.0171,
+            "deepseek": 0.0095,
+            "gemini": 0.0781,
+            "mistral": 0.0248,
+            "openai": 0.0362,
+            "qwen": 0.0095
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 5,
+            "gemini": 41,
+            "mistral": 13,
+            "openai": 19,
+            "qwen": 5
+          }
+        },
+        "open the menus at \"standard meals\"": {
+          "text": "Open the menus at \"Standard Meals\"",
+          "n": 55,
+          "dist": {
+            "all": 0.1048,
+            "deepseek": 0.0229,
+            "gemini": 0.0095,
+            "mistral": 0.0057,
+            "openai": 0.0571,
+            "qwen": 0.0095
+          },
+          "n_by_family": {
+            "deepseek": 12,
+            "gemini": 5,
+            "mistral": 3,
+            "openai": 30,
+            "qwen": 5
+          }
+        },
+        "\"seafood\" (pelengs) (20 cr)": {
+          "text": "\"Seafood\" (Pelengs) (20 cr)",
+          "n": 62,
+          "dist": {
+            "all": 0.1181,
+            "claude": 0.0038,
+            "deepseek": 0.0076,
+            "gemini": 0.0724,
+            "mistral": 0.019,
+            "openai": 0.0133,
+            "qwen": 0.0019
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 4,
+            "gemini": 38,
+            "mistral": 10,
+            "openai": 7,
+            "qwen": 1
+          }
+        },
+        "\"vegetarian\" (faeyans) (15 cr)": {
+          "text": "\"Vegetarian\" (Faeyans) (15 cr)",
+          "n": 44,
+          "dist": {
+            "all": 0.0838,
+            "claude": 0.0038,
+            "deepseek": 0.0038,
+            "gemini": 0.0686,
+            "mistral": 0.0038,
+            "openai": 0.0019,
+            "qwen": 0.0019
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 36,
+            "mistral": 2,
+            "openai": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "3": {
+      "observation_preview": "The entrance of the \"Grand Cocktail\" palace was crowded. The poster on the facad",
+      "n": 51,
+      "choices": {
+        "i represent the rangers of the galaxy!": {
+          "text": "I represent the rangers of the Galaxy!",
+          "n": 33,
+          "dist": {
+            "all": 0.6471,
+            "claude": 0.1569,
+            "deepseek": 0.0392,
+            "gemini": 0.2157,
+            "mistral": 0.0784,
+            "openai": 0.0784,
+            "other": 0.0392,
+            "qwen": 0.0392
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 2,
+            "gemini": 11,
+            "mistral": 4,
+            "openai": 4,
+            "other": 2,
+            "qwen": 2
+          }
+        },
+        "i am here by myself!": {
+          "text": "I am here by myself!",
+          "n": 18,
+          "dist": {
+            "all": 0.3529,
+            "mistral": 0.2353,
+            "openai": 0.0784,
+            "qwen": 0.0392
+          },
+          "n_by_family": {
+            "mistral": 12,
+            "openai": 4,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "19": {
+      "observation_preview": "You felt proud. You cheeks were slowly turning pink. The larger part of the popu",
+      "n": 154,
+      "choices": {
+        "this will not be the first time when i show whose the master around here!": {
+          "text": "This will not be the first time when I show whose the master around here!",
+          "n": 25,
+          "dist": {
+            "all": 0.1623,
+            "claude": 0.0325,
+            "deepseek": 0.039,
+            "gemini": 0.0714,
+            "qwen": 0.0195
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 6,
+            "gemini": 11,
+            "qwen": 3
+          }
+        },
+        "competitions of that kind were an alternative to the existing practice of galaxy-wide global conferences aimed at finding interracial compromises and improving the relations between the nations of all planets.": {
+          "text": "Competitions of that kind were an alternative to the existing practice of Galaxy-wide global conferences aimed at finding interracial compromises and improving the relations between the nations of all planets.",
+          "n": 43,
+          "dist": {
+            "all": 0.2792,
+            "claude": 0.013,
+            "deepseek": 0.0195,
+            "gemini": 0.0844,
+            "mistral": 0.1558,
+            "qwen": 0.0065
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 13,
+            "mistral": 24,
+            "qwen": 1
+          }
+        },
+        "yessir. this is my debut!": {
+          "text": "Yessir. This is my debut!",
+          "n": 86,
+          "dist": {
+            "all": 0.5584,
+            "claude": 0.0584,
+            "deepseek": 0.0844,
+            "gemini": 0.2273,
+            "openai": 0.1234,
+            "other": 0.039,
+            "qwen": 0.026
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 13,
+            "gemini": 35,
+            "openai": 19,
+            "other": 6,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "20": {
+      "observation_preview": "The response was as provoking, as it could get. But at that point of time emotio",
+      "n": 154,
+      "choices": {
+        "excellent! i'll kick their asses!!!": {
+          "text": "Excellent! I'll kick their asses!!!",
+          "n": 82,
+          "dist": {
+            "all": 0.5325,
+            "claude": 0.0519,
+            "deepseek": 0.0649,
+            "gemini": 0.3052,
+            "mistral": 0.0584,
+            "openai": 0.0195,
+            "qwen": 0.0325
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 10,
+            "gemini": 47,
+            "mistral": 9,
+            "openai": 3,
+            "qwen": 5
+          }
+        },
+        "it's a hard question. i feel a bit shy.": {
+          "text": "It's a hard question. I feel a bit shy.",
+          "n": 53,
+          "dist": {
+            "all": 0.3442,
+            "claude": 0.026,
+            "deepseek": 0.0455,
+            "gemini": 0.0649,
+            "mistral": 0.0974,
+            "openai": 0.0844,
+            "other": 0.0065,
+            "qwen": 0.0195
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 7,
+            "gemini": 10,
+            "mistral": 15,
+            "openai": 13,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "in fact it's going to be the first time i am making a pizza!": {
+          "text": "In fact it's going to be the first time I am making a pizza!",
+          "n": 19,
+          "dist": {
+            "all": 0.1234,
+            "claude": 0.026,
+            "deepseek": 0.0325,
+            "gemini": 0.013,
+            "openai": 0.0195,
+            "other": 0.0325
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 5,
+            "gemini": 2,
+            "openai": 3,
+            "other": 5
+          }
+        }
+      }
+    },
+    "21": {
+      "observation_preview": "The hall, where the competition for the Galaxy's best pizza cook was to be held,",
+      "n": 154,
+      "choices": {
+        "walk up to the peleng": {
+          "text": "Walk up to the Peleng",
+          "n": 150,
+          "dist": {
+            "all": 0.974,
+            "claude": 0.0974,
+            "deepseek": 0.1429,
+            "gemini": 0.3831,
+            "mistral": 0.1558,
+            "openai": 0.1234,
+            "other": 0.0195,
+            "qwen": 0.0519
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 22,
+            "gemini": 59,
+            "mistral": 24,
+            "openai": 19,
+            "other": 3,
+            "qwen": 8
+          }
+        },
+        "not pay attention to the peleng": {
+          "text": "Not pay attention to the Peleng",
+          "n": 4,
+          "dist": {
+            "all": 0.026,
+            "claude": 0.0065,
+            "other": 0.0195
+          },
+          "n_by_family": {
+            "claude": 1,
+            "other": 3
+          }
+        }
+      }
+    },
+    "36": {
+      "observation_preview": "- You are a new guy here, aren't you? - the Peleng asked you. - I could help you",
+      "n": 150,
+      "choices": {
+        "corrupt judge #2": {
+          "text": "Corrupt judge #2",
+          "n": 30,
+          "dist": {
+            "all": 0.2,
+            "claude": 0.0067,
+            "deepseek": 0.02,
+            "gemini": 0.0733,
+            "mistral": 0.06,
+            "openai": 0.0333,
+            "qwen": 0.0067
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 3,
+            "gemini": 11,
+            "mistral": 9,
+            "openai": 5,
+            "qwen": 1
+          }
+        },
+        "corrupt judge #4": {
+          "text": "Corrupt judge #4",
+          "n": 9,
+          "dist": {
+            "all": 0.06,
+            "claude": 0.0067,
+            "gemini": 0.0267,
+            "mistral": 0.0133,
+            "openai": 0.0067,
+            "qwen": 0.0067
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 4,
+            "mistral": 2,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "corrupt judge #3": {
+          "text": "Corrupt judge #3",
+          "n": 22,
+          "dist": {
+            "all": 0.1467,
+            "claude": 0.0067,
+            "deepseek": 0.0133,
+            "gemini": 0.0933,
+            "mistral": 0.02,
+            "openai": 0.0133
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 14,
+            "mistral": 3,
+            "openai": 2
+          }
+        },
+        "refuse the peleng services": {
+          "text": "Refuse the Peleng services",
+          "n": 56,
+          "dist": {
+            "all": 0.3733,
+            "claude": 0.0733,
+            "deepseek": 0.1067,
+            "gemini": 0.08,
+            "mistral": 0.0333,
+            "openai": 0.0467,
+            "other": 0.02,
+            "qwen": 0.0133
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 16,
+            "gemini": 12,
+            "mistral": 5,
+            "openai": 7,
+            "other": 3,
+            "qwen": 2
+          }
+        },
+        "corrupt judge #5": {
+          "text": "Corrupt judge #5",
+          "n": 8,
+          "dist": {
+            "all": 0.0533,
+            "deepseek": 0.0067,
+            "gemini": 0.04,
+            "mistral": 0.0067
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 6,
+            "mistral": 1
+          }
+        },
+        "corrupt judge #1": {
+          "text": "Corrupt judge #1",
+          "n": 25,
+          "dist": {
+            "all": 0.1667,
+            "claude": 0.0067,
+            "gemini": 0.08,
+            "mistral": 0.0267,
+            "openai": 0.0267,
+            "qwen": 0.0267
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 12,
+            "mistral": 4,
+            "openai": 4,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "22": {
+      "observation_preview": "Giving the Peleng 1000 cr, you went back to the hall. Just at that moment you al",
+      "n": 1549,
+      "choices": {
+        "meat, fish": {
+          "text": "Meat, fish",
+          "n": 418,
+          "dist": {
+            "all": 0.2699,
+            "claude": 0.0226,
+            "deepseek": 0.0439,
+            "gemini": 0.1117,
+            "mistral": 0.0213,
+            "openai": 0.0187,
+            "other": 0.042,
+            "qwen": 0.0097
+          },
+          "n_by_family": {
+            "claude": 35,
+            "deepseek": 68,
+            "gemini": 173,
+            "mistral": 33,
+            "openai": 29,
+            "other": 65,
+            "qwen": 15
+          }
+        },
+        "exotic components": {
+          "text": "Exotic components",
+          "n": 286,
+          "dist": {
+            "all": 0.1846,
+            "claude": 0.0174,
+            "deepseek": 0.0316,
+            "gemini": 0.0742,
+            "mistral": 0.0458,
+            "openai": 0.0071,
+            "qwen": 0.0084
+          },
+          "n_by_family": {
+            "claude": 27,
+            "deepseek": 49,
+            "gemini": 115,
+            "mistral": 71,
+            "openai": 11,
+            "qwen": 13
+          }
+        },
+        "spices": {
+          "text": "Spices",
+          "n": 270,
+          "dist": {
+            "all": 0.1743,
+            "claude": 0.0181,
+            "deepseek": 0.0252,
+            "gemini": 0.0581,
+            "mistral": 0.0342,
+            "openai": 0.0303,
+            "qwen": 0.0084
+          },
+          "n_by_family": {
+            "claude": 28,
+            "deepseek": 39,
+            "gemini": 90,
+            "mistral": 53,
+            "openai": 47,
+            "qwen": 13
+          }
+        },
+        "veggies, fruit": {
+          "text": "Veggies, fruit",
+          "n": 323,
+          "dist": {
+            "all": 0.2085,
+            "claude": 0.0123,
+            "deepseek": 0.0245,
+            "gemini": 0.0846,
+            "mistral": 0.04,
+            "openai": 0.0323,
+            "qwen": 0.0148
+          },
+          "n_by_family": {
+            "claude": 19,
+            "deepseek": 38,
+            "gemini": 131,
+            "mistral": 62,
+            "openai": 50,
+            "qwen": 23
+          }
+        },
+        "send the pizza into the oven": {
+          "text": "Send the pizza into the oven",
+          "n": 100,
+          "dist": {
+            "all": 0.0646,
+            "claude": 0.0065,
+            "deepseek": 0.0084,
+            "gemini": 0.0271,
+            "mistral": 0.0103,
+            "openai": 0.0103,
+            "qwen": 0.0019
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 13,
+            "gemini": 42,
+            "mistral": 16,
+            "openai": 16,
+            "qwen": 3
+          }
+        },
+        "carbohydrates": {
+          "text": "Carbohydrates",
+          "n": 152,
+          "dist": {
+            "all": 0.0981,
+            "claude": 0.0161,
+            "deepseek": 0.011,
+            "gemini": 0.0271,
+            "mistral": 0.0097,
+            "openai": 0.0226,
+            "other": 0.0006,
+            "qwen": 0.011
+          },
+          "n_by_family": {
+            "claude": 25,
+            "deepseek": 17,
+            "gemini": 42,
+            "mistral": 15,
+            "openai": 35,
+            "other": 1,
+            "qwen": 17
+          }
+        }
+      }
+    },
+    "23": {
+      "observation_preview": "You decided to add some protein-rich components to the pizza, thus increasing it",
+      "n": 418,
+      "choices": {
+        "jerbooster tenderloin from arnarique goudad": {
+          "text": "Jerbooster tenderloin from Arnarique Goudad",
+          "n": 91,
+          "dist": {
+            "all": 0.2177,
+            "claude": 0.0287,
+            "deepseek": 0.0239,
+            "gemini": 0.1053,
+            "mistral": 0.0311,
+            "openai": 0.0048,
+            "other": 0.0167,
+            "qwen": 0.0072
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 10,
+            "gemini": 44,
+            "mistral": 13,
+            "openai": 2,
+            "other": 7,
+            "qwen": 3
+          }
+        },
+        "parm ham, sliced": {
+          "text": "Parm ham, sliced",
+          "n": 88,
+          "dist": {
+            "all": 0.2105,
+            "claude": 0.0144,
+            "deepseek": 0.0526,
+            "gemini": 0.0574,
+            "mistral": 0.0215,
+            "openai": 0.0239,
+            "other": 0.0287,
+            "qwen": 0.012
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 22,
+            "gemini": 24,
+            "mistral": 9,
+            "openai": 10,
+            "other": 12,
+            "qwen": 5
+          }
+        },
+        "fresh deepwater squids": {
+          "text": "Fresh deepwater squids",
+          "n": 77,
+          "dist": {
+            "all": 0.1842,
+            "claude": 0.0263,
+            "deepseek": 0.0167,
+            "gemini": 0.1053,
+            "mistral": 0.0048,
+            "openai": 0.0096,
+            "other": 0.0144,
+            "qwen": 0.0072
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 7,
+            "gemini": 44,
+            "mistral": 2,
+            "openai": 4,
+            "other": 6,
+            "qwen": 3
+          }
+        },
+        "dry cod": {
+          "text": "Dry cod",
+          "n": 71,
+          "dist": {
+            "all": 0.1699,
+            "claude": 0.0096,
+            "deepseek": 0.0407,
+            "gemini": 0.055,
+            "mistral": 0.0144,
+            "openai": 0.0167,
+            "other": 0.0287,
+            "qwen": 0.0048
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 17,
+            "gemini": 23,
+            "mistral": 6,
+            "openai": 7,
+            "other": 12,
+            "qwen": 2
+          }
+        },
+        "mutton blade": {
+          "text": "Mutton blade",
+          "n": 42,
+          "dist": {
+            "all": 0.1005,
+            "deepseek": 0.0191,
+            "gemini": 0.0359,
+            "mistral": 0.0048,
+            "openai": 0.0144,
+            "other": 0.0239,
+            "qwen": 0.0024
+          },
+          "n_by_family": {
+            "deepseek": 8,
+            "gemini": 15,
+            "mistral": 2,
+            "openai": 6,
+            "other": 10,
+            "qwen": 1
+          }
+        },
+        "gutted herring": {
+          "text": "Gutted herring",
+          "n": 16,
+          "dist": {
+            "all": 0.0383,
+            "claude": 0.0024,
+            "deepseek": 0.0048,
+            "gemini": 0.0167,
+            "other": 0.0144
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 7,
+            "other": 6
+          }
+        },
+        "sowbelly": {
+          "text": "Sowbelly",
+          "n": 23,
+          "dist": {
+            "all": 0.055,
+            "claude": 0.0024,
+            "gemini": 0.0335,
+            "mistral": 0.0024,
+            "other": 0.0144,
+            "qwen": 0.0024
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 14,
+            "mistral": 1,
+            "other": 6,
+            "qwen": 1
+          }
+        },
+        "other type of products": {
+          "text": "Other type of products",
+          "n": 10,
+          "dist": {
+            "all": 0.0239,
+            "deepseek": 0.0048,
+            "gemini": 0.0048,
+            "other": 0.0144
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 2,
+            "other": 6
+          }
+        }
+      }
+    },
+    "27": {
+      "observation_preview": "The exotic components were separated into a special product category. The use of",
+      "n": 284,
+      "choices": {
+        "royal crab claws": {
+          "text": "Royal crab claws",
+          "n": 85,
+          "dist": {
+            "all": 0.2993,
+            "claude": 0.0423,
+            "deepseek": 0.0423,
+            "gemini": 0.1444,
+            "mistral": 0.0458,
+            "openai": 0.007,
+            "qwen": 0.0176
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 12,
+            "gemini": 41,
+            "mistral": 13,
+            "openai": 2,
+            "qwen": 5
+          }
+        },
+        "portobello mushrooms": {
+          "text": "Portobello mushrooms",
+          "n": 52,
+          "dist": {
+            "all": 0.1831,
+            "claude": 0.007,
+            "deepseek": 0.0387,
+            "gemini": 0.0634,
+            "mistral": 0.0458,
+            "openai": 0.0246,
+            "qwen": 0.0035
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 11,
+            "gemini": 18,
+            "mistral": 13,
+            "openai": 7,
+            "qwen": 1
+          }
+        },
+        "fresh brain, packed": {
+          "text": "Fresh brain, packed",
+          "n": 43,
+          "dist": {
+            "all": 0.1514,
+            "claude": 0.0106,
+            "deepseek": 0.0282,
+            "gemini": 0.0669,
+            "mistral": 0.0423,
+            "qwen": 0.0035
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 8,
+            "gemini": 19,
+            "mistral": 12,
+            "qwen": 1
+          }
+        },
+        "yong boar saddle": {
+          "text": "Yong boar saddle",
+          "n": 5,
+          "dist": {
+            "all": 0.0176,
+            "claude": 0.0035,
+            "deepseek": 0.0035,
+            "gemini": 0.0035,
+            "mistral": 0.007
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 1,
+            "mistral": 2
+          }
+        },
+        "other type of products": {
+          "text": "Other type of products",
+          "n": 7,
+          "dist": {
+            "all": 0.0246,
+            "deepseek": 0.0035,
+            "gemini": 0.0141,
+            "qwen": 0.007
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 4,
+            "qwen": 2
+          }
+        },
+        "bourbon": {
+          "text": "Bourbon",
+          "n": 15,
+          "dist": {
+            "all": 0.0528,
+            "claude": 0.0035,
+            "deepseek": 0.0176,
+            "gemini": 0.0141,
+            "mistral": 0.0141,
+            "openai": 0.0035
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 5,
+            "gemini": 4,
+            "mistral": 4,
+            "openai": 1
+          }
+        },
+        "pearl onion": {
+          "text": "Pearl onion",
+          "n": 33,
+          "dist": {
+            "all": 0.1162,
+            "claude": 0.0035,
+            "deepseek": 0.0211,
+            "gemini": 0.0493,
+            "mistral": 0.0352,
+            "openai": 0.0035,
+            "qwen": 0.0035
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 6,
+            "gemini": 14,
+            "mistral": 10,
+            "openai": 1,
+            "qwen": 1
+          }
+        },
+        "monstrodile liver oil": {
+          "text": "Monstrodile liver oil",
+          "n": 44,
+          "dist": {
+            "all": 0.1549,
+            "claude": 0.0211,
+            "deepseek": 0.0176,
+            "gemini": 0.0493,
+            "mistral": 0.0563,
+            "qwen": 0.0106
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 5,
+            "gemini": 14,
+            "mistral": 16,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "26": {
+      "observation_preview": "Spices usually added little to the actual taste of the pizza, but for some reaso",
+      "n": 269,
+      "choices": {
+        "vinegar (100%)": {
+          "text": "Vinegar (100%)",
+          "n": 14,
+          "dist": {
+            "all": 0.052,
+            "claude": 0.0074,
+            "deepseek": 0.0074,
+            "gemini": 0.0037,
+            "mistral": 0.0297,
+            "qwen": 0.0037
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 2,
+            "gemini": 1,
+            "mistral": 8,
+            "qwen": 1
+          }
+        },
+        "aromatic greens": {
+          "text": "Aromatic greens",
+          "n": 110,
+          "dist": {
+            "all": 0.4089,
+            "claude": 0.0446,
+            "deepseek": 0.0446,
+            "gemini": 0.197,
+            "mistral": 0.0335,
+            "openai": 0.0706,
+            "qwen": 0.0186
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 12,
+            "gemini": 53,
+            "mistral": 9,
+            "openai": 19,
+            "qwen": 5
+          }
+        },
+        "estragon mustard": {
+          "text": "Estragon mustard",
+          "n": 59,
+          "dist": {
+            "all": 0.2193,
+            "claude": 0.026,
+            "deepseek": 0.0372,
+            "gemini": 0.052,
+            "mistral": 0.0372,
+            "openai": 0.0558,
+            "qwen": 0.0112
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 10,
+            "gemini": 14,
+            "mistral": 10,
+            "openai": 15,
+            "qwen": 3
+          }
+        },
+        "pumpkin seeds": {
+          "text": "Pumpkin seeds",
+          "n": 27,
+          "dist": {
+            "all": 0.1004,
+            "claude": 0.0112,
+            "deepseek": 0.0223,
+            "gemini": 0.0074,
+            "mistral": 0.0297,
+            "openai": 0.026,
+            "qwen": 0.0037
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 6,
+            "gemini": 2,
+            "mistral": 8,
+            "openai": 7,
+            "qwen": 1
+          }
+        },
+        "rusk sauce": {
+          "text": "Rusk sauce",
+          "n": 19,
+          "dist": {
+            "all": 0.0706,
+            "deepseek": 0.0186,
+            "gemini": 0.0074,
+            "mistral": 0.0186,
+            "openai": 0.0186,
+            "qwen": 0.0074
+          },
+          "n_by_family": {
+            "deepseek": 5,
+            "gemini": 2,
+            "mistral": 5,
+            "openai": 5,
+            "qwen": 2
+          }
+        },
+        "ground fish bones": {
+          "text": "Ground fish bones",
+          "n": 19,
+          "dist": {
+            "all": 0.0706,
+            "claude": 0.0037,
+            "deepseek": 0.0037,
+            "gemini": 0.0409,
+            "mistral": 0.0186,
+            "openai": 0.0037
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 11,
+            "mistral": 5,
+            "openai": 1
+          }
+        },
+        "smoke-smell essence": {
+          "text": "Smoke-smell essence",
+          "n": 20,
+          "dist": {
+            "all": 0.0743,
+            "claude": 0.0112,
+            "deepseek": 0.0037,
+            "gemini": 0.026,
+            "mistral": 0.0297,
+            "qwen": 0.0037
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 1,
+            "gemini": 7,
+            "mistral": 8,
+            "qwen": 1
+          }
+        },
+        "other type of products": {
+          "text": "Other type of products",
+          "n": 1,
+          "dist": {
+            "all": 0.0037,
+            "deepseek": 0.0037
+          },
+          "n_by_family": {
+            "deepseek": 1
+          }
+        }
+      }
+    },
+    "25": {
+      "observation_preview": "The fruits and vegetables were to soften and brighten up the taste of your pizza",
+      "n": 322,
+      "choices": {
+        "dried tomatoes": {
+          "text": "Dried tomatoes",
+          "n": 71,
+          "dist": {
+            "all": 0.2205,
+            "claude": 0.0373,
+            "deepseek": 0.0124,
+            "gemini": 0.0776,
+            "mistral": 0.0404,
+            "openai": 0.0466,
+            "qwen": 0.0062
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 4,
+            "gemini": 25,
+            "mistral": 13,
+            "openai": 15,
+            "qwen": 2
+          }
+        },
+        "mango (pulp)": {
+          "text": "Mango (pulp)",
+          "n": 78,
+          "dist": {
+            "all": 0.2422,
+            "claude": 0.0124,
+            "deepseek": 0.0497,
+            "gemini": 0.0776,
+            "mistral": 0.0466,
+            "openai": 0.0373,
+            "qwen": 0.0186
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 16,
+            "gemini": 25,
+            "mistral": 15,
+            "openai": 12,
+            "qwen": 6
+          }
+        },
+        "bamboo sprouts": {
+          "text": "Bamboo sprouts",
+          "n": 72,
+          "dist": {
+            "all": 0.2236,
+            "claude": 0.0062,
+            "deepseek": 0.0155,
+            "gemini": 0.1553,
+            "mistral": 0.028,
+            "openai": 0.0093,
+            "qwen": 0.0093
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 5,
+            "gemini": 50,
+            "mistral": 9,
+            "openai": 3,
+            "qwen": 3
+          }
+        },
+        "fresh cucumber": {
+          "text": "Fresh cucumber",
+          "n": 36,
+          "dist": {
+            "all": 0.1118,
+            "claude": 0.0031,
+            "deepseek": 0.0217,
+            "gemini": 0.028,
+            "mistral": 0.0155,
+            "openai": 0.0311,
+            "qwen": 0.0124
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 7,
+            "gemini": 9,
+            "mistral": 5,
+            "openai": 10,
+            "qwen": 4
+          }
+        },
+        "crated coconut": {
+          "text": "Crated coconut",
+          "n": 27,
+          "dist": {
+            "all": 0.0839,
+            "deepseek": 0.0062,
+            "gemini": 0.0217,
+            "mistral": 0.028,
+            "openai": 0.0186,
+            "qwen": 0.0093
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 7,
+            "mistral": 9,
+            "openai": 6,
+            "qwen": 3
+          }
+        },
+        "beans": {
+          "text": "Beans",
+          "n": 11,
+          "dist": {
+            "all": 0.0342,
+            "gemini": 0.0155,
+            "mistral": 0.0155,
+            "qwen": 0.0031
+          },
+          "n_by_family": {
+            "gemini": 5,
+            "mistral": 5,
+            "qwen": 1
+          }
+        },
+        "local zucchini": {
+          "text": "Local zucchini",
+          "n": 20,
+          "dist": {
+            "all": 0.0621,
+            "deepseek": 0.0031,
+            "gemini": 0.0248,
+            "mistral": 0.0155,
+            "openai": 0.0093,
+            "qwen": 0.0093
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 8,
+            "mistral": 5,
+            "openai": 3,
+            "qwen": 3
+          }
+        },
+        "other type of products": {
+          "text": "Other type of products",
+          "n": 7,
+          "dist": {
+            "all": 0.0217,
+            "deepseek": 0.0093,
+            "gemini": 0.0031,
+            "mistral": 0.0031,
+            "openai": 0.0031,
+            "qwen": 0.0031
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "28": {
+      "observation_preview": "Finally your pizza was ready. It was your sound opinion that your masterpiece ha",
+      "n": 99,
+      "choices": {
+        "view the results of other participants": {
+          "text": "View the results of other participants",
+          "n": 99,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0909,
+            "deepseek": 0.1313,
+            "gemini": 0.4242,
+            "mistral": 0.1616,
+            "openai": 0.1616,
+            "qwen": 0.0303
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 13,
+            "gemini": 42,
+            "mistral": 16,
+            "openai": 16,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "24": {
+      "observation_preview": "Some carbohydrates would increase the calories and at the same time would make a",
+      "n": 152,
+      "choices": {
+        "parmesan cheese": {
+          "text": "Parmesan cheese",
+          "n": 58,
+          "dist": {
+            "all": 0.3816,
+            "claude": 0.0592,
+            "deepseek": 0.0592,
+            "gemini": 0.1513,
+            "mistral": 0.0329,
+            "openai": 0.0658,
+            "qwen": 0.0132
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 9,
+            "gemini": 23,
+            "mistral": 5,
+            "openai": 10,
+            "qwen": 2
+          }
+        },
+        "potatoes, chopped": {
+          "text": "Potatoes, chopped",
+          "n": 35,
+          "dist": {
+            "all": 0.2303,
+            "claude": 0.0395,
+            "deepseek": 0.0263,
+            "gemini": 0.0197,
+            "mistral": 0.0197,
+            "openai": 0.0855,
+            "other": 0.0066,
+            "qwen": 0.0329
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 4,
+            "gemini": 3,
+            "mistral": 3,
+            "openai": 13,
+            "other": 1,
+            "qwen": 5
+          }
+        },
+        "mashed peas": {
+          "text": "Mashed peas",
+          "n": 21,
+          "dist": {
+            "all": 0.1382,
+            "claude": 0.0197,
+            "deepseek": 0.0263,
+            "gemini": 0.0197,
+            "mistral": 0.0197,
+            "openai": 0.0329,
+            "qwen": 0.0197
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 4,
+            "gemini": 3,
+            "mistral": 3,
+            "openai": 5,
+            "qwen": 3
+          }
+        },
+        "corn cakes": {
+          "text": "Corn cakes",
+          "n": 17,
+          "dist": {
+            "all": 0.1118,
+            "claude": 0.0197,
+            "gemini": 0.0658,
+            "mistral": 0.0066,
+            "openai": 0.0066,
+            "qwen": 0.0132
+          },
+          "n_by_family": {
+            "claude": 3,
+            "gemini": 10,
+            "mistral": 1,
+            "openai": 1,
+            "qwen": 2
+          }
+        },
+        "ground rusks": {
+          "text": "Ground rusks",
+          "n": 10,
+          "dist": {
+            "all": 0.0658,
+            "claude": 0.0263,
+            "openai": 0.0263,
+            "qwen": 0.0132
+          },
+          "n_by_family": {
+            "claude": 4,
+            "openai": 4,
+            "qwen": 2
+          }
+        },
+        "\"macaroni\" noodles": {
+          "text": "\"Macaroni\" noodles",
+          "n": 8,
+          "dist": {
+            "all": 0.0526,
+            "gemini": 0.0066,
+            "mistral": 0.0197,
+            "openai": 0.0132,
+            "qwen": 0.0132
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 3,
+            "openai": 2,
+            "qwen": 2
+          }
+        },
+        "margarine with preservatives": {
+          "text": "Margarine with preservatives",
+          "n": 2,
+          "dist": {
+            "all": 0.0132,
+            "gemini": 0.0132
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        },
+        "other type of products": {
+          "text": "Other type of products",
+          "n": 1,
+          "dist": {
+            "all": 0.0066,
+            "qwen": 0.0066
+          },
+          "n_by_family": {
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "4": {
+      "observation_preview": "You opened the menu on the page that read \"Regular Meals\".\n\nStatus:\nYour money: ",
+      "n": 86,
+      "choices": {
+        "open the menu at \"pizzas\"": {
+          "text": "Open the menu at \"Pizzas\"",
+          "n": 49,
+          "dist": {
+            "all": 0.5698,
+            "deepseek": 0.1163,
+            "gemini": 0.0349,
+            "mistral": 0.0349,
+            "openai": 0.3256,
+            "qwen": 0.0581
+          },
+          "n_by_family": {
+            "deepseek": 10,
+            "gemini": 3,
+            "mistral": 3,
+            "openai": 28,
+            "qwen": 5
+          }
+        },
+        "beefsteak maloq-style (10 cr)": {
+          "text": "Beefsteak Maloq-style (10 cr)",
+          "n": 9,
+          "dist": {
+            "all": 0.1047,
+            "deepseek": 0.0233,
+            "openai": 0.0581,
+            "qwen": 0.0233
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "openai": 5,
+            "qwen": 2
+          }
+        },
+        "\"home sweet home\" faeyan salad (10 cr)": {
+          "text": "\"Home Sweet Home\" Faeyan salad (10 cr)",
+          "n": 4,
+          "dist": {
+            "all": 0.0465,
+            "gemini": 0.0116,
+            "openai": 0.0116,
+            "qwen": 0.0233
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "openai": 1,
+            "qwen": 2
+          }
+        },
+        "\"jolly gaalian\" punch (5 cr)": {
+          "text": "\"Jolly Gaalian\" punch (5 cr)",
+          "n": 15,
+          "dist": {
+            "all": 0.1744,
+            "deepseek": 0.0116,
+            "gemini": 0.0116,
+            "openai": 0.1395,
+            "qwen": 0.0116
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 1,
+            "openai": 12,
+            "qwen": 1
+          }
+        },
+        "eggs with brains and sour cream (20 cr)": {
+          "text": "Eggs with brains and sour cream (20 cr)",
+          "n": 1,
+          "dist": {
+            "all": 0.0116,
+            "openai": 0.0116
+          },
+          "n_by_family": {
+            "openai": 1
+          }
+        },
+        "leave the restaurant and head for the competition": {
+          "text": "Leave the restaurant and head for the competition",
+          "n": 6,
+          "dist": {
+            "all": 0.0698,
+            "deepseek": 0.0233,
+            "gemini": 0.0233,
+            "openai": 0.0233
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 2,
+            "openai": 2
+          }
+        },
+        "marinade escargots in pastry (25 cr)": {
+          "text": "Marinade escargots in pastry (25 cr)",
+          "n": 2,
+          "dist": {
+            "all": 0.0233,
+            "gemini": 0.0233
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "31": {
+      "observation_preview": "As it turned out two of the contenders including yourself struck the same amount",
+      "n": 1,
+      "choices": {
+        "show him a tongue": {
+          "text": "Show him a tongue",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "32": {
+      "observation_preview": "You showed your huge tongue, as a response to the verbal attack of your opponent",
+      "n": 1,
+      "choices": {
+        "wait for the audience's judgement": {
+          "text": "Wait for the audience's judgement",
+          "n": 1,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    }
+  }
+}

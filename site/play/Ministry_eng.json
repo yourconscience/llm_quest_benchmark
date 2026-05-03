@@ -1,0 +1,2481 @@
+{
+  "quest": "Ministry_eng",
+  "generated": "2026-05-03T07:07:44Z",
+  "total_runs": 269,
+  "win_rate": 0.0037,
+  "model_families": [
+    "claude",
+    "deepseek",
+    "gemini",
+    "mistral",
+    "openai",
+    "other",
+    "qwen"
+  ],
+  "locations": {
+    "121": {
+      "observation_preview": "After you graciously landed, you stepped down on to Rectal Island and into a cow",
+      "n": 139,
+      "choices": {
+        "look around": {
+          "text": "Look around",
+          "n": 139,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0863,
+            "deepseek": 0.1439,
+            "gemini": 0.3669,
+            "mistral": 0.1727,
+            "openai": 0.1511,
+            "other": 0.0432,
+            "qwen": 0.036
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 21,
+            "other": 6,
+            "qwen": 5
+          }
+        }
+      }
+    },
+    "117": {
+      "observation_preview": "You stand in a hall with pink speckled wallpaper. \n\nTo the left the commandant s",
+      "n": 962,
+      "choices": {
+        "talk to the commandant": {
+          "text": "Talk to the commandant",
+          "n": 258,
+          "dist": {
+            "all": 0.2682,
+            "claude": 0.0166,
+            "deepseek": 0.0374,
+            "gemini": 0.1091,
+            "mistral": 0.053,
+            "openai": 0.0405,
+            "other": 0.0062,
+            "qwen": 0.0052
+          },
+          "n_by_family": {
+            "claude": 16,
+            "deepseek": 36,
+            "gemini": 105,
+            "mistral": 51,
+            "openai": 39,
+            "other": 6,
+            "qwen": 5
+          }
+        },
+        "go down the stairs": {
+          "text": "Go down the stairs",
+          "n": 289,
+          "dist": {
+            "all": 0.3004,
+            "claude": 0.0177,
+            "deepseek": 0.0281,
+            "gemini": 0.1549,
+            "mistral": 0.0561,
+            "openai": 0.027,
+            "other": 0.001,
+            "qwen": 0.0156
+          },
+          "n_by_family": {
+            "claude": 17,
+            "deepseek": 27,
+            "gemini": 149,
+            "mistral": 54,
+            "openai": 26,
+            "other": 1,
+            "qwen": 15
+          }
+        },
+        "go to the corridor": {
+          "text": "Go to the corridor",
+          "n": 285,
+          "dist": {
+            "all": 0.2963,
+            "claude": 0.0229,
+            "deepseek": 0.0343,
+            "gemini": 0.1154,
+            "mistral": 0.0655,
+            "openai": 0.0447,
+            "other": 0.0073,
+            "qwen": 0.0062
+          },
+          "n_by_family": {
+            "claude": 22,
+            "deepseek": 33,
+            "gemini": 111,
+            "mistral": 63,
+            "openai": 43,
+            "other": 7,
+            "qwen": 6
+          }
+        },
+        "go outside": {
+          "text": "Go outside",
+          "n": 130,
+          "dist": {
+            "all": 0.1351,
+            "claude": 0.0073,
+            "deepseek": 0.0125,
+            "gemini": 0.0437,
+            "mistral": 0.0426,
+            "openai": 0.027,
+            "other": 0.001,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 12,
+            "gemini": 42,
+            "mistral": 41,
+            "openai": 26,
+            "other": 1,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "122": {
+      "observation_preview": "\"Commandant, sorry to disturb you, but...\" - you began.\n\"How you dare to speak w",
+      "n": 250,
+      "choices": {
+        "leave the commandant alone with his memories": {
+          "text": "Leave the commandant alone with his memories",
+          "n": 218,
+          "dist": {
+            "all": 0.872,
+            "claude": 0.064,
+            "deepseek": 0.12,
+            "gemini": 0.352,
+            "mistral": 0.18,
+            "openai": 0.112,
+            "other": 0.024,
+            "qwen": 0.02
+          },
+          "n_by_family": {
+            "claude": 16,
+            "deepseek": 30,
+            "gemini": 88,
+            "mistral": 45,
+            "openai": 28,
+            "other": 6,
+            "qwen": 5
+          }
+        },
+        "hit the watchman's booth with a fist": {
+          "text": "Hit the watchman's booth with a fist",
+          "n": 24,
+          "dist": {
+            "all": 0.096,
+            "deepseek": 0.012,
+            "gemini": 0.024,
+            "mistral": 0.024,
+            "openai": 0.036
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 6,
+            "mistral": 6,
+            "openai": 9
+          }
+        },
+        "hit the booth with the crowbar": {
+          "text": "Hit the booth with the crowbar",
+          "n": 8,
+          "dist": {
+            "all": 0.032,
+            "deepseek": 0.004,
+            "gemini": 0.02,
+            "openai": 0.008
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 5,
+            "openai": 2
+          }
+        }
+      }
+    },
+    "118": {
+      "observation_preview": "A gloomy ragged basement. Torn wallpaper hangs from the walls. The floor is scra",
+      "n": 730,
+      "choices": {
+        "peek into the hole": {
+          "text": "Peek into the hole",
+          "n": 125,
+          "dist": {
+            "all": 0.1712,
+            "claude": 0.0164,
+            "deepseek": 0.026,
+            "gemini": 0.0658,
+            "mistral": 0.0329,
+            "openai": 0.0247,
+            "other": 0.0014,
+            "qwen": 0.0041
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 19,
+            "gemini": 48,
+            "mistral": 24,
+            "openai": 18,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "approach the door and try to open it": {
+          "text": "Approach the door and try to open it",
+          "n": 129,
+          "dist": {
+            "all": 0.1767,
+            "claude": 0.0164,
+            "deepseek": 0.0274,
+            "gemini": 0.0699,
+            "mistral": 0.0329,
+            "openai": 0.0247,
+            "other": 0.0014,
+            "qwen": 0.0041
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 18,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "inspect wallpaper": {
+          "text": "Inspect wallpaper",
+          "n": 113,
+          "dist": {
+            "all": 0.1548,
+            "claude": 0.0123,
+            "deepseek": 0.026,
+            "gemini": 0.0562,
+            "mistral": 0.0329,
+            "openai": 0.0233,
+            "other": 0.0014,
+            "qwen": 0.0027
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 19,
+            "gemini": 41,
+            "mistral": 24,
+            "openai": 17,
+            "other": 1,
+            "qwen": 2
+          }
+        },
+        "back to the lobby": {
+          "text": "Back to the lobby",
+          "n": 281,
+          "dist": {
+            "all": 0.3849,
+            "claude": 0.0233,
+            "deepseek": 0.0356,
+            "gemini": 0.1973,
+            "mistral": 0.074,
+            "openai": 0.0356,
+            "other": 0.0014,
+            "qwen": 0.0178
+          },
+          "n_by_family": {
+            "claude": 17,
+            "deepseek": 26,
+            "gemini": 144,
+            "mistral": 54,
+            "openai": 26,
+            "other": 1,
+            "qwen": 13
+          }
+        },
+        "break the door with the crowbar": {
+          "text": "Break the door with the crowbar",
+          "n": 55,
+          "dist": {
+            "all": 0.0753,
+            "claude": 0.0055,
+            "deepseek": 0.0055,
+            "gemini": 0.0438,
+            "mistral": 0.0137,
+            "openai": 0.0041,
+            "other": 0.0014,
+            "qwen": 0.0014
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 4,
+            "gemini": 32,
+            "mistral": 10,
+            "openai": 3,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "toss the crowbar in the hole with water": {
+          "text": "Toss the crowbar in the hole with water",
+          "n": 25,
+          "dist": {
+            "all": 0.0342,
+            "deepseek": 0.0014,
+            "gemini": 0.0178,
+            "mistral": 0.0096,
+            "openai": 0.0027,
+            "other": 0.0014,
+            "qwen": 0.0014
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 13,
+            "mistral": 7,
+            "openai": 2,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "cast the line into the hole with water": {
+          "text": "Cast the line into the hole with water",
+          "n": 2,
+          "dist": {
+            "all": 0.0027,
+            "gemini": 0.0027
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "119": {
+      "observation_preview": "You bravely came up to the door and pulled the handle. The door did not open. Yo",
+      "n": 129,
+      "choices": {
+        "game over": {
+          "text": "Game over",
+          "n": 129,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.093,
+            "deepseek": 0.155,
+            "gemini": 0.3953,
+            "mistral": 0.186,
+            "openai": 0.1395,
+            "other": 0.0078,
+            "qwen": 0.0233
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 18,
+            "other": 1,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "124": {
+      "observation_preview": "A clean and tidy corridor, bright with the light from the window in the end. The",
+      "n": 1683,
+      "choices": {
+        "go to the housemaster": {
+          "text": "Go to the housemaster",
+          "n": 289,
+          "dist": {
+            "all": 0.1717,
+            "claude": 0.0154,
+            "deepseek": 0.019,
+            "gemini": 0.0582,
+            "mistral": 0.0446,
+            "openai": 0.0279,
+            "other": 0.0042,
+            "qwen": 0.0024
+          },
+          "n_by_family": {
+            "claude": 26,
+            "deepseek": 32,
+            "gemini": 98,
+            "mistral": 75,
+            "openai": 47,
+            "other": 7,
+            "qwen": 4
+          }
+        },
+        "to the secretariat": {
+          "text": "To the Secretariat",
+          "n": 332,
+          "dist": {
+            "all": 0.1973,
+            "claude": 0.0184,
+            "deepseek": 0.0291,
+            "gemini": 0.0618,
+            "mistral": 0.0529,
+            "openai": 0.0255,
+            "other": 0.0059,
+            "qwen": 0.0036
+          },
+          "n_by_family": {
+            "claude": 31,
+            "deepseek": 49,
+            "gemini": 104,
+            "mistral": 89,
+            "openai": 43,
+            "other": 10,
+            "qwen": 6
+          }
+        },
+        "come up to the window": {
+          "text": "Come up to the window",
+          "n": 166,
+          "dist": {
+            "all": 0.0986,
+            "claude": 0.0089,
+            "deepseek": 0.0113,
+            "gemini": 0.0327,
+            "mistral": 0.0261,
+            "openai": 0.0172,
+            "other": 0.0006,
+            "qwen": 0.0018
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 19,
+            "gemini": 55,
+            "mistral": 44,
+            "openai": 29,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "go see head of the transportation shop": {
+          "text": "Go see head of the transportation shop",
+          "n": 267,
+          "dist": {
+            "all": 0.1586,
+            "claude": 0.0137,
+            "deepseek": 0.0166,
+            "gemini": 0.06,
+            "mistral": 0.0374,
+            "openai": 0.0261,
+            "other": 0.0036,
+            "qwen": 0.0012
+          },
+          "n_by_family": {
+            "claude": 23,
+            "deepseek": 28,
+            "gemini": 101,
+            "mistral": 63,
+            "openai": 44,
+            "other": 6,
+            "qwen": 2
+          }
+        },
+        "see the brushes manager": {
+          "text": "See the brushes manager",
+          "n": 268,
+          "dist": {
+            "all": 0.1592,
+            "claude": 0.0137,
+            "deepseek": 0.0149,
+            "gemini": 0.0618,
+            "mistral": 0.0368,
+            "openai": 0.0267,
+            "other": 0.0036,
+            "qwen": 0.0018
+          },
+          "n_by_family": {
+            "claude": 23,
+            "deepseek": 25,
+            "gemini": 104,
+            "mistral": 62,
+            "openai": 45,
+            "other": 6,
+            "qwen": 3
+          }
+        },
+        "to wc": {
+          "text": "To WC",
+          "n": 186,
+          "dist": {
+            "all": 0.1105,
+            "claude": 0.0077,
+            "deepseek": 0.0071,
+            "gemini": 0.0458,
+            "mistral": 0.0273,
+            "openai": 0.019,
+            "other": 0.0024,
+            "qwen": 0.0012
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 12,
+            "gemini": 77,
+            "mistral": 46,
+            "openai": 32,
+            "other": 4,
+            "qwen": 2
+          }
+        },
+        "back to the lobby": {
+          "text": "Back to the lobby",
+          "n": 175,
+          "dist": {
+            "all": 0.104,
+            "claude": 0.0059,
+            "deepseek": 0.0089,
+            "gemini": 0.0434,
+            "mistral": 0.0267,
+            "openai": 0.0166,
+            "other": 0.0006,
+            "qwen": 0.0018
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 15,
+            "gemini": 73,
+            "mistral": 45,
+            "openai": 28,
+            "other": 1,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "128": {
+      "observation_preview": "As soon as you entered the room, a thick bass hit your ears:\n- Is it reserved fo",
+      "n": 291,
+      "choices": {
+        "back to the corridor": {
+          "text": "Back to the corridor",
+          "n": 291,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0893,
+            "deepseek": 0.11,
+            "gemini": 0.3436,
+            "mistral": 0.2577,
+            "openai": 0.1615,
+            "other": 0.0241,
+            "qwen": 0.0137
+          },
+          "n_by_family": {
+            "claude": 26,
+            "deepseek": 32,
+            "gemini": 100,
+            "mistral": 75,
+            "openai": 47,
+            "other": 7,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "131": {
+      "observation_preview": "You stand in the middle of a square room, illuminated with a green chandelier. L",
+      "n": 1115,
+      "choices": {
+        "approach the secretary": {
+          "text": "Approach the secretary",
+          "n": 328,
+          "dist": {
+            "all": 0.2942,
+            "claude": 0.0251,
+            "deepseek": 0.0466,
+            "gemini": 0.1022,
+            "mistral": 0.0762,
+            "openai": 0.0332,
+            "other": 0.0063,
+            "qwen": 0.0045
+          },
+          "n_by_family": {
+            "claude": 28,
+            "deepseek": 52,
+            "gemini": 114,
+            "mistral": 85,
+            "openai": 37,
+            "other": 7,
+            "qwen": 5
+          }
+        },
+        "rummage in the trash can": {
+          "text": "Rummage in the trash can",
+          "n": 277,
+          "dist": {
+            "all": 0.2484,
+            "claude": 0.0206,
+            "deepseek": 0.0404,
+            "gemini": 0.0852,
+            "mistral": 0.0601,
+            "openai": 0.0305,
+            "other": 0.0081,
+            "qwen": 0.0036
+          },
+          "n_by_family": {
+            "claude": 23,
+            "deepseek": 45,
+            "gemini": 95,
+            "mistral": 67,
+            "openai": 34,
+            "other": 9,
+            "qwen": 4
+          }
+        },
+        "rock on the chandelier": {
+          "text": "Rock on the chandelier",
+          "n": 236,
+          "dist": {
+            "all": 0.2117,
+            "claude": 0.0206,
+            "deepseek": 0.035,
+            "gemini": 0.0484,
+            "mistral": 0.0691,
+            "openai": 0.0287,
+            "other": 0.0072,
+            "qwen": 0.0027
+          },
+          "n_by_family": {
+            "claude": 23,
+            "deepseek": 39,
+            "gemini": 54,
+            "mistral": 77,
+            "openai": 32,
+            "other": 8,
+            "qwen": 3
+          }
+        },
+        "go out to the corridor": {
+          "text": "Go out to the corridor",
+          "n": 274,
+          "dist": {
+            "all": 0.2457,
+            "claude": 0.0206,
+            "deepseek": 0.0332,
+            "gemini": 0.0825,
+            "mistral": 0.0691,
+            "openai": 0.0305,
+            "other": 0.0063,
+            "qwen": 0.0036
+          },
+          "n_by_family": {
+            "claude": 23,
+            "deepseek": 37,
+            "gemini": 92,
+            "mistral": 77,
+            "openai": 34,
+            "other": 7,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "129": {
+      "observation_preview": "- Obtain the papers from the Registry and come back here. I will stamp them. The",
+      "n": 1045,
+      "choices": {
+        "could you tell me where the registry is? it is not in the basement...": {
+          "text": "Could you tell me where the Registry is? It is not in the basement...",
+          "n": 124,
+          "dist": {
+            "all": 0.1187,
+            "claude": 0.0115,
+            "deepseek": 0.0191,
+            "gemini": 0.0488,
+            "mistral": 0.023,
+            "openai": 0.0144,
+            "qwen": 0.0019
+          },
+          "n_by_family": {
+            "claude": 12,
+            "deepseek": 20,
+            "gemini": 51,
+            "mistral": 24,
+            "openai": 15,
+            "qwen": 2
+          }
+        },
+        "step away from the secretary": {
+          "text": "Step away from the secretary",
+          "n": 275,
+          "dist": {
+            "all": 0.2632,
+            "claude": 0.0191,
+            "deepseek": 0.0402,
+            "gemini": 0.0986,
+            "mistral": 0.0708,
+            "openai": 0.0268,
+            "other": 0.0048,
+            "qwen": 0.0029
+          },
+          "n_by_family": {
+            "claude": 20,
+            "deepseek": 42,
+            "gemini": 103,
+            "mistral": 74,
+            "openai": 28,
+            "other": 5,
+            "qwen": 3
+          }
+        },
+        "can i ask you, what is your name?": {
+          "text": "Can I ask you, what is your name?",
+          "n": 111,
+          "dist": {
+            "all": 0.1062,
+            "claude": 0.0086,
+            "deepseek": 0.0163,
+            "gemini": 0.0373,
+            "mistral": 0.023,
+            "openai": 0.0144,
+            "other": 0.0038,
+            "qwen": 0.0029
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 17,
+            "gemini": 39,
+            "mistral": 24,
+            "openai": 15,
+            "other": 4,
+            "qwen": 3
+          }
+        },
+        "could you please explain me the rules of 21?": {
+          "text": "Could you please explain me the rules of 21?",
+          "n": 217,
+          "dist": {
+            "all": 0.2077,
+            "claude": 0.0153,
+            "deepseek": 0.0191,
+            "gemini": 0.0316,
+            "mistral": 0.1043,
+            "openai": 0.0258,
+            "other": 0.0077,
+            "qwen": 0.0038
+          },
+          "n_by_family": {
+            "claude": 16,
+            "deepseek": 20,
+            "gemini": 33,
+            "mistral": 109,
+            "openai": 27,
+            "other": 8,
+            "qwen": 4
+          }
+        },
+        "why don't we play some cards?": {
+          "text": "Why don't we play some cards?",
+          "n": 253,
+          "dist": {
+            "all": 0.2421,
+            "claude": 0.022,
+            "deepseek": 0.0325,
+            "gemini": 0.0622,
+            "mistral": 0.0909,
+            "openai": 0.0258,
+            "other": 0.0038,
+            "qwen": 0.0048
+          },
+          "n_by_family": {
+            "claude": 23,
+            "deepseek": 34,
+            "gemini": 65,
+            "mistral": 95,
+            "openai": 27,
+            "other": 4,
+            "qwen": 5
+          }
+        },
+        "can you tell me please how do i find the registry?": {
+          "text": "Can you tell me please how do I find the Registry?",
+          "n": 16,
+          "dist": {
+            "all": 0.0153,
+            "gemini": 0.001,
+            "openai": 0.0057,
+            "other": 0.0057,
+            "qwen": 0.0029
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "openai": 6,
+            "other": 6,
+            "qwen": 3
+          }
+        },
+        "take your clothes. i don't really need them": {
+          "text": "Take your clothes. I don't really need them",
+          "n": 44,
+          "dist": {
+            "all": 0.0421,
+            "claude": 0.0019,
+            "deepseek": 0.0077,
+            "gemini": 0.0172,
+            "mistral": 0.0096,
+            "openai": 0.0038,
+            "other": 0.0019
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 8,
+            "gemini": 18,
+            "mistral": 10,
+            "openai": 4,
+            "other": 2
+          }
+        },
+        "could you please stamp my papers?": {
+          "text": "Could you please stamp my papers?",
+          "n": 4,
+          "dist": {
+            "all": 0.0038,
+            "gemini": 0.0038
+          },
+          "n_by_family": {
+            "gemini": 4
+          }
+        },
+        "don't you have a fish by any chance?": {
+          "text": "Don't you have a fish by any chance?",
+          "n": 1,
+          "dist": {
+            "all": 0.001,
+            "gemini": 0.001
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "125": {
+      "observation_preview": "You stand at a dirty window looking outside. Silly thoughts come to your mind: \"",
+      "n": 300,
+      "choices": {
+        "look outside through the window": {
+          "text": "Look outside through the window",
+          "n": 77,
+          "dist": {
+            "all": 0.2567,
+            "claude": 0.0233,
+            "deepseek": 0.0367,
+            "gemini": 0.0833,
+            "mistral": 0.0633,
+            "openai": 0.0433,
+            "other": 0.0033,
+            "qwen": 0.0033
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 11,
+            "gemini": 25,
+            "mistral": 19,
+            "openai": 13,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "back": {
+          "text": "Back",
+          "n": 164,
+          "dist": {
+            "all": 0.5467,
+            "claude": 0.05,
+            "deepseek": 0.0633,
+            "gemini": 0.18,
+            "mistral": 0.1467,
+            "openai": 0.0967,
+            "other": 0.0033,
+            "qwen": 0.0067
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 19,
+            "gemini": 54,
+            "mistral": 44,
+            "openai": 29,
+            "other": 1,
+            "qwen": 2
+          }
+        },
+        "look at the window": {
+          "text": "Look at the window",
+          "n": 59,
+          "dist": {
+            "all": 0.1967,
+            "claude": 0.02,
+            "deepseek": 0.0267,
+            "gemini": 0.07,
+            "mistral": 0.0433,
+            "openai": 0.0367
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 8,
+            "gemini": 21,
+            "mistral": 13,
+            "openai": 11
+          }
+        }
+      }
+    },
+    "152": {
+      "observation_preview": "You tried to open the door, turned the handle but it did not work. You knocked, ",
+      "n": 262,
+      "choices": {
+        "back to the corridor": {
+          "text": "Back to the corridor",
+          "n": 188,
+          "dist": {
+            "all": 0.7176,
+            "claude": 0.0573,
+            "deepseek": 0.084,
+            "gemini": 0.2328,
+            "mistral": 0.1832,
+            "openai": 0.1412,
+            "other": 0.0115,
+            "qwen": 0.0076
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 22,
+            "gemini": 61,
+            "mistral": 48,
+            "openai": 37,
+            "other": 3,
+            "qwen": 2
+          }
+        },
+        "break the door with a crowbar": {
+          "text": "Break the door with a crowbar",
+          "n": 74,
+          "dist": {
+            "all": 0.2824,
+            "claude": 0.0305,
+            "deepseek": 0.0229,
+            "gemini": 0.1336,
+            "mistral": 0.0573,
+            "openai": 0.0267,
+            "other": 0.0115
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 6,
+            "gemini": 35,
+            "mistral": 15,
+            "openai": 7,
+            "other": 3
+          }
+        }
+      }
+    },
+    "141": {
+      "observation_preview": "You stand in the middle of a room, full of rubbish. In the centre, a heavyset fe",
+      "n": 652,
+      "choices": {
+        "can you tell me please how do i find the registry?": {
+          "text": "Can you tell me please how do I find the Registry?",
+          "n": 104,
+          "dist": {
+            "all": 0.1595,
+            "claude": 0.0138,
+            "deepseek": 0.023,
+            "gemini": 0.0675,
+            "mistral": 0.0245,
+            "openai": 0.0245,
+            "other": 0.0046,
+            "qwen": 0.0015
+          },
+          "n_by_family": {
+            "claude": 9,
+            "deepseek": 15,
+            "gemini": 44,
+            "mistral": 16,
+            "openai": 16,
+            "other": 3,
+            "qwen": 1
+          }
+        },
+        "can i borrow something here? anything from the shelves?": {
+          "text": "Can I borrow something here? Anything from the shelves?",
+          "n": 55,
+          "dist": {
+            "all": 0.0844,
+            "claude": 0.0092,
+            "deepseek": 0.0077,
+            "gemini": 0.0307,
+            "mistral": 0.0215,
+            "openai": 0.0107,
+            "other": 0.0046
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 5,
+            "gemini": 20,
+            "mistral": 14,
+            "openai": 7,
+            "other": 3
+          }
+        },
+        "look, can you sell me anything? you've got a lot of stuff here.": {
+          "text": "Look, can you sell me anything? You've got a lot of stuff here.",
+          "n": 233,
+          "dist": {
+            "all": 0.3574,
+            "claude": 0.023,
+            "deepseek": 0.0307,
+            "gemini": 0.1626,
+            "mistral": 0.0675,
+            "openai": 0.0552,
+            "other": 0.0169,
+            "qwen": 0.0015
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 20,
+            "gemini": 106,
+            "mistral": 44,
+            "openai": 36,
+            "other": 11,
+            "qwen": 1
+          }
+        },
+        "go out to the corridor": {
+          "text": "Go out to the corridor",
+          "n": 258,
+          "dist": {
+            "all": 0.3957,
+            "claude": 0.0337,
+            "deepseek": 0.0353,
+            "gemini": 0.1549,
+            "mistral": 0.0905,
+            "openai": 0.0675,
+            "other": 0.0092,
+            "qwen": 0.0046
+          },
+          "n_by_family": {
+            "claude": 22,
+            "deepseek": 23,
+            "gemini": 101,
+            "mistral": 59,
+            "openai": 44,
+            "other": 6,
+            "qwen": 3
+          }
+        },
+        "don't you have a fish or a fishing rod?": {
+          "text": "Don't you have a fish or a fishing rod?",
+          "n": 2,
+          "dist": {
+            "all": 0.0031,
+            "gemini": 0.0031
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "143": {
+      "observation_preview": "- Here, - said the fellow, taking out a dirty box, - great crows, only 50 cr. Ta",
+      "n": 227,
+      "choices": {
+        "50? but this crowbar is hardly worth 20!": {
+          "text": "50? But this crowbar is hardly worth 20!",
+          "n": 21,
+          "dist": {
+            "all": 0.0925,
+            "claude": 0.0088,
+            "deepseek": 0.0044,
+            "gemini": 0.022,
+            "mistral": 0.0441,
+            "openai": 0.0132
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 1,
+            "gemini": 5,
+            "mistral": 10,
+            "openai": 3
+          }
+        },
+        "thank you for the offer, but i don't need it": {
+          "text": "Thank you for the offer, but I don't need it",
+          "n": 122,
+          "dist": {
+            "all": 0.5374,
+            "claude": 0.0352,
+            "deepseek": 0.0308,
+            "gemini": 0.2467,
+            "mistral": 0.0969,
+            "openai": 0.0925,
+            "other": 0.0352
+          },
+          "n_by_family": {
+            "claude": 8,
+            "deepseek": 7,
+            "gemini": 56,
+            "mistral": 22,
+            "openai": 21,
+            "other": 8
+          }
+        },
+        "fine, i take one for 50 cr": {
+          "text": "Fine, I take one for 50 cr",
+          "n": 84,
+          "dist": {
+            "all": 0.37,
+            "claude": 0.022,
+            "deepseek": 0.0441,
+            "gemini": 0.1894,
+            "mistral": 0.0441,
+            "openai": 0.0529,
+            "other": 0.0132,
+            "qwen": 0.0044
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 10,
+            "gemini": 43,
+            "mistral": 10,
+            "openai": 12,
+            "other": 3,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "151": {
+      "observation_preview": "Looks like your swearing was not convincing enough for the fellow. \n- 20? What t",
+      "n": 21,
+      "choices": {
+        "as you wish. i'm not giving you more than 20": {
+          "text": "As you wish. I'm not giving you more than 20",
+          "n": 2,
+          "dist": {
+            "all": 0.0952,
+            "claude": 0.0476,
+            "gemini": 0.0476
+          },
+          "n_by_family": {
+            "claude": 1,
+            "gemini": 1
+          }
+        },
+        "60 or 20, i don't care. i don't need your crowbars anyway": {
+          "text": "60 or 20, I don't care. I don't need your crowbars anyway",
+          "n": 3,
+          "dist": {
+            "all": 0.1429,
+            "gemini": 0.0476,
+            "mistral": 0.0476,
+            "openai": 0.0476
+          },
+          "n_by_family": {
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1
+          }
+        },
+        "fine, here is 50 cr": {
+          "text": "Fine, here is 50 cr",
+          "n": 16,
+          "dist": {
+            "all": 0.7619,
+            "claude": 0.0476,
+            "deepseek": 0.0476,
+            "gemini": 0.1429,
+            "mistral": 0.4286,
+            "openai": 0.0952
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 3,
+            "mistral": 9,
+            "openai": 2
+          }
+        }
+      }
+    },
+    "144": {
+      "observation_preview": "You stand in the middle of a WC. It does not look so dirty. Anyway you saw much ",
+      "n": 1046,
+      "choices": {
+        "look around the toilet more carefully": {
+          "text": "Look around the toilet more carefully",
+          "n": 74,
+          "dist": {
+            "all": 0.0707,
+            "claude": 0.0048,
+            "deepseek": 0.0096,
+            "gemini": 0.0296,
+            "mistral": 0.0115,
+            "openai": 0.0124,
+            "other": 0.0019,
+            "qwen": 0.001
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 10,
+            "gemini": 31,
+            "mistral": 12,
+            "openai": 13,
+            "other": 2,
+            "qwen": 1
+          }
+        },
+        "enter the first cubicle": {
+          "text": "Enter the first cubicle",
+          "n": 399,
+          "dist": {
+            "all": 0.3815,
+            "claude": 0.0105,
+            "deepseek": 0.0134,
+            "gemini": 0.1004,
+            "mistral": 0.2247,
+            "openai": 0.0239,
+            "other": 0.0086
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 14,
+            "gemini": 105,
+            "mistral": 235,
+            "openai": 25,
+            "other": 9
+          }
+        },
+        "to the corridor": {
+          "text": "To the corridor",
+          "n": 164,
+          "dist": {
+            "all": 0.1568,
+            "claude": 0.0105,
+            "deepseek": 0.0115,
+            "gemini": 0.0612,
+            "mistral": 0.043,
+            "openai": 0.0277,
+            "other": 0.001,
+            "qwen": 0.0019
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 12,
+            "gemini": 64,
+            "mistral": 45,
+            "openai": 29,
+            "other": 1,
+            "qwen": 2
+          }
+        },
+        "enter the second cubicle": {
+          "text": "Enter the second cubicle",
+          "n": 409,
+          "dist": {
+            "all": 0.391,
+            "claude": 0.0057,
+            "deepseek": 0.0096,
+            "gemini": 0.1424,
+            "mistral": 0.2132,
+            "openai": 0.0172,
+            "other": 0.0029
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 10,
+            "gemini": 149,
+            "mistral": 223,
+            "openai": 18,
+            "other": 3
+          }
+        }
+      }
+    },
+    "146": {
+      "observation_preview": "You stand in a VERY tiny room. Right in front of you there is a lavatory with a ",
+      "n": 1587,
+      "choices": {
+        "read writings on the walls": {
+          "text": "Read writings on the walls",
+          "n": 279,
+          "dist": {
+            "all": 0.1758,
+            "claude": 0.0113,
+            "deepseek": 0.0214,
+            "gemini": 0.0762,
+            "mistral": 0.0372,
+            "openai": 0.0233,
+            "other": 0.0063
+          },
+          "n_by_family": {
+            "claude": 18,
+            "deepseek": 34,
+            "gemini": 121,
+            "mistral": 59,
+            "openai": 37,
+            "other": 10
+          }
+        },
+        "push the handle": {
+          "text": "Push the handle",
+          "n": 475,
+          "dist": {
+            "all": 0.2993,
+            "claude": 0.0082,
+            "deepseek": 0.0132,
+            "gemini": 0.0914,
+            "mistral": 0.1601,
+            "openai": 0.0202,
+            "other": 0.0063
+          },
+          "n_by_family": {
+            "claude": 13,
+            "deepseek": 21,
+            "gemini": 145,
+            "mistral": 254,
+            "openai": 32,
+            "other": 10
+          }
+        },
+        "look what's going on in the nearby cubicle": {
+          "text": "Look what's going on in the nearby cubicle",
+          "n": 64,
+          "dist": {
+            "all": 0.0403,
+            "claude": 0.0032,
+            "deepseek": 0.0044,
+            "gemini": 0.0189,
+            "mistral": 0.0063,
+            "openai": 0.0057,
+            "other": 0.0019
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 7,
+            "gemini": 30,
+            "mistral": 10,
+            "openai": 9,
+            "other": 3
+          }
+        },
+        "leave the cubicle": {
+          "text": "Leave the cubicle",
+          "n": 391,
+          "dist": {
+            "all": 0.2464,
+            "claude": 0.0069,
+            "deepseek": 0.0088,
+            "gemini": 0.063,
+            "mistral": 0.1474,
+            "openai": 0.0151,
+            "other": 0.005
+          },
+          "n_by_family": {
+            "claude": 11,
+            "deepseek": 14,
+            "gemini": 100,
+            "mistral": 234,
+            "openai": 24,
+            "other": 8
+          }
+        },
+        "take a leak": {
+          "text": "Take a leak",
+          "n": 376,
+          "dist": {
+            "all": 0.2369,
+            "claude": 0.0044,
+            "deepseek": 0.0076,
+            "gemini": 0.0605,
+            "mistral": 0.1487,
+            "openai": 0.0107,
+            "other": 0.005
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 12,
+            "gemini": 96,
+            "mistral": 236,
+            "openai": 17,
+            "other": 8
+          }
+        },
+        "cast the line in the lavatory": {
+          "text": "Cast the line in the lavatory",
+          "n": 2,
+          "dist": {
+            "all": 0.0013,
+            "gemini": 0.0013
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "145": {
+      "observation_preview": "\"The secretary is a damned fool!\"\n\nStatus:\nYou are dressed casually\nYou've got 1",
+      "n": 278,
+      "choices": {
+        "back": {
+          "text": "Back",
+          "n": 278,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0647,
+            "deepseek": 0.1223,
+            "gemini": 0.4317,
+            "mistral": 0.2122,
+            "openai": 0.1331,
+            "other": 0.036
+          },
+          "n_by_family": {
+            "claude": 18,
+            "deepseek": 34,
+            "gemini": 120,
+            "mistral": 59,
+            "openai": 37,
+            "other": 10
+          }
+        }
+      }
+    },
+    "176": {
+      "observation_preview": "You stand outside at the entrance to the pink building. There is a plate above t",
+      "n": 252,
+      "choices": {
+        "look for something useful in the starship": {
+          "text": "Look for something useful in the starship",
+          "n": 41,
+          "dist": {
+            "all": 0.1627,
+            "claude": 0.0159,
+            "deepseek": 0.0198,
+            "gemini": 0.0635,
+            "mistral": 0.0437,
+            "openai": 0.0198
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 5,
+            "gemini": 16,
+            "mistral": 11,
+            "openai": 5
+          }
+        },
+        "enter the ministry": {
+          "text": "Enter the ministry",
+          "n": 121,
+          "dist": {
+            "all": 0.4802,
+            "claude": 0.0278,
+            "deepseek": 0.0476,
+            "gemini": 0.1548,
+            "mistral": 0.1429,
+            "openai": 0.0992,
+            "other": 0.004,
+            "qwen": 0.004
+          },
+          "n_by_family": {
+            "claude": 7,
+            "deepseek": 12,
+            "gemini": 39,
+            "mistral": 36,
+            "openai": 25,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "walk around the building": {
+          "text": "Walk around the building",
+          "n": 33,
+          "dist": {
+            "all": 0.131,
+            "claude": 0.004,
+            "deepseek": 0.0159,
+            "gemini": 0.0516,
+            "mistral": 0.0357,
+            "openai": 0.0238
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 4,
+            "gemini": 13,
+            "mistral": 9,
+            "openai": 6
+          }
+        },
+        "go to the lake": {
+          "text": "Go to the lake",
+          "n": 48,
+          "dist": {
+            "all": 0.1905,
+            "claude": 0.0079,
+            "deepseek": 0.0119,
+            "gemini": 0.0754,
+            "mistral": 0.0595,
+            "openai": 0.0357
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 19,
+            "mistral": 15,
+            "openai": 9
+          }
+        },
+        "i am sick of this stupid mission. time to leave the island": {
+          "text": "I am sick of this stupid mission. Time to leave the island",
+          "n": 9,
+          "dist": {
+            "all": 0.0357,
+            "gemini": 0.0119,
+            "mistral": 0.0198,
+            "openai": 0.004
+          },
+          "n_by_family": {
+            "gemini": 3,
+            "mistral": 5,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "127": {
+      "observation_preview": "You stand on a beach of a swamped lake. A warm wind blows into your pink-cheeked",
+      "n": 86,
+      "choices": {
+        "get into the lake and look for something on the bottom": {
+          "text": "Get into the lake and look for something on the bottom",
+          "n": 34,
+          "dist": {
+            "all": 0.3953,
+            "claude": 0.0233,
+            "deepseek": 0.0349,
+            "gemini": 0.1047,
+            "mistral": 0.1744,
+            "openai": 0.0581
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 9,
+            "mistral": 15,
+            "openai": 5
+          }
+        },
+        "go back to the entrance of the ministry": {
+          "text": "Go back to the entrance of the ministry",
+          "n": 48,
+          "dist": {
+            "all": 0.5581,
+            "claude": 0.0233,
+            "deepseek": 0.0349,
+            "gemini": 0.2209,
+            "mistral": 0.1744,
+            "openai": 0.1047
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 3,
+            "gemini": 19,
+            "mistral": 15,
+            "openai": 9
+          }
+        },
+        "toss the crowbar into the lake": {
+          "text": "Toss the crowbar into the lake",
+          "n": 1,
+          "dist": {
+            "all": 0.0116,
+            "mistral": 0.0116
+          },
+          "n_by_family": {
+            "mistral": 1
+          }
+        },
+        "cast the line": {
+          "text": "Cast the line",
+          "n": 3,
+          "dist": {
+            "all": 0.0349,
+            "gemini": 0.0349
+          },
+          "n_by_family": {
+            "gemini": 3
+          }
+        }
+      }
+    },
+    "178": {
+      "observation_preview": "You got knee-deep into the water, but could not extract anything but mud from th",
+      "n": 34,
+      "choices": {
+        "throw away the bloodsucker and get back to the beach": {
+          "text": "Throw away the bloodsucker and get back to the beach",
+          "n": 6,
+          "dist": {
+            "all": 0.1765,
+            "claude": 0.0294,
+            "deepseek": 0.0588,
+            "gemini": 0.0294,
+            "mistral": 0.0294,
+            "openai": 0.0294
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 1,
+            "mistral": 1,
+            "openai": 1
+          }
+        },
+        "go back to the beach with the bloodsucker": {
+          "text": "Go back to the beach with the bloodsucker",
+          "n": 27,
+          "dist": {
+            "all": 0.7941,
+            "claude": 0.0294,
+            "deepseek": 0.0294,
+            "gemini": 0.2059,
+            "mistral": 0.4118,
+            "openai": 0.1176
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 1,
+            "gemini": 7,
+            "mistral": 14,
+            "openai": 4
+          }
+        },
+        "attach the bloodsucker to the line and go to the beach": {
+          "text": "Attach the bloodsucker to the line and go to the beach",
+          "n": 1,
+          "dist": {
+            "all": 0.0294,
+            "gemini": 0.0294
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "132": {
+      "observation_preview": "- Dunia Rachehanovna! - uttered the heavyset secretary.\n- What a beautiful name.",
+      "n": 111,
+      "choices": {
+        "i love cards, let's play a game or two": {
+          "text": "I love cards, let's play a game or two",
+          "n": 58,
+          "dist": {
+            "all": 0.5225,
+            "claude": 0.018,
+            "deepseek": 0.1261,
+            "gemini": 0.1441,
+            "mistral": 0.1261,
+            "openai": 0.0811,
+            "other": 0.027
+          },
+          "n_by_family": {
+            "claude": 2,
+            "deepseek": 14,
+            "gemini": 16,
+            "mistral": 14,
+            "openai": 9,
+            "other": 3
+          }
+        },
+        "21? never heard of it. can you tell me the rules...": {
+          "text": "21? Never heard of it. Can you tell me the rules...",
+          "n": 47,
+          "dist": {
+            "all": 0.4234,
+            "claude": 0.045,
+            "deepseek": 0.027,
+            "gemini": 0.2072,
+            "mistral": 0.0541,
+            "openai": 0.0541,
+            "other": 0.009,
+            "qwen": 0.027
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 3,
+            "gemini": 23,
+            "mistral": 6,
+            "openai": 6,
+            "other": 1,
+            "qwen": 3
+          }
+        },
+        "probably some other time": {
+          "text": "Probably some other time",
+          "n": 6,
+          "dist": {
+            "all": 0.0541,
+            "claude": 0.018,
+            "mistral": 0.036
+          },
+          "n_by_family": {
+            "claude": 2,
+            "mistral": 4
+          }
+        }
+      }
+    },
+    "98": {
+      "observation_preview": "- So are we playing or not? - the secretary asked rudely while riffling the pack",
+      "n": 1011,
+      "choices": {
+        "could you remind the rules please?": {
+          "text": "Could you remind the rules please?",
+          "n": 332,
+          "dist": {
+            "all": 0.3284,
+            "claude": 0.0366,
+            "deepseek": 0.0336,
+            "gemini": 0.0584,
+            "mistral": 0.1325,
+            "openai": 0.0544,
+            "other": 0.003,
+            "qwen": 0.0099
+          },
+          "n_by_family": {
+            "claude": 37,
+            "deepseek": 34,
+            "gemini": 59,
+            "mistral": 134,
+            "openai": 55,
+            "other": 3,
+            "qwen": 10
+          }
+        },
+        "deal faster": {
+          "text": "Deal faster",
+          "n": 432,
+          "dist": {
+            "all": 0.4273,
+            "claude": 0.0326,
+            "deepseek": 0.0643,
+            "gemini": 0.1682,
+            "mistral": 0.1098,
+            "openai": 0.0366,
+            "other": 0.0099,
+            "qwen": 0.0059
+          },
+          "n_by_family": {
+            "claude": 33,
+            "deepseek": 65,
+            "gemini": 170,
+            "mistral": 111,
+            "openai": 37,
+            "other": 10,
+            "qwen": 6
+          }
+        },
+        "rather no than yes. i'd rather say definitely no. i mean no, period!": {
+          "text": "Rather no than yes. I'd rather say definitely no. I mean no, period!",
+          "n": 247,
+          "dist": {
+            "all": 0.2443,
+            "claude": 0.0218,
+            "deepseek": 0.0247,
+            "gemini": 0.0732,
+            "mistral": 0.092,
+            "openai": 0.0257,
+            "other": 0.003,
+            "qwen": 0.004
+          },
+          "n_by_family": {
+            "claude": 22,
+            "deepseek": 25,
+            "gemini": 74,
+            "mistral": 93,
+            "openai": 26,
+            "other": 3,
+            "qwen": 4
+          }
+        }
+      }
+    },
+    "103": {
+      "observation_preview": "With a serious expression on her face, the secretary took a card from the top of",
+      "n": 1125,
+      "choices": {
+        "take the card and look at it": {
+          "text": "Take the card and look at it",
+          "n": 1125,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0791,
+            "deepseek": 0.1493,
+            "gemini": 0.3982,
+            "mistral": 0.256,
+            "openai": 0.0818,
+            "other": 0.0222,
+            "qwen": 0.0133
+          },
+          "n_by_family": {
+            "claude": 89,
+            "deepseek": 168,
+            "gemini": 448,
+            "mistral": 288,
+            "openai": 92,
+            "other": 25,
+            "qwen": 15
+          }
+        }
+      }
+    },
+    "109": {
+      "observation_preview": "- Another one, pilot? Or is that enough? - she said with a blow of smoke into yo",
+      "n": 676,
+      "choices": {
+        "enough": {
+          "text": "Enough",
+          "n": 402,
+          "dist": {
+            "all": 0.5947,
+            "claude": 0.0488,
+            "deepseek": 0.0932,
+            "gemini": 0.2278,
+            "mistral": 0.1538,
+            "openai": 0.0503,
+            "other": 0.0118,
+            "qwen": 0.0089
+          },
+          "n_by_family": {
+            "claude": 33,
+            "deepseek": 63,
+            "gemini": 154,
+            "mistral": 104,
+            "openai": 34,
+            "other": 8,
+            "qwen": 6
+          }
+        },
+        "more": {
+          "text": "More",
+          "n": 274,
+          "dist": {
+            "all": 0.4053,
+            "claude": 0.034,
+            "deepseek": 0.0577,
+            "gemini": 0.1686,
+            "mistral": 0.1036,
+            "openai": 0.0296,
+            "other": 0.0074,
+            "qwen": 0.0044
+          },
+          "n_by_family": {
+            "claude": 23,
+            "deepseek": 39,
+            "gemini": 114,
+            "mistral": 70,
+            "openai": 20,
+            "other": 5,
+            "qwen": 3
+          }
+        }
+      }
+    },
+    "139": {
+      "observation_preview": "- Come on, what have you got? - the secretary said seriously. \nYou opened your c",
+      "n": 171,
+      "choices": {
+        "take the thing": {
+          "text": "Take the thing",
+          "n": 171,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0585,
+            "deepseek": 0.1696,
+            "gemini": 0.4094,
+            "mistral": 0.2339,
+            "openai": 0.0877,
+            "other": 0.0351,
+            "qwen": 0.0058
+          },
+          "n_by_family": {
+            "claude": 10,
+            "deepseek": 29,
+            "gemini": 70,
+            "mistral": 40,
+            "openai": 15,
+            "other": 6,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "134": {
+      "observation_preview": "- Alright, what have you got? - Rachehanovna said casually.\nYou opened your card",
+      "n": 222,
+      "choices": {
+        "can you take money instead? is 100 cr enough?": {
+          "text": "Can you take money instead? Is 100 cr enough?",
+          "n": 156,
+          "dist": {
+            "all": 0.7027,
+            "claude": 0.0676,
+            "deepseek": 0.1036,
+            "gemini": 0.2973,
+            "mistral": 0.1441,
+            "openai": 0.0586,
+            "other": 0.0135,
+            "qwen": 0.018
+          },
+          "n_by_family": {
+            "claude": 15,
+            "deepseek": 23,
+            "gemini": 66,
+            "mistral": 32,
+            "openai": 13,
+            "other": 3,
+            "qwen": 4
+          }
+        },
+        "yeah, you wish! i'm not giving away my stuff!": {
+          "text": "Yeah, you wish! I'm not giving away my stuff!",
+          "n": 6,
+          "dist": {
+            "all": 0.027,
+            "deepseek": 0.0045,
+            "mistral": 0.009,
+            "openai": 0.0135
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "mistral": 2,
+            "openai": 3
+          }
+        },
+        "alright, here is \"something\" for you": {
+          "text": "Alright, here is \"something\" for you",
+          "n": 60,
+          "dist": {
+            "all": 0.2703,
+            "claude": 0.018,
+            "deepseek": 0.0225,
+            "gemini": 0.0946,
+            "mistral": 0.1216,
+            "openai": 0.0135
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 5,
+            "gemini": 21,
+            "mistral": 27,
+            "openai": 3
+          }
+        }
+      }
+    },
+    "135": {
+      "observation_preview": "\"Shouldn't I fry some nails for you instead? Give me the clothes!\" - the secreta",
+      "n": 69,
+      "choices": {
+        "give away the clothes": {
+          "text": "Give away the clothes",
+          "n": 40,
+          "dist": {
+            "all": 0.5797,
+            "claude": 0.058,
+            "deepseek": 0.1014,
+            "gemini": 0.3188,
+            "mistral": 0.0725,
+            "other": 0.029
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 7,
+            "gemini": 22,
+            "mistral": 5,
+            "other": 2
+          }
+        },
+        "you want to leave me naked? no way!": {
+          "text": "You want to leave me naked? No way!",
+          "n": 29,
+          "dist": {
+            "all": 0.4203,
+            "claude": 0.087,
+            "deepseek": 0.0725,
+            "gemini": 0.0725,
+            "mistral": 0.1014,
+            "openai": 0.058,
+            "qwen": 0.029
+          },
+          "n_by_family": {
+            "claude": 6,
+            "deepseek": 5,
+            "gemini": 5,
+            "mistral": 7,
+            "openai": 4,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "133": {
+      "observation_preview": "\"Rules? Alright, - the secretary replied. - It is played with a 36 card pack. Pl",
+      "n": 47,
+      "choices": {
+        "alright! i love cards!": {
+          "text": "Alright! I love cards!",
+          "n": 45,
+          "dist": {
+            "all": 0.9574,
+            "claude": 0.1064,
+            "deepseek": 0.0638,
+            "gemini": 0.4894,
+            "mistral": 0.1277,
+            "openai": 0.1277,
+            "other": 0.0213,
+            "qwen": 0.0213
+          },
+          "n_by_family": {
+            "claude": 5,
+            "deepseek": 3,
+            "gemini": 23,
+            "mistral": 6,
+            "openai": 6,
+            "other": 1,
+            "qwen": 1
+          }
+        },
+        "no, i'm not in the right mood": {
+          "text": "No, I'm not in the right mood",
+          "n": 2,
+          "dist": {
+            "all": 0.0426,
+            "qwen": 0.0426
+          },
+          "n_by_family": {
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "123": {
+      "observation_preview": "You hauled off and hit the booth glass. \"Bang\" - a pleasant sound flew across th",
+      "n": 24,
+      "choices": {
+        "leave the commandant alone with his memories": {
+          "text": "Leave the commandant alone with his memories",
+          "n": 24,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.125,
+            "gemini": 0.25,
+            "mistral": 0.25,
+            "openai": 0.375
+          },
+          "n_by_family": {
+            "deepseek": 3,
+            "gemini": 6,
+            "mistral": 6,
+            "openai": 9
+          }
+        }
+      }
+    },
+    "153": {
+      "observation_preview": "The commandant looks at you with his wide open surprised eyes. He must be waitin",
+      "n": 20,
+      "choices": {
+        "commandant, where is the registry?": {
+          "text": "Commandant, where is the Registry?",
+          "n": 4,
+          "dist": {
+            "all": 0.2,
+            "deepseek": 0.1,
+            "gemini": 0.1
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 2
+          }
+        },
+        "and how is it working here? good?": {
+          "text": "And how is it working here? Good?",
+          "n": 6,
+          "dist": {
+            "all": 0.3,
+            "deepseek": 0.2,
+            "gemini": 0.1
+          },
+          "n_by_family": {
+            "deepseek": 4,
+            "gemini": 2
+          }
+        },
+        "was a pleasure talking to you. no passaran! we will win!": {
+          "text": "Was a pleasure talking to you. No passaran! We will win!",
+          "n": 8,
+          "dist": {
+            "all": 0.4,
+            "deepseek": 0.1,
+            "gemini": 0.3
+          },
+          "n_by_family": {
+            "deepseek": 2,
+            "gemini": 6
+          }
+        },
+        "listen comandante, where do i find some fish here?": {
+          "text": "Listen comandante, where do I find some fish here?",
+          "n": 2,
+          "dist": {
+            "all": 0.1,
+            "gemini": 0.1
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "155": {
+      "observation_preview": "- Interesting, - you heard a voice from inside.\n- I am on a very important gover",
+      "n": 14,
+      "choices": {
+        "i need to perfect documents for the lease of hillside": {
+          "text": "I need to perfect documents for the lease of Hillside",
+          "n": 3,
+          "dist": {
+            "all": 0.2143,
+            "deepseek": 0.0714,
+            "gemini": 0.1429
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 2
+          }
+        },
+        "leave the registry": {
+          "text": "Leave the Registry",
+          "n": 10,
+          "dist": {
+            "all": 0.7143,
+            "deepseek": 0.0714,
+            "gemini": 0.6429
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 9
+          }
+        },
+        "i need fish. don't you have some?": {
+          "text": "I need fish. Don't you have some?",
+          "n": 1,
+          "dist": {
+            "all": 0.0714,
+            "gemini": 0.0714
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "157": {
+      "observation_preview": "- No problem. We're going to perfect it perfectly, the clerk said and inserted a",
+      "n": 3,
+      "choices": {
+        "masculine": {
+          "text": "Masculine",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.3333,
+            "gemini": 0.6667
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "158": {
+      "observation_preview": "- I see. That's what I fill in, - his fingers hit the keys. - Now field 2: natio",
+      "n": 3,
+      "choices": {
+        "i am the citizen of the whole galaxy": {
+          "text": "I am the citizen of the whole galaxy",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.3333,
+            "gemini": 0.6667
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "159": {
+      "observation_preview": "- Absolutely clear. Filled in. Fields 3, 4 and 5 are to be filled in by the offi",
+      "n": 3,
+      "choices": {
+        "establishing of a resort and its use for the primary purpose": {
+          "text": "Establishing of a resort and its use for the primary purpose",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.3333,
+            "gemini": 0.6667
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "161": {
+      "observation_preview": "- Ready, - the clerk said joyfully, taking out the paper from the typewriter and",
+      "n": 3,
+      "choices": {
+        "thank you!": {
+          "text": "Thank you!",
+          "n": 3,
+          "dist": {
+            "all": 1.0,
+            "deepseek": 0.3333,
+            "gemini": 0.6667
+          },
+          "n_by_family": {
+            "deepseek": 1,
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "110": {
+      "observation_preview": "- Alright, what have you got? - Rachehanovna said casually. \nYou opened your car",
+      "n": 21,
+      "choices": {
+        "next": {
+          "text": "Next",
+          "n": 21,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.1429,
+            "deepseek": 0.1429,
+            "gemini": 0.4762,
+            "mistral": 0.0952,
+            "openai": 0.0952,
+            "qwen": 0.0476
+          },
+          "n_by_family": {
+            "claude": 3,
+            "deepseek": 3,
+            "gemini": 10,
+            "mistral": 2,
+            "openai": 2,
+            "qwen": 1
+          }
+        }
+      }
+    },
+    "136": {
+      "observation_preview": "- Fine, give it to me, - she replied.\n\nStatus:\nYou are dressed casually\nYou've g",
+      "n": 86,
+      "choices": {
+        "next": {
+          "text": "Next",
+          "n": 86,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0465,
+            "deepseek": 0.1279,
+            "gemini": 0.4535,
+            "mistral": 0.2326,
+            "openai": 0.1047,
+            "other": 0.0116,
+            "qwen": 0.0233
+          },
+          "n_by_family": {
+            "claude": 4,
+            "deepseek": 11,
+            "gemini": 39,
+            "mistral": 20,
+            "openai": 9,
+            "other": 1,
+            "qwen": 2
+          }
+        }
+      }
+    },
+    "113": {
+      "observation_preview": "- Alright, what have you got? - the secretary said seriously. \nYou slowly turned",
+      "n": 14,
+      "choices": {
+        "next": {
+          "text": "Next",
+          "n": 14,
+          "dist": {
+            "all": 1.0,
+            "claude": 0.0714,
+            "deepseek": 0.1429,
+            "gemini": 0.1429,
+            "mistral": 0.5714,
+            "openai": 0.0714
+          },
+          "n_by_family": {
+            "claude": 1,
+            "deepseek": 2,
+            "gemini": 2,
+            "mistral": 8,
+            "openai": 1
+          }
+        }
+      }
+    },
+    "162": {
+      "observation_preview": "As soon as you entered the room, a thick bass hit your ears:\n- Is it reserved fo",
+      "n": 2,
+      "choices": {
+        "alright, go ahead with your questions": {
+          "text": "Alright, go ahead with your questions",
+          "n": 2,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "164": {
+      "observation_preview": "- OK... Here we go, - the housemaster said and took out a notebook with a pencil",
+      "n": 2,
+      "choices": {
+        "turn on the vector, energy and navigation systems, check all parameters and start the engines": {
+          "text": "Turn on the vector, energy and navigation systems, check all parameters and start the engines",
+          "n": 2,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "166": {
+      "observation_preview": "Are you sure about that? I will inform the authorities that issued you the permi",
+      "n": 2,
+      "choices": {
+        "penchekryak meat is too rough for frying. it can only be cooked": {
+          "text": "Penchekryak meat is too rough for frying. It can only be cooked",
+          "n": 2,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "167": {
+      "observation_preview": "What do you say? A Faeyan told me that penchekryaks are not suitable for eating ",
+      "n": 2,
+      "choices": {
+        "lock": {
+          "text": "Lock",
+          "n": 2,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "168": {
+      "observation_preview": "Ah, damn it, I ticked off in a wrong column! Does not matter...\n\nThe fourth ques",
+      "n": 2,
+      "choices": {
+        "live at the people's expense": {
+          "text": "Live at the people's expense",
+          "n": 2,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    },
+    "169": {
+      "observation_preview": "By the way, I would like to warn you that all conversations in this room are con",
+      "n": 2,
+      "choices": {
+        "expensive weapon": {
+          "text": "Expensive weapon",
+          "n": 1,
+          "dist": {
+            "all": 0.5,
+            "gemini": 0.5
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        },
+        "smash this faeyan/gaalian/human face": {
+          "text": "Smash this Faeyan/Gaalian/Human face",
+          "n": 1,
+          "dist": {
+            "all": 0.5,
+            "gemini": 0.5
+          },
+          "n_by_family": {
+            "gemini": 1
+          }
+        }
+      }
+    },
+    "172": {
+      "observation_preview": "- Fine, so you have passed the test, - Bobchinsky went on.\n- And now, are your g",
+      "n": 2,
+      "choices": {
+        "go out to the corridor": {
+          "text": "Go out to the corridor",
+          "n": 2,
+          "dist": {
+            "all": 1.0,
+            "gemini": 1.0
+          },
+          "n_by_family": {
+            "gemini": 2
+          }
+        }
+      }
+    }
+  }
+}
