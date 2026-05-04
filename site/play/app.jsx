@@ -424,7 +424,7 @@ async function shareResult(canvas, questTitle, outcomeLabel) {
 
 // ---- EndScreen ----
 
-function EndScreen({ outcome, cohortWinRate, path, questTitle, onPlayAgain, onTryAnother }) {
+function EndScreen({ outcome, cohortWinRate, path, questTitle, endText, onPlayAgain, onTryAnother }) {
   const [shareStatus, setShareStatus] = useState('');
   const outcomeLabel = { win: 'SUCCESS', fail: 'FAILURE', dead: 'DEAD' }[outcome] || 'FAILURE';
   const branchingSteps = path.filter(e => e.agreed !== null);
@@ -448,6 +448,11 @@ function EndScreen({ outcome, cohortWinRate, path, questTitle, onPlayAgain, onTr
         <p style={{ color: 'var(--muted)', marginBottom: '1.5rem' }}>
           AI cohort: {Math.round(cohortWinRate * 100)}% won this quest.
         </p>
+      )}
+      {endText && (
+        <div className="card-table" style={{ marginBottom: '1.5rem', textAlign: 'left', padding: '1rem 1.25rem', lineHeight: 1.7 }}>
+          <QuestTags str={endText} />
+        </div>
       )}
       <h5 style={{ textAlign: 'left', marginBottom: '0.5rem' }}>Your path</h5>
       <div className="card-table" style={{ marginBottom: '1.5rem' }}>
@@ -498,6 +503,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
   const [stepNum, setStepNum] = useState(0);
   const [path, setPath] = useState([]);
   const [ended, setEnded] = useState(null);
+  const [endText, setEndText] = useState('');
   const [obsKey, setObsKey] = useState(0);
 
   useEffect(() => {
@@ -581,6 +587,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
 
     if (isTerminal) {
       setEnded(gs);
+      setEndText(nextState.text || '');
     } else {
       setGameState(player.getState());
       setStepNum(n => n + 1);
@@ -628,6 +635,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
         cohortWinRate={cohortData ? cohortData.win_rate : null}
         path={path}
         questTitle={quest.title || quest.id}
+        endText={endText}
         onPlayAgain={() => {
           player.start();
           if (canonicalPlayer) canonicalPlayer.loadSaving(player.getSaving());
@@ -636,6 +644,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
           setPath([]);
           setStepHistory([]);
           setEnded(null);
+          setEndText('');
           setObsKey(k => k + 1);
         }}
         onTryAnother={onQuit}
