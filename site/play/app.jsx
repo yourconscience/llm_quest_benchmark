@@ -145,7 +145,10 @@ function winRateColor(rate) {
 }
 
 function sortQuests(quests) {
-  return [...quests].sort((a, b) => (b.win_rate || 0) - (a.win_rate || 0));
+  return [...quests].sort((a, b) => {
+    const diff = (b.win_rate || 0) - (a.win_rate || 0);
+    return diff !== 0 ? diff : a.title.localeCompare(b.title);
+  });
 }
 
 const PLAY_URL = 'https://yourconscience.github.io/llm_quest_benchmark/play.html';
