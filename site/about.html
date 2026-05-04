@@ -3,16 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:title" content="LLM-Quest Benchmark">
+<meta property="og:description" content="Same models, different wrappers, dozens of text quests. Does agent architecture matter more than the model itself?">
+<meta property="og:image" content="https://yourconscience.github.io/llm_quest_benchmark/img/play_quest_in_progress.png">
+<meta property="og:url" content="https://yourconscience.github.io/llm_quest_benchmark/about.html">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image">
 <title>LLM-Quest Benchmark</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <style>
-:root { --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --muted: #c9d1d9; --accent: #58a6ff; }
+:root { --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --muted: #c9d1d9; --accent: #58a6ff; --green: #3fb950; --orange: #d29922; --red: #f85149; }
 body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; line-height: 1.7; }
 .navbar { background: var(--surface); border-bottom: 1px solid var(--border); }
 a { color: var(--accent); }
+h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 0.75rem; }
 .text-muted { color: var(--muted) !important; }
+.post-meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+.callout { background: var(--surface); border-left: 3px solid var(--accent); padding: 1rem 1.25rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; }
+.callout p { margin-bottom: 0; }
+.key-number { font-size: 2.2rem; font-weight: 700; color: var(--accent); line-height: 1; }
+.key-label { font-size: 0.85rem; color: var(--muted); }
+.finding-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
+.finding-card h3 { font-size: 1rem; margin-top: 0; margin-bottom: 0.5rem; }
+.finding-card p { font-size: 0.92rem; color: var(--muted); margin-bottom: 0; }
+figure { margin: 2rem 0; }
+figure img { border-radius: 8px; border: 1px solid var(--border); }
+figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 
-.hero { padding: 4rem 0 2rem; text-align: center; }
+.hero { padding: 3.5rem 0 1.5rem; text-align: center; }
 .hero h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.75rem; }
 @media (min-width: 576px) { .hero h1 { font-size: 2.4rem; } }
 .hero .subtitle { color: var(--muted); font-size: 1.05rem; max-width: 560px; margin: 0 auto 2.5rem; }
@@ -23,7 +41,7 @@ a { color: var(--accent); }
 .cta-primary { background: var(--accent); color: var(--bg); }
 .cta-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
 
-.stats-row { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin: 3rem 0; }
+.stats-row { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin: 2rem 0 1rem; }
 .stat { text-align: center; min-width: 80px; }
 .stat-num { font-size: 2rem; font-weight: 700; color: var(--accent); line-height: 1; }
 .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
@@ -41,13 +59,12 @@ a { color: var(--accent); }
       <a href="about.html" class="text-decoration-none" style="color:var(--accent)">About</a>
       <a href="index.html" class="text-decoration-none" style="color:var(--muted)">Leaderboard</a>
       <a href="play.html" class="text-decoration-none" style="color:var(--muted)">Play</a>
-      <a href="blog.html" class="text-decoration-none" style="color:var(--muted)">Blog</a>
-      <a href="https://github.com/yourconscience/llm_quest_benchmark" class="text-decoration-none" style="color:var(--muted)">GitHub</a>
+      <a href="https://github.com/yourconscience/llm_quest_benchmark" class="text-decoration-none" style="color:var(--muted)" title="GitHub"><svg height="20" width="20" style="vertical-align:middle" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
     </div>
   </div>
 </nav>
 
-<div class="container" style="max-width: 800px;">
+<div class="container" style="max-width: 780px;">
 
 <div class="hero">
   <h1>Does Agent Architecture Matter?</h1>
@@ -55,7 +72,6 @@ a { color: var(--accent); }
   <div class="cta-row">
     <a href="play.html" class="cta-btn cta-primary">Play a Quest</a>
     <a href="index.html" class="cta-btn cta-secondary">Leaderboard</a>
-    <a href="blog.html" class="cta-btn cta-secondary">Read the Blog</a>
   </div>
 </div>
 
@@ -66,21 +82,103 @@ a { color: var(--accent); }
   <div class="stat"><div class="stat-num">360</div><div class="stat-label">runs</div></div>
 </div>
 
-<div class="about-text">
-  <p>
-    Give an LLM a text quest from <a href="https://spacerangers.gitlab.io/#/quests">Space Rangers</a>: read the situation, pick an action, repeat for 10-50 turns. Run the same quest with four agent architectures - from a bare prompt to a planner with lightweight knowledge hints. Compare success rates, cost, and failure modes.
-  </p>
-  <p>
-    Everything is open source: <a href="https://github.com/yourconscience/llm_quest_benchmark">framework, data, configs</a>. The quest engine is <a href="https://github.com/roginvs/space-rangers-quest">space-rangers-quest</a> by roginvs.
-  </p>
+<div class="post-meta" style="text-align:center; margin-top: 1.5rem;">
+  Kirill Korikov &middot; May 2026
 </div>
+
+<p>
+  Most LLM benchmarks hold the agent architecture constant and vary the model. We did the opposite: same models, four different agent wrappers, 15 text quests. The results were messier than the neat story I wanted.
+</p>
+
+<h2>The setup</h2>
+<p>
+  Give an LLM a text adventure: read the situation, pick from a list of actions, repeat for 10-50 turns until you win or lose. Now do the same thing four different ways:
+</p>
+<ul>
+  <li><strong>Baseline (A)</strong> - bare prompt, just pick a number</li>
+  <li><strong>Reasoning (B)</strong> - structured chain-of-thought before choosing</li>
+  <li><strong>Knowledge (C)</strong> - reasoning plus domain hints about game mechanics</li>
+  <li><strong>Planner (D)</strong> - multi-turn planning with strategy updates</li>
+</ul>
+<p>
+  The quests come from <a href="https://spacerangers.gitlab.io/#/quests">Space Rangers</a>, a corpus of community-authored text adventures with branching narratives and non-obvious optimal paths. They were not designed for LLM evaluation, which is part of why they work: the difficulty is organic, not synthetic.
+</p>
+<p>
+  We tested six production models across 15 quests and four wrappers. Each cell has one run in the current public leaderboard, so treat this as a v1.0 slice, not a final statistical claim.
+</p>
+
+<h2>What we found</h2>
+
+<div class="finding-card">
+  <h3>Knowledge hints beat raw reasoning, but barely</h3>
+  <p>Lightweight knowledge hints (C) reached 21.1% success, ahead of prompted reasoning (17.8%) and the bare baseline (16.7%). The effect is real enough to care about, but not big enough to declare victory.</p>
+</div>
+
+<div class="finding-card">
+  <h3>Agents get stuck in loops</h3>
+  <p>The traces are full of agents revisiting the same states and re-picking familiar actions. Loop detection is still the most obvious cheap early stopping signal, but v1.0 reports it as a diagnostic, not a proven predictor.</p>
+</div>
+
+<div class="finding-card">
+  <h3>Different architectures help different problem types</h3>
+  <p>No wrapper dominates. Knowledge helps a little on average, planning is not automatically better, and some quests remain mostly unsolved. The useful signal is per-quest, not one magic architecture.</p>
+</div>
+
+<div class="finding-card">
+  <h3>Cost-performance tradeoffs are real</h3>
+  <p>DeepSeek and the two GPT-labeled leaderboard entries tie at 20% success in this slice. That is the annoying but useful lesson: wrapper changes and quest variance can swamp small model differences.</p>
+</div>
+
+<div class="callout">
+  <p>The practical takeaway: run the ablation before buying a bigger model. In this benchmark, the wrapper matters, but the effect is jagged. Architecture helps, then the quest punches it in the mouth.</p>
+</div>
+
+<h2>The failure taxonomy</h2>
+<p>
+  Reading the traces showed four recurring failure shapes. These are not solved yet; they are the next places to attack:
+</p>
+
+<table class="table table-sm" style="font-size: 0.9rem;">
+  <thead><tr><th>Failure type</th><th>What happens</th><th>What helps</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Spatial confusion</strong></td><td>Model cannot track coordinates or grid state</td><td>State tracker tool (future Mode E)</td></tr>
+    <tr><td><strong>Constraint overload</strong></td><td>Model drops constraints when juggling multiple goals</td><td>Calculator + constraint log (future Mode E)</td></tr>
+    <tr><td><strong>Decision loops</strong></td><td>Model revisits same locations after 15-20 steps</td><td>Planner with visit log (D)</td></tr>
+    <tr><td><strong>Missing domain knowledge</strong></td><td>Model lacks game-specific scoring rules</td><td>Knowledge hints (C)</td></tr>
+  </tbody>
+</table>
+
+<h2>Try it yourself</h2>
+<p>
+  We built an interactive Play mode where you can <a href="play.html">play the same quests</a> the AI models played. After each decision, you can expand the Decision History to see what the AI cohort chose at that same point - which models agreed with you, which went a different way.
+</p>
+<p>
+  The full results are on the <a href="index.html">leaderboard</a> with per-model, per-quest breakdowns. Everything is open source: <a href="https://github.com/yourconscience/llm_quest_benchmark">code, data, configs</a>.
+</p>
+
+<figure>
+  <img src="img/play_quest_in_progress.png" alt="LLM-Quest Benchmark Play mode showing Banquet in progress with decision history and AI cohort comparison" class="img-fluid" style="max-width: 100%;">
+  <figcaption>Play mode in action: make a quest choice, then expand Decision History to compare your move with the AI cohort at the same state.</figcaption>
+</figure>
+
+<figure>
+  <img src="img/early_benchmark.jpg" alt="Early version of the LLM Quest Benchmark, March 2025" class="img-fluid" style="max-width: 100%;">
+  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests. The benchmark has since grown to 6 models, 15 quests, 4 agent architectures, and 360 public runs.</figcaption>
+</figure>
+
+<h2>What's next</h2>
+<ul>
+  <li>Mode E (tool-augmented) data collection in progress</li>
+  <li>Frontier model comparison: Claude Sonnet, GPT-5.4, Gemini Pro</li>
+  <li>Human baseline data from the Play feature</li>
+  <li>Deeper cost-performance Pareto analysis</li>
+</ul>
 
 <footer class="text-center py-4 text-muted" style="font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 3rem;">
   <p style="font-size: 0.75rem; margin-bottom: 0.75rem;">Not affiliated with Elemental Games, SNK-Games, 1C Company, or Space Rangers.</p>
   <p>
     <a href="index.html">Leaderboard</a> |
     <a href="play.html">Play</a> |
-    <a href="blog.html">Blog</a> |
     <a href="https://github.com/yourconscience/llm_quest_benchmark">GitHub</a>
   </p>
 </footer>

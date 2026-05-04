@@ -2,7 +2,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 APP_SOURCE = REPO_ROOT / "site" / "play" / "app.jsx"
-BLOG_PAGE = REPO_ROOT / "site" / "blog.html"
+BLOG_PAGE = REPO_ROOT / "site" / "about.html"
 BLOG_SCREENSHOT = REPO_ROOT / "site" / "img" / "play_quest_in_progress.png"
 
 
