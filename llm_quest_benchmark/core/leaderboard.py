@@ -157,7 +157,9 @@ def _resolve_benchmark_dirs(benchmark_dirs: list[str]) -> list[Path]:
     return sorted(resolved)
 
 
-def generate_leaderboard(benchmark_dirs: list[str], output_path: str, min_runs: int = MIN_RUNS_THRESHOLD) -> dict[str, Any]:
+def generate_leaderboard(
+    benchmark_dirs: list[str], output_path: str, min_runs: int = MIN_RUNS_THRESHOLD
+) -> dict[str, Any]:
     resolved_dirs = _resolve_benchmark_dirs(benchmark_dirs)
 
     grouped_rows: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
