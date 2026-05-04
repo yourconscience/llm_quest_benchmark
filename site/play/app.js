@@ -484,6 +484,7 @@ function EndScreen({
   cohortWinRate,
   path,
   questTitle,
+  endText,
   onPlayAgain,
   onTryAnother
 }) {
@@ -517,7 +518,17 @@ function EndScreen({
       color: 'var(--muted)',
       marginBottom: '1.5rem'
     }
-  }, "AI cohort: ", Math.round(cohortWinRate * 100), "% won this quest."), /*#__PURE__*/React.createElement("h5", {
+  }, "AI cohort: ", Math.round(cohortWinRate * 100), "% won this quest."), endText && /*#__PURE__*/React.createElement("div", {
+    className: "card-table",
+    style: {
+      marginBottom: '1.5rem',
+      textAlign: 'left',
+      padding: '1rem 1.25rem',
+      lineHeight: 1.7
+    }
+  }, /*#__PURE__*/React.createElement(QuestTags, {
+    str: endText
+  })), /*#__PURE__*/React.createElement("h5", {
     style: {
       textAlign: 'left',
       marginBottom: '0.5rem'
@@ -582,6 +593,7 @@ function QuestPlay({
   const [stepNum, setStepNum] = useState(0);
   const [path, setPath] = useState([]);
   const [ended, setEnded] = useState(null);
+  const [endText, setEndText] = useState('');
   const [obsKey, setObsKey] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
@@ -663,6 +675,7 @@ function QuestPlay({
     const isTerminal = gs === 'win' || gs === 'fail' || gs === 'dead';
     if (isTerminal) {
       setEnded(gs);
+      setEndText(nextState.text || '');
     } else {
       setGameState(player.getState());
       setStepNum(n => n + 1);
@@ -717,6 +730,7 @@ function QuestPlay({
       cohortWinRate: cohortData ? cohortData.win_rate : null,
       path: path,
       questTitle: quest.title || quest.id,
+      endText: endText,
       onPlayAgain: () => {
         player.start();
         if (canonicalPlayer) canonicalPlayer.loadSaving(player.getSaving());
@@ -725,6 +739,7 @@ function QuestPlay({
         setPath([]);
         setStepHistory([]);
         setEnded(null);
+        setEndText('');
         setObsKey(k => k + 1);
       },
       onTryAnother: onQuit
