@@ -386,7 +386,7 @@ function downloadCanvas(canvas, filename) {
 
 async function copyShareText(text, url) {
   if (!navigator.clipboard || !navigator.clipboard.writeText) return false;
-  await navigator.clipboard.writeText(text + '\n' + url);
+  await navigator.clipboard.writeText(url ? text + '\n' + url : text);
   return true;
 }
 
@@ -424,7 +424,23 @@ async function shareResult(canvas, questTitle, outcomeLabel) {
 
 // ---- EndScreen ----
 
-function EndScreen({ outcome, cohortWinRate, path, questTitle, endText, onPlayAgain, onTryAnother }) {
+function buildShareText(questTitle, outcomeLabel, path, cohortWinRate) {
+  const branchingSteps = path.filter(e => e.agreed !== null);
+  const squares = branchingSteps.map(e => e.agreed ? '\u{1F7E9}' : '\u{1F7E5}').join('');
+  const agreeCount = branchingSteps.filter(e => e.agreed === true).length;
+  const aiPct = cohortWinRate != null ? Math.round(cohortWinRate * 100) : null;
+
+  let lines = [];
+  lines.push('LLM-Quest Benchmark: ' + questTitle);
+  lines.push(outcomeLabel + ' in ' + path.length + ' steps');
+  if (squares) lines.push(squares + ' ' + agreeCount + '/' + branchingSteps.length + ' AI agreed');
+  if (aiPct != null) lines.push('AI cohort win rate: ' + aiPct + '%');
+  lines.push('');
+  lines.push(PLAY_URL);
+  return lines.join('\n');
+}
+
+function EndScreen({ outcome, cohortWinRate, path, questTitle, endText, families, onPlayAgain, onTryAnother }) {
   const [shareStatus, setShareStatus] = useState('');
   const outcomeLabel = { win: 'SUCCESS', fail: 'FAILURE', dead: 'DEAD' }[outcome] || 'FAILURE';
   const branchingSteps = path.filter(e => e.agreed !== null);
@@ -432,60 +448,59 @@ function EndScreen({ outcome, cohortWinRate, path, questTitle, endText, onPlayAg
   const aiAgreeRate = branchingSteps.length > 0 ? Math.round((agreeCount / branchingSteps.length) * 100) : 0;
 
   function handleShare() {
-    setShareStatus('Preparing share card...');
+    const text = buildShareText(questTitle, outcomeLabel, path, cohortWinRate);
     const canvas = renderShareCard(questTitle, outcomeLabel, path.length, aiAgreeRate, cohortWinRate);
-    shareResult(canvas, questTitle, outcomeLabel)
-      .then(status => setShareStatus(status))
-      .catch(() => setShareStatus('Sharing failed. Try downloading from another browser.'));
+
+    if (navigator.share) {
+      canvas.toBlob(b => {
+        if (!b) { navigator.share({ text }).then(() => setShareStatus('Shared!')).catch(() => {}); return; }
+        const file = new File([b], 'quest-result.png', { type: 'image/png' });
+        const shareData = { text, files: [file] };
+        if (navigator.canShare && navigator.canShare(shareData)) {
+          navigator.share(shareData).then(() => setShareStatus('Shared!')).catch(() => {});
+        } else {
+          navigator.share({ text }).then(() => setShareStatus('Shared!')).catch(() => {});
+        }
+      }, 'image/png');
+      return;
+    }
+
+    copyShareText(text, '').then(ok => {
+      if (ok) {
+        setShareStatus('Copied to clipboard!');
+        downloadCanvas(canvas, 'quest-result.png');
+      } else {
+        downloadCanvas(canvas, 'quest-result.png');
+        setShareStatus('Downloaded image.');
+      }
+    });
   }
 
   return (
-    <div className="container py-5 text-center" style={{ maxWidth: 700 }}>
-      <div className={'outcome-badge outcome-' + outcomeLabel} style={{ display: 'inline-block', marginBottom: '1rem' }}>
-        {outcomeLabel}
+    <div className="container py-5" style={{ maxWidth: 700 }}>
+      <div style={{ textAlign: 'center' }}>
+        <div className={'outcome-badge outcome-' + outcomeLabel} style={{ display: 'inline-block', marginBottom: '1rem' }}>
+          {outcomeLabel}
+        </div>
+        {cohortWinRate != null && (
+          <p style={{ color: 'var(--muted)', marginBottom: '1.5rem' }}>
+            AI cohort: {Math.round(cohortWinRate * 100)}% won this quest.
+          </p>
+        )}
       </div>
-      {cohortWinRate != null && (
-        <p style={{ color: 'var(--muted)', marginBottom: '1.5rem' }}>
-          AI cohort: {Math.round(cohortWinRate * 100)}% won this quest.
-        </p>
-      )}
       {endText && (
         <div className="card-table" style={{ marginBottom: '1.5rem', textAlign: 'left', padding: '1rem 1.25rem', lineHeight: 1.7 }}>
           <QuestTags str={endText} />
         </div>
       )}
-      <h5 style={{ textAlign: 'left', marginBottom: '0.5rem' }}>Your path</h5>
-      <div className="card-table" style={{ marginBottom: '1.5rem' }}>
-        <table className="table table-sm path-table">
-          <thead>
-            <tr>
-              <th>Step</th>
-              <th>Choice</th>
-              <th>AI agreed?</th>
-            </tr>
-          </thead>
-          <tbody>
-            {path.map((entry, i) => (
-              <tr key={i}>
-                <td style={{ color: 'var(--muted)' }}>{entry.step}</td>
-                <td>{entry.choiceText}</td>
-                <td>
-                  {entry.agreed === true && <span className="agree-yes">Yes</span>}
-                  {entry.agreed === false && <span className="agree-no">No</span>}
-                  {entry.agreed === null && <span className="agree-no">-</span>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+      <DecisionHistory path={path} families={families} />
+      <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1.5rem' }}>
         <button className="btn btn-primary" onClick={onPlayAgain}>Play Again</button>
         <button className="btn btn-outline-secondary" onClick={onTryAnother}>Try Another Quest</button>
         <button className="btn btn-outline-info" onClick={handleShare}>Share Result</button>
       </div>
       {shareStatus && (
-        <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginTop: '0.75rem' }}>{shareStatus}</p>
+        <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginTop: '0.75rem', textAlign: 'center' }}>{shareStatus}</p>
       )}
     </div>
   );
@@ -636,6 +651,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
         path={path}
         questTitle={quest.title || quest.id}
         endText={endText}
+        families={(cohortData && cohortData.model_families) || []}
         onPlayAgain={() => {
           player.start();
           if (canonicalPlayer) canonicalPlayer.loadSaving(player.getSaving());
