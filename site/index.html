@@ -90,25 +90,25 @@ a { color: var(--accent); }
   </div>
 
   <div class="row g-4 mb-4">
-    <div class="col-lg-6">
-      <div class="card h-100"><div class="card-body">
+    <div class="col-12">
+      <div class="card"><div class="card-body">
         <h6 class="text-muted mb-3">Success Rate by Model and Mode</h6>
-        <div id="chart-bar" style="height:360px"></div>
-      </div></div>
-    </div>
-    <div class="col-lg-6">
-      <div class="card h-100"><div class="card-body">
-        <h6 class="text-muted mb-3">Steps vs Success Rate</h6>
-        <div id="chart-scatter" style="height:360px"></div>
+        <div id="chart-bar" style="height:420px"></div>
       </div></div>
     </div>
   </div>
 
   <div class="row g-4 mb-4">
-    <div class="col-12">
-      <div class="card"><div class="card-body">
+    <div class="col-lg-6">
+      <div class="card h-100"><div class="card-body">
+        <h6 class="text-muted mb-3">Steps vs Success Rate</h6>
+        <div id="chart-scatter" style="height:400px"></div>
+      </div></div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100"><div class="card-body">
         <h6 class="text-muted mb-3">Mode Impact: Success Rate Lift over Baseline</h6>
-        <div id="chart-lift" style="height:320px"></div>
+        <div id="chart-lift" style="height:400px"></div>
       </div></div>
     </div>
   </div>
@@ -298,14 +298,26 @@ function renderTable() {
   }
 }
 
+function sortedModels() {
+  return DATA.models.slice().sort((a, b) => {
+    const aRows = DATA.results.filter(r => r.model === a.id);
+    const bRows = DATA.results.filter(r => r.model === b.id);
+    const aRuns = aRows.reduce((s,r) => s+r.runs, 0);
+    const bRuns = bRows.reduce((s,r) => s+r.runs, 0);
+    const aRate = aRuns ? aRows.reduce((s,r) => s+r.success_rate*r.runs, 0)/aRuns : 0;
+    const bRate = bRuns ? bRows.reduce((s,r) => s+r.success_rate*r.runs, 0)/bRuns : 0;
+    return bRate - aRate;
+  });
+}
+
 function renderBarChart() {
   const el = document.getElementById('chart-bar');
   const chart = echarts.getInstanceByDom(el) || echarts.init(el);
-  const models = DATA.models.map(m => m.label);
+  const models = sortedModels();
+  const labels = models.map(m => m.label);
   const series = DATA.modes.map(mode => ({
     name: MODE_LABELS[mode.id], type: 'bar',
-    data: models.map(ml => {
-      const m = DATA.models.find(x => x.label === ml);
+    data: models.map(m => {
       const rows = filtered().filter(r => r.model === m.id && r.mode === mode.id);
       return rows.length ? +(rows.reduce((s,r) => s+r.success_rate, 0) / rows.length * 100).toFixed(1) : 0;
     }),
@@ -314,8 +326,8 @@ function renderBarChart() {
   chart.setOption({
     tooltip: {trigger:'axis', backgroundColor:'#161b22', borderColor:'#30363d', textStyle:{color:'#e6edf3'}},
     legend: {textStyle:{color:'#c9d1d9'}, bottom: 0},
-    grid: {left:'3%',right:'4%',bottom:'15%',containLabel:true},
-    xAxis: {type:'category', data:models, axisLabel:{color:'#c9d1d9'}, axisLine:{lineStyle:{color:'#30363d'}}},
+    grid: {left:'3%',right:'4%',bottom:'22%',containLabel:true},
+    xAxis: {type:'category', data:labels, axisLabel:{color:'#c9d1d9', rotate:35, fontSize:11}, axisLine:{lineStyle:{color:'#30363d'}}},
     yAxis: {type:'value', name:'Success %', nameTextStyle:{color:'#c9d1d9'}, axisLabel:{color:'#c9d1d9'}, splitLine:{lineStyle:{color:'#21262d'}}},
     series
   }, true);
@@ -348,12 +360,12 @@ function renderScatterChart() {
 function renderLiftChart() {
   const el = document.getElementById('chart-lift');
   const chart = echarts.getInstanceByDom(el) || echarts.init(el);
-  const models = DATA.models.map(m => m.label);
+  const models = sortedModels();
+  const labels = models.map(m => m.label);
   const nonBaseline = DATA.modes.filter(m => m.id !== 'stub');
   const series = nonBaseline.map(mode => ({
     name: MODE_LABELS[mode.id], type: 'bar',
-    data: models.map(ml => {
-      const m = DATA.models.find(x => x.label === ml);
+    data: models.map(m => {
       const base = filtered().filter(r => r.model === m.id && r.mode === 'stub');
       const curr = filtered().filter(r => r.model === m.id && r.mode === mode.id);
       if (!base.length || !curr.length) return 0;
@@ -366,8 +378,8 @@ function renderLiftChart() {
   chart.setOption({
     tooltip: {trigger:'axis', backgroundColor:'#161b22', borderColor:'#30363d', textStyle:{color:'#e6edf3'}, formatter: ps => ps.map(p=>`${p.marker} ${p.seriesName}: ${p.value>0?'+':''}${p.value}pp`).join('<br/>')},
     legend: {textStyle:{color:'#c9d1d9'}, bottom: 0},
-    grid: {left:'3%',right:'4%',bottom:'15%',containLabel:true},
-    xAxis: {type:'category', data:models, axisLabel:{color:'#c9d1d9'}, axisLine:{lineStyle:{color:'#30363d'}}},
+    grid: {left:'3%',right:'4%',bottom:'22%',containLabel:true},
+    xAxis: {type:'category', data:labels, axisLabel:{color:'#c9d1d9', rotate:35, fontSize:11}, axisLine:{lineStyle:{color:'#30363d'}}},
     yAxis: {type:'value', name:'Lift (pp)', nameTextStyle:{color:'#c9d1d9'}, axisLabel:{color:'#c9d1d9', formatter:v=>(v>0?'+':'')+v+'pp'}, splitLine:{lineStyle:{color:'#21262d'}}},
     series
   }, true);

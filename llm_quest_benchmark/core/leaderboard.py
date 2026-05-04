@@ -17,12 +17,25 @@ TEMPLATE_TO_MODE = {
     "stub": ("stub", "Baseline (A)"),
     "reasoning": ("reasoning", "Prompted (B)"),
     "strategic": ("reasoning", "Prompted (B)"),
+    "stateful_compact": ("reasoning", "Prompted (B)"),
+    "memo_cot": ("reasoning", "Prompted (B)"),
+    "memo_extended": ("reasoning", "Prompted (B)"),
+    "memo_structured": ("reasoning", "Prompted (B)"),
     "light_hints": ("light_hints", "Knowledge (C)"),
+    "stateful_compact_hints": ("light_hints", "Knowledge (C)"),
     "planner": ("planner", "Planner (D)"),
     "tool_augmented": ("tool_augmented", "Tool-aug (E)"),
+    "tool_augmented_hints": ("tool_augmented", "Tool-aug (E)"),
 }
 
 MODE_ORDER = ["stub", "reasoning", "light_hints", "planner", "tool_augmented"]
+
+MODEL_ALIASES = {
+    "claude:claude-haiku-4-5-20251001": "claude-haiku-4.5",
+    "anthropic:claude-3-5-haiku-latest": "claude-haiku-4.5",
+}
+
+MIN_RUNS_THRESHOLD = 10
 
 
 def _load_json(path: Path) -> dict[str, Any] | None:
@@ -74,6 +87,14 @@ def _model_label(model_id: str) -> str:
             normalized.append("Claude")
         elif lowered == "gemini":
             normalized.append("Gemini")
+        elif lowered.startswith("qwen"):
+            normalized.append("Qwen" + part[4:])
+        elif lowered == "llama":
+            normalized.append("Llama")
+        elif lowered == "minimax":
+            normalized.append("MiniMax")
+        elif lowered == "mistral":
+            normalized.append("Mistral")
         else:
             normalized.append(part if any(ch.isdigit() for ch in part) else part.title())
     return " ".join(normalized)
@@ -196,6 +217,7 @@ def generate_leaderboard(benchmark_dirs: list[str], output_path: str) -> dict[st
                 provider = "unknown"
                 label_source = model
             display_id = label_source if model.startswith("openrouter:") else model
+            display_id = MODEL_ALIASES.get(display_id, display_id)
 
             grouped_rows[(display_id, mode_id, quest_id)].append(
                 {
@@ -206,11 +228,13 @@ def generate_leaderboard(benchmark_dirs: list[str], output_path: str) -> dict[st
                     "repetition_rate": float(metrics.get("repetition_rate") or 0),
                 }
             )
-            model_entries[display_id] = {
-                "id": display_id,
-                "provider": provider,
-                "label": _model_label(label_source),
-            }
+            if display_id not in model_entries:
+                label_source_for_display = display_id if display_id in MODEL_ALIASES.values() else label_source
+                model_entries[display_id] = {
+                    "id": display_id,
+                    "provider": provider,
+                    "label": _model_label(label_source_for_display),
+                }
             mode_entries[mode_id] = {"id": mode_id, "label": mode_label}
             if raw_quest_id != quest_id:
                 existing_quest = quest_entries.setdefault(quest_id, {"id": quest_id, "lang": "EN"})
@@ -244,6 +268,13 @@ def generate_leaderboard(benchmark_dirs: list[str], output_path: str) -> dict[st
                 "repetition_rate": _mean(row["repetition_rate"] for row in rows),
             }
         )
+
+    model_total_runs: dict[str, int] = defaultdict(int)
+    for row in agg_results:
+        model_total_runs[row["model"]] += row["runs"]
+    included_models = {m for m, total in model_total_runs.items() if total >= MIN_RUNS_THRESHOLD}
+    agg_results = [row for row in agg_results if row["model"] in included_models]
+    model_entries = {k: v for k, v in model_entries.items() if k in included_models}
 
     mode_rank = {mode_id: index for index, mode_id in enumerate(MODE_ORDER)}
     leaderboard = {
