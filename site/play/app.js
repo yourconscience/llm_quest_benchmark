@@ -454,6 +454,10 @@ async function copyShareText(text, url) {
 }
 async function shareResult(canvas, questTitle, outcomeLabel) {
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  if (!blob) {
+    downloadCanvas(canvas, 'quest-result.png');
+    return 'Downloaded result image.';
+  }
   const file = new File([blob], 'quest-result.png', {
     type: 'image/png'
   });
