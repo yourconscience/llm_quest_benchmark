@@ -174,24 +174,15 @@ function normalizeChoice(text) {
 function stripClr(s) {
   return String(s == null ? '' : s).replace(/<clr>|<clrEnd>|<\/clr>/g, '');
 }
-function diffColor(diff) {
-  if (diff === 'easy') return 'var(--green)';
-  if (diff === 'medium') return 'var(--orange)';
+function winRateColor(rate) {
+  if (rate > 0.15) return 'var(--green)';
+  if (rate > 0) return 'var(--orange)';
   return 'var(--red)';
 }
-function diffLabel(diff) {
-  return diff.charAt(0).toUpperCase() + diff.slice(1);
-}
 function sortQuests(quests) {
-  const order = {
-    easy: 0,
-    medium: 1,
-    hard: 2
-  };
   return [...quests].sort((a, b) => {
-    const da = order[a.difficulty] ?? 3;
-    const db = order[b.difficulty] ?? 3;
-    return da !== db ? da - db : a.title.localeCompare(b.title);
+    const diff = (b.win_rate || 0) - (a.win_rate || 0);
+    return diff !== 0 ? diff : a.title.localeCompare(b.title);
   });
 }
 const PLAY_URL = 'https://yourconscience.github.io/llm_quest_benchmark/play.html';
@@ -914,12 +905,17 @@ function QuestSelect({
     style: {
       margin: 0
     }
-  }, q.title), /*#__PURE__*/React.createElement("span", {
+  }, q.title), q.win_rate != null ? /*#__PURE__*/React.createElement("span", {
     className: "diff-badge",
     style: {
-      color: diffColor(q.difficulty)
+      color: winRateColor(q.win_rate)
     }
-  }, diffLabel(q.difficulty))), /*#__PURE__*/React.createElement("p", {
+  }, Math.round(q.win_rate * 100), "%") : /*#__PURE__*/React.createElement("span", {
+    className: "diff-badge",
+    style: {
+      color: 'var(--muted)'
+    }
+  }, "--")), /*#__PURE__*/React.createElement("p", {
     style: {
       color: 'var(--muted)',
       fontSize: '0.88rem',
@@ -930,21 +926,9 @@ function QuestSelect({
     style: {
       fontSize: '0.82rem',
       color: 'var(--muted)',
-      marginBottom: '0.25rem'
-    }
-  }, "~", q.stepsRange, " steps"), q.win_rate != null ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '0.82rem',
-      color: 'var(--muted)',
       marginBottom: '0.75rem'
     }
-  }, "AI win rate: ", Math.round((q.win_rate || 0) * 100), "%") : /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: '0.82rem',
-      color: 'var(--muted)',
-      marginBottom: '0.75rem'
-    }
-  }, "No AI data yet"), /*#__PURE__*/React.createElement("button", {
+  }, "~", q.stepsRange, " steps"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-sm btn-outline-primary",
     style: {
       marginTop: 'auto'

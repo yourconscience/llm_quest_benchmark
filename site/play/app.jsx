@@ -138,22 +138,16 @@ function stripClr(s) {
   return String(s == null ? '' : s).replace(/<clr>|<clrEnd>|<\/clr>/g, '');
 }
 
-function diffColor(diff) {
-  if (diff === 'easy') return 'var(--green)';
-  if (diff === 'medium') return 'var(--orange)';
+function winRateColor(rate) {
+  if (rate > 0.15) return 'var(--green)';
+  if (rate > 0) return 'var(--orange)';
   return 'var(--red)';
 }
 
-function diffLabel(diff) {
-  return diff.charAt(0).toUpperCase() + diff.slice(1);
-}
-
 function sortQuests(quests) {
-  const order = { easy: 0, medium: 1, hard: 2 };
   return [...quests].sort((a, b) => {
-    const da = order[a.difficulty] ?? 3;
-    const db = order[b.difficulty] ?? 3;
-    return da !== db ? da - db : a.title.localeCompare(b.title);
+    const diff = (b.win_rate || 0) - (a.win_rate || 0);
+    return diff !== 0 ? diff : a.title.localeCompare(b.title);
   });
 }
 
@@ -787,19 +781,14 @@ function QuestSelect({ onSelectQuest, lang, onLangChange }) {
               <div className="quest-card h-100" style={{ display: 'flex', flexDirection: 'column' }} onClick={() => onSelectQuest(q)}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <h5 style={{ margin: 0 }}>{q.title}</h5>
-                  <span className="diff-badge" style={{ color: diffColor(q.difficulty) }}>{diffLabel(q.difficulty)}</span>
+                  {q.win_rate != null ? (
+                    <span className="diff-badge" style={{ color: winRateColor(q.win_rate) }}>{Math.round(q.win_rate * 100)}%</span>
+                  ) : (
+                    <span className="diff-badge" style={{ color: 'var(--muted)' }}>--</span>
+                  )}
                 </div>
                 <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: '0.5rem', flexGrow: 1 }}>{q.description}</p>
-                <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.25rem' }}>~{q.stepsRange} steps</div>
-                {q.win_rate != null ? (
-                  <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
-                    AI win rate: {Math.round((q.win_rate || 0) * 100)}%
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
-                    No AI data yet
-                  </div>
-                )}
+                <div style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>~{q.stepsRange} steps</div>
                 <button className="btn btn-sm btn-outline-primary" style={{ marginTop: 'auto' }} onClick={e => { e.stopPropagation(); onSelectQuest(q); }}>
                   Play
                 </button>
