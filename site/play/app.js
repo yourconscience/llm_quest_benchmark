@@ -440,7 +440,7 @@ function downloadCanvas(canvas, filename) {
 }
 async function copyShareText(text, url) {
   if (!navigator.clipboard || !navigator.clipboard.writeText) return false;
-  await navigator.clipboard.writeText(text + '\n' + url);
+  await navigator.clipboard.writeText(url ? text + '\n' + url : text);
   return true;
 }
 async function shareResult(canvas, questTitle, outcomeLabel) {
@@ -516,8 +516,13 @@ function EndScreen({
     const text = buildShareText(questTitle, outcomeLabel, path, cohortWinRate);
     const canvas = renderShareCard(questTitle, outcomeLabel, path.length, aiAgreeRate, cohortWinRate);
     if (navigator.share) {
-      const blob = canvas.toDataURL('image/png');
-      fetch(blob).then(r => r.blob()).then(b => {
+      canvas.toBlob(b => {
+        if (!b) {
+          navigator.share({
+            text
+          }).then(() => setShareStatus('Shared!')).catch(() => {});
+          return;
+        }
         const file = new File([b], 'quest-result.png', {
           type: 'image/png'
         });
@@ -532,7 +537,7 @@ function EndScreen({
             text
           }).then(() => setShareStatus('Shared!')).catch(() => {});
         }
-      });
+      }, 'image/png');
       return;
     }
     copyShareText(text, '').then(ok => {
