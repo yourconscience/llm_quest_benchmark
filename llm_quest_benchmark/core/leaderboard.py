@@ -157,7 +157,7 @@ def _resolve_benchmark_dirs(benchmark_dirs: list[str]) -> list[Path]:
     return sorted(resolved)
 
 
-def generate_leaderboard(benchmark_dirs: list[str], output_path: str) -> dict[str, Any]:
+def generate_leaderboard(benchmark_dirs: list[str], output_path: str, min_runs: int = MIN_RUNS_THRESHOLD) -> dict[str, Any]:
     resolved_dirs = _resolve_benchmark_dirs(benchmark_dirs)
 
     grouped_rows: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
@@ -272,7 +272,7 @@ def generate_leaderboard(benchmark_dirs: list[str], output_path: str) -> dict[st
     model_total_runs: dict[str, int] = defaultdict(int)
     for row in agg_results:
         model_total_runs[row["model"]] += row["runs"]
-    included_models = {m for m, total in model_total_runs.items() if total >= MIN_RUNS_THRESHOLD}
+    included_models = {m for m, total in model_total_runs.items() if total >= min_runs}
     agg_results = [row for row in agg_results if row["model"] in included_models]
     model_entries = {k: v for k, v in model_entries.items() if k in included_models}
 

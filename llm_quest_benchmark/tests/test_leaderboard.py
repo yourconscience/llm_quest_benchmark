@@ -107,7 +107,7 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
         path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 
     output_path = Path("site/leaderboard.json")
-    leaderboard = generate_leaderboard([str(benchmark_dir)], str(output_path))
+    leaderboard = generate_leaderboard([str(benchmark_dir)], str(output_path), min_runs=0)
 
     assert output_path.exists()
     persisted = json.loads(output_path.read_text(encoding="utf-8"))
