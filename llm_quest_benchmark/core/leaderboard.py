@@ -44,8 +44,6 @@ PUBLIC_MODEL_IDS = (
     "minimax-m2.5",
     "mistral-medium-3.1",
 )
-PUBLIC_MIN_MODELS_PER_QUEST = len(PUBLIC_MODEL_IDS)
-
 
 def _load_json(path: Path) -> dict[str, Any] | None:
     if not path.exists():
@@ -176,7 +174,7 @@ def generate_leaderboard(
     output_path: str,
     min_runs: int = MIN_RUNS_THRESHOLD,
     public_model_ids: Iterable[str] | None = PUBLIC_MODEL_IDS,
-    min_models_per_quest: int = PUBLIC_MIN_MODELS_PER_QUEST,
+    min_models_per_quest: int | None = None,
 ) -> dict[str, Any]:
     resolved_dirs = _resolve_benchmark_dirs(benchmark_dirs)
 
@@ -300,7 +298,12 @@ def generate_leaderboard(
         model_total_runs[row["model"]] += row["runs"]
     included_models = {m for m, total in model_total_runs.items() if total >= min_runs}
     if public_model_ids is not None:
-        included_models &= set(public_model_ids)
+        public_model_set = set(public_model_ids)
+        included_models &= public_model_set
+        if min_models_per_quest is None:
+            min_models_per_quest = len(public_model_set)
+    elif min_models_per_quest is None:
+        min_models_per_quest = 0
     agg_results = [row for row in agg_results if row["model"] in included_models]
 
     if min_models_per_quest > 0:

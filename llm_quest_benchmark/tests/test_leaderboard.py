@@ -112,7 +112,6 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
         str(output_path),
         min_runs=0,
         public_model_ids=None,
-        min_models_per_quest=0,
     )
 
     assert output_path.exists()
@@ -201,10 +200,10 @@ def test_generate_leaderboard_filters_public_slice(tmp_path, monkeypatch):
         "site/leaderboard.json",
         min_runs=1,
         public_model_ids=["model-a", "model-b", "model-c"],
-        min_models_per_quest=3,
     )
 
     assert [model["id"] for model in leaderboard["models"]] == ["model-a", "model-b", "model-c"]
+    assert leaderboard["scope"]["min_models_per_quest"] == 3
     assert [quest["id"] for quest in leaderboard["quests"]] == ["Core"]
     assert {row["quest"] for row in leaderboard["results"]} == {"Core"}
     assert {row["model"] for row in leaderboard["results"]} == {"model-a", "model-b", "model-c"}

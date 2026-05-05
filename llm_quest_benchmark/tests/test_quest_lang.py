@@ -107,7 +107,6 @@ class TestLeaderboardCanonicalization:
             output_path,
             min_runs=0,
             public_model_ids=None,
-            min_models_per_quest=0,
         )
 
         quest_ids = [r["quest"] for r in leaderboard["results"]]
