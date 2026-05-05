@@ -44,12 +44,7 @@ class Aggregate:
 
 
 def tex_escape(value: str) -> str:
-    return (
-        value.replace("\\", r"\textbackslash{}")
-        .replace("&", r"\&")
-        .replace("%", r"\%")
-        .replace("_", r"\_")
-    )
+    return value.replace("\\", r"\textbackslash{}").replace("&", r"\&").replace("%", r"\%").replace("_", r"\_")
 
 
 def format_pct(rate: float) -> str:
