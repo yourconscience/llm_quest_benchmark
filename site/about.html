@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta property="og:title" content="LLM-Quest Benchmark">
-<meta property="og:description" content="Same models, different wrappers, dozens of text quests. Does agent architecture matter more than the model itself?">
+<meta property="og:description" content="Six models, five wrappers, and 15 comparable text quests. Does agent architecture matter more than the model itself?">
 <meta property="og:image" content="https://yourconscience.github.io/llm_quest_benchmark/img/play_quest_in_progress.png">
 <meta property="og:url" content="https://yourconscience.github.io/llm_quest_benchmark/about.html">
 <meta property="og:type" content="article">
@@ -68,7 +68,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 
 <div class="hero">
   <h1>Does Agent Architecture Matter?</h1>
-  <p class="subtitle">Same models, different wrappers, dozens of text quests. We measure whether scaffolding matters more than the model itself.</p>
+  <p class="subtitle">Same models, different wrappers, 15 comparable text quests. We measure whether scaffolding matters more than the model itself.</p>
   <div class="cta-row">
     <a href="play.html" class="cta-btn cta-primary">Play a Quest</a>
     <a href="index.html" class="cta-btn cta-secondary">Leaderboard</a>
@@ -76,10 +76,10 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 </div>
 
 <div class="stats-row">
-  <div class="stat"><div class="stat-num">17</div><div class="stat-label">models</div></div>
+  <div class="stat"><div class="stat-num">6</div><div class="stat-label">models</div></div>
   <div class="stat"><div class="stat-num">5</div><div class="stat-label">agent modes</div></div>
-  <div class="stat"><div class="stat-num">30</div><div class="stat-label">quests</div></div>
-  <div class="stat"><div class="stat-num">2442</div><div class="stat-label">runs</div></div>
+  <div class="stat"><div class="stat-num">15</div><div class="stat-label">quests</div></div>
+  <div class="stat"><div class="stat-num">1615</div><div class="stat-label">runs</div></div>
 </div>
 
 <div class="post-meta" style="text-align:center; margin-top: 1.5rem;">
@@ -87,7 +87,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 </div>
 
 <p>
-  Most LLM benchmarks hold the agent architecture constant and vary the model. We did the opposite: same models, five different agent wrappers, 30 text quests. The results were messier than the neat story I wanted.
+  Most LLM benchmarks hold the agent architecture constant and vary the model. We did the opposite: same models, five different agent wrappers, 15 comparable text quests. The results were messier than the neat story I wanted.
 </p>
 
 <h2>The setup</h2>
@@ -105,14 +105,14 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
   The quests come from <a href="https://spacerangers.gitlab.io/#/quests">Space Rangers</a>, a corpus of community-authored text adventures with branching narratives and non-obvious optimal paths. They were not designed for LLM evaluation, which is part of why they work: the difficulty is organic, not synthetic.
 </p>
 <p>
-  We tested 17 model entries across 30 quest IDs and five wrappers. Treat this as a v1.0 slice, not a final statistical claim.
+  The public leaderboard keeps the six primary models and the 15 quest IDs covered by all six. Exploratory one-model and partial-coverage runs stay out of the public table so the comparison is cleaner.
 </p>
 
 <h2>What we found</h2>
 
 <div class="finding-card">
-  <h3>Knowledge hints beat raw reasoning, but barely</h3>
-  <p>Lightweight knowledge hints (C) reached 21.1% success, ahead of prompted reasoning (17.8%) and the bare baseline (16.7%). The effect is real enough to care about, but not big enough to declare victory.</p>
+  <h3>Scaffolding does not automatically help</h3>
+  <p>In the comparable slice, the bare baseline is ahead of raw prompted reasoning. Knowledge, planning, and tool modes are still thinner coverage, so the honest result is not a victory lap for any wrapper.</p>
 </div>
 
 <div class="finding-card">
@@ -121,17 +121,17 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 </div>
 
 <div class="finding-card">
-  <h3>Different architectures help different problem types</h3>
-  <p>No wrapper dominates. Knowledge helps a little on average, planning is not automatically better, and some quests remain mostly unsolved. The useful signal is per-quest, not one magic architecture.</p>
+  <h3>Quest variance dominates the headline</h3>
+  <p>Boat is solved often, Badday and Pizza have partial traction, and many quests are still near zero. The useful signal is per-quest behavior, not one magic average.</p>
 </div>
 
 <div class="finding-card">
-  <h3>Cost-performance tradeoffs are real</h3>
-  <p>DeepSeek and the two GPT-labeled leaderboard entries tie at 20% success in this slice. That is the annoying but useful lesson: wrapper changes and quest variance can swamp small model differences.</p>
+  <h3>Model rank is not the whole story</h3>
+  <p>Mistral Medium 3.1 leads the current comparable slice, but the gap is small enough that quest selection and wrapper coverage matter. This is a benchmark to inspect, not a trophy table.</p>
 </div>
 
 <div class="callout">
-  <p>The practical takeaway: run the ablation before buying a bigger model. In this benchmark, the wrapper matters, but the effect is jagged. Architecture helps, then the quest punches it in the mouth.</p>
+  <p>The practical takeaway: run the ablation before buying a bigger model. In this benchmark, architecture can matter, but the effect is jagged and quest-dependent.</p>
 </div>
 
 <h2>The failure taxonomy</h2>
@@ -154,7 +154,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
   We built an interactive Play mode where you can <a href="play.html">play the same quests</a> the AI models played. After each decision, you can expand the Decision History to see what the AI cohort chose at that same point - which models agreed with you, which went a different way.
 </p>
 <p>
-  The full results are on the <a href="index.html">leaderboard</a> with per-model, per-quest breakdowns. Everything is open source: <a href="https://github.com/yourconscience/llm_quest_benchmark">code, data, configs</a>.
+  The comparable results are on the <a href="index.html">leaderboard</a> with per-model, per-quest breakdowns. Everything is open source: <a href="https://github.com/yourconscience/llm_quest_benchmark">code, data, configs</a>.
 </p>
 
 <figure>
@@ -164,12 +164,12 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 
 <figure>
   <img src="img/early_benchmark.jpg" alt="Early version of the LLM Quest Benchmark, March 2025" class="img-fluid" style="max-width: 100%;">
-  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests. The benchmark has since grown to 17 models, 30 quest IDs, 5 agent architectures, and 2442 public runs.</figcaption>
+  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests. The public leaderboard now shows 6 primary models, 15 comparable quest IDs, 5 agent architectures, and 1615 runs.</figcaption>
 </figure>
 
 <h2>What's next</h2>
 <ul>
-  <li>More tool-augmented and knowledge-hint runs</li>
+  <li>Fill out tool-augmented, planning, and knowledge-hint coverage</li>
   <li>Frontier model comparison: Claude Sonnet, GPT-5.4, Gemini Pro</li>
   <li>Human baseline data from the Play feature</li>
   <li>Deeper cost-performance Pareto analysis</li>

@@ -42,6 +42,13 @@ a { color: var(--accent); }
 .nav-pills .nav-link { color: var(--muted); border: 1px solid var(--border); margin-right: 0.5rem; }
 .nav-pills .nav-link.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 .tooltip-icon { color: var(--muted); cursor: help; font-size: 0.75rem; border: 1px solid var(--muted); border-radius: 50%; width: 1.1em; height: 1.1em; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; margin-left: 0.3em; }
+.scope-note { color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem; }
+.control-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
+.control-label { color: var(--muted); font-size: 0.85rem; margin-right: 0.25rem; }
+.view-scope { color: var(--muted); font-size: 0.85rem; margin-left: auto; }
+@media (max-width: 768px) {
+  .view-scope { margin-left: 0; flex-basis: 100%; }
+}
 </style>
 </head>
 <body>
@@ -72,11 +79,15 @@ a { color: var(--accent); }
         <li class="nav-item"><a class="nav-link active" href="#" data-view="summary">Summary</a></li>
         <li class="nav-item"><a class="nav-link" href="#" data-view="quests">Per Quest</a></li>
       </ul>
-      <div class="d-flex flex-wrap gap-2 mb-3">
-        <span class="text-muted me-2 align-self-center" style="font-size:0.85rem">Mode:</span>
+      <div class="scope-note" id="scope-note"></div>
+      <div class="control-row mt-3">
+        <span class="control-label">Mode:</span>
         <button class="filter-btn active" data-filter="mode" data-value="all">All</button>
         <div id="mode-filters" class="d-flex flex-wrap gap-1"></div>
-        <span class="text-muted ms-3 me-2 align-self-center" style="font-size:0.85rem" id="quest-filter-label">Quest:</span>
+        <span class="view-scope" id="view-scope"></span>
+      </div>
+      <div class="control-row" id="quest-controls">
+        <span class="control-label" id="quest-filter-label">Quest:</span>
         <button class="filter-btn active" data-filter="quest" data-value="all" id="quest-all-btn">All</button>
         <div id="quest-filters" class="d-flex flex-wrap gap-1"></div>
       </div>
@@ -92,23 +103,8 @@ a { color: var(--accent); }
   <div class="row g-4 mb-4">
     <div class="col-12">
       <div class="card"><div class="card-body">
-        <h6 class="text-muted mb-3">Success Rate by Model and Mode</h6>
+        <h6 class="text-muted mb-3" id="chart-title">Success Rate by Model and Mode</h6>
         <div id="chart-bar" style="height:420px"></div>
-      </div></div>
-    </div>
-  </div>
-
-  <div class="row g-4 mb-4">
-    <div class="col-lg-6">
-      <div class="card h-100"><div class="card-body">
-        <h6 class="text-muted mb-3">Steps vs Success Rate</h6>
-        <div id="chart-scatter" style="height:400px"></div>
-      </div></div>
-    </div>
-    <div class="col-lg-6">
-      <div class="card h-100"><div class="card-body">
-        <h6 class="text-muted mb-3">Mode Impact: Success Rate Lift over Baseline</h6>
-        <div id="chart-lift" style="height:400px"></div>
       </div></div>
     </div>
   </div>
@@ -121,6 +117,8 @@ a { color: var(--accent); }
 
 <script>
 let DATA = null;
+let MODEL_BY_ID = {};
+let barChart = null;
 let sortCol = 'success_rate';
 let sortAsc = false;
 let filterMode = 'all';
@@ -130,46 +128,64 @@ let viewMode = 'summary';
 const MODE_LABELS = {stub:'Baseline (A)', reasoning:'Prompted (B)', light_hints:'Knowledge (C)', planner:'Planner (D)', tool_augmented:'Tool-aug (E)'};
 const MODE_CLASSES = {stub:'mode-stub', reasoning:'mode-reasoning', light_hints:'mode-light_hints', planner:'mode-planner', tool_augmented:'mode-tool'};
 const COLORS = {stub:'#c9d1d9', reasoning:'#58a6ff', light_hints:'#a371f7', planner:'#d29922', tool_augmented:'#3fb950'};
-const MODEL_SYMBOLS = ['circle','rect','triangle','diamond','pin','arrow'];
 
 function successColor(v) { return v >= 0.8 ? 'var(--green)' : v >= 0.4 ? 'var(--orange)' : 'var(--red)'; }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function modelLabel(id) { return MODEL_BY_ID[id]?.label || id; }
+function modeLabel(id) { return MODE_LABELS[id] || DATA.modes.find(m => m.id === id)?.label || id; }
 
-function filtered() {
-  const q = viewMode === 'summary' ? 'all' : filterQuest;
-  return DATA.results.filter(r => (filterMode === 'all' || r.mode === filterMode) && (q === 'all' || r.quest === q));
+function scopedRows() {
+  return DATA.results.filter(r => {
+    const modeOk = filterMode === 'all' || r.mode === filterMode;
+    const questOk = viewMode === 'summary' || filterQuest === 'all' || r.quest === filterQuest;
+    return modeOk && questOk;
+  });
 }
 
-function aggregated() {
+function aggregate(rows, groupKeys) {
   const groups = {};
-  filtered().forEach(r => {
-    const key = `${r.model}|${r.mode}`;
-    if (!groups[key]) groups[key] = { model: r.model, mode: r.mode, s: 0, st: 0, t: 0, rp: 0, runs: 0, q: 0 };
+  rows.forEach(r => {
+    const key = groupKeys.map(k => r[k]).join('|');
+    if (!groups[key]) {
+      groups[key] = { model: r.model, mode: r.mode, quest: r.quest, s: 0, st: 0, t: 0, rp: 0, runs: 0, quests: new Set() };
+    }
     const g = groups[key];
     g.s += r.success_rate * r.runs;
     g.st += r.avg_steps * r.runs;
     g.t += r.avg_tokens * r.runs;
     g.rp += r.repetition_rate * r.runs;
     g.runs += r.runs;
-    g.q += 1;
+    g.quests.add(r.quest);
   });
   return Object.values(groups).map(g => ({
     model: g.model,
     mode: g.mode,
+    quest: g.quest,
     success_rate: g.runs ? g.s / g.runs : 0,
     avg_steps: g.runs ? g.st / g.runs : 0,
     avg_tokens: g.runs ? g.t / g.runs : 0,
     repetition_rate: g.runs ? g.rp / g.runs : 0,
     runs: g.runs,
-    quests: g.q,
+    quests: g.quests.size,
   }));
+}
+
+function tableRows() {
+  return viewMode === 'summary' ? aggregate(scopedRows(), ['model', 'mode']) : scopedRows();
+}
+
+function weightedRate(rows) {
+  const runs = rows.reduce((sum, row) => sum + row.runs, 0);
+  return runs ? rows.reduce((sum, row) => sum + row.success_rate * row.runs, 0) / runs : 0;
 }
 
 async function init() {
   const resp = await fetch('leaderboard.json');
   DATA = await resp.json();
+  MODEL_BY_ID = Object.fromEntries(DATA.models.map(m => [m.id, m]));
   document.getElementById('footer-date').textContent = DATA.generated?.split('T')[0] || '';
   buildFilters();
+  updateViewChrome();
   renderAll();
   document.getElementById('leaderboard').addEventListener('click', e => {
     const th = e.target.closest('th[data-col]');
@@ -185,16 +201,11 @@ async function init() {
     viewMode = link.dataset.view;
     document.querySelectorAll('#view-tabs .nav-link').forEach(l => l.classList.remove('active'));
     link.classList.add('active');
-    const showQuest = viewMode === 'quests';
-    document.getElementById('quest-filter-label').style.display = showQuest ? '' : 'none';
-    document.getElementById('quest-all-btn').style.display = showQuest ? '' : 'none';
-    document.getElementById('quest-filters').style.display = showQuest ? '' : 'none';
     sortCol = 'success_rate'; sortAsc = false;
+    updateViewChrome();
     renderAll();
   });
-  document.getElementById('quest-filter-label').style.display = 'none';
-  document.getElementById('quest-all-btn').style.display = 'none';
-  document.getElementById('quest-filters').style.display = 'none';
+  window.addEventListener('resize', () => { if (barChart) barChart.resize(); });
 }
 
 function buildFilters() {
@@ -214,16 +225,30 @@ function buildFilters() {
   });
 }
 
+function updateViewChrome() {
+  const totalRuns = DATA.results.reduce((sum, row) => sum + row.runs, 0);
+  const scopeText = `${DATA.models.length} primary models, ${DATA.quests.length} comparable quests, ${totalRuns.toLocaleString()} runs.`;
+  document.getElementById('scope-note').textContent = DATA.scope?.note
+    ? `${scopeText} ${DATA.scope.note}`
+    : `Published slice: ${scopeText}`;
+  document.getElementById('quest-controls').style.display = viewMode === 'quests' ? 'flex' : 'none';
+  document.getElementById('view-scope').textContent = viewMode === 'summary'
+    ? `Scope: all ${DATA.quests.length} published quests`
+    : `Scope: ${filterQuest === 'all' ? 'all published quests' : filterQuest}`;
+  document.getElementById('chart-title').textContent = viewMode === 'summary'
+    ? 'Success Rate by Model and Mode'
+    : 'Success Rate in Selected Quest Scope';
+}
+
 function renderAll() {
+  updateViewChrome();
   renderStats();
   renderTable();
   renderBarChart();
-  renderScatterChart();
-  renderLiftChart();
 }
 
 function renderStats() {
-  const rows = viewMode === 'summary' ? aggregated() : filtered();
+  const rows = tableRows();
   const totalRuns = rows.reduce((s, r) => s + r.runs, 0);
   const wAvg = (key) => totalRuns ? rows.reduce((s, r) => s + (r[key] * r.runs), 0) / totalRuns : 0;
   const stats = [
@@ -246,12 +271,9 @@ function renderTable() {
     header.innerHTML = `<th>#</th>
       <th data-col="model">Model ${sortArrow('model')}</th>
       <th data-col="mode">Mode ${sortArrow('mode')}</th>
-      <th data-col="quests">Quests ${sortArrow('quests')}</th>
-      <th data-col="runs">Runs ${sortArrow('runs')}</th>
       <th data-col="success_rate">Success Rate ${sortArrow('success_rate')}</th>
-      <th data-col="avg_steps">Avg Steps ${sortArrow('avg_steps')}</th>
-      <th data-col="avg_tokens">Avg Tokens ${sortArrow('avg_tokens')}</th>
-      <th data-col="repetition_rate">Repetition <span class="tooltip-icon" title="Fraction of steps where the agent repeats an action from the last 5 steps. High values indicate the agent is stuck in a loop.">?</span>${sortArrow('repetition_rate')}</th>`;
+      <th data-col="runs">Runs ${sortArrow('runs')}</th>
+      <th data-col="quests">Quests ${sortArrow('quests')}</th>`;
   } else {
     header.innerHTML = `<th>#</th>
       <th data-col="model">Model ${sortArrow('model')}</th>
@@ -264,8 +286,9 @@ function renderTable() {
       <th data-col="repetition_rate">Repetition <span class="tooltip-icon" title="Fraction of steps where the agent repeats an action from the last 5 steps. High values indicate the agent is stuck in a loop.">?</span>${sortArrow('repetition_rate')}</th>`;
   }
 
-  const rows = (viewMode === 'summary' ? aggregated() : filtered()).slice().sort((a,b) => {
-    let va = a[sortCol], vb = b[sortCol];
+  const rows = tableRows().slice().sort((a,b) => {
+    let va = sortCol === 'model' ? modelLabel(a.model) : sortCol === 'mode' ? modeLabel(a.mode) : a[sortCol];
+    let vb = sortCol === 'model' ? modelLabel(b.model) : sortCol === 'mode' ? modeLabel(b.mode) : b[sortCol];
     if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
     return sortAsc ? va - vb : vb - va;
   });
@@ -274,20 +297,17 @@ function renderTable() {
   if (viewMode === 'summary') {
     tbody.innerHTML = rows.map((r,i) => `<tr>
       <td>${i+1}</td>
-      <td><strong>${esc(r.model)}</strong></td>
-      <td><span class="badge badge-mode ${MODE_CLASSES[r.mode]||''}">${MODE_LABELS[r.mode]||esc(r.mode)}</span></td>
-      <td>${r.quests}</td>
-      <td>${r.runs}</td>
+      <td><strong title="${esc(r.model)}">${esc(modelLabel(r.model))}</strong></td>
+      <td><span class="badge badge-mode ${MODE_CLASSES[r.mode]||''}">${esc(modeLabel(r.mode))}</span></td>
       <td><div class="d-flex align-items-center gap-2"><div class="success-bar"><div class="success-fill" style="width:${r.success_rate*100}%;background:${successColor(r.success_rate)}"></div></div><span>${(r.success_rate*100).toFixed(0)}%</span></div></td>
-      <td>${r.avg_steps.toFixed(1)}</td>
-      <td>${r.avg_tokens.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
-      <td>${(r.repetition_rate*100).toFixed(1)}%</td>
+      <td>${r.runs}</td>
+      <td>${r.quests}</td>
     </tr>`).join('');
   } else {
     tbody.innerHTML = rows.map((r,i) => `<tr>
       <td>${i+1}</td>
-      <td><strong>${esc(r.model)}</strong></td>
-      <td><span class="badge badge-mode ${MODE_CLASSES[r.mode]||''}">${MODE_LABELS[r.mode]||esc(r.mode)}</span></td>
+      <td><strong title="${esc(r.model)}">${esc(modelLabel(r.model))}</strong></td>
+      <td><span class="badge badge-mode ${MODE_CLASSES[r.mode]||''}">${esc(modeLabel(r.mode))}</span></td>
       <td>${esc(r.quest)}</td>
       <td>${r.runs}</td>
       <td><div class="d-flex align-items-center gap-2"><div class="success-bar"><div class="success-fill" style="width:${r.success_rate*100}%;background:${successColor(r.success_rate)}"></div></div><span>${(r.success_rate*100).toFixed(0)}%</span></div></td>
@@ -299,31 +319,28 @@ function renderTable() {
 }
 
 function sortedModels() {
-  return DATA.models.slice().sort((a, b) => {
-    const aRows = DATA.results.filter(r => r.model === a.id);
-    const bRows = DATA.results.filter(r => r.model === b.id);
-    const aRuns = aRows.reduce((s,r) => s+r.runs, 0);
-    const bRuns = bRows.reduce((s,r) => s+r.runs, 0);
-    const aRate = aRuns ? aRows.reduce((s,r) => s+r.success_rate*r.runs, 0)/aRuns : 0;
-    const bRate = bRuns ? bRows.reduce((s,r) => s+r.success_rate*r.runs, 0)/bRuns : 0;
-    return bRate - aRate;
-  });
+  const rows = scopedRows();
+  return DATA.models
+    .filter(model => rows.some(r => r.model === model.id))
+    .sort((a, b) => weightedRate(rows.filter(r => r.model === b.id)) - weightedRate(rows.filter(r => r.model === a.id)));
 }
 
 function renderBarChart() {
   const el = document.getElementById('chart-bar');
-  const chart = echarts.getInstanceByDom(el) || echarts.init(el);
+  barChart = echarts.getInstanceByDom(el) || echarts.init(el);
   const models = sortedModels();
   const labels = models.map(m => m.label);
-  const series = DATA.modes.map(mode => ({
+  const modes = filterMode === 'all' ? DATA.modes : DATA.modes.filter(mode => mode.id === filterMode);
+  const rows = scopedRows();
+  const series = modes.map(mode => ({
     name: MODE_LABELS[mode.id], type: 'bar',
     data: models.map(m => {
-      const rows = filtered().filter(r => r.model === m.id && r.mode === mode.id);
-      return rows.length ? +(rows.reduce((s,r) => s+r.success_rate, 0) / rows.length * 100).toFixed(1) : 0;
+      const scoped = rows.filter(r => r.model === m.id && r.mode === mode.id);
+      return scoped.length ? +(weightedRate(scoped) * 100).toFixed(1) : null;
     }),
     itemStyle: {color: COLORS[mode.id]}
   }));
-  chart.setOption({
+  barChart.setOption({
     tooltip: {trigger:'axis', backgroundColor:'#161b22', borderColor:'#30363d', textStyle:{color:'#e6edf3'}},
     legend: {textStyle:{color:'#c9d1d9'}, bottom: 0},
     grid: {left:'3%',right:'4%',bottom:'22%',containLabel:true},
@@ -331,59 +348,6 @@ function renderBarChart() {
     yAxis: {type:'value', name:'Success %', nameTextStyle:{color:'#c9d1d9'}, axisLabel:{color:'#c9d1d9'}, splitLine:{lineStyle:{color:'#21262d'}}},
     series
   }, true);
-  window.addEventListener('resize', () => chart.resize());
-}
-
-function renderScatterChart() {
-  const el = document.getElementById('chart-scatter');
-  const chart = echarts.getInstanceByDom(el) || echarts.init(el);
-  const series = DATA.modes.map((mode, mi) => ({
-    name: MODE_LABELS[mode.id], type: 'scatter', symbolSize: 14, symbol: MODEL_SYMBOLS[mi] || 'circle',
-    data: filtered().filter(r => r.mode === mode.id).map(r => ({
-      value: [r.avg_steps, r.success_rate * 100],
-      name: `${r.model} / ${r.quest}`
-    })),
-    itemStyle: {color: COLORS[mode.id]}
-  }));
-  chart.setOption({
-    tooltip: {trigger:'item', backgroundColor:'#161b22', borderColor:'#30363d', textStyle:{color:'#e6edf3'},
-      formatter: p => `${esc(p.seriesName)}<br/>${esc(p.data.name)}<br/>Steps: ${p.value[0]}<br/>Success: ${p.value[1].toFixed(0)}%`},
-    legend: {textStyle:{color:'#c9d1d9'}, bottom: 0},
-    grid: {left:'3%',right:'4%',bottom:'15%',containLabel:true},
-    xAxis: {name:'Avg Steps', nameTextStyle:{color:'#c9d1d9'}, axisLabel:{color:'#c9d1d9'}, splitLine:{lineStyle:{color:'#21262d'}}, axisLine:{lineStyle:{color:'#30363d'}}},
-    yAxis: {name:'Success %', nameTextStyle:{color:'#c9d1d9'}, axisLabel:{color:'#c9d1d9'}, splitLine:{lineStyle:{color:'#21262d'}}, max:105},
-    series
-  }, true);
-  window.addEventListener('resize', () => chart.resize());
-}
-
-function renderLiftChart() {
-  const el = document.getElementById('chart-lift');
-  const chart = echarts.getInstanceByDom(el) || echarts.init(el);
-  const models = sortedModels();
-  const labels = models.map(m => m.label);
-  const nonBaseline = DATA.modes.filter(m => m.id !== 'stub');
-  const series = nonBaseline.map(mode => ({
-    name: MODE_LABELS[mode.id], type: 'bar',
-    data: models.map(m => {
-      const base = filtered().filter(r => r.model === m.id && r.mode === 'stub');
-      const curr = filtered().filter(r => r.model === m.id && r.mode === mode.id);
-      if (!base.length || !curr.length) return 0;
-      const bsr = base.reduce((s,r) => s+r.success_rate,0)/base.length;
-      const csr = curr.reduce((s,r) => s+r.success_rate,0)/curr.length;
-      return +((csr - bsr) * 100).toFixed(1);
-    }),
-    itemStyle: {color: COLORS[mode.id]}
-  }));
-  chart.setOption({
-    tooltip: {trigger:'axis', backgroundColor:'#161b22', borderColor:'#30363d', textStyle:{color:'#e6edf3'}, formatter: ps => ps.map(p=>`${p.marker} ${p.seriesName}: ${p.value>0?'+':''}${p.value}pp`).join('<br/>')},
-    legend: {textStyle:{color:'#c9d1d9'}, bottom: 0},
-    grid: {left:'3%',right:'4%',bottom:'22%',containLabel:true},
-    xAxis: {type:'category', data:labels, axisLabel:{color:'#c9d1d9', rotate:35, fontSize:11}, axisLine:{lineStyle:{color:'#30363d'}}},
-    yAxis: {type:'value', name:'Lift (pp)', nameTextStyle:{color:'#c9d1d9'}, axisLabel:{color:'#c9d1d9', formatter:v=>(v>0?'+':'')+v+'pp'}, splitLine:{lineStyle:{color:'#21262d'}}},
-    series
-  }, true);
-  window.addEventListener('resize', () => chart.resize());
 }
 
 init();

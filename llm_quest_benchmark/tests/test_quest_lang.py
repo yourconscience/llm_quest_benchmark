@@ -102,7 +102,12 @@ class TestLeaderboardCanonicalization:
         (benchmark_dir / "benchmark_summary.json").write_text(json.dumps(summary))
 
         output_path = str(tmp_path / "leaderboard.json")
-        leaderboard = generate_leaderboard([str(benchmark_dir)], output_path, min_runs=0)
+        leaderboard = generate_leaderboard(
+            [str(benchmark_dir)],
+            output_path,
+            min_runs=0,
+            public_model_ids=None,
+        )
 
         quest_ids = [r["quest"] for r in leaderboard["results"]]
         assert "Banket_ru" not in quest_ids
