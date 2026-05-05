@@ -45,6 +45,7 @@ PUBLIC_MODEL_IDS = (
     "mistral-medium-3.1",
 )
 
+
 def _load_json(path: Path) -> dict[str, Any] | None:
     if not path.exists():
         return None
