@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import csv
 import json
-from collections import defaultdict
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -64,7 +63,7 @@ def load_leaderboard() -> dict[str, Any]:
 def load_tiers() -> dict[str, list[str]]:
     tiers: dict[str, list[str]] = {}
     for tier, path in TIER_CONFIGS.items():
-        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+        payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         quests = [Path(quest_path).stem for quest_path in payload.get("quests", [])]
         tiers[tier] = quests
     return tiers
@@ -83,7 +82,10 @@ def aggregate(rows: list[dict[str, Any]]) -> Aggregate:
     )
 
 
-def write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, Any]]) -> None:
+def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    if not rows:
+        raise ValueError(f"No rows available for CSV output: {path}")
+    fieldnames = list(rows[0].keys())
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -174,6 +176,9 @@ def main() -> None:
         raise SystemExit(f"Tier configs reference quests not present in leaderboard.json: {missing}")
 
     tier_map = {quest: tier for tier, quests in tiers.items() for quest in quests}
+    untiered = sorted([quest for quest in all_quests if quest not in tier_map])
+    if untiered:
+        raise SystemExit(f"Leaderboard contains quests not assigned to any tier: {untiered}")
     model_labels = {model["id"]: model["label"] for model in leaderboard["models"]}
     rows = list(leaderboard["results"])
 
@@ -276,11 +281,11 @@ def main() -> None:
     }
 
     (DATA_DIR / "public_summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    write_csv(DATA_DIR / "tier_summary.csv", list(tier_rows[0].keys()), tier_rows)
-    write_csv(DATA_DIR / "mode_by_tier.csv", list(mode_by_tier_rows[0].keys()), mode_by_tier_rows)
-    write_csv(DATA_DIR / "model_summary.csv", list(model_rows[0].keys()), model_rows)
-    write_csv(DATA_DIR / "quest_summary.csv", list(quest_rows[0].keys()), quest_rows)
-    write_csv(DATA_DIR / "mode_overall.csv", list(mode_overall_rows[0].keys()), mode_overall_rows)
+    write_csv(DATA_DIR / "tier_summary.csv", tier_rows)
+    write_csv(DATA_DIR / "mode_by_tier.csv", mode_by_tier_rows)
+    write_csv(DATA_DIR / "model_summary.csv", model_rows)
+    write_csv(DATA_DIR / "quest_summary.csv", quest_rows)
+    write_csv(DATA_DIR / "mode_overall.csv", mode_overall_rows)
     build_tables(leaderboard, tiers, tier_rows, mode_by_tier_rows, model_rows)
 
     print(f"Wrote paper data to {DATA_DIR.relative_to(ROOT)} and tables to {TABLE_DIR.relative_to(ROOT)}")
