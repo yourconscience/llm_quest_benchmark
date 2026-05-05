@@ -8,7 +8,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from llm_quest_benchmark.core.quest_lang import canonical_quest_id
 from llm_quest_benchmark.llm.client import parse_model_name
@@ -126,6 +126,11 @@ def _mean(values: Iterable[float]) -> float:
     return sum(materialized) / len(materialized)
 
 
+def _dict_field(payload: dict[str, Any], key: str) -> dict[str, Any]:
+    value = payload.get(key)
+    return cast(dict[str, Any], value) if isinstance(value, dict) else {}
+
+
 def _resolve_benchmark_dirs(benchmark_dirs: list[str]) -> list[Path]:
     resolved: list[Path] = []
     seen: set[str] = set()
@@ -165,7 +170,7 @@ def generate_leaderboard(
     grouped_rows: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
     model_entries: dict[str, dict[str, str]] = {}
     mode_entries: dict[str, dict[str, str]] = {}
-    quest_entries: dict[str, dict[str, str]] = {}
+    quest_entries: dict[str, dict[str, Any]] = {}
     benchmark_ids: list[str] = []
 
     for benchmark_dir in resolved_dirs:
@@ -177,8 +182,10 @@ def generate_leaderboard(
         if benchmark_id:
             benchmark_ids.append(str(benchmark_id))
 
-        results_list = summary.get("results") if isinstance(summary.get("results"), list) else []
-        db_runs = summary.get("db_runs") if isinstance(summary.get("db_runs"), list) else []
+        raw_results = summary.get("results")
+        results_list: list[Any] = raw_results if isinstance(raw_results, list) else []
+        raw_db_runs = summary.get("db_runs")
+        db_runs: list[Any] = raw_db_runs if isinstance(raw_db_runs, list) else []
 
         for i, result_row in enumerate(results_list):
             if not isinstance(result_row, dict):
@@ -205,8 +212,8 @@ def generate_leaderboard(
                 if run_id is not None and quest_name and agent_id:
                     run_path = Path("results") / str(agent_id) / str(quest_name) / f"run_{run_id}" / "run_summary.json"
                     run_summary = _load_json(run_path) or {}
-                    usage = run_summary.get("usage") if isinstance(run_summary.get("usage"), dict) else {}
-                    metrics = run_summary.get("metrics") if isinstance(run_summary.get("metrics"), dict) else {}
+                    usage = _dict_field(run_summary, "usage")
+                    metrics = _dict_field(run_summary, "metrics")
 
             try:
                 spec = parse_model_name(model)
@@ -240,20 +247,24 @@ def generate_leaderboard(
             mode_entries[mode_id] = {"id": mode_id, "label": mode_label}
             if raw_quest_id != quest_id:
                 existing_quest = quest_entries.setdefault(quest_id, {"id": quest_id, "lang": "EN"})
-                source_langs = existing_quest.setdefault("source_langs", [existing_quest.get("lang", "EN")])
+                source_langs = existing_quest.get("source_langs")
+                if not isinstance(source_langs, list):
+                    source_langs = [str(existing_quest.get("lang", "EN"))]
+                    existing_quest["source_langs"] = source_langs
                 existing_quest["lang"] = "EN"
                 if source_lang not in source_langs:
                     source_langs.append(source_lang)
             else:
-                existing_quest = quest_entries.get(quest_id)
-                if existing_quest and "source_langs" in existing_quest:
-                    existing_quest["lang"] = "EN"
-                    if source_lang not in existing_quest["source_langs"]:
-                        existing_quest["source_langs"].append(source_lang)
+                maybe_existing_quest = quest_entries.get(quest_id)
+                if maybe_existing_quest and "source_langs" in maybe_existing_quest:
+                    maybe_existing_quest["lang"] = "EN"
+                    source_langs = maybe_existing_quest["source_langs"]
+                    if isinstance(source_langs, list) and source_lang not in source_langs:
+                        source_langs.append(source_lang)
                 else:
                     quest_entries[quest_id] = {"id": quest_id, "lang": source_lang}
 
-    agg_results = []
+    agg_results: list[dict[str, Any]] = []
     for (model, mode_id, quest_id), rows in sorted(grouped_rows.items()):
         run_count = len(rows)
         success_count = sum(1 for row in rows if row["outcome"] == "SUCCESS")

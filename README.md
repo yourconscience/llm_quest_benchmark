@@ -2,11 +2,11 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Leaderboard](https://img.shields.io/badge/Leaderboard-Live-green.svg)](https://yourconscience.github.io/llm_quest_benchmark/)
-[![Blog](https://img.shields.io/badge/Blog-Post-blue.svg)](https://yourconscience.github.io/llm_quest_benchmark/blog.html)
+[![About](https://img.shields.io/badge/About-Post-blue.svg)](https://yourconscience.github.io/llm_quest_benchmark/about.html)
 
 Benchmark for evaluating LLM agent architectures on interactive fiction quests. Measures how planning, tool use, and prompt design affect decision-making quality across models and tasks.
 
-**[Project Site](https://yourconscience.github.io/llm_quest_benchmark/)** | **[Leaderboard](https://yourconscience.github.io/llm_quest_benchmark/index.html)** | **[Blog Post](https://yourconscience.github.io/llm_quest_benchmark/blog.html)**
+**[Project Site](https://yourconscience.github.io/llm_quest_benchmark/)** | **[Leaderboard](https://yourconscience.github.io/llm_quest_benchmark/index.html)** | **[About / Write-up](https://yourconscience.github.io/llm_quest_benchmark/about.html)**
 
 See the [About page](https://yourconscience.github.io/llm_quest_benchmark/about.html) for benchmark design, agent modes, metrics, and model selection rationale.
 
