@@ -2,7 +2,7 @@
 
 These are the missing experiments for a stronger second draft. They are planned only in this branch.
 
-## 1. Balanced A-D tier rerun
+## 1. Balanced easy/medium/hard tier rerun
 
 Use the current six-model lineup from `site/leaderboard.json` with the committed tier configs:
 

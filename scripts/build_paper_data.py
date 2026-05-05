@@ -69,6 +69,26 @@ def load_tiers() -> dict[str, list[str]]:
     return tiers
 
 
+def build_tier_map(tiers: dict[str, list[str]]) -> dict[str, str]:
+    tier_map: dict[str, str] = {}
+    duplicate_assignments: dict[str, list[str]] = {}
+
+    for tier, quests in tiers.items():
+        for quest in quests:
+            if quest in tier_map:
+                duplicate_assignments.setdefault(quest, [tier_map[quest]]).append(tier)
+                continue
+            tier_map[quest] = tier
+
+    if duplicate_assignments:
+        details = ", ".join(
+            f"{quest}: {'/'.join(assignments)}" for quest, assignments in sorted(duplicate_assignments.items())
+        )
+        raise SystemExit(f"Tier configs assign quests to multiple tiers: {details}")
+
+    return tier_map
+
+
 def aggregate(rows: list[dict[str, Any]]) -> Aggregate:
     runs = sum(int(row["runs"]) for row in rows)
     weighted_success = sum(float(row["success_rate"]) * int(row["runs"]) for row in rows)
@@ -175,7 +195,7 @@ def main() -> None:
     if missing:
         raise SystemExit(f"Tier configs reference quests not present in leaderboard.json: {missing}")
 
-    tier_map = {quest: tier for tier, quests in tiers.items() for quest in quests}
+    tier_map = build_tier_map(tiers)
     untiered = sorted([quest for quest in all_quests if quest not in tier_map])
     if untiered:
         raise SystemExit(f"Leaderboard contains quests not assigned to any tier: {untiered}")
@@ -236,13 +256,13 @@ def main() -> None:
     model_rows.sort(key=lambda row: (-row["success_rate"], -row["runs"], row["label"]))
 
     quest_rows: list[dict[str, Any]] = []
-    for quest in sorted(all_quests):
+    for quest in sorted(tier_map):
         subset = [row for row in rows if str(row["quest"]) == quest]
         agg = aggregate(subset)
         quest_rows.append(
             {
                 "quest": quest,
-                "tier": tier_map[quest],
+                "tier": tier_map.get(quest, "unassigned"),
                 "runs": agg.runs,
                 "success_rate": round(agg.success_rate, 6),
                 "modes": len({str(row["mode"]) for row in subset}),
