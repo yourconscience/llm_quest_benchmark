@@ -67,27 +67,29 @@ more success endings and one or more failure endings. A typical quest has
 
 **What is the current benchmark scope?**
 
-The leaderboard currently uses 30 quest IDs:
+The published leaderboard uses a comparable 15-quest slice:
 
-Badday_eng, Banket_eng, Boat, Borzukhan_eng, Codebox_eng, Depth_eng,
-Diehard, Disk_eng, Driver_eng, Edelweiss_eng, Election_eng, Foncers_eng,
-Gobsaur, Hachball, Leonardo_eng, Logic_eng, Ministry_eng, Muzon_eng,
-Pilot_eng, Pizza_eng, Player_eng, Prison_eng, Robots_eng, Rush,
-Shashki_eng, Ski_eng, Sortirovka1_eng, Spy, Svarokok_eng, Tomb
+Badday_eng, Banket_eng, Boat, Codebox_eng, Depth_eng, Driver_eng,
+Edelweiss_eng, Election_eng, Foncers_eng, Leonardo_eng, Ministry_eng,
+Pizza_eng, Prison_eng, Robots_eng, Ski_eng
 
-These include the original reliable English subset plus later expanded
-public leaderboard runs. Remaining English and Russian quests are available
-for follow-up benchmarking.
+These are the quest IDs with results from all six primary publication
+models. Additional exploratory benchmark runs exist in raw benchmark
+artifacts but are excluded from the public leaderboard when they do not
+support direct model-to-model comparison.
 
 **How many runs exist?**
 
-2442 benchmark runs across 17 models and 5 agent modes (as of 2026-05-05).
+1615 published leaderboard runs across 6 primary models and 5 agent modes
+(as of 2026-05-05).
 
-Model families include Anthropic, DeepSeek, Google, Meta Llama, Minimax,
-Mistral, OpenAI, and Qwen.
+Model families include Anthropic, DeepSeek, Google, Minimax, Mistral, and
+OpenAI.
 
 Modes: Baseline (A), Prompted (B), Knowledge (C), Planner (D),
-Tool-augmented (E).
+Tool-augmented (E). Baseline and Prompted have the broadest coverage;
+C/D/E are reported where they exist and should be read as intervention
+experiments rather than a complete rectangular matrix.
 
 **Is there a difficulty distribution?**
 
@@ -165,12 +167,11 @@ some quests may appear in multiple collections (e.g., original vs. remastered).
 
 **How were the public leaderboard quests selected?**
 
-The public leaderboard started with the English quests that ran reliably
-through the automated benchmark pipeline, then expanded with additional
-quest IDs as more benchmark and play-mode assets were prepared. Selection
-criteria: the quest must parse correctly, present meaningful choices, and
-terminate within the step limit. The exact inclusion/exclusion rationale for
-each quest is still TBD for formal documentation.
+The public leaderboard is a curated comparison slice. A quest is included
+only if it parses correctly, presents meaningful choices, terminates within
+the step limit, and has results from all six primary publication models.
+This removes one-model exploratory quests from the public table while
+preserving the raw benchmark artifacts for follow-up analysis.
 
 **Is language detection automated?**
 

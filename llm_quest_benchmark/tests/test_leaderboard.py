@@ -107,7 +107,13 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
         path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 
     output_path = Path("site/leaderboard.json")
-    leaderboard = generate_leaderboard([str(benchmark_dir)], str(output_path), min_runs=0)
+    leaderboard = generate_leaderboard(
+        [str(benchmark_dir)],
+        str(output_path),
+        min_runs=0,
+        public_model_ids=None,
+        min_models_per_quest=0,
+    )
 
     assert output_path.exists()
     persisted = json.loads(output_path.read_text(encoding="utf-8"))
@@ -148,3 +154,57 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
         "avg_cost_usd": 0.006,
         "repetition_rate": 0.0,
     }
+
+
+def test_generate_leaderboard_filters_public_slice(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    benchmark_dir = Path("results/benchmarks/bench_public")
+    benchmark_dir.mkdir(parents=True, exist_ok=True)
+
+    rows = []
+    for model in ["model-a", "model-b", "model-c"]:
+        for quest in ["Core", "Solo"]:
+            rows.append(
+                {
+                    "quest": f"quests/{quest}.qm",
+                    "model": model,
+                    "template": "stub.jinja",
+                    "agent_id": model,
+                    "attempt": 1,
+                    "outcome": "SUCCESS",
+                    "reward": 1.0,
+                    "error": None,
+                }
+            )
+    rows.append(
+        {
+            "quest": "quests/Core.qm",
+            "model": "low-coverage",
+            "template": "stub.jinja",
+            "agent_id": "low-coverage",
+            "attempt": 1,
+            "outcome": "SUCCESS",
+            "reward": 1.0,
+            "error": None,
+        }
+    )
+    rows = [row for row in rows if not (row["quest"] == "quests/Solo.qm" and row["model"] != "model-a")]
+
+    (benchmark_dir / "benchmark_summary.json").write_text(
+        json.dumps({"benchmark_id": "bench_public", "agents": [], "results": rows, "db_runs": []}),
+        encoding="utf-8",
+    )
+
+    leaderboard = generate_leaderboard(
+        [str(benchmark_dir)],
+        "site/leaderboard.json",
+        min_runs=1,
+        public_model_ids=["model-a", "model-b", "model-c"],
+        min_models_per_quest=3,
+    )
+
+    assert [model["id"] for model in leaderboard["models"]] == ["model-a", "model-b", "model-c"]
+    assert [quest["id"] for quest in leaderboard["quests"]] == ["Core"]
+    assert {row["quest"] for row in leaderboard["results"]} == {"Core"}
+    assert {row["model"] for row in leaderboard["results"]} == {"model-a", "model-b", "model-c"}

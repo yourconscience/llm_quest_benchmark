@@ -36,6 +36,15 @@ MODEL_ALIASES = {
 }
 
 MIN_RUNS_THRESHOLD = 10
+PUBLIC_MODEL_IDS = (
+    "claude-haiku-4.5",
+    "deepseek-v3.2",
+    "gemini-3-flash-preview",
+    "gpt-5.4-mini",
+    "minimax-m2.5",
+    "mistral-medium-3.1",
+)
+PUBLIC_MIN_MODELS_PER_QUEST = len(PUBLIC_MODEL_IDS)
 
 
 def _load_json(path: Path) -> dict[str, Any] | None:
@@ -163,7 +172,11 @@ def _resolve_benchmark_dirs(benchmark_dirs: list[str]) -> list[Path]:
 
 
 def generate_leaderboard(
-    benchmark_dirs: list[str], output_path: str, min_runs: int = MIN_RUNS_THRESHOLD
+    benchmark_dirs: list[str],
+    output_path: str,
+    min_runs: int = MIN_RUNS_THRESHOLD,
+    public_model_ids: Iterable[str] | None = PUBLIC_MODEL_IDS,
+    min_models_per_quest: int = PUBLIC_MIN_MODELS_PER_QUEST,
 ) -> dict[str, Any]:
     resolved_dirs = _resolve_benchmark_dirs(benchmark_dirs)
 
@@ -286,13 +299,34 @@ def generate_leaderboard(
     for row in agg_results:
         model_total_runs[row["model"]] += row["runs"]
     included_models = {m for m, total in model_total_runs.items() if total >= min_runs}
+    if public_model_ids is not None:
+        included_models &= set(public_model_ids)
     agg_results = [row for row in agg_results if row["model"] in included_models]
+
+    if min_models_per_quest > 0:
+        quest_models: dict[str, set[str]] = defaultdict(set)
+        for row in agg_results:
+            quest_models[row["quest"]].add(row["model"])
+        included_quests = {quest for quest, models in quest_models.items() if len(models) >= min_models_per_quest}
+        agg_results = [row for row in agg_results if row["quest"] in included_quests]
+
+    included_models = {row["model"] for row in agg_results}
+    included_modes = {row["mode"] for row in agg_results}
+    included_quests = {row["quest"] for row in agg_results}
     model_entries = {k: v for k, v in model_entries.items() if k in included_models}
+    mode_entries = {k: v for k, v in mode_entries.items() if k in included_modes}
+    quest_entries = {k: v for k, v in quest_entries.items() if k in included_quests}
 
     mode_rank = {mode_id: index for index, mode_id in enumerate(MODE_ORDER)}
     leaderboard = {
         "generated": datetime.now().isoformat(),
         "benchmark_id": benchmark_ids[0] if len(set(benchmark_ids)) == 1 and benchmark_ids else "combined",
+        "scope": {
+            "model_ids": sorted(included_models),
+            "min_runs_per_model": min_runs,
+            "min_models_per_quest": min_models_per_quest,
+            "note": "Raw benchmark artifacts may contain exploratory runs outside this published comparison slice.",
+        },
         "models": sorted(model_entries.values(), key=lambda item: item["id"]),
         "modes": sorted(mode_entries.values(), key=lambda item: (mode_rank.get(item["id"], 999), item["id"])),
         "quests": sorted(quest_entries.values(), key=lambda item: item["id"]),
