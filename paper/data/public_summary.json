@@ -1,0 +1,84 @@
+{
+  "source": "site/leaderboard.json",
+  "generated_at": "2026-05-05T12:17:16+00:00",
+  "leaderboard_generated_at": "2026-05-05T13:35:04.535791",
+  "total_runs": 1615,
+  "total_rows": 236,
+  "models": [
+    {
+      "id": "claude-haiku-4.5",
+      "provider": "anthropic",
+      "label": "Claude Haiku 4.5"
+    },
+    {
+      "id": "deepseek-v3.2",
+      "provider": "deepseek",
+      "label": "DeepSeek v3.2"
+    },
+    {
+      "id": "gemini-3-flash-preview",
+      "provider": "google",
+      "label": "Gemini 3 Flash Preview"
+    },
+    {
+      "id": "gpt-5.4-mini",
+      "provider": "openai",
+      "label": "GPT-5.4 Mini"
+    },
+    {
+      "id": "minimax-m2.5",
+      "provider": "minimax",
+      "label": "MiniMax m2.5"
+    },
+    {
+      "id": "mistral-medium-3.1",
+      "provider": "mistralai",
+      "label": "Mistral Medium 3.1"
+    }
+  ],
+  "modes": [
+    {
+      "id": "stub",
+      "label": "Baseline (A)"
+    },
+    {
+      "id": "reasoning",
+      "label": "Prompted (B)"
+    },
+    {
+      "id": "light_hints",
+      "label": "Knowledge (C)"
+    },
+    {
+      "id": "planner",
+      "label": "Planner (D)"
+    },
+    {
+      "id": "tool_augmented",
+      "label": "Tool-aug (E)"
+    }
+  ],
+  "tiers": {
+    "easy": [
+      "Boat",
+      "Badday_eng",
+      "Pizza_eng"
+    ],
+    "medium": [
+      "Ski_eng",
+      "Robots_eng",
+      "Leonardo_eng"
+    ],
+    "hard": [
+      "Banket_eng",
+      "Codebox_eng",
+      "Depth_eng",
+      "Driver_eng",
+      "Edelweiss_eng",
+      "Election_eng",
+      "Foncers_eng",
+      "Ministry_eng",
+      "Prison_eng"
+    ]
+  }
+}

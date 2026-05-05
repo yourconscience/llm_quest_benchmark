@@ -1,0 +1,16 @@
+quest,tier,runs,success_rate,modes,models
+Boat,easy,80,0.65,4,6
+Badday_eng,easy,109,0.33945,5,6
+Pizza_eng,easy,109,0.266055,5,6
+Ski_eng,medium,112,0.160714,5,6
+Leonardo_eng,medium,112,0.044643,5,6
+Robots_eng,medium,117,0.025641,5,6
+Election_eng,hard,117,0.119658,5,6
+Ministry_eng,hard,114,0.008772,5,6
+Banket_eng,hard,111,0.0,5,6
+Codebox_eng,hard,111,0.0,5,6
+Depth_eng,hard,111,0.0,5,6
+Driver_eng,hard,111,0.0,5,6
+Edelweiss_eng,hard,114,0.0,5,6
+Foncers_eng,hard,114,0.0,5,6
+Prison_eng,hard,73,0.0,4,6

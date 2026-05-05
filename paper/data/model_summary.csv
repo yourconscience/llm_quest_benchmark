@@ -1,0 +1,7 @@
+model,label,runs,success_rate,quests,modes
+mistral-medium-3.1,Mistral Medium 3.1,180,0.188889,15,2
+claude-haiku-4.5,Claude Haiku 4.5,117,0.128205,15,2
+minimax-m2.5,MiniMax m2.5,90,0.088889,15,2
+gemini-3-flash-preview,Gemini 3 Flash Preview,717,0.087866,15,4
+gpt-5.4-mini,GPT-5.4 Mini,286,0.08042,15,4
+deepseek-v3.2,DeepSeek v3.2,225,0.071111,15,2

@@ -1,0 +1,177 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{enumitem}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black
+}
+
+\title{LLM-Quest Benchmark: From Blog-Style Leaderboard to an Honest Preprint Draft}
+\author{Kirill Korikov}
+\date{May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This draft turns the current \texttt{llm\_quest\_benchmark} repository into an arXiv-oriented preprint without pretending that the benchmark is further along than it is. The public repository already exposes a six-model, 15-quest leaderboard slice with 1{,}615 total runs, but coverage is uneven across agent modes and quests. To make the result legible, we reuse the repository's committed tiered benchmark configs and summarize the public slice as three empirical packs: easy, medium, and hard. The published archive already shows a sharp difficulty cliff: the easy pack reaches 39.6\% weighted success over 298 runs, the medium pack drops to 7.6\% over 341 runs, and the hard pack falls to 1.5\% over 976 runs. These numbers are descriptive rather than causal because the current archive is not a balanced rectangular matrix across modes. The paper therefore makes two conservative claims: first, the Space Rangers quest domain exposes a steep transition from locally solvable to effectively unsolved tasks; second, the repository is ready for a stronger next phase built around the committed tiered rerun configs. No new expensive benchmark matrices were run for this draft.
+\end{abstract}
+
+\section{Introduction}
+
+Benchmarks for LLM agents usually vary tasks and models while treating the agent scaffold as fixed. This repository was built around the opposite idea: keep the task domain stable and vary the wrapper around the model. The environment is a corpus of Space Rangers text quests from the community archive, executed through the \texttt{space-rangers-quest} TypeScript interpreter already used by the repository's Python bridge. Each run is a short sequential decision problem: read the current state, choose one action from a list, observe the next state, and continue until success or failure.
+
+That framing is promising, but the current public evidence base is uneven. The published site already aggregates 1{,}615 runs across six primary models and five agent-mode labels, yet those runs were accumulated through several experiments with different coverage patterns. Some modes are dense on easy quests and thin on hard quests. Some models have much deeper historical coverage than others. A credible preprint cannot ignore that.
+
+This draft therefore takes a narrower goal. It converts the existing repository into a reviewable preprint package while keeping the claims tightly aligned with committed artifacts. The core contributions of this branch are:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item a repository-local \texttt{paper/} directory with LaTeX source, bibliography, and generated paper data;
+  \item an explicit easy/medium/hard reading of the current 15-quest public slice, grounded in the tier configs already present in the repository;
+  \item a written plan for the balanced reruns and ablations still needed before stronger causal claims are justified.
+\end{enumerate}
+
+\section{Repository State and Evidence Base}
+
+The canonical public evidence in this branch is \texttt{site/leaderboard.json}. It defines a six-model published slice:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item Claude Haiku 4.5
+  \item DeepSeek v3.2
+  \item Gemini 3 Flash Preview
+  \item GPT-5.4 Mini
+  \item MiniMax m2.5
+  \item Mistral Medium 3.1
+\end{itemize}
+
+The same file also exposes five public mode labels: baseline (\texttt{stub}), prompted reasoning, knowledge hints, planner, and tool-augmented. However, these labels do not have balanced coverage. The mode totals range from 15 planner runs to 1{,}137 reasoning runs, so the current public slice is best read as a descriptive archive rather than a clean intervention study.
+
+The branch also includes three committed tier configs:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{configs/benchmarks/tiered/tiered\_easy\_core\_v1.yaml}
+  \item \texttt{configs/benchmarks/tiered/tiered\_medium\_core\_v1.yaml}
+  \item \texttt{configs/benchmarks/tiered/tiered\_hard\_core\_v1.yaml}
+\end{itemize}
+
+These configs define the quest packs that the next balanced rerun should use. In this draft, they serve a second purpose: they provide a stable tiering scheme for summarizing the current public archive.
+
+\section{Related Work}
+
+The closest recent text-game benchmark is TextQuests \cite{textquests2025}, which uses Infocom interactive fiction to measure long-horizon intrinsic reasoning without external tools. LLM-Quest differs in two ways: it uses authored choice-based Space Rangers quests rather than parser-based games, and it treats agent architecture as a first-class benchmark variable rather than holding it fixed.
+
+TextWorld \cite{textworld2018} remains the canonical environment paper for text-based games, but it is better understood as an environment and generation framework than a benchmark for prompt-level agent design. TextGames \cite{textgames2025} is more directly relevant to this draft's tier framing because it explicitly studies easy, medium, and hard text reasoning tasks. A newer positioning paper on Zork \cite{zork2026} is also consistent with the current repository evidence: modern chat models still struggle badly when the task requires long-horizon state tracking and strategy persistence.
+
+Beyond text games, AgentBench \cite{agentbench2024}, AgentQuest \cite{agentquest2024}, and lmgame-Bench \cite{lmgame2025} frame the broader evaluation problem for LLM agents. Their main relevance here is methodological. They motivate reporting agent behavior on multi-step tasks, but they do not solve the narrower question this repository asks: what changes when the environment remains fixed and the scaffold changes?
+
+Finally, the prompt-and-tool literature provides the architectural backdrop for the benchmark modes. Chain-of-thought prompting \cite{cot2022}, ReAct \cite{react2023}, and Toolformer \cite{toolformer2023} all motivate the choice to expose baseline, reasoning, knowledge, planning, and tool-use variants inside one benchmark surface.
+
+\section{Tier Structure}
+
+The committed tier configs split the 15 public quests into three packs. They are reproduced in Table~\ref{tab:quest-tiers}. The split is not presented as a universal truth about quest difficulty; it is an empirical organization choice already encoded in the repository for the next balanced reruns.
+
+\begin{table}[t]
+  \centering
+  \caption{Quest packs used in this draft.}
+  \label{tab:quest-tiers}
+  \input{tables/quest_tiers.tex}
+\end{table}
+
+Table~\ref{tab:tier-summary} shows why this organization is useful even before reruns. The public archive already exhibits a dramatic performance drop as soon as the benchmark leaves the three easy quests.
+
+\begin{table}[t]
+  \centering
+  \caption{Weighted success on the published six-model archive by tier.}
+  \label{tab:tier-summary}
+  \input{tables/tier_summary.tex}
+\end{table}
+
+The quest-level pattern is equally sharp. In the easy tier, Boat reaches 65.0\% weighted success, Badday reaches 33.9\%, and Pizza reaches 26.6\%. In the medium tier, Ski still shows partial traction at 16.1\%, but Robots drops to 2.6\% and Leonardo to 4.5\%. The hard tier is effectively flat: Election is the only clearly nonzero quest at 12.0\%, Ministry barely registers at 0.9\%, and the other seven hard quests remain at 0.0\% in the published slice.
+
+\section{Results}
+
+\subsection{Easy tier}
+
+The easy tier is where the current repository already supports a practical benchmark story. Across 298 public runs, the easy quests reach 39.6\% weighted success. The best easy quest, Boat, is solved often enough that benchmark differences can be observed without the entire signal collapsing into zeros.
+
+The public archive also shows that simple prompting can already carry much of the easy-tier signal. Baseline rows reach 74.6\% weighted success on easy quests, while prompted reasoning reaches 31.4\%. Knowledge and planner rows have much thinner coverage, so they cannot yet support strong causal claims. The safe interpretation is not that baseline is universally better, but that the current public archive still contains strong prompt-coverage and run-history confounds.
+
+\subsection{Medium tier}
+
+The medium tier is the most informative part of the current archive. It is not saturated, but it is not entirely dead either. Weighted success drops to 7.6\% over 341 runs. Ski remains partly solvable, Leonardo occasionally yields a win, and Robots is close to unsolved.
+
+This is where the benchmark looks most promising for the next balanced rerun. Medium-tier quests are hard enough to punish weak state tracking, but not so hard that all methods collapse to zero. A balanced rerun on this tier is likely to provide the cleanest signal about whether reasoning, hints, or planning genuinely extend solvability.
+
+\subsection{Hard tier}
+
+The hard tier contains most of the public archive's runs and almost none of its wins. Weighted success is only 1.5\% over 976 runs. Seven of the nine hard quests remain at zero, and the two nonzero exceptions are narrow: Election contributes nearly all of the visible hard-tier success, and Ministry contributes only a trace.
+
+This hard-tier collapse is the strongest benchmark finding already present in the repo. It implies that future benchmark improvements should be judged less by small changes in global average and more by whether they create reproducible nonzero performance on currently flat quests.
+
+\subsection{Mode coverage and exploratory signals}
+
+Table~\ref{tab:mode-tier} summarizes the public archive by mode and tier.
+
+\begin{table}[t]
+  \centering
+  \caption{Weighted success by public mode label and tier. Each cell reports success and run count.}
+  \label{tab:mode-tier}
+  \input{tables/mode_by_tier.tex}
+\end{table}
+
+Two facts stand out. First, mode coverage is highly uneven: the current archive contains 1{,}137 reasoning runs, 331 baseline runs, 78 tool-augmented runs, 54 knowledge-hint runs, and only 15 planner runs. Second, the sparse modes still contain clues worth following. Tool-augmented hard-tier rows reach 10.4\% weighted success over 48 runs, far above the hard-tier archive average. That number is too sparse to headline as a conclusion, but it is a good candidate for the next targeted rerun.
+
+\subsection{Model summary}
+
+Table~\ref{tab:model-summary} reports the overall weighted success by public model.
+
+\begin{table}[t]
+  \centering
+  \caption{Weighted success across the full public archive by model.}
+  \label{tab:model-summary}
+  \input{tables/model_summary.tex}
+\end{table}
+
+Mistral Medium 3.1 currently tops the weighted archive summary at 18.9\% over 180 runs, followed by Claude Haiku 4.5 at 12.8\%. However, the leaderboard should not be over-read as a pure model ranking because run coverage differs sharply by model. Gemini 3 Flash Preview, for example, carries 717 published runs, far more than any other model in the current public slice. The preprint therefore treats model ranking as secondary to the benchmark-design problem.
+
+\section{What Is Missing}
+
+The repository is already strong enough for a reviewable preliminary preprint, but not for decisive causal claims about agent architecture. The main missing experiment is straightforward: rerun the current six-model lineup on the committed easy, medium, and hard packs with balanced A-D mode coverage and three runs per cell. Because the tier configs already specify 15 quests and four modes, that balanced rerun is exactly 1{,}080 runs.
+
+The second missing experiment is a targeted tool-mode follow-up. The current archive suggests tool-use signal on hard-tier Election and some medium-tier quests, but the coverage is too sparse to separate real gains from sampling noise. A focused seven-quest tool rerun would turn that hint into a falsifiable claim.
+
+Finally, the benchmark still lacks a human baseline, calibrated repeat-run stability checks, and a clean appendix strategy for frontier-tier models. These are all planned in this branch, but none are claimed as completed evidence.
+
+\section{Limitations}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Coverage imbalance.} The current public slice is not a balanced rectangular matrix across models, modes, and quests.
+  \item \textbf{Archive-style aggregation.} The leaderboard mixes results accumulated through several experiments, so per-mode comparisons are descriptive rather than causal.
+  \item \textbf{Sparse advanced modes.} Planner and tool rows are too thin for strong claims despite some promising nonzero signals.
+  \item \textbf{No build verification on this VPS.} This branch adds LaTeX source and generated tables, but the VPS does not currently have a TeX toolchain installed.
+  \item \textbf{No new expensive reruns.} This branch intentionally avoids recomputing the benchmark matrix.
+\end{itemize}
+
+\section{Conclusion}
+
+The repository is already publishable as a preliminary benchmark report if the claims are kept narrow. The main result is not that one scaffold has clearly won. It is that the Space Rangers quest domain already exposes a steep easy-to-medium-to-hard transition, while the current public archive remains too coverage-uneven for neat mode-level conclusions. That is still useful scientific progress: it tells us where the benchmark is informative today and how to design the next clean rerun.
+
+This branch packages that state into a form that can be reviewed. The paper text, bibliography, tier configs, and generated source data now live in-repo, and the next experiments are explicit rather than implicit.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

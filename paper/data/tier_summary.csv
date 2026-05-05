@@ -1,0 +1,4 @@
+tier,tier_label,quest_count,quests,runs,success_rate,models
+easy,Easy,3,"Boat,Badday_eng,Pizza_eng",298,0.395973,6
+medium,Medium,3,"Ski_eng,Robots_eng,Leonardo_eng",341,0.076246,6
+hard,Hard,9,"Banket_eng,Codebox_eng,Depth_eng,Driver_eng,Edelweiss_eng,Election_eng,Foncers_eng,Ministry_eng,Prison_eng",976,0.015369,6
