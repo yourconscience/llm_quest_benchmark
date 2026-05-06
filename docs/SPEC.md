@@ -13,6 +13,12 @@ while holding the quest environment and result logging consistent.
 The core question is practical: which kinds of context help, hurt, or expose
 state-tracking failures during 10-50 turn interactive fiction tasks?
 
+The current public result should be read as a selective-intervention story, not
+as a claim that larger context wrappers are universally better. Minimal prompts
+remain a strong baseline on easier local quests; heavier context scaffolds are
+most interesting when they recover specific stateful failures that the baseline
+cannot solve.
+
 ## Current Public Scope
 
 The public leaderboard is a curated comparable slice, not the full raw
@@ -63,6 +69,10 @@ the current public taxonomy.
 Current public metrics include success rate, average steps, token/cost
 statistics, and repetition rate. Repetition is interpreted as a diagnostic
 signal for loopiness or context loss, not as a solved predictor of success.
+
+Aggregate success-rate rankings should be interpreted alongside the Per Quest
+view. A mode can rank well overall by solving easier quests while still failing
+harder stateful, search-heavy, or navigation-heavy quests.
 
 Progress-style metrics and richer quest difficulty annotations remain future
 work unless present in generated result artifacts.

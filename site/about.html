@@ -68,7 +68,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 
 <div class="hero">
   <h1>Context Engineering for Sequential LLM Evaluations</h1>
-  <p class="subtitle">Same quests, same models, different context scaffolds. LLM-Quest tests how memory, hints, tools, and planning change multi-turn decisions.</p>
+  <p class="subtitle">Same quests, same models, different context scaffolds. LLM-Quest tests when memory, hints, tools, and planning help multi-turn decisions - and when a small prompt is enough.</p>
   <div class="cta-row">
     <a href="play.html" class="cta-btn cta-primary">Play a Quest</a>
     <a href="index.html" class="cta-btn cta-secondary">Leaderboard</a>
@@ -114,8 +114,13 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 <h2>What we found</h2>
 
 <div class="finding-card">
-  <h3>Scaffolding does not automatically help</h3>
-  <p>Compact memory/memo, full-history reasoning, prompt hints, tools, and planner runs move differently by quest and model. The honest result is not a victory lap for any scaffold: context can help, hurt, or mostly expose where the agent is losing state.</p>
+  <h3>Minimal prompts are a strong baseline</h3>
+  <p>The current summary leader is a minimal-prompt Gemini 3 Flash run, but that headline is not the whole benchmark. Its wins are concentrated in easier local quests such as Badday, Boat, Pizza, and Ski; the same setup is still at zero on most harder quests.</p>
+</div>
+
+<div class="finding-card">
+  <h3>Scaffolding is selective</h3>
+  <p>Compact memory/memo, full-history reasoning, prompt hints, tools, and planner runs move differently by quest and model. Context can help, hurt, or mostly expose where the agent is losing state; the useful question is which failure mode a scaffold addresses.</p>
 </div>
 
 <div class="finding-card">
@@ -125,7 +130,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 
 <div class="finding-card">
   <h3>Quest variance dominates the headline</h3>
-  <p>Boat is solved often, Badday and Pizza have partial traction, and many quests are still near zero. The useful signal is per-quest behavior, not one magic average.</p>
+  <p>Boat is solved often, Badday and Pizza have partial traction, and many quests are still near zero. The useful signal is per-quest behavior, not one magic average: simple prompts do well on simple quests, while tools and compact state show up in narrower hard-quest wins such as Election and Leonardo.</p>
 </div>
 
 <div class="finding-card">
@@ -134,7 +139,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 </div>
 
 <div class="callout">
-  <p>The practical takeaway: run the context ablation before buying a bigger model. In this benchmark, scaffolding can matter, but the effect is jagged, quest-dependent, and not automatically beneficial.</p>
+  <p>The practical takeaway: run the context ablation before buying a bigger model or a larger prompt wrapper. In this benchmark, scaffolding matters only when it matches the failure: state tables and tools help stateful arithmetic or coalition reasoning, but exact-search, navigation, and harness-loop failures need different treatment.</p>
 </div>
 
 <h2>The failure taxonomy</h2>
