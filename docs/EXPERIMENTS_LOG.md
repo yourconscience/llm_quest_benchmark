@@ -1,5 +1,10 @@
 # Experiments Log
 
+> Historical / non-authoritative notes. This log preserves experiment history
+> and branch-era shorthand. For the current public taxonomy and public
+> comparison slice, use `site/about.html`, `site/leaderboard.json`,
+> `docs/ARCHITECTURE.md`, and `docs/DATASHEET.md`.
+
 Record of benchmark experiments, findings, and decisions. Keeps history out of source code.
 
 ## Exp 2: Memory Modes (2026-04-27)

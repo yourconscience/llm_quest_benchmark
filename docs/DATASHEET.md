@@ -80,7 +80,7 @@ support direct model-to-model comparison.
 
 **How many runs exist?**
 
-1615 published leaderboard runs across 6 primary models and 8 taxonomy labels
+1,615 published leaderboard runs across 6 primary models and 8 taxonomy labels
 (as of 2026-05-05).
 
 Model families include Anthropic, DeepSeek, Google, Minimax, Mistral, and
@@ -190,8 +190,9 @@ archive structure.
 Benchmarking LLM decision-making in interactive text environments. Specific
 use cases:
 
-- Comparing LLM agent architectures (baseline, prompted reasoning,
-  knowledge-augmented, planner-based).
+- Comparing LLM context scaffolds: minimal prompt, short-context reasoning,
+  full-history reasoning, compact memory/memo, prompt hints, tool-assisted
+  variants, and planner loops.
 - Measuring how different models handle multi-step sequential decisions.
 - Evaluating reading comprehension and state tracking under game constraints.
 

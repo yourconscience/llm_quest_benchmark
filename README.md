@@ -4,11 +4,11 @@
 [![Leaderboard](https://img.shields.io/badge/Leaderboard-Live-green.svg)](https://yourconscience.github.io/llm_quest_benchmark/)
 [![About](https://img.shields.io/badge/About-Post-blue.svg)](https://yourconscience.github.io/llm_quest_benchmark/about.html)
 
-Benchmark for evaluating LLM agent architectures on interactive fiction quests. Measures how planning, tool use, and prompt design affect decision-making quality across models and tasks.
+Benchmark for evaluating LLM context scaffolds on interactive fiction quests. Measures how prompt context, compact memory, tools, and planning loops affect sequential decision-making across models and tasks.
 
 **[Project Site](https://yourconscience.github.io/llm_quest_benchmark/)** | **[Leaderboard](https://yourconscience.github.io/llm_quest_benchmark/index.html)** | **[About / Write-up](https://yourconscience.github.io/llm_quest_benchmark/about.html)**
 
-See the [About page](https://yourconscience.github.io/llm_quest_benchmark/about.html) for benchmark design, agent modes, metrics, and model selection rationale.
+See the [About page](https://yourconscience.github.io/llm_quest_benchmark/about.html) for the project narrative, taxonomy, metrics, caveats, and model selection rationale.
 
 ## Quick Start (Docker)
 
@@ -49,19 +49,19 @@ cp .env.template .env
 
 ```bash
 # Run one quest
-llm-quest run --quest quests/Boat.qm --model gemini-3-flash-preview --timeout 120
+uv run llm-quest run --quest quests/Boat.qm --model gemini-3-flash-preview --timeout 120
 
 # Run benchmark matrix
-llm-quest benchmark --config configs/benchmarks/memory_full_transcript.yaml
+uv run llm-quest benchmark --config configs/benchmarks/memory_full_transcript.yaml
 
 # Generate report from benchmark results
-llm-quest benchmark-report --benchmark-id <id> --output report.md
+uv run llm-quest benchmark-report --benchmark-id <id> --output report.md
 
 # Analyze a single run
-llm-quest analyze-run --run-summary results/<agent>/<quest>/run_<id>/run_summary.json
+uv run llm-quest analyze-run --run-summary results/<agent>/<quest>/run_<id>/run_summary.json
 
 # Play as human in terminal
-llm-quest play --quest quests/Boat.qm
+uv run llm-quest play --quest quests/Boat.qm
 
 # Build static site JS assets
 pnpm run build
@@ -73,13 +73,24 @@ pnpm run build:play-assets
 ## Project Structure
 
 - `llm_quest_benchmark/agents/` - Agent implementations (LLM, planner, tool-augmented)
-- `llm_quest_benchmark/prompt_templates/` - Jinja2 prompt templates per agent mode
+- `llm_quest_benchmark/prompt_templates/` - Jinja2 prompt templates for the public context-scaffold taxonomy
 - `llm_quest_benchmark/executors/` - CLI, benchmark orchestration, TS bridge
 - `configs/benchmarks/` - YAML benchmark configurations
 - `quests/` - Quest files (downloaded via `download_quests.sh`)
 - `space-rangers-quest/` - TypeScript quest engine (submodule)
-- `docs/` - Dataset documentation (DATASHEET.md)
+- `docs/ARCHITECTURE.md` - Runtime architecture and taxonomy mapping
+- `docs/DATASHEET.md` - Dataset and public leaderboard slice documentation
 - `research/` - Error analysis, landscape comparison (gitignored)
+
+## Validation
+
+```bash
+uv run llm-quest --help
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest
+pnpm run build
+```
 
 ## License
 MIT
