@@ -485,13 +485,16 @@ async function shareResult(canvas, questTitle, outcomeLabel) {
 
 function buildShareText(questTitle, outcomeLabel, path, cohortWinRate) {
   const branchingSteps = path.filter(e => e.isBranching);
-  const squares = branchingSteps.map(e => e.agreed === true ? '\u{1F7E9}' : e.agreed === false ? '\u{1F7E5}' : '\u2B1C').join('');
-  const agreeCount = branchingSteps.filter(e => e.agreed === true).length;
+  const agreementSteps = path.filter(e => e.agreed !== null);
+  const limitedCount = branchingSteps.length - agreementSteps.length;
+  const squares = agreementSteps.map(e => e.agreed ? '\u{1F7E9}' : '\u{1F7E5}').join('');
+  const agreeCount = agreementSteps.filter(e => e.agreed === true).length;
   const aiPct = cohortWinRate != null ? Math.round(cohortWinRate * 100) : null;
   let lines = [];
   lines.push('LLM-Quest Benchmark: ' + questTitle);
   lines.push(outcomeLabel + ' in ' + path.length + ' steps');
-  if (squares) lines.push(squares + ' ' + agreeCount + '/' + branchingSteps.length + ' AI agreed');
+  if (squares) lines.push(squares + ' ' + agreeCount + '/' + agreementSteps.length + ' AI agreed');
+  if (limitedCount > 0) lines.push('Limited AI data: ' + limitedCount + ' branching steps');
   if (aiPct != null) lines.push('AI cohort win rate: ' + aiPct + '%');
   lines.push('');
   lines.push(PLAY_URL);
@@ -513,9 +516,9 @@ function EndScreen({
     fail: 'FAILURE',
     dead: 'DEAD'
   }[outcome] || 'FAILURE';
-  const branchingSteps = path.filter(e => e.isBranching);
-  const agreeCount = branchingSteps.filter(e => e.agreed === true).length;
-  const aiAgreeRate = branchingSteps.length > 0 ? Math.round(agreeCount / branchingSteps.length * 100) : 0;
+  const agreementSteps = path.filter(e => e.agreed !== null);
+  const agreeCount = agreementSteps.filter(e => e.agreed === true).length;
+  const aiAgreeRate = agreementSteps.length > 0 ? Math.round(agreeCount / agreementSteps.length * 100) : 0;
   function handleShare() {
     const text = buildShareText(questTitle, outcomeLabel, path, cohortWinRate);
     const canvas = renderShareCard(questTitle, outcomeLabel, path.length, aiAgreeRate, cohortWinRate);

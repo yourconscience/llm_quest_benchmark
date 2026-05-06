@@ -30,6 +30,6 @@ def test_play_history_does_not_claim_ai_agreement_with_limited_data():
     assert "const MIN_COHORT_LOCATION_RUNS = 3;" in source
     assert "function hasCohortLocationData(cohortLoc)" in source
     assert "const hasCohortData = isBranching && hasCohortLocationData(cohortLoc);" in source
-    assert "const branchingSteps = path.filter(e => e.isBranching);" in source
-    assert "e.agreed === false ? '\\u{1F7E5}' : '\\u2B1C'" in source
+    assert "const agreementSteps = path.filter(e => e.agreed !== null);" in source
+    assert "Limited AI data: " in source
     assert "Limited AI data" in source
