@@ -155,6 +155,40 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
     }
 
 
+def test_public_leaderboard_taxonomy_has_no_legacy_labels():
+    repo_root = Path(__file__).resolve().parents[2]
+    old_labels = [
+        f"{name} ({letter})"
+        for name, letter in [
+            ("Baseline", "A"),
+            ("Prompted", "B"),
+            ("Knowledge", "C"),
+            ("Planner", "D"),
+            ("Tool-aug", "E"),
+        ]
+    ]
+
+    index_html = (repo_root / "site/index.html").read_text(encoding="utf-8")
+    for label in old_labels:
+        assert label not in index_html
+    assert "leaderboard.json?v=" in index_html
+
+    leaderboard = json.loads((repo_root / "site/leaderboard.json").read_text(encoding="utf-8"))
+    mode_labels = {mode["label"] for mode in leaderboard["modes"]}
+    assert mode_labels == {
+        "Minimal prompt",
+        "Short-context reasoning",
+        "Full-history reasoning",
+        "Compact memory / memo",
+        "Prompt hints",
+        "Tools + compact memory",
+        "Tools + hints + compact memory",
+        "Planner loop",
+    }
+    for label in old_labels:
+        assert label not in json.dumps(leaderboard, ensure_ascii=False)
+
+
 def test_generate_leaderboard_filters_public_slice(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
