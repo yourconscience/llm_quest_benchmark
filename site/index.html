@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta property="og:title" content="Leaderboard - LLM-Quest Benchmark">
-<meta property="og:description" content="How agent architecture affects LLM decision-making. Models x agent modes x quests.">
+<meta property="og:description" content="Context-engineering taxonomy for sequential LLM quest evaluations across six models and 15 comparable quests.">
 <meta property="og:image" content="https://yourconscience.github.io/llm_quest_benchmark/img/play_quest_in_progress.png">
 <meta property="og:url" content="https://yourconscience.github.io/llm_quest_benchmark/">
 <meta property="og:type" content="website">
@@ -24,11 +24,14 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .table thead th .sort-arrow { font-size: 0.7rem; margin-left: 0.3em; text-transform: none; }
 .table tbody tr:hover { background: rgba(88,166,255,0.05); }
 .badge-mode { font-size: 0.75rem; padding: 0.25em 0.6em; border-radius: 4px; }
-.mode-stub { background: var(--muted); color: var(--bg); }
-.mode-reasoning { background: var(--accent); color: var(--bg); }
-.mode-light_hints { background: #a371f7; color: var(--bg); }
-.mode-planner { background: var(--orange); color: var(--bg); }
-.mode-tool { background: var(--green); color: var(--bg); }
+.mode-minimal_prompt { background: var(--muted); color: var(--bg); }
+.mode-short_context_reasoning { background: var(--accent); color: var(--bg); }
+.mode-full_history_reasoning { background: #79c0ff; color: var(--bg); }
+.mode-compact_memory_memo { background: #a371f7; color: var(--bg); }
+.mode-prompt_hints { background: #db61a2; color: var(--bg); }
+.mode-tools_compact_memory { background: var(--green); color: var(--bg); }
+.mode-tools_hints_compact_memory { background: #56d4dd; color: var(--bg); }
+.mode-planner_loop { background: var(--orange); color: var(--bg); }
 .success-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; min-width: 60px; }
 .success-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
 .filter-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.3em 0.8em; border-radius: 6px; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
@@ -67,8 +70,8 @@ a { color: var(--accent); }
 
 <div class="container py-4">
   <div class="mb-4">
-    <h2>Leaderboard <span class="subtitle">How agent architecture affects LLM decision-making</span></h2>
-    <p class="text-muted mb-0">Models x agent modes x quests. Same task, different cognitive scaffolding, different outcomes.</p>
+    <h2>Leaderboard <span class="subtitle">Context engineering for sequential LLM evaluations</span></h2>
+    <p class="text-muted mb-0">Six primary models x current taxonomy x 15 comparable quests. Same task, different context scaffolds, different outcomes. <a href="about.html">Read the story and caveats</a>.</p>
   </div>
 
   <div class="row g-3 mb-4" id="stats-row"></div>
@@ -110,7 +113,7 @@ a { color: var(--accent); }
   </div>
 
   <footer class="text-center py-4 text-muted" style="font-size:0.85rem">
-    <p>LLM-Quest Benchmark - evaluating agent architectures on interactive fiction quests</p>
+    <p>LLM-Quest Benchmark - evaluating context scaffolds on interactive fiction quests</p>
     <p>Data: <span id="footer-date"></span> | <a href="leaderboard.json">Raw JSON</a> | <a href="https://github.com/yourconscience/llm_quest_benchmark">Source</a></p>
   </footer>
 </div>
@@ -118,6 +121,7 @@ a { color: var(--accent); }
 <script>
 let DATA = null;
 let MODEL_BY_ID = {};
+let MODE_BY_ID = {};
 let barChart = null;
 let sortCol = 'success_rate';
 let sortAsc = false;
@@ -125,14 +129,31 @@ let filterMode = 'all';
 let filterQuest = 'all';
 let viewMode = 'summary';
 
-const MODE_LABELS = {stub:'Baseline (A)', reasoning:'Prompted (B)', light_hints:'Knowledge (C)', planner:'Planner (D)', tool_augmented:'Tool-aug (E)'};
-const MODE_CLASSES = {stub:'mode-stub', reasoning:'mode-reasoning', light_hints:'mode-light_hints', planner:'mode-planner', tool_augmented:'mode-tool'};
-const COLORS = {stub:'#c9d1d9', reasoning:'#58a6ff', light_hints:'#a371f7', planner:'#d29922', tool_augmented:'#3fb950'};
+const MODE_CLASSES = {
+  minimal_prompt:'mode-minimal_prompt',
+  short_context_reasoning:'mode-short_context_reasoning',
+  full_history_reasoning:'mode-full_history_reasoning',
+  compact_memory_memo:'mode-compact_memory_memo',
+  prompt_hints:'mode-prompt_hints',
+  tools_compact_memory:'mode-tools_compact_memory',
+  tools_hints_compact_memory:'mode-tools_hints_compact_memory',
+  planner_loop:'mode-planner_loop',
+};
+const COLORS = {
+  minimal_prompt:'#c9d1d9',
+  short_context_reasoning:'#58a6ff',
+  full_history_reasoning:'#79c0ff',
+  compact_memory_memo:'#a371f7',
+  prompt_hints:'#db61a2',
+  tools_compact_memory:'#3fb950',
+  tools_hints_compact_memory:'#56d4dd',
+  planner_loop:'#d29922',
+};
 
 function successColor(v) { return v >= 0.8 ? 'var(--green)' : v >= 0.4 ? 'var(--orange)' : 'var(--red)'; }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function modelLabel(id) { return MODEL_BY_ID[id]?.label || id; }
-function modeLabel(id) { return MODE_LABELS[id] || DATA.modes.find(m => m.id === id)?.label || id; }
+function modeLabel(id) { return MODE_BY_ID[id]?.label || id; }
 
 function scopedRows() {
   return DATA.results.filter(r => {
@@ -183,6 +204,7 @@ async function init() {
   const resp = await fetch('leaderboard.json');
   DATA = await resp.json();
   MODEL_BY_ID = Object.fromEntries(DATA.models.map(m => [m.id, m]));
+  MODE_BY_ID = Object.fromEntries(DATA.modes.map(m => [m.id, m]));
   document.getElementById('footer-date').textContent = DATA.generated?.split('T')[0] || '';
   buildFilters();
   updateViewChrome();
@@ -283,7 +305,7 @@ function renderTable() {
       <th data-col="success_rate">Success Rate ${sortArrow('success_rate')}</th>
       <th data-col="avg_steps">Steps ${sortArrow('avg_steps')}</th>
       <th data-col="avg_tokens">Tokens ${sortArrow('avg_tokens')}</th>
-      <th data-col="repetition_rate">Repetition <span class="tooltip-icon" title="Fraction of steps where the agent repeats an action from the last 5 steps. High values indicate the agent is stuck in a loop.">?</span>${sortArrow('repetition_rate')}</th>`;
+      <th data-col="repetition_rate">Repetition <span class="tooltip-icon" title="Diagnostic fraction of steps where the agent repeats an action from the last 5 steps. Higher values can flag loopiness or context loss; it is not treated as a solved predictor or primary success metric.">?</span>${sortArrow('repetition_rate')}</th>`;
   }
 
   const rows = tableRows().slice().sort((a,b) => {
@@ -333,7 +355,7 @@ function renderBarChart() {
   const modes = filterMode === 'all' ? DATA.modes : DATA.modes.filter(mode => mode.id === filterMode);
   const rows = scopedRows();
   const series = modes.map(mode => ({
-    name: MODE_LABELS[mode.id], type: 'bar',
+    name: modeLabel(mode.id), type: 'bar',
     data: models.map(m => {
       const scoped = rows.filter(r => r.model === m.id && r.mode === mode.id);
       return scoped.length ? +(weightedRate(scoped) * 100).toFixed(1) : null;

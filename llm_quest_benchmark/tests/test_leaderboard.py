@@ -123,8 +123,8 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
         {"id": "gpt-5-mini", "provider": "openai", "label": "GPT-5 Mini"},
     ]
     assert leaderboard["modes"] == [
-        {"id": "stub", "label": "Baseline (A)"},
-        {"id": "planner", "label": "Planner (D)"},
+        {"id": "minimal_prompt", "label": "Minimal prompt"},
+        {"id": "planner_loop", "label": "Planner loop"},
     ]
     assert leaderboard["quests"] == [
         {"id": "Boat", "lang": "RU"},
@@ -132,7 +132,7 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
     ]
 
     boat_row = next(row for row in leaderboard["results"] if row["model"] == "gemini-2.5-flash")
-    assert boat_row["mode"] == "stub"
+    assert boat_row["mode"] == "minimal_prompt"
     assert boat_row["quest"] == "Boat"
     assert boat_row["runs"] == 2
     assert boat_row["success_rate"] == pytest.approx(0.5)
@@ -144,7 +144,7 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
     scout_row = next(row for row in leaderboard["results"] if row["model"] == "gpt-5-mini")
     assert scout_row == {
         "model": "gpt-5-mini",
-        "mode": "planner",
+        "mode": "planner_loop",
         "quest": "Scout",
         "runs": 1,
         "success_rate": 1.0,
@@ -207,3 +207,72 @@ def test_generate_leaderboard_filters_public_slice(tmp_path, monkeypatch):
     assert [quest["id"] for quest in leaderboard["quests"]] == ["Core"]
     assert {row["quest"] for row in leaderboard["results"]} == {"Core"}
     assert {row["model"] for row in leaderboard["results"]} == {"model-a", "model-b", "model-c"}
+
+
+def test_generate_leaderboard_matches_db_runs_by_identifiers(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    benchmark_dir = Path("results/benchmarks/bench_match")
+    benchmark_dir.mkdir(parents=True, exist_ok=True)
+
+    results = [
+        {
+            "quest": "quests/Alpha.qm",
+            "model": "gpt-5-mini",
+            "template": "stub.jinja",
+            "agent_id": "llm_gpt-5-mini",
+            "outcome": "SUCCESS",
+        },
+        {
+            "quest": "quests/Beta.qm",
+            "model": "gpt-5-mini",
+            "template": "stub.jinja",
+            "agent_id": "llm_gpt-5-mini",
+            "outcome": "SUCCESS",
+        },
+    ]
+    db_runs = [
+        {
+            "id": 20,
+            "quest_file": "quests/Beta.qm",
+            "quest_name": "Beta",
+            "agent_id": "llm_gpt-5-mini",
+            "agent_config": json.dumps(
+                {"model": "gpt-5-mini", "action_template": "reasoning.jinja", "memory_mode": "full_transcript"}
+            ),
+            "outcome": "SUCCESS",
+        },
+        {
+            "id": 10,
+            "quest_file": "quests/Alpha.qm",
+            "quest_name": "Alpha",
+            "agent_id": "llm_gpt-5-mini",
+            "agent_config": json.dumps(
+                {"model": "gpt-5-mini", "action_template": "loop_aware_reasoning.jinja", "memory_mode": "compaction"}
+            ),
+            "outcome": "SUCCESS",
+        },
+    ]
+    (benchmark_dir / "benchmark_summary.json").write_text(
+        json.dumps({"benchmark_id": "bench_match", "agents": [], "results": results, "db_runs": db_runs}),
+        encoding="utf-8",
+    )
+
+    for run_id, quest_name, total_steps in [(10, "Alpha", 10), (20, "Beta", 20)]:
+        path = Path("results/llm_gpt-5-mini") / quest_name / f"run_{run_id}" / "run_summary.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"usage": {"total_tokens": total_steps}, "metrics": {"total_steps": total_steps}}),
+            encoding="utf-8",
+        )
+
+    leaderboard = generate_leaderboard(
+        [str(benchmark_dir)],
+        "site/leaderboard.json",
+        min_runs=0,
+        public_model_ids=None,
+    )
+
+    rows = {(row["quest"], row["mode"]): row for row in leaderboard["results"]}
+    assert rows[("Alpha", "compact_memory_memo")]["avg_steps"] == 10.0
+    assert rows[("Beta", "full_history_reasoning")]["avg_steps"] == 20.0

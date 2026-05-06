@@ -6,7 +6,7 @@ logs/
 
 # Quest files and utils
 /quests/*
-!/quests/boat.qm
+!/quests/Boat.qm
 tge/
 
 # Local IDE

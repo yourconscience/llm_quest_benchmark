@@ -13,22 +13,41 @@ from typing import Any, cast
 from llm_quest_benchmark.core.quest_lang import canonical_quest_id
 from llm_quest_benchmark.llm.client import parse_model_name
 
-TEMPLATE_TO_MODE = {
-    "stub": ("stub", "Baseline (A)"),
-    "reasoning": ("reasoning", "Prompted (B)"),
-    "strategic": ("reasoning", "Prompted (B)"),
-    "stateful_compact": ("reasoning", "Prompted (B)"),
-    "memo_cot": ("reasoning", "Prompted (B)"),
-    "memo_extended": ("reasoning", "Prompted (B)"),
-    "memo_structured": ("reasoning", "Prompted (B)"),
-    "light_hints": ("light_hints", "Knowledge (C)"),
-    "stateful_compact_hints": ("light_hints", "Knowledge (C)"),
-    "planner": ("planner", "Planner (D)"),
-    "tool_augmented": ("tool_augmented", "Tool-aug (E)"),
-    "tool_augmented_hints": ("tool_augmented", "Tool-aug (E)"),
+TAXONOMY_MODES = {
+    "minimal_prompt": "Minimal prompt",
+    "short_context_reasoning": "Short-context reasoning",
+    "full_history_reasoning": "Full-history reasoning",
+    "compact_memory_memo": "Compact memory / memo",
+    "prompt_hints": "Prompt hints",
+    "tools_compact_memory": "Tools + compact memory",
+    "tools_hints_compact_memory": "Tools + hints + compact memory",
+    "planner_loop": "Planner loop",
 }
 
-MODE_ORDER = ["stub", "reasoning", "light_hints", "planner", "tool_augmented"]
+TEMPLATE_TO_MODE = {
+    "stub": ("minimal_prompt", TAXONOMY_MODES["minimal_prompt"]),
+    "strategic": ("short_context_reasoning", TAXONOMY_MODES["short_context_reasoning"]),
+    "stateful_compact": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
+    "memo_cot": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
+    "memo_extended": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
+    "memo_structured": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
+    "light_hints": ("prompt_hints", TAXONOMY_MODES["prompt_hints"]),
+    "stateful_compact_hints": ("prompt_hints", TAXONOMY_MODES["prompt_hints"]),
+    "planner": ("planner_loop", TAXONOMY_MODES["planner_loop"]),
+    "tool_augmented": ("tools_compact_memory", TAXONOMY_MODES["tools_compact_memory"]),
+    "tool_augmented_hints": ("tools_hints_compact_memory", TAXONOMY_MODES["tools_hints_compact_memory"]),
+}
+
+REASONING_STYLE_TEMPLATES = {
+    "reasoning",
+    "strategic",
+    "loop_aware_reasoning",
+    "objective_guard",
+    "consequence_scan",
+    "consequence_scan_subgoal",
+}
+
+MODE_ORDER = list(TAXONOMY_MODES)
 
 MODEL_ALIASES = {
     "claude:claude-haiku-4-5-20251001": "claude-haiku-4.5",
@@ -57,9 +76,26 @@ def _strip_template_suffix(template_name: str) -> str:
     return Path(template_name or "").stem
 
 
-def _mode_from_template(template_name: str) -> tuple[str, str]:
+def _mode_from_template(template_name: str, memory_mode: str | None = None) -> tuple[str, str]:
     template_id = _strip_template_suffix(template_name)
+    if template_id in REASONING_STYLE_TEMPLATES:
+        if memory_mode == "full_transcript":
+            return "full_history_reasoning", TAXONOMY_MODES["full_history_reasoning"]
+        if memory_mode == "compaction":
+            return "compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]
+        return "short_context_reasoning", TAXONOMY_MODES["short_context_reasoning"]
     return TEMPLATE_TO_MODE.get(template_id, (template_id or "unknown", template_id or "unknown"))
+
+
+def _agent_config(db_run: dict[str, Any]) -> dict[str, Any]:
+    raw_config = db_run.get("agent_config")
+    if not isinstance(raw_config, str) or not raw_config:
+        return {}
+    try:
+        parsed = json.loads(raw_config)
+    except json.JSONDecodeError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
 
 
 def _combine_numeric_tokens(parts: list[str]) -> list[str]:
@@ -127,6 +163,77 @@ def _detect_quest_lang(quest_path: str) -> str:
     return "EN"
 
 
+def _row_run_id(row: dict[str, Any]) -> str | None:
+    for key in ("run_id", "db_run_id", "id"):
+        value = row.get(key)
+        if value is not None:
+            return str(value)
+    return None
+
+
+def _row_quest_id(row: dict[str, Any]) -> str:
+    quest_ref = row.get("quest") or row.get("quest_file") or row.get("quest_name") or ""
+    return canonical_quest_id(_quest_id_from_path(str(quest_ref)))
+
+
+def _run_match_key(row: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        _row_quest_id(row),
+        str(row.get("agent_id") or ""),
+        str(row.get("outcome") or ""),
+    )
+
+
+def _db_run_matches_result(db_run: dict[str, Any], result_row: dict[str, Any]) -> bool:
+    db_quest = _row_quest_id(db_run)
+    result_quest = _row_quest_id(result_row)
+    if db_quest and result_quest and db_quest != result_quest:
+        return False
+
+    db_agent = db_run.get("agent_id")
+    result_agent = result_row.get("agent_id")
+    if db_agent and result_agent and str(db_agent) != str(result_agent):
+        return False
+
+    db_outcome = db_run.get("outcome")
+    result_outcome = result_row.get("outcome")
+    return not (db_outcome and result_outcome and str(db_outcome) != str(result_outcome))
+
+
+def _db_run_for_result(
+    result_row: dict[str, Any],
+    index: int,
+    db_runs: list[Any],
+    db_runs_by_id: dict[str, dict[str, Any]],
+    db_run_queues: dict[tuple[str, str, str], list[dict[str, Any]]],
+    used_db_run_ids: set[int],
+) -> dict[str, Any] | None:
+    result_run_id = _row_run_id(result_row)
+    if result_run_id is not None:
+        db_run = db_runs_by_id.get(result_run_id)
+        if db_run is not None and id(db_run) not in used_db_run_ids:
+            used_db_run_ids.add(id(db_run))
+            return db_run
+
+    queue = db_run_queues.get(_run_match_key(result_row), [])
+    while queue:
+        db_run = queue.pop(0)
+        if id(db_run) not in used_db_run_ids:
+            used_db_run_ids.add(id(db_run))
+            return db_run
+
+    # Legacy benchmark summaries did not store a run identifier on result rows.
+    # If the positional row still matches all available identifiers, keep it as
+    # a defensive fallback for those artifacts instead of correlating blindly.
+    if index < len(db_runs) and isinstance(db_runs[index], dict):
+        db_run = db_runs[index]
+        if id(db_run) not in used_db_run_ids and _db_run_matches_result(db_run, result_row):
+            used_db_run_ids.add(id(db_run))
+            return db_run
+
+    return None
+
+
 def _mean(values: Iterable[float]) -> float:
     materialized = list(values)
     if not materialized:
@@ -181,7 +288,7 @@ def generate_leaderboard(
 
     grouped_rows: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
     model_entries: dict[str, dict[str, str]] = {}
-    mode_entries: dict[str, dict[str, str]] = {}
+    taxonomy_entries: dict[str, dict[str, str]] = {}
     quest_entries: dict[str, dict[str, Any]] = {}
     benchmark_ids: list[str] = []
 
@@ -198,6 +305,16 @@ def generate_leaderboard(
         results_list: list[Any] = raw_results if isinstance(raw_results, list) else []
         raw_db_runs = summary.get("db_runs")
         db_runs: list[Any] = raw_db_runs if isinstance(raw_db_runs, list) else []
+        db_runs_by_id: dict[str, dict[str, Any]] = {}
+        db_run_queues: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
+        for db_run in db_runs:
+            if not isinstance(db_run, dict):
+                continue
+            run_id = _row_run_id(db_run)
+            if run_id is not None:
+                db_runs_by_id[run_id] = db_run
+            db_run_queues[_run_match_key(db_run)].append(db_run)
+        used_db_run_ids: set[int] = set()
 
         for i, result_row in enumerate(results_list):
             if not isinstance(result_row, dict):
@@ -205,7 +322,6 @@ def generate_leaderboard(
 
             model = str(result_row.get("model") or "unknown")
             template = str(result_row.get("template") or "")
-            mode_id, mode_label = _mode_from_template(template)
             quest_path = str(result_row.get("quest") or "")
             raw_quest_id = _quest_id_from_path(quest_path)
             quest_id = canonical_quest_id(raw_quest_id)
@@ -213,11 +329,13 @@ def generate_leaderboard(
             outcome = str(result_row.get("outcome") or "UNKNOWN")
 
             # TODO: cost tracking is broken - run_summary.json usage data is not populated by OpenRouter runs
-            # Correlate with db_runs by index to get run ID for metrics
+            # Correlate with db_runs to get run ID for metrics.
             usage: dict[str, Any] = {}
             metrics: dict[str, Any] = {}
-            if i < len(db_runs) and isinstance(db_runs[i], dict):
-                db_run = db_runs[i]
+            config: dict[str, Any] = {}
+            db_run = _db_run_for_result(result_row, i, db_runs, db_runs_by_id, db_run_queues, used_db_run_ids)
+            if db_run is not None:
+                config = _agent_config(db_run)
                 run_id = db_run.get("id")
                 quest_name = db_run.get("quest_name")
                 agent_id = db_run.get("agent_id")
@@ -226,6 +344,12 @@ def generate_leaderboard(
                     run_summary = _load_json(run_path) or {}
                     usage = _dict_field(run_summary, "usage")
                     metrics = _dict_field(run_summary, "metrics")
+
+            template_from_config = str(config.get("action_template") or "")
+            if template_from_config:
+                template = template_from_config
+            memory_mode = config.get("memory_mode")
+            mode_id, mode_label = _mode_from_template(template, str(memory_mode) if memory_mode is not None else None)
 
             try:
                 spec = parse_model_name(model)
@@ -256,7 +380,7 @@ def generate_leaderboard(
                     "provider": provider,
                     "label": _model_label(label_source_for_display),
                 }
-            mode_entries[mode_id] = {"id": mode_id, "label": mode_label}
+            taxonomy_entries[mode_id] = {"id": mode_id, "label": mode_label}
             if raw_quest_id != quest_id:
                 existing_quest = quest_entries.setdefault(quest_id, {"id": quest_id, "lang": "EN"})
                 source_langs = existing_quest.get("source_langs")
@@ -318,7 +442,7 @@ def generate_leaderboard(
     included_modes = {row["mode"] for row in agg_results}
     included_quests = {row["quest"] for row in agg_results}
     model_entries = {k: v for k, v in model_entries.items() if k in included_models}
-    mode_entries = {k: v for k, v in mode_entries.items() if k in included_modes}
+    taxonomy_entries = {k: v for k, v in taxonomy_entries.items() if k in included_modes}
     quest_entries = {k: v for k, v in quest_entries.items() if k in included_quests}
 
     mode_rank = {mode_id: index for index, mode_id in enumerate(MODE_ORDER)}
@@ -332,7 +456,7 @@ def generate_leaderboard(
             "note": "Raw benchmark artifacts may contain exploratory runs outside this published comparison slice.",
         },
         "models": sorted(model_entries.values(), key=lambda item: item["id"]),
-        "modes": sorted(mode_entries.values(), key=lambda item: (mode_rank.get(item["id"], 999), item["id"])),
+        "modes": sorted(taxonomy_entries.values(), key=lambda item: (mode_rank.get(item["id"], 999), item["id"])),
         "quests": sorted(quest_entries.values(), key=lambda item: item["id"]),
         "results": sorted(
             agg_results,

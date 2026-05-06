@@ -80,16 +80,18 @@ support direct model-to-model comparison.
 
 **How many runs exist?**
 
-1615 published leaderboard runs across 6 primary models and 5 agent modes
+1,615 published leaderboard runs across 6 primary models and 8 taxonomy labels
 (as of 2026-05-05).
 
 Model families include Anthropic, DeepSeek, Google, Minimax, Mistral, and
 OpenAI.
 
-Modes: Baseline (A), Prompted (B), Knowledge (C), Planner (D),
-Tool-augmented (E). Baseline and Prompted have the broadest coverage;
-C/D/E are reported where they exist and should be read as intervention
-experiments rather than a complete rectangular matrix.
+Taxonomy labels: Minimal prompt, Short-context reasoning,
+Full-history reasoning, Compact memory / memo, Prompt hints,
+Tools + compact memory, Tools + hints + compact memory, and Planner loop.
+Minimal prompt and short-context reasoning have the broadest coverage;
+the other labels are reported where they exist and should be read as
+intervention experiments rather than a complete rectangular matrix.
 
 **Is there a difficulty distribution?**
 
@@ -188,8 +190,9 @@ archive structure.
 Benchmarking LLM decision-making in interactive text environments. Specific
 use cases:
 
-- Comparing LLM agent architectures (baseline, prompted reasoning,
-  knowledge-augmented, planner-based).
+- Comparing LLM context scaffolds: minimal prompt, short-context reasoning,
+  full-history reasoning, compact memory/memo, prompt hints, tool-assisted
+  variants, and planner loops.
 - Measuring how different models handle multi-step sequential decisions.
 - Evaluating reading comprehension and state tracking under game constraints.
 
