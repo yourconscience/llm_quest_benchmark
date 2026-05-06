@@ -153,6 +153,7 @@ function sortQuests(quests) {
 
 const PLAY_URL = 'https://yourconscience.github.io/llm_quest_benchmark/play.html';
 const SHARE_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+const MIN_COHORT_LOCATION_RUNS = 5;
 
 function drawTextLine(ctx, text, x, y, maxWidth) {
   ctx.fillText(text, x, y, maxWidth);
@@ -160,8 +161,12 @@ function drawTextLine(ctx, text, x, y, maxWidth) {
 
 // ---- CohortBars (reusable distribution bars) ----
 
+function hasCohortLocationData(cohortLoc) {
+  return !!cohortLoc && (cohortLoc.n || 0) >= MIN_COHORT_LOCATION_RUNS;
+}
+
 function CohortBars({ cohortLoc, playerChoiceNorm, activeFamily, onFamilyChange, families }) {
-  if (!cohortLoc || cohortLoc.n < 5) {
+  if (!hasCohortLocationData(cohortLoc)) {
     return <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Insufficient data for this location.</span>;
   }
 
@@ -224,7 +229,7 @@ function DecisionHistory({ path, families }) {
   const [openIdx, setOpenIdx] = useState(null);
   const [activeFamily, setActiveFamily] = useState('all');
 
-  const branchingSteps = path.filter(entry => entry.cohortLoc);
+  const branchingSteps = path.filter(entry => entry.isBranching);
   if (branchingSteps.length === 0) return null;
 
   return (
@@ -240,7 +245,7 @@ function DecisionHistory({ path, families }) {
               <span className="history-step">#{entry.step}</span>
               <span className="history-choice">{entry.choiceText}</span>
               <span className="history-agree" style={{ color: entry.agreed ? 'var(--green)' : entry.agreed === false ? 'var(--red)' : 'var(--muted)' }}>
-                {entry.agreed === true ? 'AI agreed' : entry.agreed === false ? 'AI disagreed' : ''}
+                {entry.agreed === true ? 'AI agreed' : entry.agreed === false ? 'AI disagreed' : entry.hasCohortData === false ? 'Limited AI data' : ''}
               </span>
               <span className="history-chevron">&#9654;</span>
             </div>
@@ -578,14 +583,17 @@ function QuestPlay({ quest, cohortData, onQuit }) {
     const choiceNorm = canonicalChoiceNorm(choice);
     const cohortLoc = getCohortLoc(locationId);
     const isBranching = activeChoices.length >= 2;
-    const majority = (isBranching && cohortLoc) ? getMajorityChoice(cohortLoc) : null;
+    const hasCohortData = isBranching && hasCohortLocationData(cohortLoc);
+    const majority = hasCohortData ? getMajorityChoice(cohortLoc) : null;
     const agreed = majority ? normalizeChoice(majority) === choiceNorm : null;
 
     setPath(prev => [...prev, {
       step: stepNum,
       choiceText: stripClr(choice.text),
-      agreed: isBranching ? agreed : null,
+      isBranching,
+      agreed: hasCohortData ? agreed : null,
       cohortLoc: isBranching ? cohortLoc : null,
+      hasCohortData,
       playerChoiceNorm: isBranching ? choiceNorm : null,
     }]);
 

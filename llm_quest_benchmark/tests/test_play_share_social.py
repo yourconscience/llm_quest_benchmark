@@ -22,3 +22,13 @@ def test_blog_embeds_current_play_screenshot():
     assert BLOG_SCREENSHOT.exists()
     assert "img/play_quest_in_progress.png" in blog
     assert "decision history and AI cohort comparison" in blog
+
+
+def test_play_history_does_not_claim_ai_agreement_with_limited_data():
+    source = APP_SOURCE.read_text(encoding="utf-8")
+
+    assert "const MIN_COHORT_LOCATION_RUNS = 5;" in source
+    assert "function hasCohortLocationData(cohortLoc)" in source
+    assert "const hasCohortData = isBranching && hasCohortLocationData(cohortLoc);" in source
+    assert "agreed: hasCohortData ? agreed : null" in source
+    assert "Limited AI data" in source
