@@ -129,6 +129,30 @@ let filterMode = 'all';
 let filterQuest = 'all';
 let viewMode = 'summary';
 
+const LEADERBOARD_DATA_VERSION = '2026-05-06-taxonomy-v2';
+const TAXONOMY_LABELS = {
+  minimal_prompt:'Minimal prompt',
+  short_context_reasoning:'Short-context reasoning',
+  full_history_reasoning:'Full-history reasoning',
+  compact_memory_memo:'Compact memory / memo',
+  prompt_hints:'Prompt hints',
+  tools_compact_memory:'Tools + compact memory',
+  tools_hints_compact_memory:'Tools + hints + compact memory',
+  planner_loop:'Planner loop',
+};
+const MODE_ALIASES = {
+  a:'minimal_prompt',
+  baseline:'minimal_prompt',
+  b:'short_context_reasoning',
+  prompted:'short_context_reasoning',
+  c:'compact_memory_memo',
+  knowledge:'compact_memory_memo',
+  d:'planner_loop',
+  planner:'planner_loop',
+  e:'tools_compact_memory',
+  'tool-aug':'tools_compact_memory',
+  tool_augmented:'tools_compact_memory',
+};
 const MODE_CLASSES = {
   minimal_prompt:'mode-minimal_prompt',
   short_context_reasoning:'mode-short_context_reasoning',
@@ -154,6 +178,36 @@ function successColor(v) { return v >= 0.8 ? 'var(--green)' : v >= 0.4 ? 'var(--
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function modelLabel(id) { return MODEL_BY_ID[id]?.label || id; }
 function modeLabel(id) { return MODE_BY_ID[id]?.label || id; }
+
+function canonicalModeId(id, label) {
+  const rawId = String(id || '').trim();
+  const rawLabel = String(label || '').trim();
+  const key = rawId.toLowerCase().replace(/\s+/g, '_');
+  return TAXONOMY_LABELS[rawId] ? rawId : MODE_ALIASES[key] || MODE_ALIASES[rawLabel.toLowerCase()] || rawId;
+}
+
+function normalizeLeaderboard(data) {
+  const rawModeLabels = Object.fromEntries((data.modes || []).map(mode => [mode.id, mode.label]));
+  const modeSeen = new Set();
+  const modes = (data.modes || []).map(mode => {
+    const id = canonicalModeId(mode.id, mode.label);
+    return {id, label: TAXONOMY_LABELS[id] || mode.label || id};
+  }).filter(mode => {
+    if (modeSeen.has(mode.id)) return false;
+    modeSeen.add(mode.id);
+    return true;
+  });
+  const knownModes = new Set(modes.map(mode => mode.id));
+  const results = (data.results || []).map(row => {
+    const mode = canonicalModeId(row.mode, rawModeLabels[row.mode]);
+    if (!knownModes.has(mode)) {
+      modes.push({id: mode, label: TAXONOMY_LABELS[mode] || mode});
+      knownModes.add(mode);
+    }
+    return {...row, mode};
+  });
+  return {...data, modes, results};
+}
 
 function scopedRows() {
   return DATA.results.filter(r => {
@@ -201,8 +255,8 @@ function weightedRate(rows) {
 }
 
 async function init() {
-  const resp = await fetch('leaderboard.json');
-  DATA = await resp.json();
+  const resp = await fetch(`leaderboard.json?v=${encodeURIComponent(LEADERBOARD_DATA_VERSION)}`, {cache: 'no-store'});
+  DATA = normalizeLeaderboard(await resp.json());
   MODEL_BY_ID = Object.fromEntries(DATA.models.map(m => [m.id, m]));
   MODE_BY_ID = Object.fromEntries(DATA.modes.map(m => [m.id, m]));
   document.getElementById('footer-date').textContent = DATA.generated?.split('T')[0] || '';
