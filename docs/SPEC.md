@@ -95,3 +95,9 @@ pnpm run build
 
 Provider API keys are required for real LLM runs. Tests and static validation
 should run without external credentials in a prepared checkout.
+
+Reproducible benchmark rows depend on recording the quest file, model/provider
+ID, prompt templates, memory mode, run ID, outcome, and run summaries with
+usage/metrics. Agent responses are parsed into a chosen action plus optional
+analysis/reasoning so action validity, terminal outcome, steps, tokens/cost,
+and repetition diagnostics can be regenerated from stored artifacts.

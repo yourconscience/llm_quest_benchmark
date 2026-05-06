@@ -27,7 +27,7 @@ The runtime loop is:
 - `llm_quest_benchmark/agents/llm_agent.py`: Base LLM agent with template-driven prompts, retry logic, loop-breaking, and safety filters.
 - `llm_quest_benchmark/agents/planner_agent.py`: Planner loop with observation-diff heuristic for re-planning.
 - `llm_quest_benchmark/agents/tool_agent.py`: Tool-using scaffold with quest history tool.
-- `llm_quest_benchmark/agents/agent_factory.py`: Factory that maps template aliases (stub, reasoning, planner, tool_augmented) to agent classes.
+- `llm_quest_benchmark/agents/agent_factory.py`: Factory that maps Prompt Template choices to agent classes.
 - `llm_quest_benchmark/agents/human_player.py`, `random_agent.py`: Non-LLM agents.
 
 `LLMAgent` lazily initializes provider clients, so template rendering and agent construction do not require API keys.

@@ -38,6 +38,15 @@ TEMPLATE_TO_MODE = {
     "tool_augmented_hints": ("tools_hints_compact_memory", TAXONOMY_MODES["tools_hints_compact_memory"]),
 }
 
+REASONING_STYLE_TEMPLATES = {
+    "reasoning",
+    "strategic",
+    "loop_aware_reasoning",
+    "objective_guard",
+    "consequence_scan",
+    "consequence_scan_subgoal",
+}
+
 MODE_ORDER = list(TAXONOMY_MODES)
 
 MODEL_ALIASES = {
@@ -69,7 +78,7 @@ def _strip_template_suffix(template_name: str) -> str:
 
 def _mode_from_template(template_name: str, memory_mode: str | None = None) -> tuple[str, str]:
     template_id = _strip_template_suffix(template_name)
-    if template_id == "reasoning":
+    if template_id in REASONING_STYLE_TEMPLATES:
         if memory_mode == "full_transcript":
             return "full_history_reasoning", TAXONOMY_MODES["full_history_reasoning"]
         if memory_mode == "compaction":
@@ -154,6 +163,77 @@ def _detect_quest_lang(quest_path: str) -> str:
     return "EN"
 
 
+def _row_run_id(row: dict[str, Any]) -> str | None:
+    for key in ("run_id", "db_run_id", "id"):
+        value = row.get(key)
+        if value is not None:
+            return str(value)
+    return None
+
+
+def _row_quest_id(row: dict[str, Any]) -> str:
+    quest_ref = row.get("quest") or row.get("quest_file") or row.get("quest_name") or ""
+    return canonical_quest_id(_quest_id_from_path(str(quest_ref)))
+
+
+def _run_match_key(row: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        _row_quest_id(row),
+        str(row.get("agent_id") or ""),
+        str(row.get("outcome") or ""),
+    )
+
+
+def _db_run_matches_result(db_run: dict[str, Any], result_row: dict[str, Any]) -> bool:
+    db_quest = _row_quest_id(db_run)
+    result_quest = _row_quest_id(result_row)
+    if db_quest and result_quest and db_quest != result_quest:
+        return False
+
+    db_agent = db_run.get("agent_id")
+    result_agent = result_row.get("agent_id")
+    if db_agent and result_agent and str(db_agent) != str(result_agent):
+        return False
+
+    db_outcome = db_run.get("outcome")
+    result_outcome = result_row.get("outcome")
+    return not (db_outcome and result_outcome and str(db_outcome) != str(result_outcome))
+
+
+def _db_run_for_result(
+    result_row: dict[str, Any],
+    index: int,
+    db_runs: list[Any],
+    db_runs_by_id: dict[str, dict[str, Any]],
+    db_run_queues: dict[tuple[str, str, str], list[dict[str, Any]]],
+    used_db_run_ids: set[int],
+) -> dict[str, Any] | None:
+    result_run_id = _row_run_id(result_row)
+    if result_run_id is not None:
+        db_run = db_runs_by_id.get(result_run_id)
+        if db_run is not None and id(db_run) not in used_db_run_ids:
+            used_db_run_ids.add(id(db_run))
+            return db_run
+
+    queue = db_run_queues.get(_run_match_key(result_row), [])
+    while queue:
+        db_run = queue.pop(0)
+        if id(db_run) not in used_db_run_ids:
+            used_db_run_ids.add(id(db_run))
+            return db_run
+
+    # Legacy benchmark summaries did not store a run identifier on result rows.
+    # If the positional row still matches all available identifiers, keep it as
+    # a defensive fallback for those artifacts instead of correlating blindly.
+    if index < len(db_runs) and isinstance(db_runs[index], dict):
+        db_run = db_runs[index]
+        if id(db_run) not in used_db_run_ids and _db_run_matches_result(db_run, result_row):
+            used_db_run_ids.add(id(db_run))
+            return db_run
+
+    return None
+
+
 def _mean(values: Iterable[float]) -> float:
     materialized = list(values)
     if not materialized:
@@ -225,6 +305,16 @@ def generate_leaderboard(
         results_list: list[Any] = raw_results if isinstance(raw_results, list) else []
         raw_db_runs = summary.get("db_runs")
         db_runs: list[Any] = raw_db_runs if isinstance(raw_db_runs, list) else []
+        db_runs_by_id: dict[str, dict[str, Any]] = {}
+        db_run_queues: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
+        for db_run in db_runs:
+            if not isinstance(db_run, dict):
+                continue
+            run_id = _row_run_id(db_run)
+            if run_id is not None:
+                db_runs_by_id[run_id] = db_run
+            db_run_queues[_run_match_key(db_run)].append(db_run)
+        used_db_run_ids: set[int] = set()
 
         for i, result_row in enumerate(results_list):
             if not isinstance(result_row, dict):
@@ -239,12 +329,12 @@ def generate_leaderboard(
             outcome = str(result_row.get("outcome") or "UNKNOWN")
 
             # TODO: cost tracking is broken - run_summary.json usage data is not populated by OpenRouter runs
-            # Correlate with db_runs by index to get run ID for metrics
+            # Correlate with db_runs to get run ID for metrics.
             usage: dict[str, Any] = {}
             metrics: dict[str, Any] = {}
             config: dict[str, Any] = {}
-            if i < len(db_runs) and isinstance(db_runs[i], dict):
-                db_run = db_runs[i]
+            db_run = _db_run_for_result(result_row, i, db_runs, db_runs_by_id, db_run_queues, used_db_run_ids)
+            if db_run is not None:
                 config = _agent_config(db_run)
                 run_id = db_run.get("id")
                 quest_name = db_run.get("quest_name")
@@ -259,7 +349,7 @@ def generate_leaderboard(
             if template_from_config:
                 template = template_from_config
             memory_mode = config.get("memory_mode")
-            mode_id, mode_label = _mode_from_template(template, str(memory_mode) if memory_mode else None)
+            mode_id, mode_label = _mode_from_template(template, str(memory_mode) if memory_mode is not None else None)
 
             try:
                 spec = parse_model_name(model)
