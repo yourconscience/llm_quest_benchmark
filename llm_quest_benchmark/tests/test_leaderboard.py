@@ -123,8 +123,8 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
         {"id": "gpt-5-mini", "provider": "openai", "label": "GPT-5 Mini"},
     ]
     assert leaderboard["modes"] == [
-        {"id": "stub", "label": "Baseline (A)"},
-        {"id": "planner", "label": "Planner (D)"},
+        {"id": "minimal_prompt", "label": "Minimal prompt"},
+        {"id": "planner_loop", "label": "Planner loop"},
     ]
     assert leaderboard["quests"] == [
         {"id": "Boat", "lang": "RU"},
@@ -132,7 +132,7 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
     ]
 
     boat_row = next(row for row in leaderboard["results"] if row["model"] == "gemini-2.5-flash")
-    assert boat_row["mode"] == "stub"
+    assert boat_row["mode"] == "minimal_prompt"
     assert boat_row["quest"] == "Boat"
     assert boat_row["runs"] == 2
     assert boat_row["success_rate"] == pytest.approx(0.5)
@@ -144,7 +144,7 @@ def test_generate_leaderboard_aggregates_runs(tmp_path, monkeypatch):
     scout_row = next(row for row in leaderboard["results"] if row["model"] == "gpt-5-mini")
     assert scout_row == {
         "model": "gpt-5-mini",
-        "mode": "planner",
+        "mode": "planner_loop",
         "quest": "Scout",
         "runs": 1,
         "success_rate": 1.0,

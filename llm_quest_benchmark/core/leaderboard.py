@@ -13,22 +13,32 @@ from typing import Any, cast
 from llm_quest_benchmark.core.quest_lang import canonical_quest_id
 from llm_quest_benchmark.llm.client import parse_model_name
 
-TEMPLATE_TO_MODE = {
-    "stub": ("stub", "Baseline (A)"),
-    "reasoning": ("reasoning", "Prompted (B)"),
-    "strategic": ("reasoning", "Prompted (B)"),
-    "stateful_compact": ("reasoning", "Prompted (B)"),
-    "memo_cot": ("reasoning", "Prompted (B)"),
-    "memo_extended": ("reasoning", "Prompted (B)"),
-    "memo_structured": ("reasoning", "Prompted (B)"),
-    "light_hints": ("light_hints", "Knowledge (C)"),
-    "stateful_compact_hints": ("light_hints", "Knowledge (C)"),
-    "planner": ("planner", "Planner (D)"),
-    "tool_augmented": ("tool_augmented", "Tool-aug (E)"),
-    "tool_augmented_hints": ("tool_augmented", "Tool-aug (E)"),
+TAXONOMY_MODES = {
+    "minimal_prompt": "Minimal prompt",
+    "short_context_reasoning": "Short-context reasoning",
+    "full_history_reasoning": "Full-history reasoning",
+    "compact_memory_memo": "Compact memory / memo",
+    "prompt_hints": "Prompt hints",
+    "tools_compact_memory": "Tools + compact memory",
+    "tools_hints_compact_memory": "Tools + hints + compact memory",
+    "planner_loop": "Planner loop",
 }
 
-MODE_ORDER = ["stub", "reasoning", "light_hints", "planner", "tool_augmented"]
+TEMPLATE_TO_MODE = {
+    "stub": ("minimal_prompt", TAXONOMY_MODES["minimal_prompt"]),
+    "strategic": ("short_context_reasoning", TAXONOMY_MODES["short_context_reasoning"]),
+    "stateful_compact": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
+    "memo_cot": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
+    "memo_extended": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
+    "memo_structured": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
+    "light_hints": ("prompt_hints", TAXONOMY_MODES["prompt_hints"]),
+    "stateful_compact_hints": ("prompt_hints", TAXONOMY_MODES["prompt_hints"]),
+    "planner": ("planner_loop", TAXONOMY_MODES["planner_loop"]),
+    "tool_augmented": ("tools_compact_memory", TAXONOMY_MODES["tools_compact_memory"]),
+    "tool_augmented_hints": ("tools_hints_compact_memory", TAXONOMY_MODES["tools_hints_compact_memory"]),
+}
+
+MODE_ORDER = list(TAXONOMY_MODES)
 
 MODEL_ALIASES = {
     "claude:claude-haiku-4-5-20251001": "claude-haiku-4.5",
@@ -57,9 +67,26 @@ def _strip_template_suffix(template_name: str) -> str:
     return Path(template_name or "").stem
 
 
-def _mode_from_template(template_name: str) -> tuple[str, str]:
+def _mode_from_template(template_name: str, memory_mode: str | None = None) -> tuple[str, str]:
     template_id = _strip_template_suffix(template_name)
+    if template_id == "reasoning":
+        if memory_mode == "full_transcript":
+            return "full_history_reasoning", TAXONOMY_MODES["full_history_reasoning"]
+        if memory_mode == "compaction":
+            return "compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]
+        return "short_context_reasoning", TAXONOMY_MODES["short_context_reasoning"]
     return TEMPLATE_TO_MODE.get(template_id, (template_id or "unknown", template_id or "unknown"))
+
+
+def _agent_config(db_run: dict[str, Any]) -> dict[str, Any]:
+    raw_config = db_run.get("agent_config")
+    if not isinstance(raw_config, str) or not raw_config:
+        return {}
+    try:
+        parsed = json.loads(raw_config)
+    except json.JSONDecodeError:
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
 
 
 def _combine_numeric_tokens(parts: list[str]) -> list[str]:
@@ -181,7 +208,7 @@ def generate_leaderboard(
 
     grouped_rows: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
     model_entries: dict[str, dict[str, str]] = {}
-    mode_entries: dict[str, dict[str, str]] = {}
+    taxonomy_entries: dict[str, dict[str, str]] = {}
     quest_entries: dict[str, dict[str, Any]] = {}
     benchmark_ids: list[str] = []
 
@@ -205,7 +232,6 @@ def generate_leaderboard(
 
             model = str(result_row.get("model") or "unknown")
             template = str(result_row.get("template") or "")
-            mode_id, mode_label = _mode_from_template(template)
             quest_path = str(result_row.get("quest") or "")
             raw_quest_id = _quest_id_from_path(quest_path)
             quest_id = canonical_quest_id(raw_quest_id)
@@ -216,8 +242,10 @@ def generate_leaderboard(
             # Correlate with db_runs by index to get run ID for metrics
             usage: dict[str, Any] = {}
             metrics: dict[str, Any] = {}
+            config: dict[str, Any] = {}
             if i < len(db_runs) and isinstance(db_runs[i], dict):
                 db_run = db_runs[i]
+                config = _agent_config(db_run)
                 run_id = db_run.get("id")
                 quest_name = db_run.get("quest_name")
                 agent_id = db_run.get("agent_id")
@@ -226,6 +254,12 @@ def generate_leaderboard(
                     run_summary = _load_json(run_path) or {}
                     usage = _dict_field(run_summary, "usage")
                     metrics = _dict_field(run_summary, "metrics")
+
+            template_from_config = str(config.get("action_template") or "")
+            if template_from_config:
+                template = template_from_config
+            memory_mode = config.get("memory_mode")
+            mode_id, mode_label = _mode_from_template(template, str(memory_mode) if memory_mode else None)
 
             try:
                 spec = parse_model_name(model)
@@ -256,7 +290,7 @@ def generate_leaderboard(
                     "provider": provider,
                     "label": _model_label(label_source_for_display),
                 }
-            mode_entries[mode_id] = {"id": mode_id, "label": mode_label}
+            taxonomy_entries[mode_id] = {"id": mode_id, "label": mode_label}
             if raw_quest_id != quest_id:
                 existing_quest = quest_entries.setdefault(quest_id, {"id": quest_id, "lang": "EN"})
                 source_langs = existing_quest.get("source_langs")
@@ -318,7 +352,7 @@ def generate_leaderboard(
     included_modes = {row["mode"] for row in agg_results}
     included_quests = {row["quest"] for row in agg_results}
     model_entries = {k: v for k, v in model_entries.items() if k in included_models}
-    mode_entries = {k: v for k, v in mode_entries.items() if k in included_modes}
+    taxonomy_entries = {k: v for k, v in taxonomy_entries.items() if k in included_modes}
     quest_entries = {k: v for k, v in quest_entries.items() if k in included_quests}
 
     mode_rank = {mode_id: index for index, mode_id in enumerate(MODE_ORDER)}
@@ -332,7 +366,7 @@ def generate_leaderboard(
             "note": "Raw benchmark artifacts may contain exploratory runs outside this published comparison slice.",
         },
         "models": sorted(model_entries.values(), key=lambda item: item["id"]),
-        "modes": sorted(mode_entries.values(), key=lambda item: (mode_rank.get(item["id"], 999), item["id"])),
+        "modes": sorted(taxonomy_entries.values(), key=lambda item: (mode_rank.get(item["id"], 999), item["id"])),
         "quests": sorted(quest_entries.values(), key=lambda item: item["id"]),
         "results": sorted(
             agg_results,

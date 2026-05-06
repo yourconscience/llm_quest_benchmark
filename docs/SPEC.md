@@ -12,7 +12,7 @@ Most agent benchmarks vary tasks and models but treat the agent as a black box. 
 
 ## Non-goals
 
-- Full RAG pipeline with vector DB (potential follow-up). Lightweight knowledge injection is in scope as Mode C.
+- Full RAG pipeline with vector DB (potential follow-up). Lightweight knowledge injection is in scope as the knowledge-injection track.
 - Runtime web UI. The interface is CLI + YAML config.
 - New quest authoring or quest format changes. Quests come from upstream Space Rangers archives via `download_quests.sh`.
 - Competing with TextQuests (HuggingFace) or TextArena on their turf. LLM-Quest focuses on structured quests with clear success/failure, not open-ended IF or adversarial games.
@@ -51,15 +51,15 @@ Inspired by TextQuests (CAIS, 2025) and AgentQuest (NEC, NAACL 2024). See `resea
 | Prompted | `B` | Existing reasoning/strategic/loop-aware templates. The agent analyzes options and reasons about consequences. |
 | Knowledge | `C` | Domain knowledge injected into context. See knowledge gradient below. Same decision loop as B. |
 | Planner | `D` | Multi-step planning agent. Maintains a plan, re-plans when the situation changes, then picks an action aligned with the plan. |
-| Tool-augmented | `E` | Agent has access to tools: quest history (memory of past quest states within the same quest). Calculator and domain knowledge lookup deferred to future PRs. |
+| Tool-assisted | `E` | Agent has access to tools: quest history (memory of past quest states within the same quest). Calculator and domain knowledge lookup deferred to future PRs. |
 
-### Knowledge gradient (Mode C levels)
+### Knowledge gradient (historical C-track levels)
 
-Knowledge injection is a dimension, not a binary toggle. Tested as sub-levels of Mode C:
+Knowledge injection is a dimension, not a binary toggle. Tested as sub-levels of the historical C track:
 
 | Level | Tag | What's injected | Effort |
 |-------|-----|-----------------|--------|
-| C0 | `no-knowledge` | Nothing (same as Mode B, control group) | None |
+| C0 | `no-knowledge` | Nothing (same as the prompted control group) | None |
 | C1 | `light-hints` | General quest mechanics and game rules (static, quest-agnostic) | Low |
 | C2 | `heavy-context` | Quest-specific hints, walkthrough fragments, or known-good strategies | Medium |
 | C3 | `rag` | Retrieval from a knowledge base of past runs, quest descriptions, and game lore | High |
@@ -114,9 +114,9 @@ llm-quest leaderboard --output site/leaderboard.json
 ### Agent mode implementation
 
 - Modes A and B: already exist (stub.jinja, reasoning.jinja, strategic.jinja, etc.).
-- Mode C (levels C0-C3): C0 is Mode B (control). C1: new template with general game mechanics block prepended (static YAML). C2: quest-specific hints curated manually. C3 (stretch): RAG retrieval from an embedding index of past runs and game lore.
-- Mode D: new agent class wrapping the LLM client with a plan-maintain-act loop. Plan is text, re-evaluated every N steps or on significant state change.
-- Mode E: new agent class with tool-use support. Tools are simple Python functions registered as available actions alongside the quest options.
+- Knowledge-injection track (levels C0-C3): C0 is the prompted control. C1: new template with general game mechanics block prepended (static YAML). C2: quest-specific hints curated manually. C3 (stretch): RAG retrieval from an embedding index of past runs and game lore.
+- Planner track: new agent class wrapping the LLM client with a plan-maintain-act loop. Plan is text, re-evaluated every N steps or on significant state change.
+- Tool track: new agent class with tool-use support. Tools are simple Python functions registered as available actions alongside the quest options.
 
 ### Static site
 
@@ -171,7 +171,7 @@ All criteria must be met for the spec to be considered complete:
 2. **Quest success detection**: Some quests may have ambiguous endings. Need a human pass to label which endings count as success vs failure for edge cases.
 3. **Checkpoint labeling for progress %**: Progress metric requires defining intermediate checkpoints per quest. The .qm format has location/state data that may be extractable, but manual validation is needed. Start with 10 quests, then scale.
 4. **Cost of full matrix**: ~1200 runs at ~$27 for 7 mid-tier models. High-tier follow-up (Claude Sonnet, GPT-5.4, Gemini Pro) adds ~$50-100 depending on scope.
-5. **Mode D/E complexity**: Planner and tool-augmented agents are new code. Scope creep risk - keep implementations shallow and iterate.
+5. **Planner/tool complexity**: Planner and tool-assisted agents are new code. Scope creep risk - keep implementations shallow and iterate.
 6. **Models may not complete quests at all**: TextQuests (2025) found zero models completing any Infocom game without clues. Our quests are shorter and choice-based (easier), but the same ceiling effect is possible. Progress % and the knowledge gradient provide a publishable story even if success rates are low.
 7. **TextQuests differentiation**: HuggingFace's TextQuests (2025) is the closest competitor. Key differentiators: agent architecture comparison (5 modes vs 1), bilingual RU/EN, choice-based vs parser-based IF, knowledge gradient experiment. Lead with "vary the agent, not the task" framing.
 
@@ -209,7 +209,7 @@ The `memo` field is stored in decision history, passed through compaction, and d
 - Set up static site scaffold with placeholder leaderboard.
 
 ### Phase 2: Agent modes C-E
-- Implement Mode C level C1 (light knowledge hints) first. Run A vs B vs C1 on pilot quests.
+- Implement the light-hints level first. Run minimal-prompt vs prompted-control vs light-hints pilots.
 - If C1 shows improvement, implement C2 (heavy context with quest-specific hints).
 - Implement planner agent (mode D).
 - Implement tool-augmented agent (mode E).

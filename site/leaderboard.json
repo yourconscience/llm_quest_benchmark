@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-05T13:35:04.535791",
+  "generated": "2026-05-06T15:02:54.585995",
   "benchmark_id": "combined",
   "scope": {
     "model_ids": [
@@ -48,24 +48,36 @@
   ],
   "modes": [
     {
-      "id": "stub",
-      "label": "Baseline (A)"
+      "id": "minimal_prompt",
+      "label": "Minimal prompt"
     },
     {
-      "id": "reasoning",
-      "label": "Prompted (B)"
+      "id": "short_context_reasoning",
+      "label": "Short-context reasoning"
     },
     {
-      "id": "light_hints",
-      "label": "Knowledge (C)"
+      "id": "full_history_reasoning",
+      "label": "Full-history reasoning"
     },
     {
-      "id": "planner",
-      "label": "Planner (D)"
+      "id": "compact_memory_memo",
+      "label": "Compact memory / memo"
     },
     {
-      "id": "tool_augmented",
-      "label": "Tool-aug (E)"
+      "id": "prompt_hints",
+      "label": "Prompt hints"
+    },
+    {
+      "id": "tools_compact_memory",
+      "label": "Tools + compact memory"
+    },
+    {
+      "id": "tools_hints_compact_memory",
+      "label": "Tools + hints + compact memory"
+    },
+    {
+      "id": "planner_loop",
+      "label": "Planner loop"
     }
   ],
   "quests": [
@@ -133,7 +145,7 @@
   "results": [
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Badday_eng",
       "runs": 3,
       "success_rate": 1.0,
@@ -144,7 +156,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Banket_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -155,7 +167,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Boat",
       "runs": 3,
       "success_rate": 0.3333333333333333,
@@ -166,7 +178,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Codebox_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -177,7 +189,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Depth_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -188,7 +200,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Driver_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -199,7 +211,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Edelweiss_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -210,7 +222,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Election_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -221,7 +233,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Foncers_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -232,7 +244,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Leonardo_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -243,7 +255,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ministry_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -254,7 +266,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Pizza_eng",
       "runs": 3,
       "success_rate": 1.0,
@@ -265,7 +277,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Prison_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -276,7 +288,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Robots_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -287,7 +299,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ski_eng",
       "runs": 3,
       "success_rate": 0.3333333333333333,
@@ -298,7 +310,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Badday_eng",
       "runs": 3,
       "success_rate": 1.0,
@@ -309,18 +321,18 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Banket_eng",
-      "runs": 5,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 17.0,
-      "avg_tokens": 18453.8,
-      "avg_cost_usd": 0.024785800000000004,
-      "repetition_rate": 0.43344226579520695
+      "avg_steps": 28.333333333333332,
+      "avg_tokens": 30756.333333333332,
+      "avg_cost_usd": 0.04130966666666667,
+      "repetition_rate": 0.7224037763253449
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Boat",
       "runs": 3,
       "success_rate": 1.0,
@@ -331,95 +343,95 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Codebox_eng",
-      "runs": 5,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 14.6,
-      "avg_tokens": 16737.6,
-      "avg_cost_usd": 0.021798400000000002,
-      "repetition_rate": 0.443841642228739
+      "avg_steps": 24.333333333333332,
+      "avg_tokens": 27896.0,
+      "avg_cost_usd": 0.03633066666666667,
+      "repetition_rate": 0.7397360703812317
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Depth_eng",
-      "runs": 5,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 29.2,
-      "avg_tokens": 22311.0,
-      "avg_cost_usd": 0.0307782,
-      "repetition_rate": 0.5895208177044261
+      "avg_steps": 38.0,
+      "avg_tokens": 37185.0,
+      "avg_cost_usd": 0.051297,
+      "repetition_rate": 0.7221180295073769
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Driver_eng",
-      "runs": 5,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 25.0,
-      "avg_tokens": 15927.2,
-      "avg_cost_usd": 0.022196,
-      "repetition_rate": 0.5935531135531136
+      "avg_steps": 28.666666666666668,
+      "avg_tokens": 26545.333333333332,
+      "avg_cost_usd": 0.036993333333333336,
+      "repetition_rate": 0.7841269841269841
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Edelweiss_eng",
-      "runs": 5,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 42.0,
-      "avg_tokens": 28971.8,
-      "avg_cost_usd": 0.040985400000000005,
-      "repetition_rate": 0.5936895539550929
+      "avg_steps": 59.333333333333336,
+      "avg_tokens": 48286.333333333336,
+      "avg_cost_usd": 0.06830900000000001,
+      "repetition_rate": 0.7603159232584882
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Election_eng",
-      "runs": 8,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 44.125,
-      "avg_tokens": 35464.75,
-      "avg_cost_usd": 0.04630275,
-      "repetition_rate": 0.6294326981955649
+      "avg_steps": 80.66666666666667,
+      "avg_tokens": 94572.66666666667,
+      "avg_cost_usd": 0.12347399999999999,
+      "repetition_rate": 0.7326468493478272
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Foncers_eng",
-      "runs": 5,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 29.4,
-      "avg_tokens": 15202.4,
-      "avg_cost_usd": 0.0213896,
-      "repetition_rate": 0.7210801342869655
+      "avg_steps": 29.333333333333332,
+      "avg_tokens": 25337.333333333332,
+      "avg_cost_usd": 0.03564933333333333,
+      "repetition_rate": 0.7468982630272953
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Leonardo_eng",
-      "runs": 6,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 68.83333333333333,
-      "avg_tokens": 47294.0,
-      "avg_cost_usd": 0.06607,
-      "repetition_rate": 0.8600962354638826
+      "avg_steps": 105.66666666666667,
+      "avg_tokens": 94588.0,
+      "avg_cost_usd": 0.13214,
+      "repetition_rate": 0.7826924709277651
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Ministry_eng",
-      "runs": 5,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 95.6,
-      "avg_tokens": 78391.4,
-      "avg_cost_usd": 0.10904660000000002,
-      "repetition_rate": 0.4894860842415768
+      "avg_steps": 159.33333333333334,
+      "avg_tokens": 130652.33333333333,
+      "avg_cost_usd": 0.18174433333333337,
+      "repetition_rate": 0.815810140402628
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Pizza_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -430,7 +442,7 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Prison_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -441,18 +453,18 @@
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Robots_eng",
-      "runs": 8,
-      "success_rate": 0.125,
-      "avg_steps": 35.75,
-      "avg_tokens": 10359.25,
-      "avg_cost_usd": 0.01460025,
-      "repetition_rate": 0.7375319127047764
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 33.666666666666664,
+      "avg_tokens": 27624.666666666668,
+      "avg_cost_usd": 0.038934,
+      "repetition_rate": 0.743892828999212
     },
     {
       "model": "claude-haiku-4.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Ski_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -462,8 +474,118 @@
       "repetition_rate": 0.6102198455139631
     },
     {
+      "model": "claude-haiku-4.5",
+      "mode": "compact_memory_memo",
+      "quest": "Banket_eng",
+      "runs": 2,
+      "success_rate": 0.0,
+      "avg_steps": 0.0,
+      "avg_tokens": 0.0,
+      "avg_cost_usd": 0.0,
+      "repetition_rate": 0.0
+    },
+    {
+      "model": "claude-haiku-4.5",
+      "mode": "compact_memory_memo",
+      "quest": "Codebox_eng",
+      "runs": 2,
+      "success_rate": 0.0,
+      "avg_steps": 0.0,
+      "avg_tokens": 0.0,
+      "avg_cost_usd": 0.0,
+      "repetition_rate": 0.0
+    },
+    {
+      "model": "claude-haiku-4.5",
+      "mode": "compact_memory_memo",
+      "quest": "Depth_eng",
+      "runs": 2,
+      "success_rate": 0.0,
+      "avg_steps": 16.0,
+      "avg_tokens": 0.0,
+      "avg_cost_usd": 0.0,
+      "repetition_rate": 0.390625
+    },
+    {
+      "model": "claude-haiku-4.5",
+      "mode": "compact_memory_memo",
+      "quest": "Driver_eng",
+      "runs": 2,
+      "success_rate": 0.0,
+      "avg_steps": 19.5,
+      "avg_tokens": 0.0,
+      "avg_cost_usd": 0.0,
+      "repetition_rate": 0.3076923076923077
+    },
+    {
+      "model": "claude-haiku-4.5",
+      "mode": "compact_memory_memo",
+      "quest": "Edelweiss_eng",
+      "runs": 2,
+      "success_rate": 0.0,
+      "avg_steps": 16.0,
+      "avg_tokens": 0.0,
+      "avg_cost_usd": 0.0,
+      "repetition_rate": 0.34375
+    },
+    {
+      "model": "claude-haiku-4.5",
+      "mode": "compact_memory_memo",
+      "quest": "Election_eng",
+      "runs": 5,
+      "success_rate": 0.0,
+      "avg_steps": 22.2,
+      "avg_tokens": 0.0,
+      "avg_cost_usd": 0.0,
+      "repetition_rate": 0.5675042075042075
+    },
+    {
+      "model": "claude-haiku-4.5",
+      "mode": "compact_memory_memo",
+      "quest": "Foncers_eng",
+      "runs": 2,
+      "success_rate": 0.0,
+      "avg_steps": 29.5,
+      "avg_tokens": 0.0,
+      "avg_cost_usd": 0.0,
+      "repetition_rate": 0.6823529411764706
+    },
+    {
+      "model": "claude-haiku-4.5",
+      "mode": "compact_memory_memo",
+      "quest": "Leonardo_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 32.0,
+      "avg_tokens": 0.0,
+      "avg_cost_usd": 0.0,
+      "repetition_rate": 0.9375
+    },
+    {
+      "model": "claude-haiku-4.5",
+      "mode": "compact_memory_memo",
+      "quest": "Ministry_eng",
+      "runs": 2,
+      "success_rate": 0.0,
+      "avg_steps": 0.0,
+      "avg_tokens": 0.0,
+      "avg_cost_usd": 0.0,
+      "repetition_rate": 0.0
+    },
+    {
+      "model": "claude-haiku-4.5",
+      "mode": "compact_memory_memo",
+      "quest": "Robots_eng",
+      "runs": 5,
+      "success_rate": 0.2,
+      "avg_steps": 37.0,
+      "avg_tokens": 0.0,
+      "avg_cost_usd": 0.0,
+      "repetition_rate": 0.733715362928115
+    },
+    {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Badday_eng",
       "runs": 3,
       "success_rate": 1.0,
@@ -474,7 +596,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Banket_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -485,7 +607,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Boat",
       "runs": 3,
       "success_rate": 0.3333333333333333,
@@ -496,7 +618,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Codebox_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -507,7 +629,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Depth_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -518,7 +640,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Driver_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -529,7 +651,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Edelweiss_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -540,7 +662,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Election_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -551,7 +673,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Foncers_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -562,7 +684,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Leonardo_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -573,7 +695,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ministry_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -584,7 +706,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Pizza_eng",
       "runs": 3,
       "success_rate": 0.6666666666666666,
@@ -595,7 +717,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Prison_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -606,7 +728,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Robots_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -617,7 +739,7 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ski_eng",
       "runs": 3,
       "success_rate": 0.3333333333333333,
@@ -628,172 +750,469 @@
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Badday_eng",
-      "runs": 12,
-      "success_rate": 0.16666666666666666,
-      "avg_steps": 41.583333333333336,
-      "avg_tokens": 67913.5,
-      "avg_cost_usd": 0.0173951675,
-      "repetition_rate": 0.7181676881433127
+      "runs": 3,
+      "success_rate": 0.6666666666666666,
+      "avg_steps": 28.333333333333332,
+      "avg_tokens": 20509.0,
+      "avg_cost_usd": 0.005499506666666667,
+      "repetition_rate": 0.7996814018319395
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Banket_eng",
-      "runs": 12,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 41.916666666666664,
-      "avg_tokens": 81835.41666666667,
-      "avg_cost_usd": 0.020912323333333333,
-      "repetition_rate": 0.7092106211057639
+      "avg_steps": 27.0,
+      "avg_tokens": 24931.333333333332,
+      "avg_cost_usd": 0.006631793333333334,
+      "repetition_rate": 0.7037037037037037
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Boat",
-      "runs": 12,
-      "success_rate": 0.5,
-      "avg_steps": 21.25,
-      "avg_tokens": 40104.666666666664,
-      "avg_cost_usd": 0.010256600833333334,
-      "repetition_rate": 0.7216626097112715
+      "runs": 3,
+      "success_rate": 1.0,
+      "avg_steps": 17.0,
+      "avg_tokens": 13725.666666666666,
+      "avg_cost_usd": 0.0036678633333333335,
+      "repetition_rate": 0.8223684210526315
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Codebox_eng",
-      "runs": 12,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 49.916666666666664,
-      "avg_tokens": 111280.0,
-      "avg_cost_usd": 0.028359857500000002,
-      "repetition_rate": 0.7160735664822767
+      "avg_steps": 14.333333333333334,
+      "avg_tokens": 12887.333333333334,
+      "avg_cost_usd": 0.0034295899999999997,
+      "repetition_rate": 0.7055555555555556
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Depth_eng",
-      "runs": 12,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 62.0,
-      "avg_tokens": 115230.25,
-      "avg_cost_usd": 0.029462324999999998,
-      "repetition_rate": 0.7136891656453952
+      "avg_steps": 32.0,
+      "avg_tokens": 26184.0,
+      "avg_cost_usd": 0.00698387,
+      "repetition_rate": 0.6869070208728653
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Driver_eng",
-      "runs": 12,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 43.5,
-      "avg_tokens": 133852.58333333334,
-      "avg_cost_usd": 0.034024640833333335,
-      "repetition_rate": 0.7154813788861457
+      "avg_steps": 31.666666666666668,
+      "avg_tokens": 24717.333333333332,
+      "avg_cost_usd": 0.006606476666666666,
+      "repetition_rate": 0.7776052449965493
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Edelweiss_eng",
-      "runs": 12,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 69.41666666666667,
-      "avg_tokens": 98389.91666666667,
-      "avg_cost_usd": 0.025245936666666666,
-      "repetition_rate": 0.7388870365697752
+      "avg_steps": 46.666666666666664,
+      "avg_tokens": 30822.0,
+      "avg_cost_usd": 0.00829105,
+      "repetition_rate": 0.7465110958590712
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Election_eng",
-      "runs": 12,
+      "runs": 7,
       "success_rate": 0.0,
-      "avg_steps": 103.08333333333333,
-      "avg_tokens": 228443.16666666666,
-      "avg_cost_usd": 0.058307961666666665,
-      "repetition_rate": 0.7762995797489115
+      "avg_steps": 113.28571428571429,
+      "avg_tokens": 140594.85714285713,
+      "avg_cost_usd": 0.036351111428571434,
+      "repetition_rate": 0.7768211498561389
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Foncers_eng",
-      "runs": 12,
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 33.333333333333336,
+      "avg_tokens": 24733.333333333332,
+      "avg_cost_usd": 0.0065982766666666665,
+      "repetition_rate": 0.6585497835497836
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "short_context_reasoning",
+      "quest": "Leonardo_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 127.66666666666667,
+      "avg_tokens": 138042.66666666666,
+      "avg_cost_usd": 0.035806785,
+      "repetition_rate": 0.7813378695816606
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "short_context_reasoning",
+      "quest": "Ministry_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 115.0,
+      "avg_tokens": 78660.0,
+      "avg_cost_usd": 0.021086006666666667,
+      "repetition_rate": 0.8229662613051875
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "short_context_reasoning",
+      "quest": "Pizza_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 35.666666666666664,
+      "avg_tokens": 27972.333333333332,
+      "avg_cost_usd": 0.007492933333333333,
+      "repetition_rate": 0.5698523698523698
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "short_context_reasoning",
+      "quest": "Prison_eng",
+      "runs": 9,
+      "success_rate": 0.0,
+      "avg_steps": 51.22222222222222,
+      "avg_tokens": 38811.444444444445,
+      "avg_cost_usd": 0.010380174444444444,
+      "repetition_rate": 0.2838899820718003
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "short_context_reasoning",
+      "quest": "Robots_eng",
+      "runs": 9,
+      "success_rate": 0.0,
+      "avg_steps": 11.222222222222221,
+      "avg_tokens": 7759.111111111111,
+      "avg_cost_usd": 0.0020819,
+      "repetition_rate": 0.266973886328725
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "short_context_reasoning",
+      "quest": "Ski_eng",
+      "runs": 9,
+      "success_rate": 0.1111111111111111,
+      "avg_steps": 26.666666666666668,
+      "avg_tokens": 23982.666666666668,
+      "avg_cost_usd": 0.0063763744444444445,
+      "repetition_rate": 0.24506172839506174
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "full_history_reasoning",
+      "quest": "Badday_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 24.666666666666668,
+      "avg_tokens": 85336.66666666667,
+      "avg_cost_usd": 0.021652596666666666,
+      "repetition_rate": 0.7446236559139785
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "full_history_reasoning",
+      "quest": "Banket_eng",
+      "runs": 3,
       "success_rate": 0.0,
       "avg_steps": 44.0,
-      "avg_tokens": 97667.58333333333,
-      "avg_cost_usd": 0.02490410833333333,
-      "repetition_rate": 0.66654554115581
+      "avg_tokens": 169319.66666666666,
+      "avg_cost_usd": 0.04292038666666667,
+      "repetition_rate": 0.5987434113430318
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "full_history_reasoning",
+      "quest": "Boat",
+      "runs": 3,
+      "success_rate": 0.6666666666666666,
+      "avg_steps": 34.0,
+      "avg_tokens": 99659.0,
+      "avg_cost_usd": 0.02532058333333333,
+      "repetition_rate": 0.6578304048892284
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "full_history_reasoning",
+      "quest": "Codebox_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 66.0,
+      "avg_tokens": 294349.0,
+      "avg_cost_usd": 0.07455571,
+      "repetition_rate": 0.7232156553371464
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "full_history_reasoning",
+      "quest": "Depth_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 58.333333333333336,
+      "avg_tokens": 173961.66666666666,
+      "avg_cost_usd": 0.04415233333333333,
+      "repetition_rate": 0.7298515104966717
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "full_history_reasoning",
+      "quest": "Driver_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 82.0,
+      "avg_tokens": 432912.6666666667,
+      "avg_cost_usd": 0.10955947666666666,
+      "repetition_rate": 0.7142900135857883
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "full_history_reasoning",
+      "quest": "Edelweiss_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 28.666666666666668,
+      "avg_tokens": 78367.66666666667,
+      "avg_cost_usd": 0.019888176666666667,
+      "repetition_rate": 0.703030303030303
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "full_history_reasoning",
+      "quest": "Election_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 110.0,
+      "avg_tokens": 539418.3333333334,
+      "avg_cost_usd": 0.13653179333333335,
+      "repetition_rate": 0.7752136752136752
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "full_history_reasoning",
+      "quest": "Foncers_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 73.33333333333333,
+      "avg_tokens": 277083.3333333333,
+      "avg_cost_usd": 0.07022819666666667,
+      "repetition_rate": 0.7601973684210526
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "full_history_reasoning",
       "quest": "Leonardo_eng",
-      "runs": 12,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 93.5,
-      "avg_tokens": 112207.16666666667,
-      "avg_cost_usd": 0.028952143333333333,
-      "repetition_rate": 0.7465875186548164
+      "avg_steps": 28.666666666666668,
+      "avg_tokens": 70465.0,
+      "avg_cost_usd": 0.017915813333333332,
+      "repetition_rate": 0.5830566198382291
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "full_history_reasoning",
       "quest": "Ministry_eng",
-      "runs": 12,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 58.416666666666664,
-      "avg_tokens": 61781.166666666664,
-      "avg_cost_usd": 0.016049614166666667,
-      "repetition_rate": 0.7911630128440114
+      "avg_steps": 29.666666666666668,
+      "avg_tokens": 62624.333333333336,
+      "avg_cost_usd": 0.015937236666666667,
+      "repetition_rate": 0.8307447232178414
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "full_history_reasoning",
       "quest": "Pizza_eng",
-      "runs": 12,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 55.333333333333336,
-      "avg_tokens": 141246.25,
-      "avg_cost_usd": 0.035964665,
-      "repetition_rate": 0.6294022950496094
+      "avg_steps": 74.66666666666667,
+      "avg_tokens": 377571.3333333333,
+      "avg_cost_usd": 0.09556196666666666,
+      "repetition_rate": 0.6473818990498011
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "compact_memory_memo",
+      "quest": "Badday_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 56.666666666666664,
+      "avg_tokens": 82904.16666666667,
+      "avg_cost_usd": 0.021214283333333334,
+      "repetition_rate": 0.6641828474136662
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
+      "quest": "Banket_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 48.333333333333336,
+      "avg_tokens": 66545.33333333333,
+      "avg_cost_usd": 0.017048556666666666,
+      "repetition_rate": 0.7671976846881602
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
+      "quest": "Boat",
+      "runs": 6,
+      "success_rate": 0.16666666666666666,
+      "avg_steps": 17.0,
+      "avg_tokens": 23517.0,
+      "avg_cost_usd": 0.0060189783333333335,
+      "repetition_rate": 0.7032258064516128
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
+      "quest": "Codebox_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 59.666666666666664,
+      "avg_tokens": 68941.83333333333,
+      "avg_cost_usd": 0.017727065,
+      "repetition_rate": 0.7177615275182023
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
+      "quest": "Depth_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 78.83333333333333,
+      "avg_tokens": 130387.66666666667,
+      "avg_cost_usd": 0.03335654833333333,
+      "repetition_rate": 0.7189990656060218
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
+      "quest": "Driver_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 30.166666666666668,
+      "avg_tokens": 38890.166666666664,
+      "avg_cost_usd": 0.009966305,
+      "repetition_rate": 0.6850151284811227
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
+      "quest": "Edelweiss_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 101.16666666666667,
+      "avg_tokens": 142185.0,
+      "avg_cost_usd": 0.03640226,
+      "repetition_rate": 0.753003373694863
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
+      "quest": "Election_eng",
+      "runs": 2,
+      "success_rate": 0.0,
+      "avg_steps": 57.0,
+      "avg_tokens": 69449.5,
+      "avg_cost_usd": 0.01782119,
+      "repetition_rate": 0.7761029411764706
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
+      "quest": "Foncers_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 34.666666666666664,
+      "avg_tokens": 44426.833333333336,
+      "avg_cost_usd": 0.011394979999999999,
+      "repetition_rate": 0.6237175063262019
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
+      "quest": "Leonardo_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 90.0,
+      "avg_tokens": 102278.33333333333,
+      "avg_cost_usd": 0.026279189999999997,
+      "repetition_rate": 0.8406177156177156
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
+      "quest": "Ministry_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 44.5,
+      "avg_tokens": 52920.166666666664,
+      "avg_cost_usd": 0.013587606666666667,
+      "repetition_rate": 0.7554705334265083
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
+      "quest": "Pizza_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 55.5,
+      "avg_tokens": 79720.66666666667,
+      "avg_cost_usd": 0.02040188,
+      "repetition_rate": 0.6501874556481334
+    },
+    {
+      "model": "deepseek-v3.2",
+      "mode": "compact_memory_memo",
       "quest": "Prison_eng",
-      "runs": 12,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 43.25,
-      "avg_tokens": 36118.5,
-      "avg_cost_usd": 0.009577879999999999,
-      "repetition_rate": 0.42410169708016593
+      "avg_steps": 19.333333333333332,
+      "avg_tokens": 28039.666666666668,
+      "avg_cost_usd": 0.007170996666666668,
+      "repetition_rate": 0.8447368421052631
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "compact_memory_memo",
       "quest": "Robots_eng",
-      "runs": 12,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 15.666666666666666,
-      "avg_tokens": 14690.833333333334,
-      "avg_cost_usd": 0.003839368333333333,
-      "repetition_rate": 0.4014279044127023
+      "avg_steps": 29.0,
+      "avg_tokens": 35486.0,
+      "avg_cost_usd": 0.009111773333333332,
+      "repetition_rate": 0.8047899586646342
     },
     {
       "model": "deepseek-v3.2",
-      "mode": "reasoning",
+      "mode": "compact_memory_memo",
       "quest": "Ski_eng",
-      "runs": 12,
-      "success_rate": 0.08333333333333333,
-      "avg_steps": 28.5,
-      "avg_tokens": 31074.25,
-      "avg_cost_usd": 0.0081310775,
-      "repetition_rate": 0.33820806100217865
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 34.0,
+      "avg_tokens": 52349.0,
+      "avg_cost_usd": 0.013395186666666668,
+      "repetition_rate": 0.6176470588235294
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Badday_eng",
       "runs": 3,
       "success_rate": 1.0,
@@ -804,7 +1223,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Banket_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -815,7 +1234,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Boat",
       "runs": 3,
       "success_rate": 1.0,
@@ -826,7 +1245,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Codebox_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -837,7 +1256,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Depth_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -848,7 +1267,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Driver_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -859,7 +1278,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Edelweiss_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -870,7 +1289,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Election_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -881,7 +1300,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Foncers_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -892,7 +1311,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Leonardo_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -903,7 +1322,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ministry_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -914,7 +1333,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Pizza_eng",
       "runs": 3,
       "success_rate": 1.0,
@@ -925,7 +1344,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Prison_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -936,7 +1355,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Robots_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -947,7 +1366,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ski_eng",
       "runs": 3,
       "success_rate": 0.3333333333333333,
@@ -958,172 +1377,502 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Badday_eng",
-      "runs": 39,
-      "success_rate": 0.07692307692307693,
-      "avg_steps": 28.205128205128204,
-      "avg_tokens": 55211.94871794872,
-      "avg_cost_usd": 0.033111230769230775,
-      "repetition_rate": 0.7553913395333407
-    },
-    {
-      "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
-      "quest": "Banket_eng",
-      "runs": 39,
-      "success_rate": 0.0,
-      "avg_steps": 29.512820512820515,
-      "avg_tokens": 70410.84615384616,
-      "avg_cost_usd": 0.041725935897435895,
-      "repetition_rate": 0.5781475883169225
-    },
-    {
-      "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
-      "quest": "Boat",
-      "runs": 18,
+      "runs": 3,
       "success_rate": 1.0,
-      "avg_steps": 20.77777777777778,
-      "avg_tokens": 24107.222222222223,
-      "avg_cost_usd": 0.015716666666666667,
-      "repetition_rate": 0.8332586273375747
+      "avg_steps": 27.333333333333332,
+      "avg_tokens": 21024.666666666668,
+      "avg_cost_usd": 0.014954,
+      "repetition_rate": 0.804029304029304
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
+      "quest": "Banket_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 34.0,
+      "avg_tokens": 34284.333333333336,
+      "avg_cost_usd": 0.0233355,
+      "repetition_rate": 0.5686274509803922
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "short_context_reasoning",
+      "quest": "Boat",
+      "runs": 9,
+      "success_rate": 1.0,
+      "avg_steps": 19.333333333333332,
+      "avg_tokens": 15885.333333333334,
+      "avg_cost_usd": 0.011451833333333335,
+      "repetition_rate": 0.8402046783625731
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "short_context_reasoning",
       "quest": "Codebox_eng",
-      "runs": 39,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 31.666666666666668,
-      "avg_tokens": 92826.35897435897,
-      "avg_cost_usd": 0.05368702564102564,
-      "repetition_rate": 0.7511289021283805
+      "avg_steps": 16.666666666666668,
+      "avg_tokens": 16148.0,
+      "avg_cost_usd": 0.011051499999999999,
+      "repetition_rate": 0.7564102564102564
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Depth_eng",
-      "runs": 39,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 51.0,
-      "avg_tokens": 158778.4871794872,
-      "avg_cost_usd": 0.09214328205128205,
-      "repetition_rate": 0.6902790296465634
+      "avg_steps": 59.0,
+      "avg_tokens": 52901.333333333336,
+      "avg_cost_usd": 0.037241500000000004,
+      "repetition_rate": 0.6614292833457919
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Driver_eng",
-      "runs": 39,
+      "runs": 5,
       "success_rate": 0.0,
-      "avg_steps": 69.1025641025641,
-      "avg_tokens": 240012.15384615384,
-      "avg_cost_usd": 0.13484396153846154,
-      "repetition_rate": 0.7141281002285249
+      "avg_steps": 98.2,
+      "avg_tokens": 307576.8,
+      "avg_cost_usd": 0.17049589999999998,
+      "repetition_rate": 0.7042835815278073
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Edelweiss_eng",
-      "runs": 42,
+      "runs": 6,
       "success_rate": 0.0,
-      "avg_steps": 49.095238095238095,
-      "avg_tokens": 101584.66666666667,
-      "avg_cost_usd": 0.05980054761904762,
-      "repetition_rate": 0.7043058076266848
+      "avg_steps": 74.33333333333333,
+      "avg_tokens": 55309.666666666664,
+      "avg_cost_usd": 0.039599833333333334,
+      "repetition_rate": 0.7139278297396077
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Election_eng",
-      "runs": 42,
-      "success_rate": 0.21428571428571427,
-      "avg_steps": 78.28571428571429,
-      "avg_tokens": 320781.28571428574,
-      "avg_cost_usd": 0.17896891666666667,
-      "repetition_rate": 0.6851140856932394
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 54.833333333333336,
+      "avg_tokens": 59162.833333333336,
+      "avg_cost_usd": 0.039198500000000004,
+      "repetition_rate": 0.6701658351810792
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Foncers_eng",
-      "runs": 42,
+      "runs": 6,
       "success_rate": 0.0,
-      "avg_steps": 40.23809523809524,
-      "avg_tokens": 86276.69047619047,
-      "avg_cost_usd": 0.051272809523809526,
-      "repetition_rate": 0.6814271772780804
+      "avg_steps": 34.833333333333336,
+      "avg_tokens": 27230.666666666668,
+      "avg_cost_usd": 0.019577833333333333,
+      "repetition_rate": 0.6633573869994648
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Leonardo_eng",
-      "runs": 39,
-      "success_rate": 0.10256410256410256,
-      "avg_steps": 106.35897435897436,
-      "avg_tokens": 367574.6666666667,
-      "avg_cost_usd": 0.20699258974358975,
-      "repetition_rate": 0.7700114327021672
-    },
-    {
-      "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
-      "quest": "Ministry_eng",
-      "runs": 42,
-      "success_rate": 0.023809523809523808,
-      "avg_steps": 108.85714285714286,
-      "avg_tokens": 321203.40476190473,
-      "avg_cost_usd": 0.18034414285714287,
-      "repetition_rate": 0.766825407983534
-    },
-    {
-      "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
-      "quest": "Pizza_eng",
-      "runs": 39,
-      "success_rate": 0.1282051282051282,
-      "avg_steps": 34.8974358974359,
-      "avg_tokens": 83104.82051282052,
-      "avg_cost_usd": 0.04946676923076923,
-      "repetition_rate": 0.4988507037089271
-    },
-    {
-      "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
-      "quest": "Prison_eng",
-      "runs": 12,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 76.91666666666667,
-      "avg_tokens": 126717.5,
-      "avg_cost_usd": 0.077118125,
-      "repetition_rate": 0.7927038415852895
+      "avg_steps": 114.33333333333333,
+      "avg_tokens": 93518.66666666667,
+      "avg_cost_usd": 0.06671766666666666,
+      "repetition_rate": 0.7521407286488588
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
+      "quest": "Ministry_eng",
+      "runs": 7,
+      "success_rate": 0.0,
+      "avg_steps": 141.42857142857142,
+      "avg_tokens": 293751.4285714286,
+      "avg_cost_usd": 0.1698539285714286,
+      "repetition_rate": 0.7700909016955764
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "short_context_reasoning",
+      "quest": "Pizza_eng",
+      "runs": 3,
+      "success_rate": 0.6666666666666666,
+      "avg_steps": 32.333333333333336,
+      "avg_tokens": 27288.0,
+      "avg_cost_usd": 0.019610666666666665,
+      "repetition_rate": 0.46653144016227177
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "short_context_reasoning",
+      "quest": "Prison_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 110.0,
+      "avg_tokens": 89863.0,
+      "avg_cost_usd": 0.063404,
+      "repetition_rate": 0.8177483793155434
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "short_context_reasoning",
       "quest": "Robots_eng",
-      "runs": 42,
-      "success_rate": 0.047619047619047616,
-      "avg_steps": 55.92857142857143,
-      "avg_tokens": 180623.95238095237,
-      "avg_cost_usd": 0.10236560714285714,
-      "repetition_rate": 0.76536406568393
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 36.333333333333336,
+      "avg_tokens": 26912.0,
+      "avg_cost_usd": 0.019448916666666666,
+      "repetition_rate": 0.8177262468807108
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Ski_eng",
-      "runs": 42,
-      "success_rate": 0.11904761904761904,
-      "avg_steps": 57.54761904761905,
-      "avg_tokens": 219840.35714285713,
-      "avg_cost_usd": 0.12407549404761904,
-      "repetition_rate": 0.6906527931062216
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 57.833333333333336,
+      "avg_tokens": 57463.0,
+      "avg_cost_usd": 0.039069,
+      "repetition_rate": 0.6425656031674932
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "full_history_reasoning",
+      "quest": "Badday_eng",
+      "runs": 11,
+      "success_rate": 0.0,
+      "avg_steps": 28.272727272727273,
+      "avg_tokens": 67980.63636363637,
+      "avg_cost_usd": 0.0386035,
+      "repetition_rate": 0.7740760840733032
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Banket_eng",
+      "runs": 11,
+      "success_rate": 0.0,
+      "avg_steps": 30.727272727272727,
+      "avg_tokens": 93027.54545454546,
+      "avg_cost_usd": 0.05209263636363636,
+      "repetition_rate": 0.5702103239187638
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Boat",
+      "runs": 3,
+      "success_rate": 1.0,
+      "avg_steps": 20.0,
+      "avg_tokens": 40112.0,
+      "avg_cost_usd": 0.023485166666666668,
+      "repetition_rate": 0.8333333333333334
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Codebox_eng",
+      "runs": 11,
+      "success_rate": 0.0,
+      "avg_steps": 29.818181818181817,
+      "avg_tokens": 118438.90909090909,
+      "avg_cost_usd": 0.06471309090909091,
+      "repetition_rate": 0.7297837243401759
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Depth_eng",
+      "runs": 11,
+      "success_rate": 0.0,
+      "avg_steps": 41.63636363636363,
+      "avg_tokens": 172943.0,
+      "avg_cost_usd": 0.09428399999999999,
+      "repetition_rate": 0.6873215939451929
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Driver_eng",
+      "runs": 9,
+      "success_rate": 0.0,
+      "avg_steps": 69.55555555555556,
+      "avg_tokens": 352221.44444444444,
+      "avg_cost_usd": 0.18795516666666667,
+      "repetition_rate": 0.7103433778383483
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Edelweiss_eng",
+      "runs": 11,
+      "success_rate": 0.0,
+      "avg_steps": 46.72727272727273,
+      "avg_tokens": 143618.36363636365,
+      "avg_cost_usd": 0.0793769090909091,
+      "repetition_rate": 0.7110425360004741
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Election_eng",
+      "runs": 11,
+      "success_rate": 0.09090909090909091,
+      "avg_steps": 89.0,
+      "avg_tokens": 529437.5454545454,
+      "avg_cost_usd": 0.2808449090909091,
+      "repetition_rate": 0.7037445294327515
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Foncers_eng",
+      "runs": 11,
+      "success_rate": 0.0,
+      "avg_steps": 36.09090909090909,
+      "avg_tokens": 111081.63636363637,
+      "avg_cost_usd": 0.061869,
+      "repetition_rate": 0.6791646529795206
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Leonardo_eng",
+      "runs": 11,
+      "success_rate": 0.09090909090909091,
+      "avg_steps": 101.45454545454545,
+      "avg_tokens": 547796.2727272727,
+      "avg_cost_usd": 0.2916154090909091,
+      "repetition_rate": 0.7815445713864072
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Ministry_eng",
+      "runs": 10,
+      "success_rate": 0.1,
+      "avg_steps": 108.4,
+      "avg_tokens": 497800.2,
+      "avg_cost_usd": 0.26645435,
+      "repetition_rate": 0.8079625308886161
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Pizza_eng",
+      "runs": 11,
+      "success_rate": 0.0,
+      "avg_steps": 30.636363636363637,
+      "avg_tokens": 84923.36363636363,
+      "avg_cost_usd": 0.04803872727272727,
+      "repetition_rate": 0.47085354951816055
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Prison_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 45.333333333333336,
+      "avg_tokens": 151967.66666666666,
+      "avg_cost_usd": 0.083868,
+      "repetition_rate": 0.8180602006688963
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Robots_eng",
+      "runs": 11,
+      "success_rate": 0.09090909090909091,
+      "avg_steps": 68.63636363636364,
+      "avg_tokens": 328600.63636363635,
+      "avg_cost_usd": 0.17652781818181817,
+      "repetition_rate": 0.7576059861064846
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "full_history_reasoning",
+      "quest": "Ski_eng",
+      "runs": 11,
+      "success_rate": 0.36363636363636365,
+      "avg_steps": 69.9090909090909,
+      "avg_tokens": 415166.9090909091,
+      "avg_cost_usd": 0.2231677272727273,
+      "repetition_rate": 0.7274216049451824
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Badday_eng",
+      "runs": 25,
+      "success_rate": 0.0,
+      "avg_steps": 28.28,
+      "avg_tokens": 53696.2,
+      "avg_cost_usd": 0.0328735,
+      "repetition_rate": 0.7413334961962416
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Banket_eng",
+      "runs": 25,
+      "success_rate": 0.0,
+      "avg_steps": 28.44,
+      "avg_tokens": 64794.68,
+      "avg_cost_usd": 0.03937144,
+      "repetition_rate": 0.582782401132496
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Boat",
+      "runs": 6,
+      "success_rate": 1.0,
+      "avg_steps": 23.333333333333332,
+      "avg_tokens": 28437.666666666668,
+      "avg_cost_usd": 0.01822966666666667,
+      "repetition_rate": 0.8228021978021979
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Codebox_eng",
+      "runs": 25,
+      "success_rate": 0.0,
+      "avg_steps": 34.28,
+      "avg_tokens": 90758.24,
+      "avg_cost_usd": 0.053951820000000004,
+      "repetition_rate": 0.7598870178413654
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Depth_eng",
+      "runs": 25,
+      "success_rate": 0.0,
+      "avg_steps": 54.16,
+      "avg_tokens": 165251.36,
+      "avg_cost_usd": 0.09778957999999999,
+      "repetition_rate": 0.695042270911259
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Driver_eng",
+      "runs": 25,
+      "success_rate": 0.0,
+      "avg_steps": 63.12,
+      "avg_tokens": 186103.88,
+      "avg_cost_usd": 0.10859354,
+      "repetition_rate": 0.717459504029132
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Edelweiss_eng",
+      "runs": 25,
+      "success_rate": 0.0,
+      "avg_steps": 44.08,
+      "avg_tokens": 94195.84,
+      "avg_cost_usd": 0.05603512,
+      "repetition_rate": 0.6990323618351161
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Election_eng",
+      "runs": 25,
+      "success_rate": 0.32,
+      "avg_steps": 79.2,
+      "avg_tokens": 291760.96,
+      "avg_cost_usd": 0.16768838,
+      "repetition_rate": 0.6805042705707727
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Foncers_eng",
+      "runs": 25,
+      "success_rate": 0.0,
+      "avg_steps": 43.36,
+      "avg_tokens": 89533.56,
+      "avg_cost_usd": 0.05421728,
+      "repetition_rate": 0.6867594376363146
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Leonardo_eng",
+      "runs": 25,
+      "success_rate": 0.12,
+      "avg_steps": 107.56,
+      "avg_tokens": 321163.88,
+      "avg_cost_usd": 0.18659154,
+      "repetition_rate": 0.7670813361674987
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Ministry_eng",
+      "runs": 25,
+      "success_rate": 0.0,
+      "avg_steps": 99.92,
+      "avg_tokens": 258251.24,
+      "avg_cost_usd": 0.14883732,
+      "repetition_rate": 0.7494562205821294
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Pizza_eng",
+      "runs": 25,
+      "success_rate": 0.12,
+      "avg_steps": 37.08,
+      "avg_tokens": 89002.68,
+      "avg_cost_usd": 0.053677840000000004,
+      "repetition_rate": 0.515047763178463
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Prison_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 76.16666666666667,
+      "avg_tokens": 132519.66666666666,
+      "avg_cost_usd": 0.08060025,
+      "repetition_rate": 0.7675033931783591
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Robots_eng",
+      "runs": 25,
+      "success_rate": 0.04,
+      "avg_steps": 55.04,
+      "avg_tokens": 152405.08,
+      "avg_cost_usd": 0.08963424,
+      "repetition_rate": 0.7562106972107787
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "compact_memory_memo",
+      "quest": "Ski_eng",
+      "runs": 25,
+      "success_rate": 0.04,
+      "avg_steps": 52.04,
+      "avg_tokens": 172867.24,
+      "avg_cost_usd": 0.10087647000000001,
+      "repetition_rate": 0.6860154414823738
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "prompt_hints",
       "quest": "Badday_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1134,7 +1883,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Banket_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1145,7 +1894,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Codebox_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1156,7 +1905,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Depth_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1167,7 +1916,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Driver_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1178,7 +1927,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Edelweiss_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1189,7 +1938,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Election_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1200,7 +1949,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Foncers_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1211,7 +1960,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Leonardo_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1222,7 +1971,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Ministry_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1233,7 +1982,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Pizza_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1244,7 +1993,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Robots_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1255,7 +2004,7 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Ski_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -1266,150 +2015,293 @@
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
+      "mode": "tools_compact_memory",
       "quest": "Badday_eng",
-      "runs": 6,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 31.833333333333332,
-      "avg_tokens": 87586.5,
-      "avg_cost_usd": 0.04919158333333334,
-      "repetition_rate": 0.7667500988262482
+      "avg_steps": 30.0,
+      "avg_tokens": 77412.0,
+      "avg_cost_usd": 0.04367933333333333,
+      "repetition_rate": 0.7776580459770116
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
+      "mode": "tools_compact_memory",
       "quest": "Banket_eng",
-      "runs": 6,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 28.833333333333332,
-      "avg_tokens": 97407.16666666667,
-      "avg_cost_usd": 0.05482066666666666,
+      "avg_steps": 29.0,
+      "avg_tokens": 98057.33333333333,
+      "avg_cost_usd": 0.05523533333333333,
       "repetition_rate": 0.5664488017429194
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
+      "mode": "tools_compact_memory",
       "quest": "Codebox_eng",
-      "runs": 6,
+      "runs": 3,
       "success_rate": 0.0,
       "avg_steps": 32.0,
-      "avg_tokens": 161539.66666666666,
-      "avg_cost_usd": 0.09262025,
+      "avg_tokens": 170521.33333333334,
+      "avg_cost_usd": 0.09831816666666666,
       "repetition_rate": 0.78125
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
+      "mode": "tools_compact_memory",
       "quest": "Depth_eng",
-      "runs": 6,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 39.833333333333336,
-      "avg_tokens": 198842.0,
-      "avg_cost_usd": 0.11341141666666667,
-      "repetition_rate": 0.7049825897172924
+      "avg_steps": 45.666666666666664,
+      "avg_tokens": 239329.33333333334,
+      "avg_cost_usd": 0.13514383333333332,
+      "repetition_rate": 0.7389125478556373
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
+      "mode": "tools_compact_memory",
       "quest": "Driver_eng",
-      "runs": 6,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 83.16666666666667,
-      "avg_tokens": 341664.0,
-      "avg_cost_usd": 0.18659699999999999,
-      "repetition_rate": 0.701619529232611
+      "avg_steps": 115.33333333333333,
+      "avg_tokens": 486301.0,
+      "avg_cost_usd": 0.26506633333333335,
+      "repetition_rate": 0.6929773760122155
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
+      "mode": "tools_compact_memory",
       "quest": "Edelweiss_eng",
-      "runs": 6,
-      "success_rate": 0.0,
-      "avg_steps": 37.166666666666664,
-      "avg_tokens": 113210.16666666667,
-      "avg_cost_usd": 0.06317716666666666,
-      "repetition_rate": 0.6999353109302705
-    },
-    {
-      "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
-      "quest": "Election_eng",
-      "runs": 6,
-      "success_rate": 0.8333333333333334,
-      "avg_steps": 89.16666666666667,
-      "avg_tokens": 510114.5,
-      "avg_cost_usd": 0.2845789166666666,
-      "repetition_rate": 0.7042255882371232
-    },
-    {
-      "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
-      "quest": "Foncers_eng",
-      "runs": 6,
-      "success_rate": 0.0,
-      "avg_steps": 35.166666666666664,
-      "avg_tokens": 107388.33333333333,
-      "avg_cost_usd": 0.06047166666666667,
-      "repetition_rate": 0.7033271263050676
-    },
-    {
-      "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
-      "quest": "Leonardo_eng",
-      "runs": 6,
-      "success_rate": 0.16666666666666666,
-      "avg_steps": 85.16666666666667,
-      "avg_tokens": 347644.3333333333,
-      "avg_cost_usd": 0.19101924999999997,
-      "repetition_rate": 0.7439885527289741
-    },
-    {
-      "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
-      "quest": "Ministry_eng",
-      "runs": 6,
-      "success_rate": 0.0,
-      "avg_steps": 83.0,
-      "avg_tokens": 295291.3333333333,
-      "avg_cost_usd": 0.16168941666666667,
-      "repetition_rate": 0.7537505872064695
-    },
-    {
-      "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
-      "quest": "Pizza_eng",
-      "runs": 6,
+      "runs": 3,
       "success_rate": 0.0,
       "avg_steps": 39.333333333333336,
-      "avg_tokens": 133531.16666666666,
-      "avg_cost_usd": 0.074886,
-      "repetition_rate": 0.49834656084656087
+      "avg_tokens": 118153.0,
+      "avg_cost_usd": 0.06555316666666666,
+      "repetition_rate": 0.7033836937559658
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
+      "mode": "tools_compact_memory",
+      "quest": "Election_eng",
+      "runs": 3,
+      "success_rate": 0.6666666666666666,
+      "avg_steps": 84.33333333333333,
+      "avg_tokens": 454504.0,
+      "avg_cost_usd": 0.25375366666666666,
+      "repetition_rate": 0.7098376554923044
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_compact_memory",
+      "quest": "Foncers_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 36.666666666666664,
+      "avg_tokens": 114543.66666666667,
+      "avg_cost_usd": 0.06434266666666667,
+      "repetition_rate": 0.694574420677362
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_compact_memory",
+      "quest": "Leonardo_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 82.66666666666667,
+      "avg_tokens": 326756.3333333333,
+      "avg_cost_usd": 0.17958316666666665,
+      "repetition_rate": 0.7586366538952746
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_compact_memory",
+      "quest": "Ministry_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 102.66666666666667,
+      "avg_tokens": 371302.0,
+      "avg_cost_usd": 0.20254516666666667,
+      "repetition_rate": 0.7304712598830246
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_compact_memory",
+      "quest": "Pizza_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 40.666666666666664,
+      "avg_tokens": 138193.33333333334,
+      "avg_cost_usd": 0.0774475,
+      "repetition_rate": 0.4828042328042328
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_compact_memory",
       "quest": "Robots_eng",
-      "runs": 6,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 61.333333333333336,
-      "avg_tokens": 230640.0,
-      "avg_cost_usd": 0.12707458333333335,
-      "repetition_rate": 0.7597367173069857
+      "avg_steps": 49.0,
+      "avg_tokens": 172333.33333333334,
+      "avg_cost_usd": 0.09538333333333333,
+      "repetition_rate": 0.7685038329368226
     },
     {
       "model": "gemini-3-flash-preview",
-      "mode": "tool_augmented",
+      "mode": "tools_compact_memory",
       "quest": "Ski_eng",
-      "runs": 6,
+      "runs": 3,
       "success_rate": 0.0,
-      "avg_steps": 114.16666666666667,
-      "avg_tokens": 608391.1666666666,
-      "avg_cost_usd": 0.3344751666666667,
-      "repetition_rate": 0.6768024409617867
+      "avg_steps": 108.66666666666667,
+      "avg_tokens": 569379.3333333334,
+      "avg_cost_usd": 0.313923,
+      "repetition_rate": 0.6613089815337007
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Badday_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 33.666666666666664,
+      "avg_tokens": 97761.0,
+      "avg_cost_usd": 0.054703833333333333,
+      "repetition_rate": 0.755842151675485
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Banket_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 28.666666666666668,
+      "avg_tokens": 96757.0,
+      "avg_cost_usd": 0.054406,
+      "repetition_rate": 0.5664488017429194
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Codebox_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 32.0,
+      "avg_tokens": 152558.0,
+      "avg_cost_usd": 0.08692233333333332,
+      "repetition_rate": 0.78125
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Depth_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 34.0,
+      "avg_tokens": 158354.66666666666,
+      "avg_cost_usd": 0.09167900000000001,
+      "repetition_rate": 0.6710526315789473
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Driver_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 51.0,
+      "avg_tokens": 197027.0,
+      "avg_cost_usd": 0.10812766666666666,
+      "repetition_rate": 0.7102616824530061
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Edelweiss_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 35.0,
+      "avg_tokens": 108267.33333333333,
+      "avg_cost_usd": 0.06080116666666666,
+      "repetition_rate": 0.6964869281045751
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Election_eng",
+      "runs": 3,
+      "success_rate": 1.0,
+      "avg_steps": 94.0,
+      "avg_tokens": 565725.0,
+      "avg_cost_usd": 0.31540416666666665,
+      "repetition_rate": 0.6986135209819421
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Foncers_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 33.666666666666664,
+      "avg_tokens": 100233.0,
+      "avg_cost_usd": 0.05660066666666667,
+      "repetition_rate": 0.7120798319327731
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Leonardo_eng",
+      "runs": 3,
+      "success_rate": 0.3333333333333333,
+      "avg_steps": 87.66666666666667,
+      "avg_tokens": 368532.3333333333,
+      "avg_cost_usd": 0.20245533333333332,
+      "repetition_rate": 0.7293404515626737
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Ministry_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 63.333333333333336,
+      "avg_tokens": 219280.66666666666,
+      "avg_cost_usd": 0.12083366666666667,
+      "repetition_rate": 0.7770299145299145
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Pizza_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 38.0,
+      "avg_tokens": 128869.0,
+      "avg_cost_usd": 0.0723245,
+      "repetition_rate": 0.5138888888888888
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Robots_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 73.66666666666667,
+      "avg_tokens": 288946.6666666667,
+      "avg_cost_usd": 0.15876583333333336,
+      "repetition_rate": 0.7509696016771489
+    },
+    {
+      "model": "gemini-3-flash-preview",
+      "mode": "tools_hints_compact_memory",
+      "quest": "Ski_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 119.66666666666667,
+      "avg_tokens": 647403.0,
+      "avg_cost_usd": 0.35502733333333336,
+      "repetition_rate": 0.6922959003898729
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Badday_eng",
       "runs": 4,
       "success_rate": 0.75,
@@ -1420,7 +2312,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Banket_eng",
       "runs": 4,
       "success_rate": 0.0,
@@ -1431,7 +2323,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Boat",
       "runs": 5,
       "success_rate": 0.4,
@@ -1442,7 +2334,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Codebox_eng",
       "runs": 4,
       "success_rate": 0.0,
@@ -1453,7 +2345,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Depth_eng",
       "runs": 4,
       "success_rate": 0.0,
@@ -1464,7 +2356,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Driver_eng",
       "runs": 4,
       "success_rate": 0.0,
@@ -1475,7 +2367,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Edelweiss_eng",
       "runs": 4,
       "success_rate": 0.0,
@@ -1486,7 +2378,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Election_eng",
       "runs": 4,
       "success_rate": 0.0,
@@ -1497,7 +2389,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Foncers_eng",
       "runs": 4,
       "success_rate": 0.0,
@@ -1508,7 +2400,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Leonardo_eng",
       "runs": 4,
       "success_rate": 0.0,
@@ -1519,7 +2411,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ministry_eng",
       "runs": 4,
       "success_rate": 0.0,
@@ -1530,7 +2422,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Pizza_eng",
       "runs": 4,
       "success_rate": 1.0,
@@ -1541,7 +2433,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Prison_eng",
       "runs": 4,
       "success_rate": 0.0,
@@ -1552,7 +2444,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Robots_eng",
       "runs": 4,
       "success_rate": 0.0,
@@ -1563,7 +2455,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ski_eng",
       "runs": 4,
       "success_rate": 0.5,
@@ -1574,172 +2466,502 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Badday_eng",
-      "runs": 13,
-      "success_rate": 0.23076923076923078,
-      "avg_steps": 34.61538461538461,
-      "avg_tokens": 51076.230769230766,
-      "avg_cost_usd": 0.041502307692307686,
-      "repetition_rate": 0.7446096908607834
+      "runs": 4,
+      "success_rate": 0.75,
+      "avg_steps": 31.5,
+      "avg_tokens": 23026.75,
+      "avg_cost_usd": 0.00888175,
+      "repetition_rate": 0.8158127182119304
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Banket_eng",
-      "runs": 13,
+      "runs": 4,
       "success_rate": 0.0,
-      "avg_steps": 39.38461538461539,
-      "avg_tokens": 60859.153846153844,
-      "avg_cost_usd": 0.04946103846153846,
-      "repetition_rate": 0.7293903114892335
+      "avg_steps": 29.75,
+      "avg_tokens": 27478.75,
+      "avg_cost_usd": 0.009934812500000001,
+      "repetition_rate": 0.7304032258064517
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Boat",
-      "runs": 13,
-      "success_rate": 0.15384615384615385,
-      "avg_steps": 24.692307692307693,
-      "avg_tokens": 35644.92307692308,
-      "avg_cost_usd": 0.030084865384615387,
-      "repetition_rate": 0.7641458873195115
+      "runs": 4,
+      "success_rate": 0.25,
+      "avg_steps": 15.75,
+      "avg_tokens": 12440.25,
+      "avg_cost_usd": 0.0048858750000000005,
+      "repetition_rate": 0.7951704545454545
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Codebox_eng",
-      "runs": 13,
+      "runs": 4,
       "success_rate": 0.0,
-      "avg_steps": 30.076923076923077,
-      "avg_tokens": 57417.61538461538,
-      "avg_cost_usd": 0.046677538461538465,
-      "repetition_rate": 0.7169896005359901
+      "avg_steps": 18.5,
+      "avg_tokens": 17493.75,
+      "avg_cost_usd": 0.00641875,
+      "repetition_rate": 0.7656479909451047
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Depth_eng",
-      "runs": 13,
+      "runs": 4,
       "success_rate": 0.0,
-      "avg_steps": 60.23076923076923,
-      "avg_tokens": 122732.0,
-      "avg_cost_usd": 0.09855338461538461,
-      "repetition_rate": 0.7213147226805607
+      "avg_steps": 44.5,
+      "avg_tokens": 35872.0,
+      "avg_cost_usd": 0.0134991875,
+      "repetition_rate": 0.6382293286047416
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Driver_eng",
-      "runs": 13,
+      "runs": 4,
       "success_rate": 0.0,
-      "avg_steps": 39.69230769230769,
-      "avg_tokens": 65320.692307692305,
-      "avg_cost_usd": 0.05574275,
-      "repetition_rate": 0.7409129670258431
+      "avg_steps": 13.25,
+      "avg_tokens": 10091.75,
+      "avg_cost_usd": 0.0038354375,
+      "repetition_rate": 0.7737179487179487
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Edelweiss_eng",
-      "runs": 13,
+      "runs": 4,
       "success_rate": 0.0,
-      "avg_steps": 64.61538461538461,
-      "avg_tokens": 160552.76923076922,
-      "avg_cost_usd": 0.12810834615384617,
-      "repetition_rate": 0.7390488097280474
+      "avg_steps": 46.75,
+      "avg_tokens": 30945.75,
+      "avg_cost_usd": 0.0127353125,
+      "repetition_rate": 0.7688636363636363
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Election_eng",
-      "runs": 13,
+      "runs": 5,
       "success_rate": 0.0,
-      "avg_steps": 81.07692307692308,
-      "avg_tokens": 106387.53846153847,
-      "avg_cost_usd": 0.08193601923076922,
-      "repetition_rate": 0.7222035405942804
+      "avg_steps": 113.2,
+      "avg_tokens": 139278.8,
+      "avg_cost_usd": 0.08872355,
+      "repetition_rate": 0.7142379767001892
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Foncers_eng",
-      "runs": 13,
+      "runs": 4,
       "success_rate": 0.0,
-      "avg_steps": 59.61538461538461,
-      "avg_tokens": 156237.23076923078,
-      "avg_cost_usd": 0.12556807692307692,
-      "repetition_rate": 0.7013911250655981
+      "avg_steps": 32.25,
+      "avg_tokens": 24082.75,
+      "avg_cost_usd": 0.0093281875,
+      "repetition_rate": 0.6614289664161788
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Leonardo_eng",
-      "runs": 13,
+      "runs": 4,
       "success_rate": 0.0,
-      "avg_steps": 101.84615384615384,
-      "avg_tokens": 213654.23076923078,
-      "avg_cost_usd": 0.16547863461538462,
-      "repetition_rate": 0.7744833198560894
+      "avg_steps": 111.25,
+      "avg_tokens": 83792.25,
+      "avg_cost_usd": 0.0318685,
+      "repetition_rate": 0.7617553965541253
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Ministry_eng",
-      "runs": 13,
+      "runs": 4,
       "success_rate": 0.0,
-      "avg_steps": 42.69230769230769,
-      "avg_tokens": 48233.307692307695,
-      "avg_cost_usd": 0.03815613461538461,
-      "repetition_rate": 0.785077940702907
+      "avg_steps": 52.5,
+      "avg_tokens": 36137.25,
+      "avg_cost_usd": 0.0141241875,
+      "repetition_rate": 0.8453830951235424
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Pizza_eng",
-      "runs": 13,
-      "success_rate": 0.15384615384615385,
-      "avg_steps": 67.07692307692308,
-      "avg_tokens": 112627.23076923077,
-      "avg_cost_usd": 0.09488988461538463,
-      "repetition_rate": 0.7224868725684819
+      "runs": 4,
+      "success_rate": 0.5,
+      "avg_steps": 31.25,
+      "avg_tokens": 24323.75,
+      "avg_cost_usd": 0.0094085625,
+      "repetition_rate": 0.6497960697070819
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Prison_eng",
-      "runs": 13,
+      "runs": 4,
       "success_rate": 0.0,
-      "avg_steps": 50.92307692307692,
-      "avg_tokens": 91187.69230769231,
-      "avg_cost_usd": 0.06175297692307692,
-      "repetition_rate": 0.7738710851606547
+      "avg_steps": 95.25,
+      "avg_tokens": 71758.25,
+      "avg_cost_usd": 0.0272530625,
+      "repetition_rate": 0.8078060826550787
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Robots_eng",
-      "runs": 13,
+      "runs": 4,
       "success_rate": 0.0,
-      "avg_steps": 30.923076923076923,
-      "avg_tokens": 31556.076923076922,
-      "avg_cost_usd": 0.014326210769230768,
-      "repetition_rate": 0.8256115124773957
+      "avg_steps": 47.5,
+      "avg_tokens": 31987.5,
+      "avg_cost_usd": 0.0126663125,
+      "repetition_rate": 0.8103499356803605
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Ski_eng",
-      "runs": 13,
+      "runs": 4,
       "success_rate": 0.0,
-      "avg_steps": 38.61538461538461,
-      "avg_tokens": 51772.307692307695,
-      "avg_cost_usd": 0.022698643076923077,
-      "repetition_rate": 0.6802200919948812
+      "avg_steps": 55.0,
+      "avg_tokens": 48720.0,
+      "avg_cost_usd": 0.017737125,
+      "repetition_rate": 0.6127002368791176
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "full_history_reasoning",
+      "quest": "Badday_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 27.0,
+      "avg_tokens": 69181.66666666667,
+      "avg_cost_usd": 0.05802625,
+      "repetition_rate": 0.6883702756464904
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Banket_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 23.0,
+      "avg_tokens": 73615.66666666667,
+      "avg_cost_usd": 0.060497999999999996,
+      "repetition_rate": 0.752447215445318
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Boat",
+      "runs": 3,
+      "success_rate": 0.3333333333333333,
+      "avg_steps": 21.0,
+      "avg_tokens": 39261.333333333336,
+      "avg_cost_usd": 0.03396225,
+      "repetition_rate": 0.8095238095238094
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Codebox_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 41.0,
+      "avg_tokens": 149292.66666666666,
+      "avg_cost_usd": 0.1209845,
+      "repetition_rate": 0.6216516236124079
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Depth_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 62.333333333333336,
+      "avg_tokens": 278054.3333333333,
+      "avg_cost_usd": 0.22320450000000003,
+      "repetition_rate": 0.8135002210433244
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Driver_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 41.666666666666664,
+      "avg_tokens": 105289.0,
+      "avg_cost_usd": 0.08874675,
+      "repetition_rate": 0.7648062809353132
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Edelweiss_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 85.0,
+      "avg_tokens": 457597.6666666667,
+      "avg_cost_usd": 0.36152325,
+      "repetition_rate": 0.6705567367509252
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Election_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 22.666666666666668,
+      "avg_tokens": 49081.666666666664,
+      "avg_cost_usd": 0.042008750000000004,
+      "repetition_rate": 0.6381184407796102
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Foncers_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 103.0,
+      "avg_tokens": 503806.3333333333,
+      "avg_cost_usd": 0.40037225,
+      "repetition_rate": 0.7450399951151004
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Leonardo_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 138.66666666666666,
+      "avg_tokens": 608095.6666666666,
+      "avg_cost_usd": 0.48652175000000003,
+      "repetition_rate": 0.7267939814814816
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Ministry_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 23.0,
+      "avg_tokens": 49039.333333333336,
+      "avg_cost_usd": 0.0420395,
+      "repetition_rate": 0.6846928916494134
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Pizza_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 53.666666666666664,
+      "avg_tokens": 169129.66666666666,
+      "avg_cost_usd": 0.1386885,
+      "repetition_rate": 0.8236456220419202
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Prison_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 55.666666666666664,
+      "avg_tokens": 251956.0,
+      "avg_cost_usd": 0.20157075,
+      "repetition_rate": 0.6447876447876447
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Robots_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 18.666666666666668,
+      "avg_tokens": 35299.0,
+      "avg_cost_usd": 0.008995056666666666,
+      "repetition_rate": 0.8541666666666666
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "full_history_reasoning",
+      "quest": "Ski_eng",
+      "runs": 3,
+      "success_rate": 0.0,
+      "avg_steps": 29.0,
+      "avg_tokens": 66035.66666666667,
+      "avg_cost_usd": 0.016799876666666668,
+      "repetition_rate": 0.8265784394816653
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Badday_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 40.5,
+      "avg_tokens": 60723.166666666664,
+      "avg_cost_usd": 0.054987375,
+      "repetition_rate": 0.7252607135671653
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Banket_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 54.0,
+      "avg_tokens": 76734.5,
+      "avg_cost_usd": 0.070293375,
+      "repetition_rate": 0.7171865832997125
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Boat",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 32.5,
+      "avg_tokens": 49306.5,
+      "avg_cost_usd": 0.0449455,
+      "repetition_rate": 0.7207738814000674
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Codebox_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 32.333333333333336,
+      "avg_tokens": 38096.0,
+      "avg_cost_usd": 0.03636325,
+      "repetition_rate": 0.7322196620583717
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Depth_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 69.66666666666667,
+      "avg_tokens": 102977.5,
+      "avg_cost_usd": 0.092930625,
+      "repetition_rate": 0.7306122362163915
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Driver_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 56.333333333333336,
+      "avg_tokens": 82155.83333333333,
+      "avg_cost_usd": 0.073845625,
+      "repetition_rate": 0.7070963222763712
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Edelweiss_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 66.33333333333333,
+      "avg_tokens": 98435.0,
+      "avg_cost_usd": 0.08831625,
+      "repetition_rate": 0.7534182951262158
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Election_eng",
+      "runs": 5,
+      "success_rate": 0.0,
+      "avg_steps": 84.0,
+      "avg_tokens": 107879.8,
+      "avg_cost_usd": 0.09910485,
+      "repetition_rate": 0.7806201643771737
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Foncers_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 56.166666666666664,
+      "avg_tokens": 70555.66666666667,
+      "avg_cost_usd": 0.06565925,
+      "repetition_rate": 0.7062081291404599
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Leonardo_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 77.16666666666667,
+      "avg_tokens": 103008.16666666667,
+      "avg_cost_usd": 0.0940305,
+      "repetition_rate": 0.8068132712447028
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Ministry_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 46.0,
+      "avg_tokens": 55894.333333333336,
+      "avg_cost_usd": 0.05223575,
+      "repetition_rate": 0.7950670289492304
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Pizza_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 97.66666666666667,
+      "avg_tokens": 143245.0,
+      "avg_cost_usd": 0.129978125,
+      "repetition_rate": 0.7203680330726959
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Prison_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 19.0,
+      "avg_tokens": 23756.5,
+      "avg_cost_usd": 0.014844033333333333,
+      "repetition_rate": 0.8157894736842105
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Robots_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 26.0,
+      "avg_tokens": 29397.0,
+      "avg_cost_usd": 0.018098386666666667,
+      "repetition_rate": 0.821508319914117
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "compact_memory_memo",
+      "quest": "Ski_eng",
+      "runs": 6,
+      "success_rate": 0.0,
+      "avg_steps": 32.5,
+      "avg_tokens": 46675.5,
+      "avg_cost_usd": 0.028955704999999998,
+      "repetition_rate": 0.6520541549953315
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "mode": "prompt_hints",
       "quest": "Badday_eng",
       "runs": 1,
       "success_rate": 1.0,
@@ -1750,7 +2972,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Banket_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1761,7 +2983,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Boat",
       "runs": 1,
       "success_rate": 1.0,
@@ -1772,7 +2994,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Codebox_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1783,7 +3005,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Depth_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1794,7 +3016,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Driver_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1805,7 +3027,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Edelweiss_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1816,7 +3038,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Election_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1827,7 +3049,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Foncers_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1838,7 +3060,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Leonardo_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1849,7 +3071,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Ministry_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1860,7 +3082,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Pizza_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1871,7 +3093,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Prison_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1882,7 +3104,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Robots_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1893,7 +3115,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "light_hints",
+      "mode": "prompt_hints",
       "quest": "Ski_eng",
       "runs": 1,
       "success_rate": 1.0,
@@ -1904,7 +3126,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Badday_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1915,7 +3137,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Banket_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1926,7 +3148,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Boat",
       "runs": 1,
       "success_rate": 1.0,
@@ -1937,7 +3159,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Codebox_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1948,7 +3170,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Depth_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1959,7 +3181,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Driver_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1970,7 +3192,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Edelweiss_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1981,7 +3203,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Election_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -1992,7 +3214,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Foncers_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -2003,7 +3225,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Leonardo_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -2014,7 +3236,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Ministry_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -2025,7 +3247,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Pizza_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -2036,7 +3258,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Prison_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -2047,7 +3269,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Robots_eng",
       "runs": 1,
       "success_rate": 0.0,
@@ -2058,7 +3280,7 @@
     },
     {
       "model": "gpt-5.4-mini",
-      "mode": "planner",
+      "mode": "planner_loop",
       "quest": "Ski_eng",
       "runs": 1,
       "success_rate": 1.0,
@@ -2069,7 +3291,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Badday_eng",
       "runs": 3,
       "success_rate": 0.3333333333333333,
@@ -2080,7 +3302,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Banket_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2091,7 +3313,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Boat",
       "runs": 3,
       "success_rate": 0.3333333333333333,
@@ -2102,7 +3324,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Codebox_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2113,7 +3335,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Depth_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2124,7 +3346,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Driver_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2135,7 +3357,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Edelweiss_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2146,7 +3368,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Election_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2157,7 +3379,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Foncers_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2168,7 +3390,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Leonardo_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2179,7 +3401,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ministry_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2190,7 +3412,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Pizza_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2201,7 +3423,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Prison_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2212,7 +3434,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Robots_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2223,7 +3445,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ski_eng",
       "runs": 3,
       "success_rate": 0.6666666666666666,
@@ -2234,7 +3456,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Badday_eng",
       "runs": 3,
       "success_rate": 0.3333333333333333,
@@ -2245,7 +3467,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Banket_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2256,7 +3478,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Boat",
       "runs": 3,
       "success_rate": 0.6666666666666666,
@@ -2267,7 +3489,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Codebox_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2278,7 +3500,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Depth_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2289,7 +3511,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Driver_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2300,7 +3522,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Edelweiss_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2311,7 +3533,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Election_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2322,7 +3544,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Foncers_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2333,7 +3555,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Leonardo_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2344,7 +3566,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Ministry_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2355,7 +3577,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Pizza_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2366,7 +3588,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Prison_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2377,7 +3599,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Robots_eng",
       "runs": 3,
       "success_rate": 0.0,
@@ -2388,7 +3610,7 @@
     },
     {
       "model": "minimax-m2.5",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Ski_eng",
       "runs": 3,
       "success_rate": 0.3333333333333333,
@@ -2399,7 +3621,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Badday_eng",
       "runs": 6,
       "success_rate": 1.0,
@@ -2410,7 +3632,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Banket_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2421,7 +3643,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Boat",
       "runs": 6,
       "success_rate": 0.8333333333333334,
@@ -2432,7 +3654,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Codebox_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2443,7 +3665,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Depth_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2454,7 +3676,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Driver_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2465,7 +3687,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Edelweiss_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2476,7 +3698,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Election_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2487,7 +3709,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Foncers_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2498,7 +3720,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Leonardo_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2509,7 +3731,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ministry_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2520,7 +3742,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Pizza_eng",
       "runs": 6,
       "success_rate": 1.0,
@@ -2531,7 +3753,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Prison_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2542,7 +3764,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Robots_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2553,7 +3775,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "stub",
+      "mode": "minimal_prompt",
       "quest": "Ski_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2564,7 +3786,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Badday_eng",
       "runs": 6,
       "success_rate": 0.8333333333333334,
@@ -2575,7 +3797,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Banket_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2586,7 +3808,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Boat",
       "runs": 6,
       "success_rate": 1.0,
@@ -2597,7 +3819,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Codebox_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2608,7 +3830,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Depth_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2619,7 +3841,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Driver_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2630,7 +3852,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Edelweiss_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2641,7 +3863,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Election_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2652,7 +3874,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Foncers_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2663,7 +3885,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Leonardo_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2674,7 +3896,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Ministry_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2685,7 +3907,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Pizza_eng",
       "runs": 6,
       "success_rate": 0.6666666666666666,
@@ -2696,7 +3918,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Prison_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2707,7 +3929,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Robots_eng",
       "runs": 6,
       "success_rate": 0.0,
@@ -2718,7 +3940,7 @@
     },
     {
       "model": "mistral-medium-3.1",
-      "mode": "reasoning",
+      "mode": "short_context_reasoning",
       "quest": "Ski_eng",
       "runs": 6,
       "success_rate": 0.3333333333333333,
