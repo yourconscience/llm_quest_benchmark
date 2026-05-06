@@ -90,6 +90,10 @@ uv run ruff check .
 uv run ruff format --check .
 uv run pytest
 pnpm run build
+python3 -m json.tool site/leaderboard.json >/tmp/llm_quest_leaderboard_check.json
+
+# Report-only for now: broad pre-existing typing backlog is not a release gate.
+uv run mypy llm_quest_benchmark
 ```
 
 ## License

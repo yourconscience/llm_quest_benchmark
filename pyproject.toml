@@ -70,8 +70,8 @@ ignore = [
 [tool.ruff.lint.isort]
 known-first-party = ["llm_quest_benchmark"]
 
-[tool.setuptools]
-packages = ["llm_quest_benchmark"]
+[tool.setuptools.packages.find]
+include = ["llm_quest_benchmark*"]
 
 [tool.setuptools.package-data]
 "llm_quest_benchmark" = [
