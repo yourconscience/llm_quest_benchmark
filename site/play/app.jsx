@@ -311,8 +311,10 @@ function renderShareCard(questTitle, outcomeLabel, steps, aiAgreeRate, cohortWin
   const statsY = 160;
   const stats = [
     { value: String(steps), label: 'steps' },
-    { value: aiAgreeRate + '%', label: 'AI agreed' },
   ];
+  if (aiAgreeRate != null) {
+    stats.push({ value: aiAgreeRate + '%', label: 'AI agreed' });
+  }
   if (cohortWinRate != null) {
     stats.push({ value: Math.round(cohortWinRate * 100) + '%', label: 'AI win rate' });
   }
@@ -453,7 +455,7 @@ function EndScreen({ outcome, cohortWinRate, path, questTitle, endText, families
   const outcomeLabel = { win: 'SUCCESS', fail: 'FAILURE', dead: 'DEAD' }[outcome] || 'FAILURE';
   const agreementSteps = path.filter(e => e.agreed !== null);
   const agreeCount = agreementSteps.filter(e => e.agreed === true).length;
-  const aiAgreeRate = agreementSteps.length > 0 ? Math.round((agreeCount / agreementSteps.length) * 100) : 0;
+  const aiAgreeRate = agreementSteps.length > 0 ? Math.round((agreeCount / agreementSteps.length) * 100) : null;
 
   function handleShare() {
     const text = buildShareText(questTitle, outcomeLabel, path, cohortWinRate);
