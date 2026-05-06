@@ -187,7 +187,7 @@ function sortQuests(quests) {
 }
 const PLAY_URL = 'https://yourconscience.github.io/llm_quest_benchmark/play.html';
 const SHARE_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
-const MIN_COHORT_LOCATION_RUNS = 5;
+const MIN_COHORT_LOCATION_RUNS = 3;
 function drawTextLine(ctx, text, x, y, maxWidth) {
   ctx.fillText(text, x, y, maxWidth);
 }

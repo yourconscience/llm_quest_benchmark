@@ -27,7 +27,7 @@ def test_blog_embeds_current_play_screenshot():
 def test_play_history_does_not_claim_ai_agreement_with_limited_data():
     source = APP_SOURCE.read_text(encoding="utf-8")
 
-    assert "const MIN_COHORT_LOCATION_RUNS = 5;" in source
+    assert "const MIN_COHORT_LOCATION_RUNS = 3;" in source
     assert "function hasCohortLocationData(cohortLoc)" in source
     assert "const hasCohortData = isBranching && hasCohortLocationData(cohortLoc);" in source
     assert "agreed: hasCohortData ? agreed : null" in source
