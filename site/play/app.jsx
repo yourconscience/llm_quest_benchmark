@@ -153,6 +153,7 @@ function sortQuests(quests) {
 
 const PLAY_URL = 'https://yourconscience.github.io/llm_quest_benchmark/play.html';
 const SHARE_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+const MIN_COHORT_LOCATION_RUNS = 3;
 
 function drawTextLine(ctx, text, x, y, maxWidth) {
   ctx.fillText(text, x, y, maxWidth);
@@ -160,8 +161,12 @@ function drawTextLine(ctx, text, x, y, maxWidth) {
 
 // ---- CohortBars (reusable distribution bars) ----
 
+function hasCohortLocationData(cohortLoc) {
+  return !!cohortLoc && (cohortLoc.n || 0) >= MIN_COHORT_LOCATION_RUNS;
+}
+
 function CohortBars({ cohortLoc, playerChoiceNorm, activeFamily, onFamilyChange, families }) {
-  if (!cohortLoc || cohortLoc.n < 5) {
+  if (!hasCohortLocationData(cohortLoc)) {
     return <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Insufficient data for this location.</span>;
   }
 
@@ -224,7 +229,7 @@ function DecisionHistory({ path, families }) {
   const [openIdx, setOpenIdx] = useState(null);
   const [activeFamily, setActiveFamily] = useState('all');
 
-  const branchingSteps = path.filter(entry => entry.cohortLoc);
+  const branchingSteps = path.filter(entry => entry.isBranching);
   if (branchingSteps.length === 0) return null;
 
   return (
@@ -240,7 +245,7 @@ function DecisionHistory({ path, families }) {
               <span className="history-step">#{entry.step}</span>
               <span className="history-choice">{entry.choiceText}</span>
               <span className="history-agree" style={{ color: entry.agreed ? 'var(--green)' : entry.agreed === false ? 'var(--red)' : 'var(--muted)' }}>
-                {entry.agreed === true ? 'AI agreed' : entry.agreed === false ? 'AI disagreed' : ''}
+                {entry.agreed === true ? 'AI agreed' : entry.agreed === false ? 'AI disagreed' : entry.hasCohortData === false ? 'Limited AI data' : ''}
               </span>
               <span className="history-chevron">&#9654;</span>
             </div>
@@ -306,8 +311,10 @@ function renderShareCard(questTitle, outcomeLabel, steps, aiAgreeRate, cohortWin
   const statsY = 160;
   const stats = [
     { value: String(steps), label: 'steps' },
-    { value: aiAgreeRate + '%', label: 'AI agreed' },
   ];
+  if (aiAgreeRate != null) {
+    stats.push({ value: aiAgreeRate + '%', label: 'AI agreed' });
+  }
   if (cohortWinRate != null) {
     stats.push({ value: Math.round(cohortWinRate * 100) + '%', label: 'AI win rate' });
   }
@@ -425,15 +432,18 @@ async function shareResult(canvas, questTitle, outcomeLabel) {
 // ---- EndScreen ----
 
 function buildShareText(questTitle, outcomeLabel, path, cohortWinRate) {
-  const branchingSteps = path.filter(e => e.agreed !== null);
-  const squares = branchingSteps.map(e => e.agreed ? '\u{1F7E9}' : '\u{1F7E5}').join('');
-  const agreeCount = branchingSteps.filter(e => e.agreed === true).length;
+  const branchingSteps = path.filter(e => e.isBranching);
+  const agreementSteps = path.filter(e => e.agreed !== null);
+  const limitedCount = branchingSteps.length - agreementSteps.length;
+  const squares = agreementSteps.map(e => e.agreed ? '\u{1F7E9}' : '\u{1F7E5}').join('');
+  const agreeCount = agreementSteps.filter(e => e.agreed === true).length;
   const aiPct = cohortWinRate != null ? Math.round(cohortWinRate * 100) : null;
 
   let lines = [];
   lines.push('LLM-Quest Benchmark: ' + questTitle);
   lines.push(outcomeLabel + ' in ' + path.length + ' steps');
-  if (squares) lines.push(squares + ' ' + agreeCount + '/' + branchingSteps.length + ' AI agreed');
+  if (squares) lines.push(squares + ' ' + agreeCount + '/' + agreementSteps.length + ' AI agreed');
+  if (limitedCount > 0) lines.push('Limited AI data: ' + limitedCount + ' branching steps');
   if (aiPct != null) lines.push('AI cohort win rate: ' + aiPct + '%');
   lines.push('');
   lines.push(PLAY_URL);
@@ -443,9 +453,9 @@ function buildShareText(questTitle, outcomeLabel, path, cohortWinRate) {
 function EndScreen({ outcome, cohortWinRate, path, questTitle, endText, families, onPlayAgain, onTryAnother }) {
   const [shareStatus, setShareStatus] = useState('');
   const outcomeLabel = { win: 'SUCCESS', fail: 'FAILURE', dead: 'DEAD' }[outcome] || 'FAILURE';
-  const branchingSteps = path.filter(e => e.agreed !== null);
-  const agreeCount = branchingSteps.filter(e => e.agreed === true).length;
-  const aiAgreeRate = branchingSteps.length > 0 ? Math.round((agreeCount / branchingSteps.length) * 100) : 0;
+  const agreementSteps = path.filter(e => e.agreed !== null);
+  const agreeCount = agreementSteps.filter(e => e.agreed === true).length;
+  const aiAgreeRate = agreementSteps.length > 0 ? Math.round((agreeCount / agreementSteps.length) * 100) : null;
 
   function handleShare() {
     const text = buildShareText(questTitle, outcomeLabel, path, cohortWinRate);
@@ -578,14 +588,17 @@ function QuestPlay({ quest, cohortData, onQuit }) {
     const choiceNorm = canonicalChoiceNorm(choice);
     const cohortLoc = getCohortLoc(locationId);
     const isBranching = activeChoices.length >= 2;
-    const majority = (isBranching && cohortLoc) ? getMajorityChoice(cohortLoc) : null;
+    const hasCohortData = isBranching && hasCohortLocationData(cohortLoc);
+    const majority = hasCohortData ? getMajorityChoice(cohortLoc) : null;
     const agreed = majority ? normalizeChoice(majority) === choiceNorm : null;
 
     setPath(prev => [...prev, {
       step: stepNum,
       choiceText: stripClr(choice.text),
-      agreed: isBranching ? agreed : null,
+      isBranching,
+      agreed,
       cohortLoc: isBranching ? cohortLoc : null,
+      hasCohortData,
       playerChoiceNorm: isBranching ? choiceNorm : null,
     }]);
 
