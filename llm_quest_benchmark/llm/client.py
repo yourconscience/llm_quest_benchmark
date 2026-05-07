@@ -236,7 +236,13 @@ class OpenAICompatibleClient(LLMClient):
 
     def _provider_settings(self) -> tuple[str | None, str | None]:
         if self.provider == "openai":
-            return self._require_api_key("OPENAI_API_KEY"), None
+            base_url = os.getenv("OPENAI_BASE_URL")
+            api_key = os.getenv("OPENAI_API_KEY") or (base_url and "not-needed") or None
+            if not api_key:
+                raise RuntimeError(
+                    "Missing API key for provider 'openai'. Set OPENAI_API_KEY in your environment or .env file."
+                )
+            return api_key, base_url
         if self.provider == "google":
             api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
             if not api_key:
