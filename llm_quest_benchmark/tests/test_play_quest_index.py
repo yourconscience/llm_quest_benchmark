@@ -1,9 +1,11 @@
 import json
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 QUEST_INDEX_PATH = REPO_ROOT / "site" / "play" / "quest-index.json"
 APP_SOURCE_PATH = REPO_ROOT / "site" / "play" / "app.jsx"
+APP_COMPILED_PATH = REPO_ROOT / "site" / "play" / "app.js"
 
 
 def test_ru_quests_share_canonical_en_card_data():
@@ -24,10 +26,13 @@ def test_ru_quests_share_canonical_en_card_data():
 
 
 def test_play_uses_canonical_location_for_cohort_lookup():
-    source = APP_SOURCE_PATH.read_text(encoding="utf-8")
-
-    assert (
-        "const locationId = canonicalPlayer ? canonicalPlayer.getSaving().locationId : player.getSaving().locationId;"
-        in source
+    lookup_pattern = re.compile(
+        r"const\s+locationId\s*=\s*canonicalPlayer\s*\?"
+        r"\s*canonicalPlayer\.getSaving\(\)\.locationId\s*:"
+        r"\s*player\.getSaving\(\)\.locationId\s*;"
     )
-    assert "const cohortId = quest.canonical_id || quest.id;" in source
+
+    for path in [APP_SOURCE_PATH, APP_COMPILED_PATH]:
+        source = path.read_text(encoding="utf-8")
+        assert lookup_pattern.search(source), path
+        assert "const cohortId = quest.canonical_id || quest.id;" in source, path
