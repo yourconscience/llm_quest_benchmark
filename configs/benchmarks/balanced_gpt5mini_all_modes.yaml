@@ -1,0 +1,72 @@
+name: balanced_gpt5mini_all_modes
+quests:
+  # Easy tier
+  - quests/Boat.qm
+  - quests/sr_2_1_2121_eng/Badday_eng.qm
+  - quests/sr_2_1_2121_eng/Pizza_eng.qm
+  # Medium tier
+  - quests/sr_2_1_2121_eng/Ski_eng.qm
+  - quests/sr_2_1_2121_eng/Leonardo_eng.qm
+  - quests/sr_2_1_2121_eng/Robots_eng.qm
+  # Hard tier
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
+  - quests/sr_2_1_2121_eng/Codebox_eng.qm
+  - quests/sr_2_1_2121_eng/Depth_eng.qm
+  - quests/sr_2_1_2121_eng/Driver_eng.qm
+  - quests/sr_2_1_2121_eng/Edelweiss_eng.qm
+  - quests/sr_2_1_2121_eng/Election_eng.qm
+  - quests/sr_2_1_2121_eng/Foncers_eng.qm
+  - quests/sr_2_1_2121_eng/Ministry_eng.qm
+  - quests/sr_2_1_2121_eng/Prison_eng.qm
+agents:
+  # 1. Minimal prompt
+  - model: gpt-5-mini
+    template: stub
+    temperature: 0.4
+    runs: 3
+  # 2. Short-context reasoning
+  - model: gpt-5-mini
+    template: reasoning
+    temperature: 0.4
+    runs: 3
+  # 3. Full-history reasoning
+  - model: gpt-5-mini
+    template: reasoning
+    temperature: 0.4
+    runs: 3
+    memory_mode: full_transcript
+  # 4. Compact memory / memo
+  - model: gpt-5-mini
+    template: stateful_compact
+    temperature: 0.4
+    runs: 3
+    memory_mode: compaction
+    compaction_interval: 50
+  # 5. Prompt hints
+  - model: gpt-5-mini
+    template: light_hints
+    temperature: 0.4
+    runs: 3
+  # 6. Tools + compact memory
+  - model: gpt-5-mini
+    template: tool_augmented
+    temperature: 0.4
+    runs: 3
+    memory_mode: compaction
+    compaction_interval: 50
+  # 7. Tools + hints + compact memory
+  - model: gpt-5-mini
+    template: tool_augmented_hints
+    temperature: 0.4
+    runs: 3
+    memory_mode: compaction
+    compaction_interval: 50
+  # 8. Planner loop
+  - model: gpt-5-mini
+    template: planner
+    temperature: 0.4
+    runs: 3
+debug: false
+quest_timeout: 600
+max_workers: 2
+output_dir: results/benchmarks

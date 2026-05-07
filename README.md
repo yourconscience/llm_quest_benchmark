@@ -70,6 +70,39 @@ pnpm run build
 pnpm run build:play-assets
 ```
 
+## API Configuration
+
+Set provider API keys in `.env` (see `.env.template`).
+
+### OpenRouter
+
+Any model on OpenRouter can be used with the `openrouter:` prefix:
+```bash
+uv run llm-quest run --model openrouter:openai/gpt-5.4-mini --quest quests/Boat.qm
+```
+Requires `OPENROUTER_API_KEY` in `.env`.
+
+### OpenAI-compatible proxies (OAuth, local LLMs)
+
+Set `OPENAI_BASE_URL` in `.env` to route the `openai:` provider through any compatible endpoint:
+```bash
+# .env - local OAuth proxy (CLIProxyAPI, codex-proxy, openai-oauth, etc.)
+OPENAI_BASE_URL=http://localhost:8318/v1
+```
+No `OPENAI_API_KEY` needed when using a local proxy:
+```bash
+uv run llm-quest run --model gpt-5-mini --quest quests/Boat.qm
+```
+
+### Direct API keys
+
+Provider-specific keys in `.env`:
+- `OPENAI_API_KEY` - OpenAI API
+- `GOOGLE_API_KEY` / `GEMINI_API_KEY` - Google AI Studio
+- `ANTHROPIC_API_KEY` - Anthropic API
+- `DEEPSEEK_API_KEY` - DeepSeek API
+- `OPENROUTER_API_KEY` - OpenRouter (multi-provider gateway)
+
 ## Project Structure
 
 - `llm_quest_benchmark/agents/` - Agent implementations (LLM, planner, tool-augmented)
