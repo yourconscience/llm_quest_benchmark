@@ -52,11 +52,15 @@ agents:
     template: tool_augmented
     temperature: 0.4
     runs: 3
+    memory_mode: compaction
+    compaction_interval: 50
   # 7. Tools + hints + compact memory
   - model: gpt-5-mini
     template: tool_augmented_hints
     temperature: 0.4
     runs: 3
+    memory_mode: compaction
+    compaction_interval: 50
   # 8. Planner loop
   - model: gpt-5-mini
     template: planner

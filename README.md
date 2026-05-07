@@ -84,12 +84,13 @@ Requires `OPENROUTER_API_KEY` in `.env`.
 
 ### OpenAI-compatible proxies (OAuth, local LLMs)
 
-Set `OPENAI_BASE_URL` to route the `openai:` provider through any compatible endpoint:
+Set `OPENAI_BASE_URL` in `.env` to route the `openai:` provider through any compatible endpoint:
 ```bash
-# Local OAuth proxy (CLIProxyAPI, codex-proxy, openai-oauth, etc.)
+# .env - local OAuth proxy (CLIProxyAPI, codex-proxy, openai-oauth, etc.)
 OPENAI_BASE_URL=http://localhost:8318/v1
-
-# No OPENAI_API_KEY needed when using a local proxy
+```
+No `OPENAI_API_KEY` needed when using a local proxy:
+```bash
 uv run llm-quest run --model gpt-5-mini --quest quests/Boat.qm
 ```
 
