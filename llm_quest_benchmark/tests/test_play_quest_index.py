@@ -3,6 +3,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 QUEST_INDEX_PATH = REPO_ROOT / "site" / "play" / "quest-index.json"
+APP_SOURCE_PATH = REPO_ROOT / "site" / "play" / "app.jsx"
 
 
 def test_ru_quests_share_canonical_en_card_data():
@@ -20,3 +21,13 @@ def test_ru_quests_share_canonical_en_card_data():
         en_quest = quests[canonical_id]
         assert ru_quest["win_rate"] == en_quest["win_rate"], ru_quest["id"]
         assert ru_quest["total_runs"] == en_quest["total_runs"], ru_quest["id"]
+
+
+def test_play_uses_canonical_location_for_cohort_lookup():
+    source = APP_SOURCE_PATH.read_text(encoding="utf-8")
+
+    assert (
+        "const locationId = canonicalPlayer ? canonicalPlayer.getSaving().locationId : player.getSaving().locationId;"
+        in source
+    )
+    assert "const cohortId = quest.canonical_id || quest.id;" in source
