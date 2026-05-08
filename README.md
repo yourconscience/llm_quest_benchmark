@@ -93,6 +93,8 @@ No `OPENAI_API_KEY` needed when using a local proxy:
 ```bash
 uv run llm-quest run --model gpt-5-mini --quest quests/Boat.qm
 ```
+When `OPENAI_BASE_URL` is set, the client will not forward `OPENAI_API_KEY` to that endpoint.
+If your proxy requires bearer auth, set `OPENAI_BASE_URL_API_KEY` explicitly.
 
 ### Direct API keys
 

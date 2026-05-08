@@ -172,3 +172,27 @@ def test_openai_gpt5_retries_empty_with_larger_budget(mock_openai_cls, monkeypat
     assert mock_chat.completions.create.call_count == 2
     second_kwargs = mock_chat.completions.create.call_args_list[1].kwargs
     assert second_kwargs["max_completion_tokens"] >= 800
+
+
+def test_openai_base_url_uses_proxy_key_not_openai_key(monkeypatch):
+    monkeypatch.setenv("OPENAI_BASE_URL", "http://localhost:8318/v1")
+    monkeypatch.setenv("OPENAI_API_KEY", "real-openai-key")
+    monkeypatch.delenv("OPENAI_BASE_URL_API_KEY", raising=False)
+
+    client = get_llm_client("gpt-5-mini")
+    api_key, base_url = client._provider_settings()
+
+    assert base_url == "http://localhost:8318/v1"
+    assert api_key == "not-needed"
+
+
+def test_openai_base_url_uses_explicit_proxy_key(monkeypatch):
+    monkeypatch.setenv("OPENAI_BASE_URL", "http://localhost:8318/v1")
+    monkeypatch.setenv("OPENAI_API_KEY", "real-openai-key")
+    monkeypatch.setenv("OPENAI_BASE_URL_API_KEY", "proxy-key")
+
+    client = get_llm_client("gpt-5-mini")
+    api_key, base_url = client._provider_settings()
+
+    assert base_url == "http://localhost:8318/v1"
+    assert api_key == "proxy-key"
