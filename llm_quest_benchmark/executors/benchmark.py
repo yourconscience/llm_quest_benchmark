@@ -34,6 +34,16 @@ logging.getLogger("llm_quest_benchmark.executors.ts_bridge").setLevel(logging.WA
 logger = logging.getLogger(__name__)
 
 
+class _ListQueue:
+    """Minimal queue substitute that appends to a list (for serial in-process runs)."""
+
+    def __init__(self, target: list):
+        self._target = target
+
+    def put(self, item):
+        self._target.append(item)
+
+
 def _result_entry(
     quest: str,
     agent_config,
@@ -142,10 +152,11 @@ def _run_benchmark_task(task: dict[str, Any], result_queue) -> None:
             memory_mode=agent_config.memory_mode,
             compaction_interval=agent_config.compaction_interval,
         )
+        quest_timeout = task.get("quest_timeout", 10**9)
         outcome = run_quest_with_timeout(
             quest,
             agent,
-            timeout=10**9,
+            timeout=quest_timeout,
             agent_config=agent_config,
             debug=agent_config.debug,
             callbacks=[callback],
@@ -341,6 +352,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                         "agent_config": task_agent_config,
                         "attempt": attempt,
                         "benchmark_id": config.benchmark_id,
+                        "quest_timeout": config.quest_timeout,
                     }
                 )
 
@@ -357,32 +369,11 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
 
     # Collect results for each agent x quest combination.
     results_by_index: list[tuple[int, dict[str, Any]]] = []
-    ctx = mp.get_context("spawn")
-    running: dict[int, dict[str, Any]] = {}
-    next_task = 0
 
-    while next_task < len(tasks) or running:
-        while next_task < len(tasks) and len(running) < max_workers:
-            task = tasks[next_task]
-            next_task += 1
+    if max_workers == 1:
+        # Serial path: run tasks in-process to avoid multiprocessing orphan leaks.
+        for task in tasks:
             agent_config = task["agent_config"]
-            task_queue = ctx.Queue()
-            process = ctx.Process(target=_run_benchmark_task, args=(task, task_queue))
-            process.start()
-            running[task["run_index"]] = {
-                "task": task,
-                "queue": task_queue,
-                "process": process,
-                "started_at": time.monotonic(),
-                "run_id": None,
-            }
-            logger.info(
-                "Agent %s running quest %s (attempt %s/%s)",
-                agent_config.agent_id,
-                task["quest_name"],
-                task["attempt"],
-                agent_config.runs,
-            )
             _emit_progress(
                 progress_callback,
                 {
@@ -396,28 +387,151 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                     "attempt": task["attempt"],
                 },
             )
+            result_holder: list[dict[str, Any]] = []
+            dummy_queue = _ListQueue(result_holder)
+            try:
+                _run_benchmark_task(task, dummy_queue)
+            except Exception as exc:
+                result_holder.append(
+                    {
+                        "event": "done",
+                        "run_index": task["run_index"],
+                        "result": _result_entry(
+                            task["quest"], agent_config, task["attempt"], QuestOutcome.ERROR.name, error=str(exc)
+                        ),
+                    }
+                )
+            done_msgs = [m for m in result_holder if m.get("event") == "done"]
+            if done_msgs:
+                result = done_msgs[-1]["result"]
+            else:
+                result = _result_entry(
+                    task["quest"], agent_config, task["attempt"], QuestOutcome.ERROR.name, error="No result produced"
+                )
+            results_by_index.append((task["run_index"], result))
+            _emit_progress(
+                progress_callback,
+                {
+                    "event": "pair_done",
+                    "run_index": task["run_index"],
+                    "total_runs": total_runs,
+                    "quest": task["quest"],
+                    "quest_name": task["quest_name"],
+                    "agent_id": agent_config.agent_id,
+                    "model": agent_config.model,
+                    "attempt": task["attempt"],
+                    "outcome": result["outcome"],
+                    "error": result.get("error"),
+                },
+            )
+    else:
+        # Parallel path: use multiprocessing for max_workers > 1.
+        ctx = mp.get_context("spawn")
+        running: dict[int, dict[str, Any]] = {}
+        next_task = 0
 
-        completed: list[int] = []
-        for current_index, handle in list(running.items()):
-            task = handle["task"]
-            agent_config = task["agent_config"]
-            process = handle["process"]
-            task_queue = handle["queue"]
-            while True:
-                try:
-                    message = task_queue.get_nowait()
-                except queue.Empty:
-                    break
-                if message.get("event") == "run_record":
-                    handle["run_id"] = message.get("run_id")
-                elif message.get("event") == "done":
-                    result = message["result"]
+        while next_task < len(tasks) or running:
+            while next_task < len(tasks) and len(running) < max_workers:
+                task = tasks[next_task]
+                next_task += 1
+                agent_config = task["agent_config"]
+                task_queue = ctx.Queue()
+                process = ctx.Process(target=_run_benchmark_task, args=(task, task_queue))
+                process.start()
+                running[task["run_index"]] = {
+                    "task": task,
+                    "queue": task_queue,
+                    "process": process,
+                    "started_at": time.monotonic(),
+                    "run_id": None,
+                }
+                logger.info(
+                    "Agent %s running quest %s (attempt %s/%s)",
+                    agent_config.agent_id,
+                    task["quest_name"],
+                    task["attempt"],
+                    agent_config.runs,
+                )
+                _emit_progress(
+                    progress_callback,
+                    {
+                        "event": "pair_start",
+                        "run_index": task["run_index"],
+                        "total_runs": total_runs,
+                        "quest": task["quest"],
+                        "quest_name": task["quest_name"],
+                        "agent_id": agent_config.agent_id,
+                        "model": agent_config.model,
+                        "attempt": task["attempt"],
+                    },
+                )
+
+            completed: list[int] = []
+            for current_index, handle in list(running.items()):
+                task = handle["task"]
+                agent_config = task["agent_config"]
+                process = handle["process"]
+                task_queue = handle["queue"]
+                while True:
+                    try:
+                        message = task_queue.get_nowait()
+                    except queue.Empty:
+                        break
+                    if message.get("event") == "run_record":
+                        handle["run_id"] = message.get("run_id")
+                    elif message.get("event") == "done":
+                        result = message["result"]
+                        results_by_index.append((current_index, result))
+                        completed.append(current_index)
+                        process.join(timeout=1)
+                        if process.is_alive():
+                            process.terminate()
+                            process.join(timeout=5)
+                        _emit_progress(
+                            progress_callback,
+                            {
+                                "event": "pair_done",
+                                "run_index": current_index,
+                                "total_runs": total_runs,
+                                "quest": task["quest"],
+                                "quest_name": task["quest_name"],
+                                "agent_id": agent_config.agent_id,
+                                "model": agent_config.model,
+                                "attempt": task["attempt"],
+                                "outcome": result["outcome"],
+                                "error": result["error"],
+                            },
+                        )
+                        break
+
+                if current_index in completed:
+                    continue
+
+                elapsed = time.monotonic() - handle["started_at"]
+                if elapsed > max(config.quest_timeout, 1):
+                    logger.warning(
+                        "Quest %s attempt %s timed out after %s seconds",
+                        task["quest_name"],
+                        task["attempt"],
+                        config.quest_timeout,
+                    )
+                    process.terminate()
+                    process.join(timeout=5)
+                    if process.is_alive():
+                        process.kill()
+                        process.join(timeout=1)
+                    _mark_run_timeout(
+                        handle["run_id"], task["quest"], agent_config, config.benchmark_id, config.quest_timeout
+                    )
+                    result = _result_entry(
+                        task["quest"],
+                        agent_config,
+                        task["attempt"],
+                        QuestOutcome.TIMEOUT.name,
+                        error=f"Timed out after {config.quest_timeout} seconds",
+                    )
                     results_by_index.append((current_index, result))
                     completed.append(current_index)
-                    process.join(timeout=1)
-                    if process.is_alive():
-                        process.terminate()
-                        process.join(timeout=5)
                     _emit_progress(
                         progress_callback,
                         {
@@ -429,75 +543,30 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                             "agent_id": agent_config.agent_id,
                             "model": agent_config.model,
                             "attempt": task["attempt"],
-                            "outcome": result["outcome"],
-                            "error": result["error"],
+                            "outcome": QuestOutcome.TIMEOUT.name,
+                            "error": f"Timed out after {config.quest_timeout} seconds",
                         },
                     )
-                    break
 
-            if current_index in completed:
-                continue
+                elif process.exitcode is not None and process.exitcode != 0:
+                    result = _result_entry(
+                        task["quest"],
+                        agent_config,
+                        task["attempt"],
+                        QuestOutcome.ERROR.name,
+                        error=f"Worker exited with code {process.exitcode}",
+                    )
+                    results_by_index.append((current_index, result))
+                    completed.append(current_index)
+                    process.join()
 
-            elapsed = time.monotonic() - handle["started_at"]
-            if elapsed > max(config.quest_timeout, 1):
-                logger.warning(
-                    "Quest %s attempt %s timed out after %s seconds",
-                    task["quest_name"],
-                    task["attempt"],
-                    config.quest_timeout,
-                )
-                process.terminate()
-                process.join(timeout=5)
-                if process.is_alive():
-                    process.kill()
-                    process.join(timeout=1)
-                _mark_run_timeout(
-                    handle["run_id"], task["quest"], agent_config, config.benchmark_id, config.quest_timeout
-                )
-                result = _result_entry(
-                    task["quest"],
-                    agent_config,
-                    task["attempt"],
-                    QuestOutcome.TIMEOUT.name,
-                    error=f"Timed out after {config.quest_timeout} seconds",
-                )
-                results_by_index.append((current_index, result))
-                completed.append(current_index)
-                _emit_progress(
-                    progress_callback,
-                    {
-                        "event": "pair_done",
-                        "run_index": current_index,
-                        "total_runs": total_runs,
-                        "quest": task["quest"],
-                        "quest_name": task["quest_name"],
-                        "agent_id": agent_config.agent_id,
-                        "model": agent_config.model,
-                        "attempt": task["attempt"],
-                        "outcome": QuestOutcome.TIMEOUT.name,
-                        "error": f"Timed out after {config.quest_timeout} seconds",
-                    },
-                )
+            for current_index in completed:
+                handle = running.pop(current_index, None)
+                if handle:
+                    handle["queue"].close()
 
-            elif process.exitcode is not None and process.exitcode != 0:
-                result = _result_entry(
-                    task["quest"],
-                    agent_config,
-                    task["attempt"],
-                    QuestOutcome.ERROR.name,
-                    error=f"Worker exited with code {process.exitcode}",
-                )
-                results_by_index.append((current_index, result))
-                completed.append(current_index)
-                process.join()
-
-        for current_index in completed:
-            handle = running.pop(current_index, None)
-            if handle:
-                handle["queue"].close()
-
-        if not completed:
-            time.sleep(0.1)
+            if not completed:
+                time.sleep(0.1)
 
     results = [result for _, result in sorted(results_by_index, key=lambda item: item[0])]
 
