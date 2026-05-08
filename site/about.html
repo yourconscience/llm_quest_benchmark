@@ -79,7 +79,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
   <div class="stat"><div class="stat-num">6</div><div class="stat-label">models</div></div>
   <div class="stat"><div class="stat-num">8</div><div class="stat-label">taxonomy labels</div></div>
   <div class="stat"><div class="stat-num">15</div><div class="stat-label">quests</div></div>
-  <div class="stat"><div class="stat-num">1615</div><div class="stat-label">runs</div></div>
+  <div class="stat"><div class="stat-num">1665</div><div class="stat-label">runs</div></div>
 </div>
 
 <div class="post-meta" style="text-align:center; margin-top: 1.5rem;">
@@ -108,7 +108,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
   The quests come from <a href="https://spacerangers.gitlab.io/#/quests">Space Rangers</a>, a corpus of community-authored text adventures with branching narratives and non-obvious optimal paths. They were not designed for LLM evaluation, which is part of why they work: the difficulty is organic, not synthetic.
 </p>
 <p>
-  The public leaderboard keeps the six primary models and the 15 quest IDs covered by all six. Exploratory one-model, raw-history, and partial-coverage runs remain useful for analysis, but they stay out of the public comparison slice unless coverage is comparable.
+  The public leaderboard keeps the six primary models and the 15 quest IDs covered by all six. GPT-5.4 Mini now has full 3-run coverage across all 8 taxonomy modes (7 complete, planner partial at 7/15 quests); other models have varying coverage across modes. Exploratory one-model, raw-history, and partial-coverage runs remain useful for analysis, but they stay out of the public comparison slice unless coverage is comparable.
 </p>
 
 <h2>What we found</h2>
@@ -162,7 +162,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
   We built an interactive Play mode where you can <a href="play.html">play the same quests</a> the AI models played. After each decision, you can expand the Decision History to see what the AI cohort chose at that same point - which models agreed with you, which went a different way.
 </p>
 <p>
-  The comparable results are on the <a href="index.html">leaderboard</a> with summary and Per Quest views so quest variance stays visible. Everything is open source: <a href="https://github.com/yourconscience/llm_quest_benchmark">code, data, configs</a>.
+  The comparable results are on the <a href="index.html">leaderboard</a> with summary and Per Quest views so quest variance stays visible. The leaderboard now includes 1665 curated runs. Everything is open source: <a href="https://github.com/yourconscience/llm_quest_benchmark">code, data, configs</a>.
 </p>
 
 <figure>
@@ -172,12 +172,12 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 
 <figure>
   <img src="img/early_benchmark.jpg" alt="Early version of the LLM Quest Benchmark, March 2025" class="img-fluid" style="max-width: 100%;">
-  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests. The public leaderboard now shows 6 primary models, 15 comparable quest IDs, and 1615 curated runs across the current context-engineering taxonomy.</figcaption>
+  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests. The public leaderboard now shows 6 primary models, 15 comparable quest IDs, and 1665 curated runs across the current context-engineering taxonomy.</figcaption>
 </figure>
 
 <h2>What's next</h2>
 <ul>
-  <li>Complete under-covered taxonomy arms: prompt hints, tools + compact memory, tools + hints + compact memory, and planner loop need broader quest/model coverage before strong claims.</li>
+  <li>Complete under-covered taxonomy arms: GPT-5.4 Mini now covers all 8 modes (planner partial); other models still need tools + compact memory, tools + hints + compact memory, and planner loop coverage before cross-model scaffold comparisons.</li>
   <li>Add human baseline data from the Play feature so "hard for LLMs" can be separated from "hard quest".</li>
   <li>Build better loop/context diagnostics: state revisit tracking, action-cycle detection, and summaries that explain why repetition spiked.</li>
   <li>Run cost/model follow-ups on newer frontier and small models, then report Pareto trade-offs instead of only success-rate rank.</li>

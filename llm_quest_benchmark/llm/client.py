@@ -424,7 +424,7 @@ class AnthropicClient(LLMClient):
 
 def get_llm_client(model_name: str, system_prompt: str = "", temperature: float = DEFAULT_TEMPERATURE) -> LLMClient:
     """Factory function to get appropriate LLM client."""
-    request_timeout = 30
+    request_timeout = 120
     spec = parse_model_name(model_name)
 
     if spec.provider == "anthropic":

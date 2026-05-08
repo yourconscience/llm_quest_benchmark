@@ -1,4 +1,4 @@
-name: balanced_gpt5mini_all_modes
+name: balanced_gpt5mini_final
 quests:
   # Easy tier
   - quests/Boat.qm
@@ -19,41 +19,6 @@ quests:
   - quests/sr_2_1_2121_eng/Ministry_eng.qm
   - quests/sr_2_1_2121_eng/Prison_eng.qm
 agents:
-  # 1. Minimal prompt
-  - model: gpt-5.4-mini
-    template: stub
-    temperature: 0.4
-    runs: 3
-  # 2. Short-context reasoning
-  - model: gpt-5.4-mini
-    template: reasoning
-    temperature: 0.4
-    runs: 3
-  # 3. Full-history reasoning
-  - model: gpt-5.4-mini
-    template: reasoning
-    temperature: 0.4
-    runs: 3
-    memory_mode: full_transcript
-  # 4. Compact memory / memo
-  - model: gpt-5.4-mini
-    template: stateful_compact
-    temperature: 0.4
-    runs: 3
-    memory_mode: compaction
-    compaction_interval: 50
-  # 5. Prompt hints
-  - model: gpt-5.4-mini
-    template: light_hints
-    temperature: 0.4
-    runs: 3
-  # 6. Tools + compact memory
-  - model: gpt-5.4-mini
-    template: tool_augmented
-    temperature: 0.4
-    runs: 3
-    memory_mode: compaction
-    compaction_interval: 50
   # 7. Tools + hints + compact memory
   - model: gpt-5.4-mini
     template: tool_augmented_hints
@@ -68,5 +33,5 @@ agents:
     runs: 3
 debug: false
 quest_timeout: 600
-max_workers: 2
+max_workers: 1
 output_dir: results/benchmarks
