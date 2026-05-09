@@ -584,7 +584,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
   }
 
   function handleChoice(choice, activeChoices) {
-    const locationId = player.getSaving().locationId;
+    const locationId = canonicalPlayer ? canonicalPlayer.getSaving().locationId : player.getSaving().locationId;
     const choiceNorm = canonicalChoiceNorm(choice);
     const cohortLoc = getCohortLoc(locationId);
     const isBranching = activeChoices.length >= 2;
