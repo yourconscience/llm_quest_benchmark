@@ -68,12 +68,45 @@ class HarnessConfig:
     benchmark_id: str | None = None
     compaction_interval: int = 50
 
+    def __init__(
+        self,
+        model: str = DEFAULT_MODEL,
+        system_template: str = SYSTEM_ROLE_TEMPLATE,
+        harness: str = "reasoning_recent",
+        temperature: float = DEFAULT_TEMPERATURE,
+        runs: int = 1,
+        skip_single: bool = False,
+        debug: bool = False,
+        benchmark_id: str | None = None,
+        compaction_interval: int = 50,
+        **legacy_keys,
+    ):
+        if "template" in legacy_keys or "action_template" in legacy_keys:
+            raise ValueError("Use harness: key instead of template:")
+        if "memory_mode" in legacy_keys:
+            raise ValueError("Use harness: key instead of memory_mode:")
+        if legacy_keys:
+            unexpected = ", ".join(sorted(legacy_keys))
+            raise TypeError(f"Unexpected HarnessConfig key(s): {unexpected}")
+
+        self.model = model
+        self.system_template = system_template
+        self.harness = harness
+        self.temperature = temperature
+        self.runs = runs
+        self.skip_single = skip_single
+        self.debug = debug
+        self.benchmark_id = benchmark_id
+        self.compaction_interval = compaction_interval
+        self.__post_init__()
+
     def __post_init__(self):
         self.system_template = normalize_template_name(self.system_template)
-        from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY
+        from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY, SPECIAL_HARNESSES, is_random_choice_harness
 
-        if self.harness not in HARNESS_REGISTRY:
-            raise ValueError(f"Invalid harness: {self.harness}. Supported harnesses: {sorted(HARNESS_REGISTRY)}")
+        if self.harness not in HARNESS_REGISTRY and self.harness != "human" and not is_random_choice_harness(self.harness):
+            valid = [*sorted(HARNESS_REGISTRY), *SPECIAL_HARNESSES]
+            raise ValueError(f"Invalid harness: {self.harness}. Supported harnesses: {valid}")
         if not (0.0 <= self.temperature <= 2.0):
             raise ValueError(f"Temperature must be between 0.0 and 2.0, got {self.temperature}")
         if self.runs < 1:
@@ -180,9 +213,9 @@ class BenchmarkConfig:
             agents = []
             for agent in data["agents"]:
                 if "template" in agent:
-                    raise ValueError("Use 'harness:' instead of 'template:'")
+                    raise ValueError("Use harness: key instead of template:")
                 if "memory_mode" in agent:
-                    raise ValueError("Use 'harness:' instead of 'memory_mode:'")
+                    raise ValueError("Use harness: key instead of memory_mode:")
                 agents.append(HarnessConfig(**agent))
             data["agents"] = agents
 

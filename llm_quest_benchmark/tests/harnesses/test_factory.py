@@ -33,9 +33,26 @@ def test_create_random_choice_harness():
     assert isinstance(harness, RandomAgent)
 
 
+def test_create_seeded_random_choice_harness():
+    harness = create_harness("random_choice_123")
+
+    assert isinstance(harness, RandomAgent)
+    assert harness.agent_id == "random_123"
+
+
 def test_create_bad_harness_name_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="minimal"):
         create_harness("bad_name", model="gpt-5-mini")
+
+
+def test_create_bad_random_choice_seed_raises():
+    with pytest.raises(ValueError, match="random_choice_<seed>"):
+        create_harness("random_choice_bad")
+
+
+def test_random_choice_model_does_not_hide_bad_harness():
+    with pytest.raises(ValueError, match="bad_name"):
+        create_harness("bad_name", model="random_choice_123")
 
 
 def test_harness_config_stable_harness_id():
@@ -43,6 +60,22 @@ def test_harness_config_stable_harness_id():
 
     assert isinstance(config.harness_id, str)
     assert config.harness_id == HarnessConfig(harness="memo_compact", model="gpt-5-mini").harness_id
+
+
+def test_harness_config_allows_seeded_random_choice_harness():
+    config = HarnessConfig(harness="random_choice_123", model="gpt-5-mini")
+
+    assert config.harness == "random_choice_123"
+
+
+def test_harness_config_rejects_old_template_key():
+    with pytest.raises(ValueError, match="Use harness: key instead of template:"):
+        HarnessConfig(model="gpt-5-mini", template="reasoning.jinja")
+
+
+def test_harness_config_rejects_old_memory_mode_key():
+    with pytest.raises(ValueError, match="Use harness: key instead of memory_mode:"):
+        HarnessConfig(model="gpt-5-mini", harness="memo_compact", memory_mode="compaction")
 
 
 def test_benchmark_config_from_yaml_parses_harness(tmp_path):
@@ -83,5 +116,25 @@ agents:
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="Use 'harness:' instead of 'template:'"):
+    with pytest.raises(ValueError, match="Use harness: key instead of template:"):
+        BenchmarkConfig.from_yaml(str(config_path))
+
+
+def test_benchmark_config_from_yaml_rejects_memory_mode(tmp_path):
+    quest_path = tmp_path / "quest.qm"
+    quest_path.write_text("", encoding="utf-8")
+    config_path = tmp_path / "benchmark.yaml"
+    config_path.write_text(
+        f"""
+quests:
+  - {quest_path}
+agents:
+  - model: gpt-5-mini
+    harness: memo_compact
+    memory_mode: compaction
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="Use harness: key instead of memory_mode:"):
         BenchmarkConfig.from_yaml(str(config_path))
