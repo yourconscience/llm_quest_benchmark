@@ -1,6 +1,8 @@
 """Base harness class for quest benchmark experiments."""
 
+import hashlib
 import logging
+import re
 from abc import abstractmethod
 from typing import Any
 
@@ -30,14 +32,15 @@ class BaseHarness(QuestPlayer):
         debug,
         memory_module=None,
         tools=None,
+        action_template=DEFAULT_TEMPLATE,
     ):
         super().__init__(skip_single=skip_single)
         self.debug = debug
         self.model_name = model_name.lower()
         self.system_template = normalize_template_name(system_template)
-        self.action_template = DEFAULT_TEMPLATE
+        self.action_template = normalize_template_name(action_template)
         self.temperature = temperature
-        self.harness_name = ""
+        self.harness_name = getattr(self.__class__, "harness_name", "")
         self.agent_id = f"harness_{self.model_name}"
         self.memory_module = memory_module
         self.tools = tools or []
@@ -61,6 +64,10 @@ class BaseHarness(QuestPlayer):
         self.history: list[LLMResponse] = []
         self._use_safety_filter = True
         self._last_response = LLMResponse(action=1, is_default=True)
+        self._observation_history: list[str] = []
+        self._decision_history: list[dict[str, Any]] = []
+        self._state_action_counts: dict[str, dict[int, int]] = {}
+        self._step_count = 0
 
     def _ensure_llm(self) -> None:
         """Lazily create the provider client only when inference is needed."""
@@ -82,8 +89,124 @@ class BaseHarness(QuestPlayer):
         super().reset()
         self.history = []
         self._last_response = LLMResponse(action=1, is_default=True)
+        self._observation_history = []
+        self._decision_history = []
+        self._state_action_counts = {}
+        self._step_count = 0
         if self.memory_module is not None:
             self.memory_module.reset()
+
+    def get_action(self, observation: str, choices: list[dict[str, str]]) -> int:
+        clean = (observation or "").strip()
+        if clean:
+            self._observation_history.append(clean)
+            if len(self._observation_history) > 20:
+                self._observation_history = self._observation_history[-20:]
+            if self.memory_module is not None:
+                self.memory_module.update({"observation": clean, "step": self._step_count + 1})
+        return super().get_action(observation, choices)
+
+    def on_game_start(self) -> None:
+        super().on_game_start()
+        self.reset()
+
+    def on_game_end(self, final_state: dict[str, Any]) -> None:
+        if self.debug:
+            self.logger.debug("Game ended with state: %s", final_state)
+
+    def get_last_response(self) -> LLMResponse | None:
+        return self._last_response
+
+    @property
+    def _quest_briefing(self) -> str | None:
+        return getattr(self.memory_module, "_quest_briefing", None)
+
+    @_quest_briefing.setter
+    def _quest_briefing(self, value: str | None) -> None:
+        if self.memory_module is not None:
+            self.memory_module._quest_briefing = value
+
+    @property
+    def _transcript(self) -> list[dict[str, Any]]:
+        return getattr(self.memory_module, "_transcript", [])
+
+    @_transcript.setter
+    def _transcript(self, value: list[dict[str, Any]]) -> None:
+        if self.memory_module is not None:
+            self.memory_module._transcript = value
+
+    @property
+    def _steps_since_compaction(self) -> int:
+        return getattr(self.memory_module, "_steps_since_compaction", 0)
+
+    @_steps_since_compaction.setter
+    def _steps_since_compaction(self, value: int) -> None:
+        if self.memory_module is not None:
+            self.memory_module._steps_since_compaction = value
+
+    def _build_contextual_state(self, state: str) -> str:
+        if self.memory_module is None:
+            return state
+        context = self.memory_module.get_context(self._step_count + 1)
+        if not context:
+            return state
+        return f"{context}\n\nCurrent story state:\n{state}"
+
+    @staticmethod
+    def _normalize_for_signature(value: str, max_len: int = 320) -> str:
+        text = (value or "").lower()
+        text = re.sub(r"\s+", " ", text).strip()
+        return text[:max_len] if len(text) > max_len else text
+
+    def _state_signature(self, state: str, choices: list[dict[str, str]]) -> str:
+        normalized_state = self._normalize_for_signature(state, max_len=420)
+        normalized_choices = "|".join(
+            self._normalize_for_signature(choice.get("text", ""), max_len=110) for choice in choices
+        )
+        raw_signature = f"{normalized_state}||{normalized_choices}"
+        return hashlib.sha1(raw_signature.encode("utf-8", errors="ignore")).hexdigest()[:20]
+
+    def _remember_decision(
+        self,
+        state: str,
+        choices: list[dict[str, str]],
+        state_signature: str,
+        response: LLMResponse,
+    ) -> None:
+        action = int(response.action)
+        counts = self._state_action_counts.setdefault(state_signature, {})
+        counts[action] = counts.get(action, 0) + 1
+
+        selected_text = ""
+        if 1 <= action <= len(choices):
+            selected_text = choices[action - 1].get("text", "")
+        state_snippet = (state or "").strip()
+        if len(state_snippet) > 220:
+            state_snippet = state_snippet[:220] + "..."
+
+        decision = {
+            "state": state_snippet,
+            "action": action,
+            "choice": selected_text,
+            "choice_text": selected_text,
+            "parse_mode": response.parse_mode or "unknown",
+            "memo": (response.memo or "").strip()[:350] or None,
+            "reasoning": (response.reasoning or "")[:800],
+        }
+        self._decision_history.append(decision)
+        if len(self._decision_history) > 40:
+            self._decision_history = self._decision_history[-40:]
+
+        self._step_count += 1
+        if self.memory_module is not None:
+            self.memory_module.update(
+                {
+                    "step": self._step_count,
+                    "observation": state,
+                    "choices": [c.get("text", "") for c in choices],
+                    **decision,
+                }
+            )
 
     def _format_prompt(self, observation, choices, memo=None, context=None) -> str:
         """Render system and action Jinja templates for the current decision."""

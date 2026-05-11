@@ -5,9 +5,7 @@ import logging
 from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.agents.human_player import HumanPlayer
 from llm_quest_benchmark.agents.llm_agent import LLMAgent
-from llm_quest_benchmark.agents.planner_agent import PlannerAgent
 from llm_quest_benchmark.agents.random_agent import RandomAgent
-from llm_quest_benchmark.agents.tool_agent import ToolAgent
 from llm_quest_benchmark.constants import (
     DEFAULT_MODEL,
     DEFAULT_TEMPERATURE,
@@ -66,27 +64,29 @@ def create_agent(
         return RandomAgent(seed=seed, debug=debug, skip_single=skip_single)
 
     if resolved_action_template == "planner.jinja":
-        return PlannerAgent(
-            debug=debug,
-            model_name=model,
-            system_template=system_template,
-            action_template=resolved_action_template,
+        from llm_quest_benchmark.harnesses.factory import create_harness
+
+        return create_harness(
+            harness="planner",
+            model=model,
             temperature=temperature,
             skip_single=skip_single,
-            memory_mode=memory_mode,
+            debug=debug,
             compaction_interval=compaction_interval,
+            system_template=system_template,
         )
 
     if resolved_action_template in ("tool_augmented.jinja", "tool_augmented_hints.jinja"):
-        return ToolAgent(
-            debug=debug,
-            model_name=model,
-            system_template=system_template,
-            action_template=resolved_action_template,
+        from llm_quest_benchmark.harnesses.factory import create_harness
+
+        return create_harness(
+            harness="tool_hinted" if resolved_action_template == "tool_augmented_hints.jinja" else "tool_compact",
+            model=model,
             temperature=temperature,
             skip_single=skip_single,
-            memory_mode=memory_mode,
+            debug=debug,
             compaction_interval=compaction_interval,
+            system_template=system_template,
         )
 
     # Default to LLM agent
