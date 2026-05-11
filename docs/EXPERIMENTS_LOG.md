@@ -1,5 +1,19 @@
 # Experiments Log
 
+## Harness Name Mapping
+
+| Experiment arm | Old label | New harness name |
+|---|---|---|
+| Minimal prompt arms | `stub` | `minimal` |
+| Short-context reasoning arms | `reasoning` + `default` memory | `reasoning_recent` |
+| Full-history reasoning arms | `reasoning` + `full_transcript` memory | `reasoning_full` |
+| Stateful compact memo arms | `stateful_compact` + compaction | `memo_compact` |
+| Hinted compact memo arms | `stateful_compact_hints` + compaction | `hinted_compact` |
+| Tool-augmented compact arms | `tool_augmented` + compaction | `tool_compact` |
+| Tool-augmented hinted arms | `tool_augmented_hints` + compaction | `tool_hinted` |
+| Planner arms | `planner` | `planner` |
+| Memo variation arms | `memo_extended`, `memo_structured`, `memo_cot` | retired experiment variants, not canonical harnesses |
+
 > Historical / non-authoritative notes. This log preserves experiment history
 > and branch-era shorthand. For the current public taxonomy and public
 > comparison slice, use `site/about.html`, `site/leaderboard.json`,
