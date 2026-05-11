@@ -104,7 +104,11 @@ class HarnessConfig:
         self.system_template = normalize_template_name(self.system_template)
         from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY, SPECIAL_HARNESSES, is_random_choice_harness
 
-        if self.harness not in HARNESS_REGISTRY and self.harness != "human" and not is_random_choice_harness(self.harness):
+        if (
+            self.harness not in HARNESS_REGISTRY
+            and self.harness != "human"
+            and not is_random_choice_harness(self.harness)
+        ):
             valid = [*sorted(HARNESS_REGISTRY), *SPECIAL_HARNESSES]
             raise ValueError(f"Invalid harness: {self.harness}. Supported harnesses: {valid}")
         if not (0.0 <= self.temperature <= 2.0):

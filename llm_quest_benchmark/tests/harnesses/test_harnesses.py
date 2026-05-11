@@ -3,13 +3,12 @@
 from unittest.mock import Mock
 
 from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY, create_harness
-from llm_quest_benchmark.harnesses.memory import CompactionMemory, DefaultMemory, FullTranscriptMemory
 from llm_quest_benchmark.harnesses.memo import HintedCompactHarness, MemoCompactHarness
+from llm_quest_benchmark.harnesses.memory import CompactionMemory, DefaultMemory, FullTranscriptMemory
 from llm_quest_benchmark.harnesses.minimal import MinimalHarness
 from llm_quest_benchmark.harnesses.planner import PlannerHarness
 from llm_quest_benchmark.harnesses.reasoning import ReasoningFullTranscriptHarness, ReasoningRecentHarness
 from llm_quest_benchmark.harnesses.tool_harness import ToolCompactHarness, ToolHintedHarness
-
 
 HARNESS_SPECS = {
     "minimal": (MinimalHarness, "stub.jinja", DefaultMemory),
@@ -221,8 +220,7 @@ def test_tool_compact_scratchpad_read_write_and_reset():
 
     assert harness.scratchpad("read") == "(empty)"
     assert (
-        harness.scratchpad("write_replace", " Board: W B _ ; failed door 2 ")
-        == "updated: Board: W B _ ; failed door 2"
+        harness.scratchpad("write_replace", " Board: W B _ ; failed door 2 ") == "updated: Board: W B _ ; failed door 2"
     )
     assert harness.scratchpad("read") == "Board: W B _ ; failed door 2"
 

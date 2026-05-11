@@ -56,6 +56,40 @@ def _agent_harness(agent_config) -> str:
     return legacy_mapping.get((template, memory_mode), "reasoning_recent")
 
 
+def _agent_template(agent_config) -> str:
+    """Return legacy template name for result artifacts."""
+    if hasattr(agent_config, "action_template"):
+        return agent_config.action_template
+
+    harness_templates = {
+        "minimal": "stub.jinja",
+        "reasoning_recent": "reasoning.jinja",
+        "reasoning_full": "reasoning.jinja",
+        "memo_compact": "stateful_compact.jinja",
+        "hinted_compact": "stateful_compact_hints.jinja",
+        "tool_compact": "tool_augmented.jinja",
+        "tool_hinted": "tool_augmented_hints.jinja",
+        "planner": "planner.jinja",
+    }
+    return harness_templates.get(_agent_harness(agent_config), "reasoning.jinja")
+
+
+def _agent_memory_mode(agent_config) -> str:
+    """Return legacy memory mode for result artifacts."""
+    if hasattr(agent_config, "memory_mode"):
+        return agent_config.memory_mode
+
+    harness_memory_modes = {
+        "reasoning_full": "full_transcript",
+        "memo_compact": "compaction",
+        "hinted_compact": "compaction",
+        "tool_compact": "compaction",
+        "tool_hinted": "compaction",
+        "planner": "compaction",
+    }
+    return harness_memory_modes.get(_agent_harness(agent_config), "default")
+
+
 def _result_entry(
     quest: str,
     agent_config,
@@ -69,6 +103,8 @@ def _result_entry(
         "model": agent_config.model,
         "temperature": agent_config.temperature,
         "harness": _agent_harness(agent_config),
+        "template": _agent_template(agent_config),
+        "memory_mode": _agent_memory_mode(agent_config),
         "agent_id": agent_config.harness_id if hasattr(agent_config, "harness_id") else agent_config.agent_id,
         "attempt": attempt,
         "outcome": outcome,
