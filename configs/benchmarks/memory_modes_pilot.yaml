@@ -5,31 +5,27 @@ quests:
 agents:
 # Short-context reasoning - default memory (3 obs, 5 decisions)
 - model: openrouter:google/gemini-3-flash-preview
-  template: reasoning
+  harness: reasoning_recent
   temperature: 0.4
   runs: 3
-  memory_mode: default
 
 # Short-context reasoning - loop-aware template
 - model: openrouter:google/gemini-3-flash-preview
-  template: loop_aware_reasoning
+  harness: reasoning_recent
   temperature: 0.4
   runs: 3
-  memory_mode: default
 
 # Full-history reasoning
 - model: openrouter:google/gemini-3-flash-preview
-  template: reasoning
+  harness: reasoning_full
   temperature: 0.4
   runs: 3
-  memory_mode: full_transcript
 
 # Compact memory / memo (compact every 10 steps)
 - model: openrouter:google/gemini-3-flash-preview
-  template: reasoning
+  harness: memo_compact
   temperature: 0.4
   runs: 3
-  memory_mode: compaction
   compaction_interval: 10
 
 debug: false

@@ -18,22 +18,19 @@ quests:
 agents:
   # Gemini 3 Flash - full transcript
   - model: "openrouter:google/gemini-3-flash-preview"
-    template: reasoning
+    harness: reasoning_full
     temperature: 0.4
     runs: 3
-    memory_mode: full_transcript
   # GPT-5.4 Mini - full transcript
   - model: "openrouter:openai/gpt-5.4-mini"
-    template: reasoning
+    harness: reasoning_full
     temperature: 0.4
     runs: 3
-    memory_mode: full_transcript
   # DeepSeek V3.2 - full transcript
   - model: "openrouter:deepseek/deepseek-v3.2"
-    template: reasoning
+    harness: reasoning_full
     temperature: 0.4
     runs: 3
-    memory_mode: full_transcript
 debug: false
 quest_timeout: 600
 max_workers: 2

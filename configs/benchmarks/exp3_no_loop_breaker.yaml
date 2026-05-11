@@ -24,10 +24,9 @@ quests:
   - quests/sr_2_1_2121_eng/Sortirovka1_eng.qm
 agents:
   - model: "openrouter:google/gemini-3-flash-preview"
-    template: reasoning
+    harness: reasoning_full
     temperature: 0.4
     runs: 2
-    memory_mode: full_transcript
 debug: false
 quest_timeout: 600
 max_workers: 2

@@ -12,10 +12,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.core.logging import DEFAULT_DB_PATH
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.environments.state import QuestOutcome
+from llm_quest_benchmark.harnesses.factory import create_harness
 from llm_quest_benchmark.llm import tracing
 from llm_quest_benchmark.schemas.config import BenchmarkConfig
 
@@ -34,6 +34,28 @@ logging.getLogger("llm_quest_benchmark.executors.ts_bridge").setLevel(logging.WA
 logger = logging.getLogger(__name__)
 
 
+def _agent_harness(agent_config) -> str:
+    """Return harness name for new configs, with legacy AgentConfig fallback."""
+    if hasattr(agent_config, "harness"):
+        return agent_config.harness
+
+    template = getattr(agent_config, "action_template", "reasoning.jinja")
+    memory_mode = getattr(agent_config, "memory_mode", "default")
+    template = template.removesuffix(".jinja")
+    legacy_mapping = {
+        ("stub", "default"): "minimal",
+        ("reasoning", "default"): "reasoning_recent",
+        ("reasoning", "full_transcript"): "reasoning_full",
+        ("reasoning", "compaction"): "memo_compact",
+        ("stateful_compact", "compaction"): "memo_compact",
+        ("stateful_compact_hints", "compaction"): "hinted_compact",
+        ("tool_augmented", "compaction"): "tool_compact",
+        ("tool_augmented_hints", "compaction"): "tool_hinted",
+        ("planner", "compaction"): "planner",
+    }
+    return legacy_mapping.get((template, memory_mode), "reasoning_recent")
+
+
 def _result_entry(
     quest: str,
     agent_config,
@@ -46,8 +68,8 @@ def _result_entry(
         "quest": quest,
         "model": agent_config.model,
         "temperature": agent_config.temperature,
-        "template": agent_config.action_template,
-        "agent_id": agent_config.agent_id,
+        "harness": _agent_harness(agent_config),
+        "agent_id": agent_config.harness_id if hasattr(agent_config, "harness_id") else agent_config.agent_id,
         "attempt": attempt,
         "outcome": outcome,
         "reward": reward,
@@ -132,15 +154,14 @@ def _run_benchmark_task(task: dict[str, Any], result_queue) -> None:
             )
 
     try:
-        agent = create_agent(
+        agent = create_harness(
+            harness=_agent_harness(agent_config),
             model=agent_config.model,
             temperature=agent_config.temperature,
-            system_template=agent_config.system_template,
-            action_template=agent_config.action_template,
             skip_single=agent_config.skip_single,
             debug=agent_config.debug,
-            memory_mode=agent_config.memory_mode,
             compaction_interval=agent_config.compaction_interval,
+            system_template=agent_config.system_template,
         )
         outcome = run_quest_with_timeout(
             quest,
@@ -254,7 +275,7 @@ def _write_benchmark_artifacts(config: BenchmarkConfig, results: list[dict[str, 
                 "temperature": agent.temperature,
                 "runs": agent.runs,
                 "system_template": agent.system_template,
-                "action_template": agent.action_template,
+                "harness": _agent_harness(agent),
             }
             for agent in config.agents
         ],
@@ -281,7 +302,7 @@ def _write_benchmark_artifacts(config: BenchmarkConfig, results: list[dict[str, 
             {
                 "model": agent.model,
                 "system_template": agent.system_template,
-                "action_template": agent.action_template,
+                "harness": _agent_harness(agent),
                 "temperature": agent.temperature,
                 "runs": agent.runs,
                 "skip_single": agent.skip_single,
