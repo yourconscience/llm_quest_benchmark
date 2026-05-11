@@ -15,6 +15,26 @@ The runtime loop is:
 4. Apply the choice, log the step, and detect the terminal outcome.
 5. Persist run metrics and run summaries.
 
+## Harness Engineering Framing
+
+This project treats the **agent harness** as the primary experimental object.
+An agent harness is the wrapper around a model that controls what the model
+sees, what state is carried forward, what external tools are available, and how
+a raw completion is converted into a quest action. In this codebase, harnesses
+are not incidental plumbing: they are the independent variable.
+
+This follows the practical question raised by "How Much Heavy Lifting Can an
+Agent Harness Do?" (arXiv:2604.07236): how much performance comes from the
+surrounding scaffold rather than the base model alone? Space Rangers text
+quests are useful because they are long enough to stress memory, planning, and
+state tracking, but concrete enough to score with terminal success/failure
+outcomes.
+
+Closest text-game benchmarks such as TextQuests and TALE-Suite usually vary
+models under a mostly fixed evaluation scaffold. LLM Quest Benchmark can hold
+the model fixed and vary the harness to ask which prompt, memory, tool, and
+planning choices change behavior.
+
 ## Main Runtime Layers
 
 ### 1. Quest Engine Layer
@@ -107,3 +127,8 @@ and benchmark configuration parsing do not require API keys.
 | Tools + compact memory | `tool_compact` | `tool_augmented.jinja` | `CompactionMemory` | calculator, scratchpad, quest history | tool-select-then-act |
 | Tools + hints + compact memory | `tool_hinted` | `tool_augmented_hints.jinja` | `CompactionMemory` | calculator, scratchpad, quest history | tool-select-then-act |
 | Planner loop | `planner` | `planner.jinja` | `CompactionMemory` | none | plan-maintain-act |
+
+The harness names above are canonical snake_case identifiers used in YAML
+configs, the CLI, result artifacts, and documentation. Public labels can be
+friendlier, but experiment records should preserve the canonical names so runs
+remain comparable.

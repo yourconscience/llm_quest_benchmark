@@ -21,49 +21,45 @@ quests:
 agents:
   # 1. Minimal prompt
   - model: gpt-5-mini
-    template: stub
+    harness: minimal
     temperature: 0.4
     runs: 3
   # 2. Short-context reasoning
   - model: gpt-5-mini
-    template: reasoning
+    harness: reasoning_recent
     temperature: 0.4
     runs: 3
   # 3. Full-history reasoning
   - model: gpt-5-mini
-    template: reasoning
+    harness: reasoning_full
     temperature: 0.4
     runs: 3
-    memory_mode: full_transcript
   # 4. Compact memory / memo
   - model: gpt-5-mini
-    template: stateful_compact
+    harness: memo_compact
     temperature: 0.4
     runs: 3
-    memory_mode: compaction
     compaction_interval: 50
   # 5. Prompt hints
   - model: gpt-5-mini
-    template: light_hints
+    harness: hinted_compact
     temperature: 0.4
     runs: 3
   # 6. Tools + compact memory
   - model: gpt-5-mini
-    template: tool_augmented
+    harness: tool_compact
     temperature: 0.4
     runs: 3
-    memory_mode: compaction
     compaction_interval: 50
   # 7. Tools + hints + compact memory
   - model: gpt-5-mini
-    template: tool_augmented_hints
+    harness: tool_hinted
     temperature: 0.4
     runs: 3
-    memory_mode: compaction
     compaction_interval: 50
   # 8. Planner loop
   - model: gpt-5-mini
-    template: planner
+    harness: planner
     temperature: 0.4
     runs: 3
 debug: false

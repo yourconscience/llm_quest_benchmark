@@ -54,6 +54,24 @@ Use these labels for current public descriptions of benchmark harnesses:
 Older internal experiment labels are historical and should not be presented as
 the current public taxonomy.
 
+## Current Interpretation
+
+The strongest pattern so far is that bigger scaffolds are not automatically
+better. A concise 20-word memo produced a useful sweet spot: it improved over
+no-memo and full-transcript baselines, while longer or more structured memo
+variants regressed. The likely mechanism is selective pressure: the short memo
+forces the harness to preserve only state that matters for future decisions.
+
+Tools and hints showed a synergy effect. Prompt hints alone hurt, and tools
+alone were modest, but tools plus hints improved outcomes because the hints
+pointed the model toward quantities and quest mechanics while the calculator,
+scratchpad, and history search gave it ways to act on those signals.
+
+Verbosity is a recurring failure mode. Some newer or larger models timed out
+more often because they spent too much of the quest budget generating long step
+responses. For sequential decision tasks, a harness that elicits concise,
+actionable state updates can outperform one that invites broad reasoning.
+
 ## Implemented Runtime
 
 - Quest execution uses the TypeScript `space-rangers-quest` submodule through
