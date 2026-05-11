@@ -5,10 +5,10 @@ from typing import Any
 
 import pytest
 
-from llm_quest_benchmark.agents.agent_factory import create_agent
-from llm_quest_benchmark.constants import DEFAULT_QUEST, DEFAULT_TEMPLATE, SYSTEM_ROLE_TEMPLATE
+from llm_quest_benchmark.constants import DEFAULT_QUEST, SYSTEM_ROLE_TEMPLATE
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.environments.state import QuestOutcome
+from llm_quest_benchmark.harnesses.factory import create_harness
 
 TIMEOUT = 20  # 20s should be enough for test quests to complete
 
@@ -19,11 +19,11 @@ def test_quest_run_with_llm(caplog):
     """Test that quest runs with LLM agent and reaches a final state"""
     caplog.set_level(logging.DEBUG)  # Show all logs in test output
 
-    # Create LLM agent
-    agent = create_agent(
+    # Create LLM harness
+    agent = create_harness(
+        harness="minimal",
         model="random_choice",  # Use random for testing
         system_template=SYSTEM_ROLE_TEMPLATE,
-        action_template=DEFAULT_TEMPLATE,
         temperature=0.0,
         skip_single=False,
         debug=True,
@@ -68,7 +68,7 @@ def test_random_agent_on_test_quest(caplog):
     caplog.set_level(logging.DEBUG)  # Show all logs in test output
 
     # Create random agent
-    agent = create_agent("random_choice", skip_single=True, debug=True)
+    agent = create_harness("random_choice", skip_single=True, debug=True)
     assert agent is not None, "Failed to create random agent"
 
     # Mock callback for testing
