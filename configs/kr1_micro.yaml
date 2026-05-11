@@ -8,12 +8,12 @@ quests:
 agents:
   # Just 2 agents to validate the process
   - model: gpt-5-mini
-    template: reasoning.jinja
+    harness: reasoning_recent
     temperature: 0.7
     skip_single: true
     
   - model: gemini-2.5-flash
-    template: reasoning.jinja
+    harness: reasoning_recent
     temperature: 0.6
     skip_single: true
 

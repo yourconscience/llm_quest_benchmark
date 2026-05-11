@@ -5,27 +5,27 @@ quests:
 
 agents:
   - model: random_choice
-    template: reasoning.jinja
+    harness: reasoning_recent
     temperature: 0.0
     skip_single: true
 
   - model: gpt-5-mini
-    template: reasoning.jinja
+    harness: reasoning_recent
     temperature: 0.4
     skip_single: true
 
   - model: claude-sonnet-4-5
-    template: reasoning.jinja
+    harness: reasoning_recent
     temperature: 0.4
     skip_single: true
 
   - model: gemini-2.5-flash
-    template: reasoning.jinja
+    harness: reasoning_recent
     temperature: 0.4
     skip_single: true
 
   - model: deepseek-3.2-chat
-    template: reasoning.jinja
+    harness: reasoning_recent
     temperature: 0.4
     skip_single: true
 

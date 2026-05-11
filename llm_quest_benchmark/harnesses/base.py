@@ -328,8 +328,6 @@ class BaseHarness(QuestPlayer):
             self._observation_history.append(clean)
             if len(self._observation_history) > 20:
                 self._observation_history = self._observation_history[-20:]
-            if self.memory_module is not None:
-                self.memory_module.update({"observation": clean, "step": self._step_count + 1})
         return super().get_action(observation, choices)
 
     def on_game_start(self) -> None:

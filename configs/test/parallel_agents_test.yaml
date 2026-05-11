@@ -6,7 +6,7 @@ quests:
 agents:
   - model: random_choice
   - model: gpt-5-mini
-    template: reasoning.jinja
+    harness: reasoning_recent
 debug: true
 # No max_workers setting - we'll use one worker per agent
 output_dir: results/benchmarks

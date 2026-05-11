@@ -249,6 +249,9 @@ class CompactionMemory(MemoryModule):
     def _maybe_compact(self) -> None:
         if self._steps_since_compaction < self.compaction_interval:
             return
+        if self.llm_client is None:
+            # No LLM client available for compaction; skip silently
+            return
         transcript_text = self._format_transcript_for_compaction()
         if not transcript_text:
             return
@@ -269,9 +272,7 @@ class CompactionMemory(MemoryModule):
             "Write a concise summary in plain text, max 300 words."
         )
 
-        summary = ""
-        if self.llm_client is not None:
-            summary = (self.llm_client.get_completion("\n".join(prompt_parts)) or "").strip()
+        summary = (self.llm_client.get_completion("\n".join(prompt_parts)) or "").strip()
         if summary:
             self._compaction_summary = summary
             self._transcript = []
