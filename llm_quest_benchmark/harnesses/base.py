@@ -1,23 +1,249 @@
 """Base harness class for quest benchmark experiments."""
 
 import hashlib
+import json
 import logging
 import re
 from abc import abstractmethod
 from typing import Any
 
+from json_repair import repair_json
+
 from llm_quest_benchmark.agents.base import QuestPlayer
-from llm_quest_benchmark.agents.llm_agent import (
-    RISKY_CHOICE_KEYWORDS,
-    SAFE_CHOICE_KEYWORDS,
-    _is_numeric_raw_reasoning,
-    _raw_reasoning_fallback,
-    parse_llm_response,
-)
 from llm_quest_benchmark.constants import DEFAULT_TEMPLATE, normalize_template_name
 from llm_quest_benchmark.llm.client import get_llm_client, parse_model_name
 from llm_quest_benchmark.llm.prompt import PromptRenderer
 from llm_quest_benchmark.schemas.response import LLMResponse
+
+RISKY_CHOICE_KEYWORDS = (
+    "улететь",
+    "сдаться",
+    "отказ",
+    "провал",
+    "убежать",
+    "surrender",
+    "give up",
+)
+
+SAFE_CHOICE_KEYWORDS = (
+    "пройти мимо",
+    "избежать",
+    "подготов",
+    "библиотек",
+    "изуч",
+    "wait",
+    "avoid",
+    "study",
+)
+
+
+def _parse_json_response(
+    response: str,
+    debug: bool = False,
+    logger: logging.Logger | None = None,
+) -> tuple[dict[str, Any] | None, str | None]:
+    """Try to parse response as JSON, with repair attempt if needed."""
+    cleaned_response = (response or "").strip()
+    if not cleaned_response:
+        return None, None
+
+    try:
+        if "```json" in cleaned_response:
+            start = cleaned_response.find("```json") + 7
+            end = cleaned_response.find("```", start)
+            if end > start:
+                json_str = cleaned_response[start:end].strip()
+                if debug and logger:
+                    logger.debug("Extracted JSON: %s", json_str)
+                result = json.loads(json_str)
+                if debug and logger:
+                    logger.debug("Parsed JSON: %s", result)
+                return result, "json_fenced"
+
+        embedded_json = re.search(r"\{[\s\S]*\}", cleaned_response)
+        if embedded_json:
+            candidate = embedded_json.group(0).strip()
+            if candidate and candidate != cleaned_response:
+                try:
+                    result = json.loads(candidate)
+                    if debug and logger:
+                        logger.debug("Parsed embedded JSON: %s", result)
+                    return result, "json_embedded"
+                except json.JSONDecodeError:
+                    pass
+
+        result = json.loads(cleaned_response)
+        if debug and logger:
+            logger.debug("Direct JSON parse successful: %s", result)
+        return result, "json_direct"
+    except json.JSONDecodeError:
+        if debug and logger:
+            logger.debug("Initial JSON parse failed, attempting repair")
+        try:
+            repaired = repair_json(cleaned_response)
+            if debug and logger:
+                logger.debug("Repaired JSON: %s", repaired)
+            result = json.loads(repaired)
+            if debug and logger:
+                logger.debug("Parse of repaired JSON successful: %s", result)
+            return result, "json_repaired"
+        except Exception as exc:
+            if debug and logger:
+                logger.error("JSON repair failed: %s", exc)
+            return None, None
+
+
+def _validate_action_number(
+    action: int,
+    num_choices: int,
+    debug: bool = False,
+    logger: logging.Logger | None = None,
+) -> bool:
+    """Validate that action number is within valid range."""
+    if 1 <= action <= num_choices:
+        return True
+    if debug and logger:
+        logger.error("Action number %s out of range [1, %s]", action, num_choices)
+    return False
+
+
+def _extract_action_from_text(response: str, num_choices: int) -> int | None:
+    """Extract a candidate action from free-form text."""
+    for match in re.finditer(r"\b(\d+)\b", response):
+        action = int(match.group(1))
+        if 1 <= action <= num_choices:
+            return action
+    return None
+
+
+def _extract_field_from_text(response: str, field: str) -> str | None:
+    """Best-effort extraction of analysis/reasoning from loosely formatted output."""
+    if not response:
+        return None
+
+    json_pattern = re.compile(
+        rf"""['"]{re.escape(field)}['"]\s*:\s*['"](?P<value>.*?)['"]""",
+        re.IGNORECASE | re.DOTALL,
+    )
+    match = json_pattern.search(response)
+    if match:
+        value = " ".join(match.group("value").strip().split())
+        if value:
+            return value
+
+    partial_json_pattern = re.compile(
+        rf"""['"]{re.escape(field)}['"]\s*:\s*['"](?P<value>[^"\n\r]+)""",
+        re.IGNORECASE,
+    )
+    match = partial_json_pattern.search(response)
+    if match:
+        value = " ".join(match.group("value").strip().split())
+        if value:
+            return value
+
+    label_pattern = re.compile(
+        rf"""(?im)^\s*{re.escape(field)}\s*[:\-]\s*(?P<value>.+?)\s*$""",
+    )
+    match = label_pattern.search(response)
+    if match:
+        value = " ".join(match.group("value").strip().split())
+        if value:
+            return value
+
+    return None
+
+
+def _raw_reasoning_fallback(response: str) -> str | None:
+    compact = " ".join((response or "").strip().split())
+    if not compact:
+        return None
+    if len(compact) > 240:
+        compact = compact[:237] + "..."
+    return f"raw_response: {compact}"
+
+
+def _is_numeric_raw_reasoning(reasoning: str | None) -> bool:
+    if not reasoning or not reasoning.startswith("raw_response:"):
+        return False
+    payload = reasoning.split(":", 1)[1].strip()
+    return payload.isdigit()
+
+
+def parse_llm_response(
+    response: str,
+    num_choices: int,
+    debug: bool = False,
+    logger: logging.Logger | None = None,
+) -> LLMResponse:
+    """Parse an LLM response and return a structured response object."""
+    if debug and logger:
+        logger.debug("Raw LLM response: %s", response)
+
+    extracted_analysis = _extract_field_from_text(response, "analysis")
+    extracted_reasoning = _extract_field_from_text(response, "reasoning")
+    raw_reasoning = _raw_reasoning_fallback(response)
+
+    response_json, json_parse_mode = _parse_json_response(response, debug, logger)
+    if response_json and isinstance(response_json, dict):
+        analysis = response_json.get("analysis") or extracted_analysis
+        reasoning = response_json.get("reasoning") or response_json.get("thinking") or extracted_reasoning
+        if not reasoning and analysis:
+            reasoning = analysis
+        if not analysis and not reasoning:
+            reasoning = raw_reasoning
+
+        memo_raw = response_json.get("memo")
+        memo = str(memo_raw) if memo_raw is not None else None
+        action_value = response_json.get("action") or response_json.get("result") or response_json.get("choice")
+        if action_value is not None:
+            try:
+                action = int(action_value)
+                if _validate_action_number(action, num_choices, debug, logger):
+                    return LLMResponse(
+                        action=action,
+                        reasoning=reasoning,
+                        analysis=analysis,
+                        memo=memo,
+                        is_default=False,
+                        parse_mode=json_parse_mode or "json",
+                    )
+            except (ValueError, TypeError):
+                if debug and logger:
+                    logger.error("Invalid action value in JSON: %s", action_value)
+
+    try:
+        action = int(response.strip())
+        if _validate_action_number(action, num_choices, debug, logger):
+            return LLMResponse(
+                action=action,
+                reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
+                analysis=extracted_analysis,
+                is_default=False,
+                parse_mode="number_only",
+            )
+    except ValueError:
+        if debug and logger:
+            logger.error("Could not parse response as number: %s", response)
+
+    extracted_action = _extract_action_from_text(response, num_choices)
+    if extracted_action is not None:
+        return LLMResponse(
+            action=extracted_action,
+            reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
+            analysis=extracted_analysis,
+            is_default=False,
+            parse_mode="number_extracted",
+        )
+
+    if debug and logger:
+        logger.error("Error during response parsing, defaulting to first choice. Response: %s...", response[:100])
+    return LLMResponse(
+        action=1,
+        reasoning=extracted_reasoning or extracted_analysis or raw_reasoning,
+        analysis=extracted_analysis,
+        is_default=True,
+        parse_mode="default_first",
+    )
 
 
 class BaseHarness(QuestPlayer):

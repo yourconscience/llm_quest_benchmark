@@ -2,9 +2,8 @@
 
 from typing import Any
 
-from llm_quest_benchmark.agents.llm_agent import _parse_json_response
 from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_TEMPERATURE, SYSTEM_ROLE_TEMPLATE
-from llm_quest_benchmark.harnesses.base import BaseHarness
+from llm_quest_benchmark.harnesses.base import BaseHarness, _parse_json_response
 from llm_quest_benchmark.harnesses.memory import CompactionMemory
 from llm_quest_benchmark.harnesses.tools import QuestHistoryTool, Scratchpad, calculator
 from llm_quest_benchmark.schemas.response import LLMResponse
