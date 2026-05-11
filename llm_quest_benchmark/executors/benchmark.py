@@ -49,6 +49,11 @@ def _agent_model(agent_config) -> str:
     return agent_config.model
 
 
+def _agent_id(agent_config) -> str:
+    """Return the stable result identifier for legacy and harness configs."""
+    return getattr(agent_config, "harness_id", None) or agent_config.agent_id
+
+
 def _agent_template(agent_config) -> str:
     """Return legacy template name for result artifacts."""
     if hasattr(agent_config, "action_template"):
@@ -106,7 +111,7 @@ def _result_entry(
         "harness": _agent_harness(agent_config),
         "template": _agent_template(agent_config),
         "memory_mode": _agent_memory_mode(agent_config),
-        "agent_id": agent_config.harness_id if hasattr(agent_config, "harness_id") else agent_config.agent_id,
+        "agent_id": _agent_id(agent_config),
         "attempt": attempt,
         "outcome": outcome,
         "reward": reward,
@@ -137,7 +142,7 @@ def _mark_run_timeout(run_id: int | None, quest: str, agent_config, benchmark_id
                 WHERE id = ?
                 """,
                 (
-                    agent_config.agent_id,
+                    _agent_id(agent_config),
                     agent_config_json,
                     benchmark_id,
                     QuestOutcome.TIMEOUT.name,
@@ -160,7 +165,7 @@ def _mark_run_timeout(run_id: int | None, quest: str, agent_config, benchmark_id
                     Path(quest).stem,
                     end_time,
                     end_time,
-                    agent_config.agent_id,
+                    _agent_id(agent_config),
                     agent_config_json,
                     QuestOutcome.TIMEOUT.name,
                     0.0,
@@ -404,7 +409,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
 
                 logger.info(
                     "Queued agent %s quest %s (attempt %s/%s)",
-                    agent_config.agent_id,
+                    _agent_id(agent_config),
                     quest_name,
                     attempt,
                     agent_config.runs,
@@ -436,7 +441,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
             }
             logger.info(
                 "Agent %s running quest %s (attempt %s/%s)",
-                agent_config.agent_id,
+                _agent_id(agent_config),
                 task["quest_name"],
                 task["attempt"],
                 agent_config.runs,
@@ -449,7 +454,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                     "total_runs": total_runs,
                     "quest": task["quest"],
                     "quest_name": task["quest_name"],
-                    "agent_id": agent_config.agent_id,
+                    "agent_id": _agent_id(agent_config),
                     "model": agent_config.model,
                     "attempt": task["attempt"],
                 },
@@ -484,7 +489,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                             "total_runs": total_runs,
                             "quest": task["quest"],
                             "quest_name": task["quest_name"],
-                            "agent_id": agent_config.agent_id,
+                            "agent_id": _agent_id(agent_config),
                             "model": agent_config.model,
                             "attempt": task["attempt"],
                             "outcome": result["outcome"],
@@ -529,7 +534,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                         "total_runs": total_runs,
                         "quest": task["quest"],
                         "quest_name": task["quest_name"],
-                        "agent_id": agent_config.agent_id,
+                        "agent_id": _agent_id(agent_config),
                         "model": agent_config.model,
                         "attempt": task["attempt"],
                         "outcome": QuestOutcome.TIMEOUT.name,

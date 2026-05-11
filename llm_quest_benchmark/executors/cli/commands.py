@@ -8,7 +8,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import click
 from dotenv import load_dotenv
 
 # Initialize quest registry early
@@ -353,7 +352,6 @@ def run(
         "reasoning_recent",
         "--harness",
         help="Harness to use for quest decisions.",
-        click_type=click.Choice(HARNESS_CHOICES),
     ),
     compaction_interval: int = typer.Option(50, help="Advanced override for compaction interval."),
     timeout: int = typer.Option(60, help="Timeout in seconds for run (0 for no timeout)."),

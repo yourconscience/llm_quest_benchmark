@@ -111,6 +111,11 @@ class HarnessConfig:
         ):
             valid = [*sorted(HARNESS_REGISTRY), *SPECIAL_HARNESSES]
             raise ValueError(f"Invalid harness: {self.harness}. Supported harnesses: {valid}")
+        if self.model not in ("human",) and not is_random_choice_harness(self.model):
+            from llm_quest_benchmark.llm.client import is_supported_model_name
+
+            if not is_supported_model_name(self.model):
+                raise ValueError(f"Invalid model: {self.model}. Supported models: {MODEL_CHOICES}")
         if not (0.0 <= self.temperature <= 2.0):
             raise ValueError(f"Temperature must be between 0.0 and 2.0, got {self.temperature}")
         if self.runs < 1:

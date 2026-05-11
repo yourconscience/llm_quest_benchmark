@@ -164,11 +164,11 @@ class PlannerHarness(BaseHarness):
             parsed_response.total_tokens = total_usage["total_tokens"]
             parsed_response.estimated_cost_usd = total_usage["estimated_cost_usd"]
 
+            if parsed_response.action < 1 or parsed_response.action > len(choices):
+                parsed_response.action = 1
             self.history.append(parsed_response)
             self._last_response = parsed_response
             self._remember_decision(state, choices, state_signature, parsed_response)
-            if parsed_response.action < 1 or parsed_response.action > len(choices):
-                parsed_response.action = 1
             return parsed_response.action
         except Exception as exc:
             self.logger.error("Planner harness error during LLM call: %s", exc)

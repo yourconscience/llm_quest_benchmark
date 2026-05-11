@@ -39,11 +39,11 @@ class MinimalHarness(BaseHarness):
             state_signature = self._state_signature(observation, choices)
             prompt = self._format_prompt(self._build_contextual_state(observation), choices)
             parsed_response = self._parse_with_retries(prompt, observation, choices)
+            if parsed_response.action < 1 or parsed_response.action > len(choices):
+                parsed_response.action = 1
             self.history.append(parsed_response)
             self._last_response = parsed_response
             self._remember_decision(observation, choices, state_signature, parsed_response)
-            if parsed_response.action < 1 or parsed_response.action > len(choices):
-                parsed_response.action = 1
             return parsed_response.action
         except Exception as exc:
             self.logger.error("Harness error during LLM call: %s", exc)

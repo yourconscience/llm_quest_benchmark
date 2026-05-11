@@ -160,12 +160,14 @@ class QuestHistoryTool:
         scored.sort(key=lambda item: (item[0], item[1].get("step", 0)), reverse=True)
         best = [entry for score, entry in scored if score > 0][: self.history_window]
         if not best:
-            best = [entry for _, entry in scored[-self.history_window :]]
+            best = [entry for _, entry in scored[: self.history_window]]
 
         lines = []
         for entry in best:
+            choices = entry.get("choices", [])
+            choices_text = choices if isinstance(choices, str) else "; ".join(choices)
             lines.append(
-                f"Step {entry['step']}: obs={entry['observation']} | "
-                f"choices={'; '.join(entry['choices'])} | picked={entry.get('selected_choice', 'n/a')}"
+                f"Step {entry.get('step', '?')}: obs={entry.get('observation', '')} | "
+                f"choices={choices_text} | picked={entry.get('selected_choice', 'n/a')}"
             )
         return "\n".join(lines)

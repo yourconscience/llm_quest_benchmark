@@ -27,7 +27,11 @@ class MemoCompactHarness(MinimalHarness):
             temperature=temperature,
             skip_single=skip_single,
             debug=debug,
-            memory_module=memory_module or CompactionMemory(compaction_interval=compaction_interval),
+            memory_module=(
+                memory_module
+                if memory_module is not None
+                else CompactionMemory(compaction_interval=compaction_interval)
+            ),
             **kwargs,
         )
         self._memory_mode = "compaction"

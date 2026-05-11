@@ -251,9 +251,11 @@ class CompactionMemory(MemoryModule):
             return
         if self.llm_client is None:
             # No LLM client available for compaction; skip silently
+            self._steps_since_compaction = 0
             return
         transcript_text = self._format_transcript_for_compaction()
         if not transcript_text:
+            self._steps_since_compaction = 0
             return
 
         prompt_parts = ["You are summarizing an agent's progress through a text quest."]
@@ -272,10 +274,16 @@ class CompactionMemory(MemoryModule):
             "Write a concise summary in plain text, max 300 words."
         )
 
-        summary = (self.llm_client.get_completion("\n".join(prompt_parts)) or "").strip()
+        try:
+            summary = (self.llm_client.get_completion("\n".join(prompt_parts)) or "").strip()
+        except Exception:
+            self._steps_since_compaction = 0
+            return
         if summary:
             self._compaction_summary = summary
             self._transcript = []
+            self._steps_since_compaction = 0
+        else:
             self._steps_since_compaction = 0
 
     def _format_transcript_for_compaction(self) -> str:
