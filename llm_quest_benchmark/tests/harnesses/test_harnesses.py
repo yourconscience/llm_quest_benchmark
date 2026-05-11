@@ -3,7 +3,14 @@
 from unittest.mock import Mock
 
 from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY, create_harness
-from llm_quest_benchmark.harnesses.memo import HintedCompactHarness, MemoCompactHarness
+from llm_quest_benchmark.harnesses.memo import (
+    CompactionNoMemoHarness,
+    HintedCompactHarness,
+    MemoCompactHarness,
+    MemoCotHarness,
+    MemoExtendedHarness,
+    MemoStructuredHarness,
+)
 from llm_quest_benchmark.harnesses.memory import CompactionMemory, DefaultMemory, FullTranscriptMemory
 from llm_quest_benchmark.harnesses.minimal import MinimalHarness
 from llm_quest_benchmark.harnesses.planner import PlannerHarness
@@ -19,6 +26,10 @@ HARNESS_SPECS = {
     "tool_compact": (ToolCompactHarness, "tool_augmented.jinja", CompactionMemory),
     "tool_hinted": (ToolHintedHarness, "tool_augmented_hints.jinja", CompactionMemory),
     "planner": (PlannerHarness, "planner.jinja", CompactionMemory),
+    "compaction_no_memo": (CompactionNoMemoHarness, "reasoning.jinja", CompactionMemory),
+    "memo_cot": (MemoCotHarness, "memo_cot.jinja", CompactionMemory),
+    "memo_extended": (MemoExtendedHarness, "memo_extended.jinja", CompactionMemory),
+    "memo_structured": (MemoStructuredHarness, "memo_structured.jinja", CompactionMemory),
 }
 
 
@@ -65,6 +76,13 @@ def test_planner_harness_configuration():
     assert_harness_configuration("planner")
 
 
+def test_exp4_retired_harness_configuration():
+    assert_harness_configuration("compaction_no_memo")
+    assert_harness_configuration("memo_cot")
+    assert_harness_configuration("memo_extended")
+    assert_harness_configuration("memo_structured")
+
+
 def test_all_registry_harnesses_have_configuration_specs():
     assert set(HARNESS_REGISTRY) == set(HARNESS_SPECS)
 
@@ -99,6 +117,29 @@ def test_memo_compact_mocked_llm_returns_action_and_reuses_memo_context():
     assert harness.get_last_response().memo == "Paid fuel merchant"
     second_prompt = mocked_llm.get_completion.call_args_list[1].args[0]
     assert "Merchant needs fuel payment" in second_prompt
+
+
+def test_compaction_memory_receives_existing_llm_client():
+    harness = MemoCompactHarness(model_name="gpt-5-mini", compaction_interval=1)
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = [
+        '{"memo":"Paid fuel merchant","analysis":"pay first","reasoning":"quest clue","result":2}',
+        "Summary: paid the fuel merchant and should keep receipt.",
+    ]
+    mocked_llm.get_last_usage.return_value = {
+        "prompt_tokens": 10,
+        "completion_tokens": 5,
+        "total_tokens": 15,
+        "estimated_cost_usd": 0.0,
+    }
+    harness.llm = mocked_llm
+
+    action = harness.get_action("A merchant offers fuel for a fee.", [{"text": "Leave"}, {"text": "Pay"}])
+
+    assert action == 2
+    assert harness.memory_module.llm_client is mocked_llm
+    assert harness.memory_module._compaction_summary == "Summary: paid the fuel merchant and should keep receipt."
+    assert harness._steps_since_compaction == 0
 
 
 def test_planner_harness_first_turn_generates_plan_then_acts():

@@ -24,7 +24,7 @@ quests:
   - quests/sr_2_1_2121_eng/Sortirovka1_eng.qm
 agents:
   - model: "openrouter:google/gemini-3-flash-preview"
-    harness: memo_compact
+    harness: memo_extended
     temperature: 0.4
     runs: 2
     compaction_interval: 50

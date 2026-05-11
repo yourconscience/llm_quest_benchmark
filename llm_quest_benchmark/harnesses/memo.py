@@ -60,3 +60,39 @@ class HintedCompactHarness(MemoCompactHarness):
             memory_module=memory_module,
             **kwargs,
         )
+
+
+class CompactionNoMemoHarness(MemoCompactHarness):
+    """Retired Exp 4 ablation: compacted transcript without memo-oriented prompting."""
+
+    harness_name = "compaction_no_memo"
+
+    def __init__(self, *args, action_template: str = "reasoning.jinja", **kwargs):
+        super().__init__(*args, action_template=action_template, **kwargs)
+
+
+class MemoExtendedHarness(MemoCompactHarness):
+    """Retired Exp 4 variant with a larger generic memo field."""
+
+    harness_name = "memo_extended"
+
+    def __init__(self, *args, action_template: str = "memo_extended.jinja", **kwargs):
+        super().__init__(*args, action_template=action_template, **kwargs)
+
+
+class MemoStructuredHarness(MemoCompactHarness):
+    """Retired Exp 4 variant with structured memo prompting."""
+
+    harness_name = "memo_structured"
+
+    def __init__(self, *args, action_template: str = "memo_structured.jinja", **kwargs):
+        super().__init__(*args, action_template=action_template, **kwargs)
+
+
+class MemoCotHarness(MemoCompactHarness):
+    """Retired Exp 4 variant with scratchpad-style memo prompting."""
+
+    harness_name = "memo_cot"
+
+    def __init__(self, *args, action_template: str = "memo_cot.jinja", **kwargs):
+        super().__init__(*args, action_template=action_template, **kwargs)

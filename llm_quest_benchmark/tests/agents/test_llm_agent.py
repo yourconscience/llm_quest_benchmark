@@ -90,6 +90,13 @@ def test_non_gemini_prompt_uses_selected_template():
     assert "IMPORTANT: Please respond with ONLY a single number" in prompt
 
 
+def test_formatted_user_prompt_does_not_duplicate_system_prompt():
+    harness = MinimalHarness(model_name="gpt-5-mini", action_template="stub.jinja")
+    prompt = harness._format_prompt("state", [{"text": "A"}, {"text": "B"}])
+
+    assert "experienced interactive fiction player" not in prompt
+
+
 def test_template_alias_without_suffix_is_supported():
     harness = MinimalHarness(model_name="gpt-5-mini", action_template="reasoning")
     prompt = harness._format_prompt("state", [{"text": "A"}, {"text": "B"}])

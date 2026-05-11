@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 from llm_quest_benchmark.executors.benchmark import run_benchmark
-from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
+from llm_quest_benchmark.schemas.config import BenchmarkConfig, HarnessConfig
 
 
 def create_test_config():
@@ -19,7 +19,7 @@ def create_test_config():
     return {
         "name": "Directory Benchmark Test",
         "quests": ["quests/sr_2_1_2121_eng"],
-        "agents": [{"model": "random_choice", "skip_single": True, "temperature": 0.7}],
+        "agents": [{"model": "random_choice", "harness": "random_choice", "skip_single": True, "temperature": 0.7}],
         "quest_timeout": 4,  # Keep runtime below pytest global timeout
         "max_quests": 1,
         "debug": True,
@@ -34,8 +34,8 @@ def test_benchmark_with_directory():
     config_dict = create_test_config()
     logger.info(f"Created test config: {json.dumps(config_dict, indent=2)}")
 
-    # Convert agent dictionaries to AgentConfig objects first
-    config_dict["agents"] = [AgentConfig(**agent_dict) for agent_dict in config_dict["agents"]]
+    # Convert agent dictionaries to HarnessConfig objects first
+    config_dict["agents"] = [HarnessConfig(**agent_dict) for agent_dict in config_dict["agents"]]
     config = BenchmarkConfig(**config_dict)
     logger.info("Config validation passed")
 

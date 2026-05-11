@@ -68,6 +68,13 @@ def test_harness_config_allows_seeded_random_choice_harness():
     assert config.harness == "random_choice_123"
 
 
+def test_harness_config_allows_retired_exp4_aliases():
+    for harness_name in ("compaction_no_memo", "memo_cot", "memo_extended", "memo_structured"):
+        config = HarnessConfig(harness=harness_name, model="gpt-5-mini")
+
+        assert config.harness == harness_name
+
+
 def test_harness_config_rejects_old_template_key():
     with pytest.raises(ValueError, match="Use harness: key instead of template:"):
         HarnessConfig(model="gpt-5-mini", template="reasoning.jinja")

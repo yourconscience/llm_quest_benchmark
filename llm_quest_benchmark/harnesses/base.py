@@ -303,6 +303,8 @@ class BaseHarness(QuestPlayer):
                 system_prompt=self.prompt_renderer.render_system_prompt(),
                 temperature=self.temperature,
             )
+        if self.memory_module is not None and hasattr(self.memory_module, "llm_client"):
+            self.memory_module.llm_client = self.llm
 
     @abstractmethod
     def _get_action_impl(self, observation, choices) -> int:
@@ -433,22 +435,13 @@ class BaseHarness(QuestPlayer):
             )
 
     def _format_prompt(self, observation, choices, memo=None, context=None) -> str:
-        """Render system and action Jinja templates for the current decision."""
-        system_prompt = self.prompt_renderer.render_system_prompt(
-            observation=observation,
-            choices=choices,
-            memo=memo,
-            context=context,
-        ).strip()
-        action_prompt = self.prompt_renderer.action_template.render(
+        """Render the action Jinja template for the current decision."""
+        return self.prompt_renderer.action_template.render(
             observation=observation,
             choices=[{"text": c.get("text", "")} for c in choices],
             memo=memo,
             context=context,
         ).strip()
-        if system_prompt:
-            return f"{system_prompt}\n\n{action_prompt}".strip()
-        return action_prompt
 
     def _parse_llm_response(self, response, num_choices) -> LLMResponse:
         """Parse an LLM response into a structured response object."""

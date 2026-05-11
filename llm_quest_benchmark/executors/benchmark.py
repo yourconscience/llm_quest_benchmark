@@ -35,25 +35,8 @@ logger = logging.getLogger(__name__)
 
 
 def _agent_harness(agent_config) -> str:
-    """Return harness name for new configs, with legacy AgentConfig fallback."""
-    if hasattr(agent_config, "harness"):
-        return agent_config.harness
-
-    template = getattr(agent_config, "action_template", "reasoning.jinja")
-    memory_mode = getattr(agent_config, "memory_mode", "default")
-    template = template.removesuffix(".jinja")
-    legacy_mapping = {
-        ("stub", "default"): "minimal",
-        ("reasoning", "default"): "reasoning_recent",
-        ("reasoning", "full_transcript"): "reasoning_full",
-        ("reasoning", "compaction"): "memo_compact",
-        ("stateful_compact", "compaction"): "memo_compact",
-        ("stateful_compact_hints", "compaction"): "hinted_compact",
-        ("tool_augmented", "compaction"): "tool_compact",
-        ("tool_augmented_hints", "compaction"): "tool_hinted",
-        ("planner", "compaction"): "planner",
-    }
-    return legacy_mapping.get((template, memory_mode), "reasoning_recent")
+    """Return the configured harness name."""
+    return agent_config.harness
 
 
 def _agent_template(agent_config) -> str:
@@ -70,6 +53,10 @@ def _agent_template(agent_config) -> str:
         "tool_compact": "tool_augmented.jinja",
         "tool_hinted": "tool_augmented_hints.jinja",
         "planner": "planner.jinja",
+        "compaction_no_memo": "reasoning.jinja",
+        "memo_cot": "memo_cot.jinja",
+        "memo_extended": "memo_extended.jinja",
+        "memo_structured": "memo_structured.jinja",
     }
     return harness_templates.get(_agent_harness(agent_config), "reasoning.jinja")
 
@@ -86,6 +73,10 @@ def _agent_memory_mode(agent_config) -> str:
         "tool_compact": "compaction",
         "tool_hinted": "compaction",
         "planner": "compaction",
+        "compaction_no_memo": "compaction",
+        "memo_cot": "compaction",
+        "memo_extended": "compaction",
+        "memo_structured": "compaction",
     }
     return harness_memory_modes.get(_agent_harness(agent_config), "default")
 

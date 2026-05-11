@@ -4,7 +4,14 @@ from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.agents.human_player import HumanPlayer
 from llm_quest_benchmark.agents.random_agent import RandomAgent
 from llm_quest_benchmark.constants import DEFAULT_MODEL
-from llm_quest_benchmark.harnesses.memo import HintedCompactHarness, MemoCompactHarness
+from llm_quest_benchmark.harnesses.memo import (
+    CompactionNoMemoHarness,
+    HintedCompactHarness,
+    MemoCompactHarness,
+    MemoCotHarness,
+    MemoExtendedHarness,
+    MemoStructuredHarness,
+)
 from llm_quest_benchmark.harnesses.minimal import MinimalHarness
 from llm_quest_benchmark.harnesses.planner import PlannerHarness
 from llm_quest_benchmark.harnesses.reasoning import ReasoningFullTranscriptHarness, ReasoningRecentHarness
@@ -19,6 +26,10 @@ HARNESS_REGISTRY = {
     "tool_compact": ToolCompactHarness,
     "tool_hinted": ToolHintedHarness,
     "planner": PlannerHarness,
+    "compaction_no_memo": CompactionNoMemoHarness,
+    "memo_cot": MemoCotHarness,
+    "memo_extended": MemoExtendedHarness,
+    "memo_structured": MemoStructuredHarness,
 }
 
 SPECIAL_HARNESSES = ("human", "random_choice", "random_choice_<seed>")
