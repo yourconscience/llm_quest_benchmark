@@ -7,11 +7,10 @@ __all__ = [
     "QMBridgeState",
     "BenchmarkConfig",
     "HarnessConfig",
-    "AgentConfig",
 ]
 
 # Import directly from the schema modules using relative imports
 from .bridge import QMBridgeState
-from .config import AgentConfig, BenchmarkConfig, HarnessConfig
+from .config import BenchmarkConfig, HarnessConfig
 from .response import LLMResponse
 from .state import AgentState, QMState
