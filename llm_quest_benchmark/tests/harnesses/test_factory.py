@@ -62,6 +62,13 @@ def test_harness_config_stable_harness_id():
     assert config.harness_id == HarnessConfig(harness="memo_compact", model="gpt-5-mini").harness_id
 
 
+def test_harness_config_system_template_affects_harness_id():
+    first = HarnessConfig(harness="memo_compact", model="gpt-5-mini", system_template="system_role.jinja")
+    second = HarnessConfig(harness="memo_compact", model="gpt-5-mini", system_template="system_role_risk.jinja")
+
+    assert first.harness_id != second.harness_id
+
+
 def test_harness_config_allows_seeded_random_choice_harness():
     config = HarnessConfig(harness="random_choice_123", model="gpt-5-mini")
 

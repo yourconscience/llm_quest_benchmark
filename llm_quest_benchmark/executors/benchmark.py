@@ -39,6 +39,16 @@ def _agent_harness(agent_config) -> str:
     return agent_config.harness
 
 
+def _agent_model(agent_config) -> str:
+    """Return the result model label for the executed harness."""
+    harness = _agent_harness(agent_config)
+    if harness == "human":
+        return "human"
+    if harness.startswith("random_choice"):
+        return "random_policy"
+    return agent_config.model
+
+
 def _agent_template(agent_config) -> str:
     """Return legacy template name for result artifacts."""
     if hasattr(agent_config, "action_template"):
@@ -91,7 +101,7 @@ def _result_entry(
 ) -> dict[str, Any]:
     return {
         "quest": quest,
-        "model": agent_config.model,
+        "model": _agent_model(agent_config),
         "temperature": agent_config.temperature,
         "harness": _agent_harness(agent_config),
         "template": _agent_template(agent_config),

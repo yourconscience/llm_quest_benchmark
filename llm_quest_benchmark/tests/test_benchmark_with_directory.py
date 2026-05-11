@@ -6,12 +6,12 @@ from pathlib import Path
 
 import pytest
 
+from llm_quest_benchmark.executors.benchmark import _result_entry, run_benchmark
+from llm_quest_benchmark.schemas.config import BenchmarkConfig, HarnessConfig
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
-
-from llm_quest_benchmark.executors.benchmark import run_benchmark
-from llm_quest_benchmark.schemas.config import BenchmarkConfig, HarnessConfig
 
 
 def create_test_config():
@@ -25,6 +25,26 @@ def create_test_config():
         "debug": True,
         "output_dir": "results/benchmarks",
     }
+
+
+def test_result_entry_logs_random_harness_model_as_random_policy():
+    """Random harness results should not be attributed to the default LLM model."""
+    agent_config = HarnessConfig(harness="random_choice", model="gpt-5-mini")
+
+    result = _result_entry("quests/Boat.qm", agent_config, 1, "FAILURE")
+
+    assert result["model"] == "random_policy"
+    assert result["harness"] == "random_choice"
+
+
+def test_result_entry_logs_human_harness_model_as_human():
+    """Human harness results should not be attributed to the default LLM model."""
+    agent_config = HarnessConfig(harness="human", model="gpt-5-mini")
+
+    result = _result_entry("quests/Boat.qm", agent_config, 1, "FAILURE")
+
+    assert result["model"] == "human"
+    assert result["harness"] == "human"
 
 
 @pytest.mark.skipif(not Path("quests/sr_2_1_2121_eng").exists(), reason="Quest files not downloaded")

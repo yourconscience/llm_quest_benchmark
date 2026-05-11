@@ -83,7 +83,7 @@ def test_benchmark_e2e(caplog, tmp_path):
         # Check first result
         result = results[0]
         assert result["quest"] == str(quest_path)
-        assert result["model"] == "random_choice"
+        assert result["model"] == "random_policy"
         assert result["temperature"] == 0.0
         assert result["template"] == "reasoning.jinja"
         assert result["attempt"] == 1

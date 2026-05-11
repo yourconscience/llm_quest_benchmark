@@ -123,7 +123,7 @@ class HarnessConfig:
         """Generate a stable harness ID based on configuration values"""
         import hashlib
 
-        config_str = f"{self.model}_{self.temperature}_{self.harness}_{self.compaction_interval}"
+        config_str = f"{self.model}_{self.temperature}_{self.harness}_{self.system_template}_{self.compaction_interval}"
         hash_val = hashlib.md5(config_str.encode()).hexdigest()[:8]
         return f"{self.model}_t{self.temperature}_{self.harness}_{hash_val}"
 
