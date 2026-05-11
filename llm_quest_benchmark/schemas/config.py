@@ -18,8 +18,8 @@ from llm_quest_benchmark.constants import (
 DEFAULT_BENCHMARK_CONFIG = {
     "quests": ["quests/Boat.qm"],
     "agents": [
-        {"model": "random_choice", "skip_single": True, "temperature": 0.0, "template": "reasoning.jinja"},
-        {"model": "gpt-5-mini", "skip_single": True, "temperature": 0.4, "template": "reasoning.jinja"},
+        {"model": "random_choice", "skip_single": True, "temperature": 0.0, "harness": "minimal"},
+        {"model": "gpt-5-mini", "skip_single": True, "temperature": 0.4, "harness": "reasoning_recent"},
     ],
     "debug": False,
     "quest_timeout": 30,
@@ -44,7 +44,7 @@ quests:
 agents:
   - model: random_choice
   - model: gpt-5-mini
-    template: reasoning.jinja
+    harness: reasoning_recent
 debug: true
 # One worker per agent will be used automatically
 output_dir: results/benchmarks"""
@@ -55,8 +55,50 @@ output_dir: results/benchmarks"""
 
 
 @dataclass
+class HarnessConfig:
+    """Configuration for a single harness in benchmark"""
+
+    model: str = DEFAULT_MODEL
+    system_template: str = SYSTEM_ROLE_TEMPLATE
+    harness: str = "reasoning_recent"
+    temperature: float = DEFAULT_TEMPERATURE
+    runs: int = 1
+    skip_single: bool = False
+    debug: bool = False
+    benchmark_id: str | None = None
+    compaction_interval: int = 50
+
+    def __post_init__(self):
+        self.system_template = normalize_template_name(self.system_template)
+        from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY
+
+        if self.harness not in HARNESS_REGISTRY:
+            raise ValueError(f"Invalid harness: {self.harness}. Supported harnesses: {sorted(HARNESS_REGISTRY)}")
+        if not (0.0 <= self.temperature <= 2.0):
+            raise ValueError(f"Temperature must be between 0.0 and 2.0, got {self.temperature}")
+        if self.runs < 1:
+            raise ValueError(f"runs must be >= 1, got {self.runs}")
+        if self.compaction_interval < 1:
+            raise ValueError(f"compaction_interval must be >= 1, got {self.compaction_interval}")
+
+    @property
+    def harness_id(self) -> str:
+        """Generate a stable harness ID based on configuration values"""
+        import hashlib
+
+        config_str = f"{self.model}_{self.temperature}_{self.harness}_{self.compaction_interval}"
+        hash_val = hashlib.md5(config_str.encode()).hexdigest()[:8]
+        return f"{self.model}_t{self.temperature}_{self.harness}_{hash_val}"
+
+    @property
+    def agent_id(self) -> str:
+        """DB-compatible alias for harness_id"""
+        return self.harness_id
+
+
+@dataclass
 class AgentConfig:
-    """Configuration for a single agent in benchmark"""
+    """Legacy configuration for a single agent in benchmark"""
 
     model: str = DEFAULT_MODEL
     system_template: str = SYSTEM_ROLE_TEMPLATE
@@ -103,7 +145,7 @@ class BenchmarkConfig:
     """Configuration for benchmark run"""
 
     quests: list[str]  # List of quest files or directories
-    agents: list[AgentConfig]  # List of agent configurations to test
+    agents: list[HarnessConfig]  # List of harness configurations to test
     debug: bool = False
     quest_timeout: int = 60  # Timeout per quest
     benchmark_timeout: int | None = None  # Total timeout for all quests, defaults to quest_timeout * num_quests
@@ -137,10 +179,11 @@ class BenchmarkConfig:
         if "agents" in data:
             agents = []
             for agent in data["agents"]:
-                # Handle 'template' key which maps to action_template in AgentConfig
                 if "template" in agent:
-                    agent["action_template"] = agent.pop("template")
-                agents.append(AgentConfig(**agent))
+                    raise ValueError("Use 'harness:' instead of 'template:'")
+                if "memory_mode" in agent:
+                    raise ValueError("Use 'harness:' instead of 'memory_mode:'")
+                agents.append(HarnessConfig(**agent))
             data["agents"] = agents
 
         return cls(**data)

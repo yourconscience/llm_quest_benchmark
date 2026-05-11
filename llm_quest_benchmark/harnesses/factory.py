@@ -3,6 +3,7 @@
 from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.agents.human_player import HumanPlayer
 from llm_quest_benchmark.agents.random_agent import RandomAgent
+from llm_quest_benchmark.constants import DEFAULT_MODEL
 from llm_quest_benchmark.harnesses.memo import HintedCompactHarness, MemoCompactHarness
 from llm_quest_benchmark.harnesses.minimal import MinimalHarness
 from llm_quest_benchmark.harnesses.planner import PlannerHarness
@@ -23,7 +24,7 @@ HARNESS_REGISTRY = {
 
 def create_harness(
     harness: str,
-    model: str,
+    model: str = DEFAULT_MODEL,
     temperature: float = 0.4,
     skip_single: bool = False,
     debug: bool = False,
