@@ -34,7 +34,9 @@ def test_run_quest_invalid_args():
     assert result.exit_code == 2
 
     # Test missing quest file
-    result = runner.invoke(app, ["run", "--quest", "nonexistent.qm", "--model", "random_choice", "--harness", "random_choice"])
+    result = runner.invoke(
+        app, ["run", "--quest", "nonexistent.qm", "--model", "random_choice", "--harness", "random_choice"]
+    )
     assert result.exit_code == 2
 
 

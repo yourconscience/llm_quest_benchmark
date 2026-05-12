@@ -70,7 +70,9 @@ def create_harness(
         raise ValueError(f"Unknown harness '{harness}'. Valid: {valid}")
     is_random_model, seed = _parse_random_choice_seed(model)
     if is_random_model:
-        raise ValueError("Use harness='random_choice' for random policy runs instead of pairing random_choice model with an LLM harness")
+        raise ValueError(
+            "Use harness='random_choice' for random policy runs instead of pairing random_choice model with an LLM harness"
+        )
     if model.startswith("random_choice"):
         raise ValueError(f"Unknown random_choice model '{model}'. Valid: {valid}")
     if model == "human":
