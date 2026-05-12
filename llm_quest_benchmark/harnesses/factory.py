@@ -70,9 +70,11 @@ def create_harness(
         raise ValueError(f"Unknown harness '{harness}'. Valid: {valid}")
     is_random_model, seed = _parse_random_choice_seed(model)
     if is_random_model:
-        return RandomAgent(seed=seed, debug=debug, skip_single=skip_single)
+        raise ValueError("Use harness='random_choice' for random policy runs instead of pairing random_choice model with an LLM harness")
     if model.startswith("random_choice"):
         raise ValueError(f"Unknown random_choice model '{model}'. Valid: {valid}")
+    if model == "human":
+        raise ValueError("Use harness='human' for human runs instead of pairing human model with an LLM harness")
     cls = HARNESS_REGISTRY[harness]
     return cls(
         model_name=model,

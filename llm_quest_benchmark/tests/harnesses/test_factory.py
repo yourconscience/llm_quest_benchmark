@@ -55,6 +55,16 @@ def test_random_choice_model_does_not_hide_bad_harness():
         create_harness("bad_name", model="random_choice_123")
 
 
+def test_random_choice_model_requires_random_harness():
+    with pytest.raises(ValueError, match="harness='random_choice'"):
+        create_harness("minimal", model="random_choice")
+
+
+def test_human_model_requires_human_harness():
+    with pytest.raises(ValueError, match="harness='human'"):
+        create_harness("minimal", model="human")
+
+
 def test_harness_config_stable_harness_id():
     config = HarnessConfig(harness="memo_compact", model="gpt-5-mini")
 
@@ -73,6 +83,16 @@ def test_harness_config_allows_seeded_random_choice_harness():
     config = HarnessConfig(harness="random_choice_123", model="gpt-5-mini")
 
     assert config.harness == "random_choice_123"
+
+
+def test_harness_config_rejects_random_model_with_llm_harness():
+    with pytest.raises(ValueError, match="harness: random_choice"):
+        HarnessConfig(harness="minimal", model="random_choice")
+
+
+def test_harness_config_rejects_human_model_with_llm_harness():
+    with pytest.raises(ValueError, match="harness: human"):
+        HarnessConfig(harness="minimal", model="human")
 
 
 def test_harness_config_allows_retired_exp4_aliases():

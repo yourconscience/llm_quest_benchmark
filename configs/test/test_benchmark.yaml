@@ -3,6 +3,7 @@ quests:
   - quests/Boat.qm
 agents:
   - model: random_choice
+    harness: random_choice
   - model: gemini-2.5-flash
     harness: reasoning_recent
 debug: true

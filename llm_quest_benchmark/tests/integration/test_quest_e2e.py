@@ -19,9 +19,9 @@ def test_quest_run_with_llm(caplog):
     """Test that quest runs with LLM agent and reaches a final state"""
     caplog.set_level(logging.DEBUG)  # Show all logs in test output
 
-    # Create LLM harness
+    # Create random harness
     agent = create_harness(
-        harness="minimal",
+        harness="random_choice",
         model="random_choice",  # Use random for testing
         system_template=SYSTEM_ROLE_TEMPLATE,
         temperature=0.0,

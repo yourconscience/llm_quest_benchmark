@@ -18,7 +18,7 @@ from llm_quest_benchmark.constants import (
 DEFAULT_BENCHMARK_CONFIG = {
     "quests": ["quests/Boat.qm"],
     "agents": [
-        {"model": "random_choice", "skip_single": True, "temperature": 0.0, "harness": "minimal"},
+        {"model": "random_choice", "skip_single": True, "temperature": 0.0, "harness": "random_choice"},
         {"model": "gpt-5-mini", "skip_single": True, "temperature": 0.4, "harness": "reasoning_recent"},
     ],
     "debug": False,
@@ -43,6 +43,7 @@ quests:
   - quests/Boat.qm
 agents:
   - model: random_choice
+    harness: random_choice
   - model: gpt-5-mini
     harness: reasoning_recent
 debug: true
@@ -111,6 +112,10 @@ class HarnessConfig:
         ):
             valid = [*sorted(HARNESS_REGISTRY), *SPECIAL_HARNESSES]
             raise ValueError(f"Invalid harness: {self.harness}. Supported harnesses: {valid}")
+        if self.model == "human" and self.harness != "human":
+            raise ValueError("Use harness: human with model: human")
+        if is_random_choice_harness(self.model) and not is_random_choice_harness(self.harness):
+            raise ValueError("Use harness: random_choice with model: random_choice")
         if self.model not in ("human",) and not is_random_choice_harness(self.model):
             from llm_quest_benchmark.llm.client import is_supported_model_name
 
