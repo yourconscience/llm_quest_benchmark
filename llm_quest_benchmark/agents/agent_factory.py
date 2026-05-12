@@ -49,7 +49,7 @@ def create_agent(
     logger.debug(f"Creating agent for model: {model}")
     resolved_action_template = normalize_template_name(action_template)
     harness_routed_templates = {"planner.jinja", "tool_augmented.jinja", "tool_augmented_hints.jinja"}
-    if resolved_action_template in harness_routed_templates and memory_mode != "default":
+    if resolved_action_template in harness_routed_templates and memory_mode not in ("default", "compaction"):
         raise ValueError(
             "memory_mode is not supported for planner/tool harness templates; configure memory via harness selection."
         )
