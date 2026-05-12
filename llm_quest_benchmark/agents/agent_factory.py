@@ -17,6 +17,18 @@ from llm_quest_benchmark.constants import (
 logger = logging.getLogger(__name__)
 
 
+def _legacy_memory_module(memory_mode: str, compaction_interval: int):
+    from llm_quest_benchmark.harnesses.memory import CompactionMemory, DefaultMemory, FullTranscriptMemory
+
+    if memory_mode == "default":
+        return DefaultMemory()
+    if memory_mode == "full_transcript":
+        return FullTranscriptMemory()
+    if memory_mode == "compaction":
+        return CompactionMemory(compaction_interval=compaction_interval)
+    raise ValueError(f"Invalid memory_mode: {memory_mode}")
+
+
 def create_agent(
     model: str = DEFAULT_MODEL,
     system_template: str = SYSTEM_ROLE_TEMPLATE,
@@ -48,11 +60,6 @@ def create_agent(
     """
     logger.debug(f"Creating agent for model: {model}")
     resolved_action_template = normalize_template_name(action_template)
-    harness_routed_templates = {"planner.jinja", "tool_augmented.jinja", "tool_augmented_hints.jinja"}
-    if resolved_action_template in harness_routed_templates and memory_mode not in ("default", "compaction"):
-        raise ValueError(
-            "memory_mode is not supported for planner/tool harness templates; configure memory via harness selection."
-        )
 
     # Human player
     if model == "human":
@@ -69,30 +76,35 @@ def create_agent(
         return RandomAgent(seed=seed, debug=debug, skip_single=skip_single)
 
     if resolved_action_template == "planner.jinja":
-        from llm_quest_benchmark.harnesses.factory import create_harness
+        from llm_quest_benchmark.harnesses.planner import PlannerHarness
 
-        return create_harness(
-            harness="planner",
-            model=model,
+        agent = PlannerHarness(
+            model_name=model,
             temperature=temperature,
             skip_single=skip_single,
             debug=debug,
             compaction_interval=compaction_interval,
             system_template=system_template,
+            memory_module=_legacy_memory_module(memory_mode, compaction_interval),
         )
+        agent._memory_mode = memory_mode
+        return agent
 
     if resolved_action_template in ("tool_augmented.jinja", "tool_augmented_hints.jinja"):
-        from llm_quest_benchmark.harnesses.factory import create_harness
+        from llm_quest_benchmark.harnesses.tool_harness import ToolCompactHarness, ToolHintedHarness
 
-        return create_harness(
-            harness="tool_hinted" if resolved_action_template == "tool_augmented_hints.jinja" else "tool_compact",
-            model=model,
+        cls = ToolHintedHarness if resolved_action_template == "tool_augmented_hints.jinja" else ToolCompactHarness
+        agent = cls(
+            model_name=model,
             temperature=temperature,
             skip_single=skip_single,
             debug=debug,
             compaction_interval=compaction_interval,
             system_template=system_template,
+            memory_module=_legacy_memory_module(memory_mode, compaction_interval),
         )
+        agent._memory_mode = memory_mode
+        return agent
 
     # Default to LLM agent
     return LLMAgent(
