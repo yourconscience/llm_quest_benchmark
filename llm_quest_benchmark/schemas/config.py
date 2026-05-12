@@ -8,7 +8,6 @@ import yaml
 from llm_quest_benchmark.constants import (
     DEFAULT_MODEL,
     DEFAULT_TEMPERATURE,
-    DEFAULT_TEMPLATE,
     MODEL_CHOICES,
     SYSTEM_ROLE_TEMPLATE,
     normalize_template_name,
@@ -141,50 +140,6 @@ class HarnessConfig:
     def agent_id(self) -> str:
         """DB-compatible alias for harness_id"""
         return self.harness_id
-
-
-@dataclass
-class AgentConfig:
-    """Legacy configuration for a single agent in benchmark"""
-
-    model: str = DEFAULT_MODEL
-    system_template: str = SYSTEM_ROLE_TEMPLATE
-    action_template: str = DEFAULT_TEMPLATE
-    temperature: float = DEFAULT_TEMPERATURE
-    runs: int = 1
-    skip_single: bool = False
-    debug: bool = False
-    benchmark_id: str | None = None
-    memory_mode: str = "default"
-    compaction_interval: int = 10
-
-    def __post_init__(self):
-        self.system_template = normalize_template_name(self.system_template)
-        self.action_template = normalize_template_name(self.action_template)
-        if self.model not in ("random_choice", "human"):
-            # Keep parser compatibility for legacy names while UI remains clean.
-            from llm_quest_benchmark.llm.client import is_supported_model_name
-
-            if not is_supported_model_name(self.model):
-                raise ValueError(f"Invalid model: {self.model}. Supported models: {MODEL_CHOICES}")
-        if not (0.0 <= self.temperature <= 2.0):
-            raise ValueError(f"Temperature must be between 0.0 and 2.0, got {self.temperature}")
-        if self.runs < 1:
-            raise ValueError(f"runs must be >= 1, got {self.runs}")
-        if self.memory_mode not in ("default", "full_transcript", "compaction"):
-            raise ValueError(f"Invalid memory_mode: {self.memory_mode}")
-        if self.memory_mode == "compaction" and self.compaction_interval < 1:
-            raise ValueError(f"compaction_interval must be >= 1, got {self.compaction_interval}")
-
-    @property
-    def agent_id(self) -> str:
-        """Generate a unique agent ID based on configuration values"""
-        import hashlib
-
-        interval_tag = f"_ci{self.compaction_interval}" if self.memory_mode == "compaction" else ""
-        config_str = f"{self.model}_{self.temperature}_{self.system_template}_{self.action_template}_{self.memory_mode}{interval_tag}"
-        hash_val = hashlib.md5(config_str.encode()).hexdigest()[:8]
-        return f"{self.model}_t{self.temperature}_{hash_val}"
 
 
 @dataclass

@@ -217,7 +217,7 @@ class ToolCompactHarness(BaseHarness):
                 action=1,
                 is_default=True,
                 parse_mode="error_default",
-                reasoning=f"tool_agent_error: {exc}",
+                reasoning=f"tool_harness_error: {exc}",
             )
             self.history.append(default_response)
             self._last_response = default_response

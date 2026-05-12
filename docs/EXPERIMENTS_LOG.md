@@ -190,7 +190,7 @@ The `_apply_loop_breaker` mechanism was overriding correct LLM decisions. Eviden
 
 ### Decision
 
-- **Disabled loop breaker** entirely in all agent types (llm_agent, planner_agent, tool_agent)
+- **Disabled loop breaker** entirely in all harness types
 - **Removed number normalization** from state signature computation
 - Kept `_state_action_counts` and `_state_signature` (used by safety filter and loop escape)
 - Removed `_apply_loop_breaker` method and `_loop_repetition_threshold` field as dead code

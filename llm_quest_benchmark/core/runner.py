@@ -20,7 +20,6 @@ from llm_quest_benchmark.schemas.state import AgentState
 
 # Configure logging
 logging.getLogger("quest").setLevel(logging.WARNING)
-logging.getLogger("LLMAgent").setLevel(logging.WARNING)
 
 
 def run_quest_with_timeout(
