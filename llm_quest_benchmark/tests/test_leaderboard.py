@@ -178,7 +178,6 @@ def test_public_leaderboard_taxonomy_has_no_legacy_labels():
     assert mode_labels == {
         "Minimal prompt",
         "Short-context reasoning",
-        "Full-history reasoning",
         "Compact memory / memo",
         "Prompt hints",
         "Tools + compact memory",
@@ -241,6 +240,52 @@ def test_generate_leaderboard_filters_public_slice(tmp_path, monkeypatch):
     assert [quest["id"] for quest in leaderboard["quests"]] == ["Core"]
     assert {row["quest"] for row in leaderboard["results"]} == {"Core"}
     assert {row["model"] for row in leaderboard["results"]} == {"model-a", "model-b", "model-c"}
+
+
+def test_generate_leaderboard_excludes_legacy_claude_cli_runs_from_public_slice(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    benchmark_dir = Path("results/benchmarks/bench_claude_cli")
+    benchmark_dir.mkdir(parents=True, exist_ok=True)
+
+    rows = [
+        {
+            "quest": "quests/Core.qm",
+            "model": "claude:claude-haiku-4-5-20251001",
+            "template": "stateful_compact.jinja",
+            "agent_id": "legacy-claude-cli",
+            "attempt": attempt,
+            "outcome": "SUCCESS",
+        }
+        for attempt in range(10)
+    ]
+    rows.append(
+        {
+            "quest": "quests/Core.qm",
+            "model": "anthropic:claude-haiku-4-5-20251001",
+            "template": "stateful_compact.jinja",
+            "agent_id": "anthropic-api",
+            "attempt": 1,
+            "outcome": "SUCCESS",
+        }
+    )
+
+    (benchmark_dir / "benchmark_summary.json").write_text(
+        json.dumps({"benchmark_id": "bench_claude_cli", "agents": [], "results": rows, "db_runs": []}),
+        encoding="utf-8",
+    )
+
+    leaderboard = generate_leaderboard(
+        [str(benchmark_dir)],
+        "site/leaderboard.json",
+        min_runs=1,
+        public_model_ids=["claude-haiku-4.5"],
+    )
+
+    assert [model["id"] for model in leaderboard["models"]] == ["claude-haiku-4.5"]
+    assert len(leaderboard["results"]) == 1
+    assert leaderboard["results"][0]["model"] == "claude-haiku-4.5"
+    assert leaderboard["results"][0]["runs"] == 1
 
 
 def test_generate_leaderboard_excludes_retired_exp4_variants(tmp_path, monkeypatch):

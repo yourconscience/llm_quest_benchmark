@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta property="og:title" content="LLM-Quest Benchmark">
-<meta property="og:description" content="Context engineering for sequential LLM evaluations: six models, 15 comparable text quests, and 1,615 published runs.">
+<meta property="og:description" content="Context engineering for sequential LLM evaluations: six models, 15 comparable text quests, and 1,584 published runs.">
 <meta property="og:image" content="https://yourconscience.github.io/llm_quest_benchmark/img/play_quest_in_progress.png">
 <meta property="og:url" content="https://yourconscience.github.io/llm_quest_benchmark/about.html">
 <meta property="og:type" content="article">
@@ -77,9 +77,9 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 
 <div class="stats-row">
   <div class="stat"><div class="stat-num">6</div><div class="stat-label">models</div></div>
-  <div class="stat"><div class="stat-num">8</div><div class="stat-label">taxonomy labels</div></div>
+  <div class="stat"><div class="stat-num">7</div><div class="stat-label">taxonomy labels</div></div>
   <div class="stat"><div class="stat-num">15</div><div class="stat-label">quests</div></div>
-  <div class="stat"><div class="stat-num">1615</div><div class="stat-label">runs</div></div>
+  <div class="stat"><div class="stat-num">1584</div><div class="stat-label">runs</div></div>
 </div>
 
 <div class="post-meta" style="text-align:center; margin-top: 1.5rem;">
@@ -87,7 +87,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 </div>
 
 <p>
-  Most LLM benchmarks hold the prompt and context wrapper constant, then compare models. LLM-Quest does the uncomfortable version: keep a comparable slice of six primary models and 15 Space Rangers text quests, then vary the context the model sees while it makes 10-50 sequential choices. The published leaderboard currently contains 1,615 runs after excluding exploratory and partial-coverage history.
+  Most LLM benchmarks hold the prompt and context wrapper constant, then compare models. LLM-Quest does the uncomfortable version: keep a comparable slice of six primary models and 15 Space Rangers text quests, then vary the context the model sees while it makes 10-50 sequential choices. The published leaderboard currently contains 1,584 runs after excluding exploratory and partial-coverage history.
 </p>
 
 <h2>The setup</h2>
@@ -97,7 +97,6 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
   <ul>
     <li><strong>Minimal prompt</strong> - the smallest "pick an action" prompt.</li>
     <li><strong>Short-context reasoning</strong> - structured reasoning over the current turn and local context.</li>
-    <li><strong>Full-history reasoning</strong> - reasoning with the whole transcript kept in context.</li>
     <li><strong>Compact memory / memo</strong> - summarized state and notes instead of unbounded transcript growth.</li>
     <li><strong>Prompt hints</strong> - lightweight game-mechanics hints injected into the prompt.</li>
     <li><strong>Tools + compact memory</strong> - scratchpad/history tools paired with compact context.</li>
@@ -120,7 +119,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 
 <div class="finding-card">
   <h3>Scaffolding is selective</h3>
-  <p>Compact memory/memo, full-history reasoning, prompt hints, tools, and planner runs move differently by quest and model. Context can help, hurt, or mostly expose where the agent is losing state; the useful question is which failure mode a scaffold addresses.</p>
+  <p>Compact memory/memo, prompt hints, tools, and planner runs move differently by quest and model. Context can help, hurt, or mostly expose where the agent is losing state; the useful question is which failure mode a scaffold addresses.</p>
 </div>
 
 <div class="finding-card">
@@ -172,7 +171,7 @@ figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
 
 <figure>
   <img src="img/early_benchmark.jpg" alt="Early version of the LLM Quest Benchmark, March 2025" class="img-fluid" style="max-width: 100%;">
-  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests. The public leaderboard now shows 6 primary models, 15 comparable quest IDs, and 1615 curated runs across the current context-engineering taxonomy.</figcaption>
+  <figcaption>Where it started: first benchmark run (March 2025). Five models, two quests. The public leaderboard now shows 6 primary models, 15 comparable quest IDs, and 1584 curated runs across the current context-engineering taxonomy.</figcaption>
 </figure>
 
 <h2>What's next</h2>

@@ -29,7 +29,7 @@ experiment history. It currently reports:
 
 - 6 primary publication models.
 - 15 comparable quest IDs with coverage across all six primary models.
-- 1,615 published leaderboard runs.
+- 1,584 published leaderboard runs.
 - Exploratory, one-model, and partial-coverage runs excluded from the public
   comparison slice unless they support direct comparison.
 
@@ -44,7 +44,6 @@ Use these labels for current public descriptions of benchmark harnesses:
 |---|---|---|---|---|
 | Minimal prompt | `minimal` | `stub.jinja` | `DefaultMemory` | no tools, react loop |
 | Short-context reasoning | `reasoning_recent` | `reasoning.jinja` | `DefaultMemory` | no tools, react loop |
-| Full-history reasoning | `reasoning_full` | `reasoning.jinja` | `FullTranscriptMemory` | no tools, react loop |
 | Compact memory / memo | `memo_compact` | `stateful_compact.jinja` | `CompactionMemory` | no tools, react loop |
 | Prompt hints | `hinted_compact` | `stateful_compact_hints.jinja` | `CompactionMemory` | no tools, react loop |
 | Tools + compact memory | `tool_compact` | `tool_augmented.jinja` | `CompactionMemory` | calculator, scratchpad, quest history |

@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
+
 from llm_quest_benchmark.llm.client import (
     AnthropicClient,
     OpenAICompatibleClient,
@@ -49,6 +51,11 @@ def test_parse_model_name_haiku_alias():
     spec = parse_model_name("claude-3-5-haiku-latest")
     assert spec.provider == "anthropic"
     assert spec.model_id == "claude-3-5-haiku-latest"
+
+
+def test_parse_model_name_rejects_legacy_claude_cli_provider():
+    with pytest.raises(NotImplementedError, match="Provider claude is not supported"):
+        parse_model_name("claude:claude-haiku-4-5-20251001")
 
 
 @patch("llm_quest_benchmark.llm.client.OpenAI")

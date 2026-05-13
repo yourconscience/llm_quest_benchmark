@@ -67,7 +67,7 @@ REASONING_STYLE_TEMPLATES = {
 MODE_ORDER = list(TAXONOMY_MODES)
 
 MODEL_ALIASES = {
-    "claude:claude-haiku-4-5-20251001": "claude-haiku-4.5",
+    "anthropic:claude-haiku-4-5-20251001": "claude-haiku-4.5",
     "anthropic:claude-3-5-haiku-latest": "claude-haiku-4.5",
 }
 
