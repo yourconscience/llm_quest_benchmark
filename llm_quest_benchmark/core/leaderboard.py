@@ -385,7 +385,7 @@ def generate_leaderboard(
             template_from_config = str(config.get("action_template") or "")
             if template_from_config:
                 template = template_from_config
-            memory_mode = config.get("memory_mode")
+            memory_mode = config.get("memory_mode") or result_row.get("memory_mode")
             if _is_retired_result(
                 str(source_name) if source_name else None,
                 str(benchmark_id) if benchmark_id else None,
