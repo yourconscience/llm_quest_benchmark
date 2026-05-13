@@ -29,7 +29,7 @@ experiment history. It currently reports:
 
 - 6 primary publication models.
 - 15 comparable quest IDs with coverage across all six primary models.
-- 1,615 published leaderboard runs.
+- 1,584 published leaderboard runs.
 - Exploratory, one-model, and partial-coverage runs excluded from the public
   comparison slice unless they support direct comparison.
 

@@ -437,7 +437,7 @@ def get_llm_client(model_name: str, system_prompt: str = "", temperature: float 
             temperature=temperature,
             request_timeout=request_timeout,
         )
-    if spec.provider in {"codex_cli", "claude_cli", "claude"}:
+    if spec.provider in {"codex_cli", "claude_cli"}:
         raise NotImplementedError(f"Provider {spec.provider!r} has been removed (command injection risk)")
     if spec.provider in {"openai", "google", "openrouter", "deepseek"}:
         if spec.provider == "google":
