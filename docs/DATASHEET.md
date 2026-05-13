@@ -2,7 +2,7 @@
 
 Following the "Datasheets for Datasets" framework (Gebru et al., 2021).
 
-Last updated: 2026-05-05
+Last updated: 2026-05-13
 
 ---
 
@@ -190,9 +190,9 @@ archive structure.
 Benchmarking LLM decision-making in interactive text environments. Specific
 use cases:
 
-- Comparing LLM context scaffolds: minimal prompt, short-context reasoning,
-  full-history reasoning, compact memory/memo, prompt hints, tool-assisted
-  variants, and planner loops.
+- Comparing LLM context scaffolds represented in the public slice: minimal
+  prompt, short-context reasoning, compact memory/memo, prompt hints,
+  tool-assisted variants, and planner loops.
 - Measuring how different models handle multi-step sequential decisions.
 - Evaluating reading comprehension and state tracking under game constraints.
 

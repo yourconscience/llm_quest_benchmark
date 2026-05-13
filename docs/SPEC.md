@@ -44,7 +44,6 @@ Use these labels for current public descriptions of benchmark harnesses:
 |---|---|---|---|---|
 | Minimal prompt | `minimal` | `stub.jinja` | `DefaultMemory` | no tools, react loop |
 | Short-context reasoning | `reasoning_recent` | `reasoning.jinja` | `DefaultMemory` | no tools, react loop |
-| Full-history reasoning | `reasoning_full` | `reasoning.jinja` | `FullTranscriptMemory` | no tools, react loop |
 | Compact memory / memo | `memo_compact` | `stateful_compact.jinja` | `CompactionMemory` | no tools, react loop |
 | Prompt hints | `hinted_compact` | `stateful_compact_hints.jinja` | `CompactionMemory` | no tools, react loop |
 | Tools + compact memory | `tool_compact` | `tool_augmented.jinja` | `CompactionMemory` | calculator, scratchpad, quest history |
