@@ -3,8 +3,9 @@ quests:
   - quests/Boat.qm
 agents:
   - model: random_choice
+    harness: random_choice
   - model: gemini-2.5-flash
-    template: reasoning.jinja
+    harness: reasoning_recent
 debug: true
 quest_timeout: 60
 max_workers: 2

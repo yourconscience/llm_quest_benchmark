@@ -243,6 +243,73 @@ def test_generate_leaderboard_filters_public_slice(tmp_path, monkeypatch):
     assert {row["model"] for row in leaderboard["results"]} == {"model-a", "model-b", "model-c"}
 
 
+def test_generate_leaderboard_excludes_retired_exp4_variants(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    active_dir = Path("results/benchmarks/active")
+    active_dir.mkdir(parents=True, exist_ok=True)
+    retired_dir = Path("results/benchmarks/retired")
+    retired_dir.mkdir(parents=True, exist_ok=True)
+
+    active_row = {
+        "quest": "quests/Core.qm",
+        "model": "gpt-5-mini",
+        "template": "stateful_compact.jinja",
+        "harness": "memo_compact",
+        "agent_id": "active",
+        "attempt": 1,
+        "outcome": "SUCCESS",
+    }
+    retired_rows = [
+        {
+            "quest": "quests/Core.qm",
+            "model": "gpt-5-mini",
+            "template": "reasoning.jinja",
+            "harness": "compaction_no_memo",
+            "agent_id": "retired-no-memo",
+            "attempt": 1,
+            "outcome": "FAILURE",
+        },
+        {
+            "quest": "quests/Core.qm",
+            "model": "gpt-5-mini",
+            "template": "memo_extended.jinja",
+            "harness": "memo_extended",
+            "agent_id": "retired-extended",
+            "attempt": 1,
+            "outcome": "FAILURE",
+        },
+    ]
+
+    (active_dir / "benchmark_summary.json").write_text(
+        json.dumps({"benchmark_id": "active", "name": "active", "agents": [], "results": [active_row], "db_runs": []}),
+        encoding="utf-8",
+    )
+    (retired_dir / "benchmark_summary.json").write_text(
+        json.dumps(
+            {
+                "benchmark_id": "retired",
+                "name": "exp4_compaction_no_memo",
+                "agents": [],
+                "results": retired_rows,
+                "db_runs": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    leaderboard = generate_leaderboard(
+        [str(active_dir), str(retired_dir)],
+        "site/leaderboard.json",
+        min_runs=0,
+        public_model_ids=None,
+    )
+
+    assert len(leaderboard["results"]) == 1
+    assert leaderboard["results"][0]["mode"] == "compact_memory_memo"
+    assert leaderboard["results"][0]["runs"] == 1
+
+
 def test_generate_leaderboard_matches_db_runs_by_identifiers(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
@@ -310,3 +377,44 @@ def test_generate_leaderboard_matches_db_runs_by_identifiers(tmp_path, monkeypat
     rows = {(row["quest"], row["mode"]): row for row in leaderboard["results"]}
     assert rows[("Alpha", "compact_memory_memo")]["avg_steps"] == 10.0
     assert rows[("Beta", "full_history_reasoning")]["avg_steps"] == 20.0
+
+
+def test_generate_leaderboard_uses_result_row_memory_mode_without_db_config(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    benchmark_dir = Path("results/benchmarks/bench_result_memory_mode")
+    benchmark_dir.mkdir(parents=True, exist_ok=True)
+    results = [
+        {
+            "quest": "quests/Beta.qm",
+            "model": "gpt-5-mini",
+            "template": "reasoning.jinja",
+            "memory_mode": "full_transcript",
+            "agent_id": "harness_gpt-5-mini",
+            "outcome": "SUCCESS",
+        }
+    ]
+    db_runs = [
+        {
+            "id": 20,
+            "quest_file": "quests/Beta.qm",
+            "quest_name": "Beta",
+            "agent_id": "harness_gpt-5-mini",
+            "agent_config": json.dumps({"model": "gpt-5-mini", "harness": "reasoning_full"}),
+            "outcome": "SUCCESS",
+        }
+    ]
+    (benchmark_dir / "benchmark_summary.json").write_text(
+        json.dumps(
+            {"benchmark_id": "bench_result_memory_mode", "harnesses": [], "results": results, "db_runs": db_runs}
+        ),
+        encoding="utf-8",
+    )
+
+    leaderboard = generate_leaderboard(
+        [str(benchmark_dir)],
+        "site/leaderboard.json",
+        min_runs=0,
+        public_model_ids=None,
+    )
+
+    assert leaderboard["results"][0]["mode"] == "full_history_reasoning"

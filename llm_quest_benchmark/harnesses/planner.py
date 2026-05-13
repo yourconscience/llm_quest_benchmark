@@ -1,33 +1,53 @@
-"""Planner agent with a lightweight plan-maintain-act loop."""
+"""Planner harness implementation."""
 
 import logging
 import re
 from typing import Any
 
-from llm_quest_benchmark.agents.llm_agent import LLMAgent, LLMResponse, parse_llm_response
+from llm_quest_benchmark.constants import DEFAULT_MODEL, DEFAULT_TEMPERATURE, SYSTEM_ROLE_TEMPLATE
+from llm_quest_benchmark.harnesses.base import BaseHarness
+from llm_quest_benchmark.harnesses.memory import CompactionMemory
+from llm_quest_benchmark.schemas.response import LLMResponse
 
 
-class PlannerAgent(LLMAgent):
-    """LLM agent that maintains a short plan and re-plans on notable changes."""
+class PlannerHarness(BaseHarness):
+    """Compacted-memory harness with a lightweight plan-maintain-act loop."""
+
+    harness_name = "planner"
 
     def __init__(
         self,
-        *args,
+        model_name: str = DEFAULT_MODEL,
+        system_template: str = SYSTEM_ROLE_TEMPLATE,
         action_template: str = "planner.jinja",
-        **kwargs,
+        temperature: float = DEFAULT_TEMPERATURE,
+        skip_single: bool = False,
+        debug: bool = False,
+        compaction_interval: int = 50,
+        memory_module=None,
+        **_,
     ):
-        super().__init__(*args, action_template=action_template, **kwargs)
+        super().__init__(
+            model_name=model_name,
+            system_template=system_template,
+            action_template=action_template,
+            temperature=temperature,
+            skip_single=skip_single,
+            debug=debug,
+            memory_module=memory_module or CompactionMemory(compaction_interval=compaction_interval),
+        )
         self.agent_id = f"planner_{self.model_name}"
         self.current_plan: str | None = None
         self._plan_history: list[str] = []
+        self._memory_mode = "compaction"
+        self._compaction_interval = compaction_interval
 
     def _recent_actions(self) -> list[str]:
         entries = []
         for item in self._decision_history[-3:]:
             choice = (item.get("choice") or "").strip()
-            if not choice:
-                continue
-            entries.append(f"{item.get('action')}. {choice}")
+            if choice:
+                entries.append(f"{item.get('action')}. {choice}")
         return entries
 
     @staticmethod
@@ -35,7 +55,6 @@ class PlannerAgent(LLMAgent):
         compact = " ".join((raw_plan or "").strip().split())
         if not compact:
             return ""
-
         sentences = re.split(r"(?<=[.!?])\s+", compact)
         sentences = [sentence.strip() for sentence in sentences if sentence.strip()]
         if len(sentences) >= 5:
@@ -60,14 +79,8 @@ class PlannerAgent(LLMAgent):
         ).strip()
 
     def _observation_changed_significantly(self, observation: str) -> bool:
-        """Check if the observation differs enough from the previous one to warrant re-planning.
-
-        Uses token-level overlap ratio: if less than 50% of tokens are shared,
-        the scene has changed significantly.
-        """
         if len(self._observation_history) < 2:
             return False
-
         prev_tokens = set(self._observation_history[-2].lower().split())
         curr_tokens = set((observation or "").lower().split())
         if not prev_tokens or not curr_tokens:
@@ -78,13 +91,10 @@ class PlannerAgent(LLMAgent):
     def _should_replan(self, observation: str, state_signature: str) -> tuple[bool, str | None]:
         if not self.current_plan:
             return True, "No plan exists yet."
-
         if any(self._state_action_counts.get(state_signature, {}).values()):
             return True, "This state has repeated, so a previous action already failed to progress."
-
         if self._observation_changed_significantly(observation):
             return True, "The scene changed significantly from the previous observation."
-
         return False, None
 
     def _update_plan(
@@ -94,23 +104,14 @@ class PlannerAgent(LLMAgent):
         replan_reason: str | None,
     ) -> dict[str, Any]:
         self._ensure_llm()
-        prompt = self._build_planner_prompt(
-            observation,
-            choices,
-            prompt_kind="plan",
-            replan_reason=replan_reason,
-        )
-        plan_response = self.llm.get_completion(prompt)
+        prompt = self._build_planner_prompt(observation, choices, prompt_kind="plan", replan_reason=replan_reason)
+        plan_response = self._call_llm(prompt)
         usage = self.llm.get_last_usage()
         plan = self._normalize_plan(plan_response)
         if not plan:
-            if self.current_plan:
-                plan = self.current_plan
-            else:
-                plan = (
-                    "Gather clues, protect resources, and avoid obvious traps while "
-                    "advancing toward the main objective."
-                )
+            plan = self.current_plan or (
+                "Gather clues, protect resources, and avoid obvious traps while advancing toward the main objective."
+            )
         self.current_plan = plan
         self._plan_history.append(plan)
         if len(self._plan_history) > 10:
@@ -123,48 +124,18 @@ class PlannerAgent(LLMAgent):
         choices: list[dict[str, str]],
         replan_reason: str | None,
     ) -> tuple[LLMResponse, dict[str, Any]]:
-        prompt = self._build_planner_prompt(
-            observation,
-            choices,
-            prompt_kind="act",
-            replan_reason=replan_reason,
-        )
-        llm_response = self.llm.get_completion(prompt)
-        llm_usage = self.llm.get_last_usage()
-        parsed_response = parse_llm_response(llm_response, len(choices), self.debug, self.logger)
-
-        if parsed_response.is_default:
-            retry_response = self.llm.get_completion(self._format_retry_prompt(observation, choices))
-            retry_usage = self.llm.get_last_usage()
-            llm_usage = self._merge_usage(llm_usage, retry_usage)
-            retry_parsed = parse_llm_response(
-                retry_response,
-                len(choices),
-                self.debug,
-                self.logger,
-            )
-            if not retry_parsed.is_default:
-                retry_parsed.parse_mode = f"retry_{retry_parsed.parse_mode or 'parsed'}"
-                parsed_response = retry_parsed
-            elif self._needs_force_numeric_retry():
-                force_retry_response = self.llm.get_completion(self._format_force_numeric_retry_prompt(choices))
-                force_retry_usage = self.llm.get_last_usage()
-                llm_usage = self._merge_usage(llm_usage, force_retry_usage)
-                force_retry_parsed = parse_llm_response(
-                    force_retry_response,
-                    len(choices),
-                    self.debug,
-                    self.logger,
-                )
-                if not force_retry_parsed.is_default:
-                    force_retry_parsed.parse_mode = f"force_retry_{force_retry_parsed.parse_mode or 'parsed'}"
-                    parsed_response = force_retry_parsed
-
-        return parsed_response, llm_usage
+        prompt = self._build_planner_prompt(observation, choices, prompt_kind="act", replan_reason=replan_reason)
+        parsed_response = self._parse_with_retries(prompt, observation, choices)
+        return parsed_response, {
+            "prompt_tokens": parsed_response.prompt_tokens,
+            "completion_tokens": parsed_response.completion_tokens,
+            "total_tokens": parsed_response.total_tokens,
+            "estimated_cost_usd": parsed_response.estimated_cost_usd,
+        }
 
     def _get_action_impl(self, state: str, choices: list[dict[str, str]]) -> int:
         if self.debug:
-            self.logger.debug("PlannerAgent evaluating state with %s choices", len(choices))
+            self.logger.debug("PlannerHarness evaluating state with %s choices", len(choices))
         try:
             state_signature = self._state_signature(state, choices)
             contextual_state = self._build_contextual_state(state)
@@ -178,37 +149,29 @@ class PlannerAgent(LLMAgent):
                 choices,
                 replan_reason if should_replan else None,
             )
+
             action_before_policy = parsed_response.action
-            parsed_response.action = self._apply_safety_filter(parsed_response.action, choices)
+            parsed_response.action = self._apply_safety_filter(choices, parsed_response.action)
             if parsed_response.action != action_before_policy and not parsed_response.reasoning:
                 parsed_response.reasoning = "policy_safety_override"
 
             total_usage = (
                 self._merge_usage(plan_usage, action_usage) if plan_usage else self._normalize_usage(action_usage)
             )
-            if plan_usage:
-                total_usage = self._normalize_usage(total_usage)
-
+            total_usage = self._normalize_usage(total_usage)
             parsed_response.prompt_tokens = total_usage["prompt_tokens"]
             parsed_response.completion_tokens = total_usage["completion_tokens"]
             parsed_response.total_tokens = total_usage["total_tokens"]
             parsed_response.estimated_cost_usd = total_usage["estimated_cost_usd"]
 
+            if parsed_response.action < 1 or parsed_response.action > len(choices):
+                parsed_response.action = 1
             self.history.append(parsed_response)
             self._last_response = parsed_response
             self._remember_decision(state, choices, state_signature, parsed_response)
-
-            if parsed_response.action < 1 or parsed_response.action > len(choices):
-                self.logger.error(
-                    "INVALID ACTION DETECTED: %s not in range 1-%s",
-                    parsed_response.action,
-                    len(choices),
-                )
-                parsed_response.action = 1
-
             return parsed_response.action
         except Exception as exc:
-            self.logger.error("Planner agent error during LLM call: %s", exc)
+            self.logger.error("Planner harness error during LLM call: %s", exc)
             default_response = LLMResponse(
                 action=1,
                 is_default=True,

@@ -8,7 +8,6 @@ import yaml
 from llm_quest_benchmark.constants import (
     DEFAULT_MODEL,
     DEFAULT_TEMPERATURE,
-    DEFAULT_TEMPLATE,
     MODEL_CHOICES,
     SYSTEM_ROLE_TEMPLATE,
     normalize_template_name,
@@ -18,13 +17,25 @@ from llm_quest_benchmark.constants import (
 DEFAULT_BENCHMARK_CONFIG = {
     "quests": ["quests/Boat.qm"],
     "agents": [
-        {"model": "random_choice", "skip_single": True, "temperature": 0.0, "template": "reasoning.jinja"},
-        {"model": "gpt-5-mini", "skip_single": True, "temperature": 0.4, "template": "reasoning.jinja"},
+        {"model": "random_choice", "skip_single": True, "temperature": 0.0, "harness": "random_choice"},
+        {"model": "gpt-5-mini", "skip_single": True, "temperature": 0.4, "harness": "reasoning_recent"},
     ],
     "debug": False,
     "quest_timeout": 30,
     "output_dir": "results/benchmarks",
     "name": "Default Benchmark",
+}
+
+COMPACTION_HARNESSES = {
+    "memo_compact",
+    "hinted_compact",
+    "tool_compact",
+    "tool_hinted",
+    "planner",
+    "compaction_no_memo",
+    "memo_cot",
+    "memo_extended",
+    "memo_structured",
 }
 
 
@@ -43,8 +54,9 @@ quests:
   - quests/Boat.qm
 agents:
   - model: random_choice
+    harness: random_choice
   - model: gpt-5-mini
-    template: reasoning.jinja
+    harness: reasoning_recent
 debug: true
 # One worker per agent will be used automatically
 output_dir: results/benchmarks"""
@@ -55,25 +67,71 @@ output_dir: results/benchmarks"""
 
 
 @dataclass
-class AgentConfig:
-    """Configuration for a single agent in benchmark"""
+class HarnessConfig:
+    """Configuration for a single harness in benchmark"""
 
     model: str = DEFAULT_MODEL
     system_template: str = SYSTEM_ROLE_TEMPLATE
-    action_template: str = DEFAULT_TEMPLATE
+    harness: str = "reasoning_recent"
     temperature: float = DEFAULT_TEMPERATURE
     runs: int = 1
     skip_single: bool = False
     debug: bool = False
     benchmark_id: str | None = None
-    memory_mode: str = "default"
-    compaction_interval: int = 10
+    compaction_interval: int = 50
+
+    def __init__(
+        self,
+        model: str = DEFAULT_MODEL,
+        system_template: str = SYSTEM_ROLE_TEMPLATE,
+        harness: str = "reasoning_recent",
+        temperature: float = DEFAULT_TEMPERATURE,
+        runs: int = 1,
+        skip_single: bool = False,
+        debug: bool = False,
+        benchmark_id: str | None = None,
+        compaction_interval: int = 50,
+        **legacy_keys,
+    ):
+        if "template" in legacy_keys or "action_template" in legacy_keys:
+            raise ValueError("Use harness: key instead of template:")
+        if "memory_mode" in legacy_keys:
+            raise ValueError("Use harness: key instead of memory_mode:")
+        if legacy_keys:
+            unexpected = ", ".join(sorted(legacy_keys))
+            raise TypeError(f"Unexpected HarnessConfig key(s): {unexpected}")
+
+        self.model = model
+        self.system_template = system_template
+        self.harness = harness
+        self.temperature = temperature
+        self.runs = runs
+        self.skip_single = skip_single
+        self.debug = debug
+        self.benchmark_id = benchmark_id
+        self.compaction_interval = compaction_interval
+        self.__post_init__()
 
     def __post_init__(self):
         self.system_template = normalize_template_name(self.system_template)
-        self.action_template = normalize_template_name(self.action_template)
-        if self.model not in ("random_choice", "human"):
-            # Keep parser compatibility for legacy names while UI remains clean.
+        from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY, SPECIAL_HARNESSES, is_random_choice_harness
+
+        if (
+            self.harness not in HARNESS_REGISTRY
+            and self.harness != "human"
+            and not is_random_choice_harness(self.harness)
+        ):
+            valid = [*sorted(HARNESS_REGISTRY), *SPECIAL_HARNESSES]
+            raise ValueError(f"Invalid harness: {self.harness}. Supported harnesses: {valid}")
+        if self.harness == "human" and self.model != "human":
+            raise ValueError("Use model: human with harness: human")
+        if self.model == "human" and self.harness != "human":
+            raise ValueError("Use harness: human with model: human")
+        if is_random_choice_harness(self.harness) and self.model != "random_choice":
+            raise ValueError("Use model: random_choice with random_choice harnesses")
+        if is_random_choice_harness(self.model) and not is_random_choice_harness(self.harness):
+            raise ValueError("Use harness: random_choice with model: random_choice")
+        if self.model not in ("human",) and not is_random_choice_harness(self.model):
             from llm_quest_benchmark.llm.client import is_supported_model_name
 
             if not is_supported_model_name(self.model):
@@ -82,20 +140,23 @@ class AgentConfig:
             raise ValueError(f"Temperature must be between 0.0 and 2.0, got {self.temperature}")
         if self.runs < 1:
             raise ValueError(f"runs must be >= 1, got {self.runs}")
-        if self.memory_mode not in ("default", "full_transcript", "compaction"):
-            raise ValueError(f"Invalid memory_mode: {self.memory_mode}")
-        if self.memory_mode == "compaction" and self.compaction_interval < 1:
+        if self.compaction_interval < 1:
             raise ValueError(f"compaction_interval must be >= 1, got {self.compaction_interval}")
 
     @property
-    def agent_id(self) -> str:
-        """Generate a unique agent ID based on configuration values"""
+    def harness_id(self) -> str:
+        """Generate a stable harness ID based on configuration values"""
         import hashlib
 
-        interval_tag = f"_ci{self.compaction_interval}" if self.memory_mode == "compaction" else ""
-        config_str = f"{self.model}_{self.temperature}_{self.system_template}_{self.action_template}_{self.memory_mode}{interval_tag}"
+        interval_tag = f"_ci{self.compaction_interval}" if self.harness in COMPACTION_HARNESSES else ""
+        config_str = f"{self.model}_{self.temperature}_{self.harness}_{self.system_template}{interval_tag}"
         hash_val = hashlib.md5(config_str.encode()).hexdigest()[:8]
-        return f"{self.model}_t{self.temperature}_{hash_val}"
+        return f"{self.model}_t{self.temperature}_{self.harness}_{hash_val}"
+
+    @property
+    def agent_id(self) -> str:
+        """DB-compatible alias for harness_id"""
+        return self.harness_id
 
 
 @dataclass
@@ -103,7 +164,7 @@ class BenchmarkConfig:
     """Configuration for benchmark run"""
 
     quests: list[str]  # List of quest files or directories
-    agents: list[AgentConfig]  # List of agent configurations to test
+    agents: list[HarnessConfig]  # List of harness configurations to test
     debug: bool = False
     quest_timeout: int = 60  # Timeout per quest
     benchmark_timeout: int | None = None  # Total timeout for all quests, defaults to quest_timeout * num_quests
@@ -137,10 +198,11 @@ class BenchmarkConfig:
         if "agents" in data:
             agents = []
             for agent in data["agents"]:
-                # Handle 'template' key which maps to action_template in AgentConfig
                 if "template" in agent:
-                    agent["action_template"] = agent.pop("template")
-                agents.append(AgentConfig(**agent))
+                    raise ValueError("Use harness: key instead of template:")
+                if "memory_mode" in agent:
+                    raise ValueError("Use harness: key instead of memory_mode:")
+                agents.append(HarnessConfig(**agent))
             data["agents"] = agents
 
         return cls(**data)

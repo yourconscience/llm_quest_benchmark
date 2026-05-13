@@ -10,24 +10,23 @@ from concurrent.futures import TimeoutError as FuturesTimeoutError
 from copy import deepcopy
 from typing import Any
 
-from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.constants import DEFAULT_QUEST_TIMEOUT
 from llm_quest_benchmark.core.logging import LogManager, QuestLogger
 from llm_quest_benchmark.environments.qm import QMPlayerEnv as QuestEnvironment
 from llm_quest_benchmark.environments.state import QuestOutcome
-from llm_quest_benchmark.schemas.config import AgentConfig
+from llm_quest_benchmark.players.base import QuestPlayer
+from llm_quest_benchmark.schemas.config import HarnessConfig
 from llm_quest_benchmark.schemas.state import AgentState
 
 # Configure logging
 logging.getLogger("quest").setLevel(logging.WARNING)
-logging.getLogger("LLMAgent").setLevel(logging.WARNING)
 
 
 def run_quest_with_timeout(
     quest_path: str,
     agent: QuestPlayer,
     timeout: int = DEFAULT_QUEST_TIMEOUT,
-    agent_config: AgentConfig | None = None,
+    agent_config: HarnessConfig | Any | None = None,
     debug: bool = False,
     callbacks: list[Callable[[str, Any], None]] = None,
 ) -> QuestOutcome | None:

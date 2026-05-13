@@ -45,23 +45,23 @@ class ProgressRenderer(BaseRenderer):
         self.console.print("\n[bold cyan]Benchmark Progress[/]")
 
     def render_game_state(self, state: dict[str, Any]) -> None:
-        """No game state rendering needed for automated agents"""
+        """No game state rendering needed for automated players"""
         pass
 
     def render_title(self) -> None:
-        """No title rendering needed for automated agents"""
+        """No title rendering needed for automated players"""
         pass
 
     def render_quest_text(self, text: str) -> None:
-        """No quest text rendering needed for automated agents"""
+        """No quest text rendering needed for automated players"""
         pass
 
     def render_choices(self, choices: list) -> None:
-        """No choices rendering needed for automated agents"""
+        """No choices rendering needed for automated players"""
         pass
 
     def render_parameters(self, params: list) -> None:
-        """No parameters rendering needed for automated agents"""
+        """No parameters rendering needed for automated players"""
         pass
 
     def render_error(self, message: str) -> None:

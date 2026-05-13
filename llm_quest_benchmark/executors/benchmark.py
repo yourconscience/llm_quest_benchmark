@@ -12,10 +12,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from llm_quest_benchmark.agents.agent_factory import create_agent
 from llm_quest_benchmark.core.logging import DEFAULT_DB_PATH
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.environments.state import QuestOutcome
+from llm_quest_benchmark.harnesses.factory import create_harness
 from llm_quest_benchmark.llm import tracing
 from llm_quest_benchmark.schemas.config import BenchmarkConfig
 
@@ -34,6 +34,68 @@ logging.getLogger("llm_quest_benchmark.executors.ts_bridge").setLevel(logging.WA
 logger = logging.getLogger(__name__)
 
 
+def _agent_harness(agent_config) -> str:
+    """Return the configured harness name."""
+    return agent_config.harness
+
+
+def _agent_model(agent_config) -> str:
+    """Return the result model label for the executed harness."""
+    harness = _agent_harness(agent_config)
+    if harness == "human":
+        return "human"
+    if harness.startswith("random_choice"):
+        return "random_policy"
+    return agent_config.model
+
+
+def _agent_id(agent_config) -> str:
+    """Return the stable result identifier for legacy and harness configs."""
+    return getattr(agent_config, "harness_id", None) or agent_config.agent_id
+
+
+def _agent_template(agent_config) -> str:
+    """Return legacy template name for result artifacts."""
+    if hasattr(agent_config, "action_template"):
+        return agent_config.action_template
+
+    harness_templates = {
+        "minimal": "stub.jinja",
+        "reasoning_recent": "reasoning.jinja",
+        "reasoning_full": "reasoning.jinja",
+        "memo_compact": "stateful_compact.jinja",
+        "hinted_compact": "stateful_compact_hints.jinja",
+        "tool_compact": "tool_augmented.jinja",
+        "tool_hinted": "tool_augmented_hints.jinja",
+        "planner": "planner.jinja",
+        "compaction_no_memo": "reasoning.jinja",
+        "memo_cot": "memo_cot.jinja",
+        "memo_extended": "memo_extended.jinja",
+        "memo_structured": "memo_structured.jinja",
+    }
+    return harness_templates.get(_agent_harness(agent_config), "reasoning.jinja")
+
+
+def _agent_memory_mode(agent_config) -> str:
+    """Return legacy memory mode for result artifacts."""
+    if hasattr(agent_config, "memory_mode"):
+        return agent_config.memory_mode
+
+    harness_memory_modes = {
+        "reasoning_full": "full_transcript",
+        "memo_compact": "compaction",
+        "hinted_compact": "compaction",
+        "tool_compact": "compaction",
+        "tool_hinted": "compaction",
+        "planner": "compaction",
+        "compaction_no_memo": "compaction",
+        "memo_cot": "compaction",
+        "memo_extended": "compaction",
+        "memo_structured": "compaction",
+    }
+    return harness_memory_modes.get(_agent_harness(agent_config), "default")
+
+
 def _result_entry(
     quest: str,
     agent_config,
@@ -44,10 +106,12 @@ def _result_entry(
 ) -> dict[str, Any]:
     return {
         "quest": quest,
-        "model": agent_config.model,
+        "model": _agent_model(agent_config),
         "temperature": agent_config.temperature,
-        "template": agent_config.action_template,
-        "agent_id": agent_config.agent_id,
+        "harness": _agent_harness(agent_config),
+        "template": _agent_template(agent_config),
+        "memory_mode": _agent_memory_mode(agent_config),
+        "agent_id": _agent_id(agent_config),
         "attempt": attempt,
         "outcome": outcome,
         "reward": reward,
@@ -78,7 +142,7 @@ def _mark_run_timeout(run_id: int | None, quest: str, agent_config, benchmark_id
                 WHERE id = ?
                 """,
                 (
-                    agent_config.agent_id,
+                    _agent_id(agent_config),
                     agent_config_json,
                     benchmark_id,
                     QuestOutcome.TIMEOUT.name,
@@ -101,7 +165,7 @@ def _mark_run_timeout(run_id: int | None, quest: str, agent_config, benchmark_id
                     Path(quest).stem,
                     end_time,
                     end_time,
-                    agent_config.agent_id,
+                    _agent_id(agent_config),
                     agent_config_json,
                     QuestOutcome.TIMEOUT.name,
                     0.0,
@@ -132,15 +196,14 @@ def _run_benchmark_task(task: dict[str, Any], result_queue) -> None:
             )
 
     try:
-        agent = create_agent(
+        agent = create_harness(
+            harness=_agent_harness(agent_config),
             model=agent_config.model,
             temperature=agent_config.temperature,
-            system_template=agent_config.system_template,
-            action_template=agent_config.action_template,
             skip_single=agent_config.skip_single,
             debug=agent_config.debug,
-            memory_mode=agent_config.memory_mode,
             compaction_interval=agent_config.compaction_interval,
+            system_template=agent_config.system_template,
         )
         outcome = run_quest_with_timeout(
             quest,
@@ -254,7 +317,7 @@ def _write_benchmark_artifacts(config: BenchmarkConfig, results: list[dict[str, 
                 "temperature": agent.temperature,
                 "runs": agent.runs,
                 "system_template": agent.system_template,
-                "action_template": agent.action_template,
+                "harness": _agent_harness(agent),
             }
             for agent in config.agents
         ],
@@ -281,7 +344,7 @@ def _write_benchmark_artifacts(config: BenchmarkConfig, results: list[dict[str, 
             {
                 "model": agent.model,
                 "system_template": agent.system_template,
-                "action_template": agent.action_template,
+                "harness": _agent_harness(agent),
                 "temperature": agent.temperature,
                 "runs": agent.runs,
                 "skip_single": agent.skip_single,
@@ -346,7 +409,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
 
                 logger.info(
                     "Queued agent %s quest %s (attempt %s/%s)",
-                    agent_config.agent_id,
+                    _agent_id(agent_config),
                     quest_name,
                     attempt,
                     agent_config.runs,
@@ -378,7 +441,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
             }
             logger.info(
                 "Agent %s running quest %s (attempt %s/%s)",
-                agent_config.agent_id,
+                _agent_id(agent_config),
                 task["quest_name"],
                 task["attempt"],
                 agent_config.runs,
@@ -391,7 +454,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                     "total_runs": total_runs,
                     "quest": task["quest"],
                     "quest_name": task["quest_name"],
-                    "agent_id": agent_config.agent_id,
+                    "agent_id": _agent_id(agent_config),
                     "model": agent_config.model,
                     "attempt": task["attempt"],
                 },
@@ -426,7 +489,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                             "total_runs": total_runs,
                             "quest": task["quest"],
                             "quest_name": task["quest_name"],
-                            "agent_id": agent_config.agent_id,
+                            "agent_id": _agent_id(agent_config),
                             "model": agent_config.model,
                             "attempt": task["attempt"],
                             "outcome": result["outcome"],
@@ -471,7 +534,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                         "total_runs": total_runs,
                         "quest": task["quest"],
                         "quest_name": task["quest_name"],
-                        "agent_id": agent_config.agent_id,
+                        "agent_id": _agent_id(agent_config),
                         "model": agent_config.model,
                         "attempt": task["attempt"],
                         "outcome": QuestOutcome.TIMEOUT.name,

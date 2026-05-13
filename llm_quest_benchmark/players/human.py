@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from llm_quest_benchmark.agents.base import QuestPlayer
+from llm_quest_benchmark.players.base import QuestPlayer
 
 
 class HumanPlayer(QuestPlayer):
@@ -15,7 +15,7 @@ class HumanPlayer(QuestPlayer):
         self.logger = logging.getLogger(__name__)
         if debug:
             self.logger.setLevel(logging.DEBUG)
-        # Set agent_id for database records
+        # Keep the persisted identifier stable for existing result artifacts.
         self.agent_id = "human"
 
     def _get_action_impl(self, observation: str, choices: list) -> int:

@@ -5,7 +5,7 @@ quests:
 agents:
   - model: random_choice  # Use random agent for speed and reliability
     temperature: 0.5
-    template: reasoning.jinja
+    harness: random_choice
 quest_timeout: 10  # short timeout for testing
 debug: true
 output_dir: results/benchmarks

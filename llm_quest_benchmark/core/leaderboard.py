@@ -28,14 +28,31 @@ TEMPLATE_TO_MODE = {
     "stub": ("minimal_prompt", TAXONOMY_MODES["minimal_prompt"]),
     "strategic": ("short_context_reasoning", TAXONOMY_MODES["short_context_reasoning"]),
     "stateful_compact": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
-    "memo_cot": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
-    "memo_extended": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
-    "memo_structured": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
     "light_hints": ("prompt_hints", TAXONOMY_MODES["prompt_hints"]),
     "stateful_compact_hints": ("prompt_hints", TAXONOMY_MODES["prompt_hints"]),
     "planner": ("planner_loop", TAXONOMY_MODES["planner_loop"]),
     "tool_augmented": ("tools_compact_memory", TAXONOMY_MODES["tools_compact_memory"]),
     "tool_augmented_hints": ("tools_hints_compact_memory", TAXONOMY_MODES["tools_hints_compact_memory"]),
+}
+
+RETIRED_BENCHMARK_NAMES = {
+    "exp4_compaction_no_memo",
+    "exp4_memo_cot",
+    "exp4_memo_extended",
+    "exp4_memo_structured",
+}
+
+RETIRED_HARNESSES = {
+    "compaction_no_memo",
+    "memo_cot",
+    "memo_extended",
+    "memo_structured",
+}
+
+RETIRED_TEMPLATE_IDS = {
+    "memo_cot",
+    "memo_extended",
+    "memo_structured",
 }
 
 REASONING_STYLE_TEMPLATES = {
@@ -85,6 +102,25 @@ def _mode_from_template(template_name: str, memory_mode: str | None = None) -> t
             return "compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]
         return "short_context_reasoning", TAXONOMY_MODES["short_context_reasoning"]
     return TEMPLATE_TO_MODE.get(template_id, (template_id or "unknown", template_id or "unknown"))
+
+
+def _is_retired_result(
+    source_name: str | None,
+    benchmark_id: str | None,
+    result_row: dict[str, Any],
+    agent_config: dict[str, Any],
+    template_name: str,
+) -> bool:
+    source_names = {str(value) for value in (source_name, benchmark_id) if value}
+    if source_names & RETIRED_BENCHMARK_NAMES:
+        return True
+
+    harness = str(result_row.get("harness") or agent_config.get("harness") or "")
+    if harness in RETIRED_HARNESSES:
+        return True
+
+    template_id = _strip_template_suffix(template_name)
+    return template_id in RETIRED_TEMPLATE_IDS
 
 
 def _agent_config(db_run: dict[str, Any]) -> dict[str, Any]:
@@ -298,6 +334,7 @@ def generate_leaderboard(
             continue
 
         benchmark_id = summary.get("benchmark_id")
+        source_name = summary.get("name")
         if benchmark_id:
             benchmark_ids.append(str(benchmark_id))
 
@@ -348,7 +385,15 @@ def generate_leaderboard(
             template_from_config = str(config.get("action_template") or "")
             if template_from_config:
                 template = template_from_config
-            memory_mode = config.get("memory_mode")
+            memory_mode = config.get("memory_mode") or result_row.get("memory_mode")
+            if _is_retired_result(
+                str(source_name) if source_name else None,
+                str(benchmark_id) if benchmark_id else None,
+                result_row,
+                config,
+                template,
+            ):
+                continue
             mode_id, mode_label = _mode_from_template(template, str(memory_mode) if memory_mode is not None else None)
 
             try:

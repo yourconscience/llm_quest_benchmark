@@ -18,13 +18,10 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parents[3] / ".env", override=F
 
 import typer
 
-from llm_quest_benchmark.agents.agent_factory import create_agent
-from llm_quest_benchmark.agents.human_player import HumanPlayer
 from llm_quest_benchmark.constants import (
     DEFAULT_MODEL,
     DEFAULT_QUEST,
     DEFAULT_TEMPERATURE,
-    DEFAULT_TEMPLATE,
     INFINITE_TIMEOUT,
     MODEL_CHOICES,
     SYSTEM_ROLE_TEMPLATE,
@@ -40,9 +37,10 @@ from llm_quest_benchmark.executors.benchmark import (
     print_summary,
     run_benchmark,
 )
+from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY, create_harness
 from llm_quest_benchmark.llm import tracing
 from llm_quest_benchmark.renderers.terminal import RichRenderer
-from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
+from llm_quest_benchmark.schemas.config import BenchmarkConfig, HarnessConfig
 
 # Initialize logging
 log_manager = LogManager()
@@ -52,6 +50,8 @@ app = typer.Typer(
     help="llm-quest: Command-line tools for LLM Quest Benchmark.",
     rich_markup_mode="rich",
 )
+
+HARNESS_CHOICES = list(HARNESS_REGISTRY.keys())
 
 
 def version_callback(value: bool):
@@ -348,7 +348,12 @@ def run(
     model: str = typer.Option(DEFAULT_MODEL, help=f"Model for the LLM agent (choices: {', '.join(MODEL_CHOICES)})."),
     temperature: float = typer.Option(DEFAULT_TEMPERATURE, help="Temperature for LLM sampling"),
     system_template: str = typer.Option(SYSTEM_ROLE_TEMPLATE, help="Template to use for system instructions."),
-    action_template: str = typer.Option(DEFAULT_TEMPLATE, help="Template to use for action prompts."),
+    harness: str = typer.Option(
+        "reasoning_recent",
+        "--harness",
+        help="Harness to use for quest decisions.",
+    ),
+    compaction_interval: int = typer.Option(50, help="Advanced override for compaction interval."),
     timeout: int = typer.Option(60, help="Timeout in seconds for run (0 for no timeout)."),
     skip: bool = typer.Option(True, help="Auto-select single choices without asking agent."),
     debug: bool = typer.Option(False, help="Enable debug logging and output, remove terminal UI."),
@@ -365,23 +370,25 @@ def run(
         log_manager.setup(debug)
 
         # Create agent config
-        agent_config = AgentConfig(
+        agent_config = HarnessConfig(
             model=model,
             system_template=system_template,
-            action_template=action_template,
+            harness=harness,
             temperature=temperature,
             skip_single=skip,
             debug=debug,
+            compaction_interval=compaction_interval,
         )
 
         # Create agent
-        agent = create_agent(
+        agent = create_harness(
+            harness=harness,
             model=model,
             system_template=system_template,
-            action_template=action_template,
             temperature=temperature,
             skip_single=skip,
             debug=debug,
+            compaction_interval=compaction_interval,
         )
 
         log.warning(f"Starting quest run with agent {str(agent)}")
@@ -458,7 +465,7 @@ def play(
         log.debug(f"Quest file: {quest}")
 
         # Create interactive player
-        player = HumanPlayer(skip_single=skip, debug=debug)
+        player = create_harness(harness="human", skip_single=skip, debug=debug)
 
         # Run quest in interactive mode
         result = run_quest_with_timeout(quest_path=str(quest), agent=player, timeout=INFINITE_TIMEOUT, debug=debug)
@@ -952,7 +959,7 @@ def benchmark(
 
     This command runs benchmark evaluation using a YAML configuration file that specifies:
     - quests: list of quest files or directories to test
-    - agents: list of agents with their model, template, and temperature settings
+    - agents: list of harnesses with their model, harness, and temperature settings
     - other settings: debug, timeout, workers, etc.
 
     Example:

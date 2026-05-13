@@ -7,10 +7,9 @@ quests:
   - quests/sr_2_1_2121_eng/Robots_eng.qm
 agents:
   - model: "anthropic:claude-3-5-haiku-latest"
-    template: stateful_compact
+    harness: memo_compact
     temperature: 0.4
     runs: 3
-    memory_mode: compaction
     compaction_interval: 50
 debug: false
 quest_timeout: 600

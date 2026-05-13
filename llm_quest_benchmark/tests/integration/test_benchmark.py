@@ -5,11 +5,11 @@ import time
 
 import pytest
 
-from llm_quest_benchmark.constants import DEFAULT_TEMPLATE, SYSTEM_ROLE_TEMPLATE
+from llm_quest_benchmark.constants import SYSTEM_ROLE_TEMPLATE
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors import benchmark as benchmark_module
 from llm_quest_benchmark.executors.benchmark import run_benchmark
-from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
+from llm_quest_benchmark.schemas.config import BenchmarkConfig, HarnessConfig
 
 
 def _fake_task_for_parallel_test(task, result_queue):
@@ -58,10 +58,10 @@ def test_benchmark_e2e(caplog, tmp_path):
     config = BenchmarkConfig(
         quests=[str(quest_path)],
         agents=[
-            AgentConfig(
+            HarnessConfig(
                 model="random_choice",  # Use random_choice for testing
+                harness="random_choice",
                 system_template=SYSTEM_ROLE_TEMPLATE,
-                action_template=DEFAULT_TEMPLATE,
                 temperature=0.0,
                 skip_single=True,
             )
@@ -83,9 +83,9 @@ def test_benchmark_e2e(caplog, tmp_path):
         # Check first result
         result = results[0]
         assert result["quest"] == str(quest_path)
-        assert result["model"] == "random_choice"
+        assert result["model"] == "random_policy"
         assert result["temperature"] == 0.0
-        assert result["template"] == DEFAULT_TEMPLATE
+        assert result["template"] == "reasoning.jinja"
         assert result["attempt"] == 1
         assert "agent_id" in result
         assert "outcome" in result
@@ -122,9 +122,9 @@ def test_benchmark_supports_multiple_runs_per_agent(tmp_path):
     config = BenchmarkConfig(
         quests=[str(quest_path)],
         agents=[
-            AgentConfig(
+            HarnessConfig(
                 model="random_choice",
-                action_template="reasoning",
+                harness="random_choice",
                 temperature=0.0,
                 runs=2,
                 skip_single=True,
@@ -154,7 +154,7 @@ def test_benchmark_uses_max_workers(monkeypatch, tmp_path):
 
     config = BenchmarkConfig(
         quests=[str(quest_path)],
-        agents=[AgentConfig(model="random_choice", runs=4)],
+        agents=[HarnessConfig(model="random_choice", harness="random_choice", runs=4)],
         quest_timeout=5,
         max_workers=2,
         output_dir=str(tmp_path),
@@ -187,7 +187,7 @@ def test_benchmark_enforces_child_process_timeout(monkeypatch, tmp_path):
 
     config = BenchmarkConfig(
         quests=[str(quest_path)],
-        agents=[AgentConfig(model="random_choice", runs=1)],
+        agents=[HarnessConfig(model="random_choice", harness="random_choice", runs=1)],
         quest_timeout=1,
         max_workers=1,
         output_dir=str(tmp_path),

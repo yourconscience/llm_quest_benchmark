@@ -1,17 +1,19 @@
-"""Random agent for testing quests"""
+"""Random player for testing quests"""
 
 import logging
 import random
 
-from llm_quest_benchmark.agents.base import QuestPlayer
+from llm_quest_benchmark.players.base import QuestPlayer
 
 
-class RandomAgent(QuestPlayer):
-    """Agent that randomly selects from available choices.
-    Used for testing quests and finding edge cases."""
+class RandomPlayer(QuestPlayer):
+    """Player that randomly selects from available choices.
+
+    Used for testing quests and finding edge cases.
+    """
 
     def __init__(self, seed: int = None, debug: bool = False, skip_single: bool = False):
-        """Initialize random agent.
+        """Initialize random player.
 
         Args:
             seed (int, optional): Random seed for reproducibility. Defaults to None.
@@ -24,7 +26,7 @@ class RandomAgent(QuestPlayer):
         if debug:
             self.logger.setLevel(logging.DEBUG)
         self.rng = random.Random(seed)
-        # Set agent_id for database records
+        # Keep the persisted identifier stable for existing result artifacts.
         self.agent_id = f"random_{seed}" if seed is not None else "random"
 
     def _get_action_impl(self, observation: str, choices: list[dict[str, str]]) -> int:
@@ -43,5 +45,5 @@ class RandomAgent(QuestPlayer):
         return self.rng.randint(1, len(choices))
 
     def reset(self) -> None:
-        """Reset agent state - nothing to reset for random agent"""
+        """Reset player state; nothing to reset for random choice."""
         pass

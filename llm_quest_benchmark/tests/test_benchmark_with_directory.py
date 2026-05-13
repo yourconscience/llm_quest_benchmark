@@ -6,12 +6,12 @@ from pathlib import Path
 
 import pytest
 
+from llm_quest_benchmark.executors.benchmark import _result_entry, run_benchmark
+from llm_quest_benchmark.schemas.config import BenchmarkConfig, HarnessConfig
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
-
-from llm_quest_benchmark.executors.benchmark import run_benchmark
-from llm_quest_benchmark.schemas.config import AgentConfig, BenchmarkConfig
 
 
 def create_test_config():
@@ -19,12 +19,32 @@ def create_test_config():
     return {
         "name": "Directory Benchmark Test",
         "quests": ["quests/sr_2_1_2121_eng"],
-        "agents": [{"model": "random_choice", "skip_single": True, "temperature": 0.7}],
+        "agents": [{"model": "random_choice", "harness": "random_choice", "skip_single": True, "temperature": 0.7}],
         "quest_timeout": 4,  # Keep runtime below pytest global timeout
         "max_quests": 1,
         "debug": True,
         "output_dir": "results/benchmarks",
     }
+
+
+def test_result_entry_logs_random_harness_model_as_random_policy():
+    """Random harness results should not be attributed to the default LLM model."""
+    agent_config = HarnessConfig(harness="random_choice", model="random_choice")
+
+    result = _result_entry("quests/Boat.qm", agent_config, 1, "FAILURE")
+
+    assert result["model"] == "random_policy"
+    assert result["harness"] == "random_choice"
+
+
+def test_result_entry_logs_human_harness_model_as_human():
+    """Human harness results should not be attributed to the default LLM model."""
+    agent_config = HarnessConfig(harness="human", model="human")
+
+    result = _result_entry("quests/Boat.qm", agent_config, 1, "FAILURE")
+
+    assert result["model"] == "human"
+    assert result["harness"] == "human"
 
 
 @pytest.mark.skipif(not Path("quests/sr_2_1_2121_eng").exists(), reason="Quest files not downloaded")
@@ -34,8 +54,8 @@ def test_benchmark_with_directory():
     config_dict = create_test_config()
     logger.info(f"Created test config: {json.dumps(config_dict, indent=2)}")
 
-    # Convert agent dictionaries to AgentConfig objects first
-    config_dict["agents"] = [AgentConfig(**agent_dict) for agent_dict in config_dict["agents"]]
+    # Convert agent dictionaries to HarnessConfig objects first
+    config_dict["agents"] = [HarnessConfig(**agent_dict) for agent_dict in config_dict["agents"]]
     config = BenchmarkConfig(**config_dict)
     logger.info("Config validation passed")
 
