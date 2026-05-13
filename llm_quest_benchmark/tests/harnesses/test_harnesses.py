@@ -139,7 +139,7 @@ def test_compaction_memory_receives_existing_llm_client():
     assert action == 2
     assert harness.memory_module.llm_client is mocked_llm
     assert harness.memory_module._compaction_summary == "Summary: paid the fuel merchant and should keep receipt."
-    assert harness._steps_since_compaction == 0
+    assert harness.memory_module.steps_since_compaction == 0
 
 
 def test_planner_harness_first_turn_generates_plan_then_acts():
@@ -186,8 +186,8 @@ def test_planner_harness_reuses_plan_when_state_is_stable():
 
 def test_planner_harness_uses_contextual_memory_state():
     harness = PlannerHarness(model_name="gpt-5-mini", compaction_interval=50)
-    harness._quest_briefing = "Original mission: win the election."
-    harness._transcript = [
+    harness.memory_module.set_quest_briefing("Original mission: win the election.")
+    harness.memory_module.transcript = [
         {
             "step": 1,
             "observation": "You learned Maloqs value strength.",
@@ -196,7 +196,7 @@ def test_planner_harness_uses_contextual_memory_state():
             "action": 1,
         }
     ]
-    harness._steps_since_compaction = 1
+    harness.memory_module.steps_since_compaction = 1
     mocked_llm = Mock()
     mocked_llm.get_completion.side_effect = [
         "Use the remembered cultural clue.",
@@ -323,8 +323,8 @@ def test_tool_compact_harness_can_use_scratchpad_tool_call():
 
 def test_tool_compact_harness_uses_contextual_memory_state():
     harness = ToolCompactHarness(model_name="gpt-5-mini", compaction_interval=50)
-    harness._quest_briefing = "Original mission: pass pilot certification."
-    harness._transcript = [
+    harness.memory_module.set_quest_briefing("Original mission: pass pilot certification.")
+    harness.memory_module.transcript = [
         {
             "step": 1,
             "observation": "Hogger is greedy.",
@@ -333,7 +333,7 @@ def test_tool_compact_harness_uses_contextual_memory_state():
             "action": 1,
         }
     ]
-    harness._steps_since_compaction = 1
+    harness.memory_module.steps_since_compaction = 1
     mocked_llm = Mock()
     mocked_llm.get_completion.return_value = (
         '{"memo":"Hogger is greedy","analysis":"no tools needed","tool_calls":[],"result":1}'

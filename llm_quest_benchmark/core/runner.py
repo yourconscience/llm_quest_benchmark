@@ -10,11 +10,11 @@ from concurrent.futures import TimeoutError as FuturesTimeoutError
 from copy import deepcopy
 from typing import Any
 
-from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.constants import DEFAULT_QUEST_TIMEOUT
 from llm_quest_benchmark.core.logging import LogManager, QuestLogger
 from llm_quest_benchmark.environments.qm import QMPlayerEnv as QuestEnvironment
 from llm_quest_benchmark.environments.state import QuestOutcome
+from llm_quest_benchmark.players.base import QuestPlayer
 from llm_quest_benchmark.schemas.config import HarnessConfig
 from llm_quest_benchmark.schemas.state import AgentState
 

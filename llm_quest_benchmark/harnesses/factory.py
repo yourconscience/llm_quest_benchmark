@@ -1,8 +1,5 @@
 """Factory for creating harness-based quest players."""
 
-from llm_quest_benchmark.agents.base import QuestPlayer
-from llm_quest_benchmark.agents.human_player import HumanPlayer
-from llm_quest_benchmark.agents.random_agent import RandomAgent
 from llm_quest_benchmark.constants import DEFAULT_MODEL
 from llm_quest_benchmark.harnesses.memo import (
     CompactionNoMemoHarness,
@@ -16,6 +13,9 @@ from llm_quest_benchmark.harnesses.minimal import MinimalHarness
 from llm_quest_benchmark.harnesses.planner import PlannerHarness
 from llm_quest_benchmark.harnesses.reasoning import ReasoningFullTranscriptHarness, ReasoningRecentHarness
 from llm_quest_benchmark.harnesses.tool_harness import ToolCompactHarness, ToolHintedHarness
+from llm_quest_benchmark.players.base import QuestPlayer
+from llm_quest_benchmark.players.human import HumanPlayer
+from llm_quest_benchmark.players.random import RandomPlayer
 
 HARNESS_REGISTRY = {
     "minimal": MinimalHarness,
@@ -66,7 +66,7 @@ def create_harness(
             raise ValueError("Encode random seeds in harness, for example harness='random_choice_123'")
         if model not in (DEFAULT_MODEL, "random_choice"):
             raise ValueError("Use model='random_choice' with random_choice harnesses")
-        return RandomAgent(seed=seed, debug=debug, skip_single=skip_single)
+        return RandomPlayer(seed=seed, debug=debug, skip_single=skip_single)
     if harness.startswith("random_choice"):
         raise ValueError(f"Unknown harness '{harness}'. Valid: {valid}")
     if harness == "human":

@@ -19,7 +19,7 @@ def test_version():
 
 
 def test_run_quest():
-    """Test running a quest with random agent"""
+    """Test running a quest with random player"""
     result = runner.invoke(
         app,
         ["run", "--quest", str(DEFAULT_QUEST), "--model", "random_choice", "--harness", "random_choice", "--debug"],

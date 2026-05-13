@@ -20,10 +20,8 @@ class MinimalHarness(BaseHarness):
         skip_single: bool = False,
         debug: bool = False,
         memory_module=None,
-        compaction_interval: int = 50,
         **_,
     ):
-        del compaction_interval
         super().__init__(
             model_name=model_name,
             system_template=system_template,
@@ -56,6 +54,3 @@ class MinimalHarness(BaseHarness):
             self.history.append(default_response)
             self._last_response = default_response
             return 1
-
-    def reset(self) -> None:
-        super().reset()

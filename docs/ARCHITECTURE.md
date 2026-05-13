@@ -61,8 +61,8 @@ planning choices change behavior.
   history helpers used by tool harnesses.
 - `llm_quest_benchmark/harnesses/factory.py`: `create_harness()` and the
   canonical harness registry.
-- `llm_quest_benchmark/agents/human_player.py`,
-  `llm_quest_benchmark/agents/random_agent.py`: Non-LLM `QuestPlayer`
+- `llm_quest_benchmark/players/human.py`,
+  `llm_quest_benchmark/players/random.py`: Non-LLM `QuestPlayer`
   implementations preserved for interactive and random baselines.
 
 Harness construction lazily initializes provider clients, so template rendering

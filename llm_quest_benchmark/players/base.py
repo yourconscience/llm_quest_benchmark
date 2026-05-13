@@ -1,4 +1,4 @@
-"""Base classes for quest players (both human and LLM)"""
+"""Base class for quest players and harnesses."""
 
 from abc import ABC, abstractmethod
 from typing import Any
@@ -13,7 +13,7 @@ class QuestPlayer(ABC):
         """Initialize player with skip_single option"""
         self.skip_single = skip_single
         self._last_response: LLMResponse = None
-        self.agent_id = "base_agent"  # Default agent ID
+        self.agent_id = "base_player"
 
     def get_action(self, observation: str, choices: list) -> int:
         """Get action number from observation and choices
@@ -55,7 +55,7 @@ class QuestPlayer(ABC):
         pass
 
     def get_last_response(self) -> LLMResponse:
-        """Get the last response from the agent"""
+        """Get the last response from the player or harness."""
         return self._last_response
 
     @abstractmethod

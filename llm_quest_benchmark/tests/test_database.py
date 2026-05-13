@@ -249,8 +249,8 @@ def test_run_summary_export_tracks_repetition_rate(tmp_path, monkeypatch, quest_
     assert exported["metrics"]["bad_decision_rate"] == 0.0
 
 
-def test_random_agent_does_not_export_json(tmp_path, monkeypatch, quest_logger):
-    """Random agent runs should not create result artifacts in results/."""
+def test_random_player_does_not_export_json(tmp_path, monkeypatch, quest_logger):
+    """Random player runs should not create result artifacts in results/."""
     monkeypatch.setattr(logging_module, "RESULTS_DIR", tmp_path)
 
     quest_logger.agent = "random_choice"

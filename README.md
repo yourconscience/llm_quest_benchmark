@@ -58,7 +58,7 @@ uv run llm-quest benchmark --config configs/benchmarks/memory_full_transcript.ya
 uv run llm-quest benchmark-report --benchmark-id <id> --output report.md
 
 # Analyze a single run
-uv run llm-quest analyze-run --run-summary results/<agent>/<quest>/run_<id>/run_summary.json
+uv run llm-quest analyze-run --run-summary results/<harness>/<quest>/run_<id>/run_summary.json
 
 # Play as human in terminal
 uv run llm-quest play --quest quests/Boat.qm
@@ -108,7 +108,7 @@ Provider-specific keys in `.env`:
 ## Project Structure
 
 - `llm_quest_benchmark/harnesses/` - LLM harness implementations for prompt, memory, tools, and planning experiments
-- `llm_quest_benchmark/agents/` - Non-LLM player primitives (`human`, `random_choice`)
+- `llm_quest_benchmark/players/` - Non-LLM player primitives (`human`, `random_choice`)
 - `llm_quest_benchmark/prompt_templates/` - Jinja2 prompt templates for the public context-scaffold taxonomy
 - `llm_quest_benchmark/executors/` - CLI, benchmark orchestration, TS bridge
 - `configs/benchmarks/` - YAML benchmark configurations

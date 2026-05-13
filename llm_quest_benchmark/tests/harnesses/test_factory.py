@@ -1,10 +1,10 @@
 import pytest
 
-from llm_quest_benchmark.agents.human_player import HumanPlayer
-from llm_quest_benchmark.agents.random_agent import RandomAgent
 from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY, create_harness
 from llm_quest_benchmark.harnesses.memo import MemoCompactHarness
 from llm_quest_benchmark.harnesses.minimal import MinimalHarness
+from llm_quest_benchmark.players.human import HumanPlayer
+from llm_quest_benchmark.players.random import RandomPlayer
 from llm_quest_benchmark.schemas.config import BenchmarkConfig, HarnessConfig
 
 
@@ -30,13 +30,13 @@ def test_create_human_harness():
 def test_create_random_choice_harness():
     harness = create_harness("random_choice")
 
-    assert isinstance(harness, RandomAgent)
+    assert isinstance(harness, RandomPlayer)
 
 
 def test_create_seeded_random_choice_harness():
     harness = create_harness("random_choice_123", model="random_choice")
 
-    assert isinstance(harness, RandomAgent)
+    assert isinstance(harness, RandomPlayer)
     assert harness.agent_id == "random_123"
 
 

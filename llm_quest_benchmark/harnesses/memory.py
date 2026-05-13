@@ -1,7 +1,10 @@
-"""Memory modules for harness-based quest agents."""
+"""Memory modules for harness-based quest players."""
 
+import logging
 from abc import ABC, abstractmethod
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class MemoryModule(ABC):
@@ -17,12 +20,44 @@ class MemoryModule(ABC):
     def reset(self) -> None:
         pass
 
+    @property
+    def quest_briefing(self) -> str | None:
+        return None
+
+    @property
+    def transcript(self) -> list[dict[str, Any]]:
+        return []
+
+    @transcript.setter
+    def transcript(self, value: list[dict[str, Any]]) -> None:
+        raise TypeError(f"{self.__class__.__name__} does not support transcript assignment")
+
+    @property
+    def steps_since_compaction(self) -> int:
+        return 0
+
+    @steps_since_compaction.setter
+    def steps_since_compaction(self, value: int) -> None:
+        raise TypeError(f"{self.__class__.__name__} does not support compaction counters")
+
     def set_quest_briefing(self, briefing: str) -> None:
-        pass
+        clean = (briefing or "").strip()
+        if hasattr(self, "_quest_briefing"):
+            self._quest_briefing = clean or None
+
+    def _briefing_block(self, current_state: str) -> str | None:
+        briefing = self.quest_briefing
+        if not briefing:
+            return None
+        if current_state.strip() == briefing:
+            return None
+        if len(briefing) > 800:
+            briefing = briefing[:800] + "..."
+        return f"Quest briefing (your mission):\n{briefing}"
 
 
 class DefaultMemory(MemoryModule):
-    """Recent N observations window (no compaction)."""
+    """Recent N observations window without compaction."""
 
     def __init__(self, context_window: int = 3, context_chars: int = 220, decision_window: int = 5):
         self.context_window = context_window
@@ -32,9 +67,9 @@ class DefaultMemory(MemoryModule):
         self._observations: list[str] = []
         self._decisions: list[dict[str, Any]] = []
 
-    def set_quest_briefing(self, briefing: str) -> None:
-        clean = (briefing or "").strip()
-        self._quest_briefing = clean or None
+    @property
+    def quest_briefing(self) -> str | None:
+        return self._quest_briefing
 
     def get_context(self, step: int) -> str:
         blocks: list[str] = []
@@ -106,16 +141,6 @@ class DefaultMemory(MemoryModule):
         self._observations = []
         self._decisions = []
 
-    def _briefing_block(self, current_state: str) -> str | None:
-        if not self._quest_briefing:
-            return None
-        if current_state.strip() == self._quest_briefing:
-            return None
-        briefing = self._quest_briefing
-        if len(briefing) > 800:
-            briefing = briefing[:800] + "..."
-        return f"Quest briefing (your mission):\n{briefing}"
-
 
 class FullTranscriptMemory(MemoryModule):
     """Unbounded full transcript in context."""
@@ -124,9 +149,17 @@ class FullTranscriptMemory(MemoryModule):
         self._quest_briefing: str | None = None
         self._transcript: list[dict[str, Any]] = []
 
-    def set_quest_briefing(self, briefing: str) -> None:
-        clean = (briefing or "").strip()
-        self._quest_briefing = clean or None
+    @property
+    def quest_briefing(self) -> str | None:
+        return self._quest_briefing
+
+    @property
+    def transcript(self) -> list[dict[str, Any]]:
+        return self._transcript
+
+    @transcript.setter
+    def transcript(self, value: list[dict[str, Any]]) -> None:
+        self._transcript = value
 
     def get_context(self, step: int) -> str:
         blocks: list[str] = []
@@ -170,19 +203,9 @@ class FullTranscriptMemory(MemoryModule):
         self._quest_briefing = None
         self._transcript = []
 
-    def _briefing_block(self, current_state: str) -> str | None:
-        if not self._quest_briefing:
-            return None
-        if current_state.strip() == self._quest_briefing:
-            return None
-        briefing = self._quest_briefing
-        if len(briefing) > 800:
-            briefing = briefing[:800] + "..."
-        return f"Quest briefing (your mission):\n{briefing}"
-
 
 class CompactionMemory(MemoryModule):
-    """Periodic LLM summarization + 20-word memo field."""
+    """Periodic LLM summarization plus 20-word memo field."""
 
     def __init__(self, compaction_interval: int = 50, llm_client=None):
         self.compaction_interval = compaction_interval
@@ -192,9 +215,25 @@ class CompactionMemory(MemoryModule):
         self._compaction_summary: str | None = None
         self._steps_since_compaction = 0
 
-    def set_quest_briefing(self, briefing: str) -> None:
-        clean = (briefing or "").strip()
-        self._quest_briefing = clean or None
+    @property
+    def quest_briefing(self) -> str | None:
+        return self._quest_briefing
+
+    @property
+    def transcript(self) -> list[dict[str, Any]]:
+        return self._transcript
+
+    @transcript.setter
+    def transcript(self, value: list[dict[str, Any]]) -> None:
+        self._transcript = value
+
+    @property
+    def steps_since_compaction(self) -> int:
+        return self._steps_since_compaction
+
+    @steps_since_compaction.setter
+    def steps_since_compaction(self, value: int) -> None:
+        self._steps_since_compaction = value
 
     def get_context(self, step: int) -> str:
         blocks: list[str] = []
@@ -250,15 +289,14 @@ class CompactionMemory(MemoryModule):
         if self._steps_since_compaction < self.compaction_interval:
             return
         if self.llm_client is None:
-            # No LLM client available for compaction; skip silently
-            self._steps_since_compaction = 0
+            logger.debug("Skipping compaction because no LLM client is attached")
             return
         transcript_text = self._format_transcript_for_compaction()
         if not transcript_text:
             self._steps_since_compaction = 0
             return
 
-        prompt_parts = ["You are summarizing an agent's progress through a text quest."]
+        prompt_parts = ["You are summarizing a quest player's progress through a text quest."]
         if self._quest_briefing:
             prompt_parts.append(f"\nQUEST BRIEFING (the original mission):\n{self._quest_briefing}")
         if self._compaction_summary:
@@ -266,7 +304,7 @@ class CompactionMemory(MemoryModule):
         prompt_parts.append(f"\nTRANSCRIPT OF LAST {self._steps_since_compaction} STEPS:\n{transcript_text}")
         prompt_parts.append(
             "\nSummarize the agent's progress. Include:\n"
-            "- Current objective (what the agent should do next)\n"
+            "- Current objective (what the player should do next)\n"
             "- Progress so far (what has been accomplished)\n"
             "- Key facts (NPCs, items, locations, deadlines discovered)\n"
             "- Failed approaches (actions/paths that didn't work)\n"
@@ -276,15 +314,14 @@ class CompactionMemory(MemoryModule):
 
         try:
             summary = (self.llm_client.get_completion("\n".join(prompt_parts)) or "").strip()
-        except Exception:
+        except Exception as exc:
+            logger.debug("Skipping compaction because summarization failed: %s", exc)
             self._steps_since_compaction = 0
             return
         if summary:
             self._compaction_summary = summary
             self._transcript = []
-            self._steps_since_compaction = 0
-        else:
-            self._steps_since_compaction = 0
+        self._steps_since_compaction = 0
 
     def _format_transcript_for_compaction(self) -> str:
         recent = (
@@ -310,16 +347,6 @@ class CompactionMemory(MemoryModule):
                 line += f"\n  Reasoning: {reasoning[:800]}"
             lines.append(line)
         return "\n\n".join(lines)
-
-    def _briefing_block(self, current_state: str) -> str | None:
-        if not self._quest_briefing:
-            return None
-        if current_state.strip() == self._quest_briefing:
-            return None
-        briefing = self._quest_briefing
-        if len(briefing) > 800:
-            briefing = briefing[:800] + "..."
-        return f"Quest briefing (your mission):\n{briefing}"
 
     @staticmethod
     def _twenty_word_memo(memo: str) -> str:

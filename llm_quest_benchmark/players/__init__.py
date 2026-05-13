@@ -1,4 +1,4 @@
-__all__ = ["QuestPlayer", "HumanPlayer", "RandomAgent"]
+__all__ = ["QuestPlayer", "HumanPlayer", "RandomPlayer"]
 
 
 def __getattr__(name):
@@ -7,11 +7,11 @@ def __getattr__(name):
 
         return QuestPlayer
     if name == "HumanPlayer":
-        from .human_player import HumanPlayer
+        from .human import HumanPlayer
 
         return HumanPlayer
-    if name == "RandomAgent":
-        from .random_agent import RandomAgent
+    if name == "RandomPlayer":
+        from .random import RandomPlayer
 
-        return RandomAgent
+        return RandomPlayer
     raise AttributeError(name)

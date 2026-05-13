@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from llm_quest_benchmark.agents.human_player import HumanPlayer
+from llm_quest_benchmark.players.human import HumanPlayer
 
 
 def test_human_player_initialization():

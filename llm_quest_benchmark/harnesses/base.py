@@ -9,10 +9,10 @@ from typing import Any
 
 from json_repair import repair_json
 
-from llm_quest_benchmark.agents.base import QuestPlayer
 from llm_quest_benchmark.constants import DEFAULT_TEMPLATE, normalize_template_name
 from llm_quest_benchmark.llm.client import get_llm_client, parse_model_name
 from llm_quest_benchmark.llm.prompt import PromptRenderer
+from llm_quest_benchmark.players.base import QuestPlayer
 from llm_quest_benchmark.schemas.response import LLMResponse
 
 RISKY_CHOICE_KEYWORDS = (
@@ -311,7 +311,6 @@ class BaseHarness(QuestPlayer):
         """Return the selected 1-based action number."""
         pass
 
-    @abstractmethod
     def reset(self) -> None:
         """Reset harness state between episodes."""
         super().reset()
@@ -342,33 +341,6 @@ class BaseHarness(QuestPlayer):
 
     def get_last_response(self) -> LLMResponse | None:
         return self._last_response
-
-    @property
-    def _quest_briefing(self) -> str | None:
-        return getattr(self.memory_module, "_quest_briefing", None)
-
-    @_quest_briefing.setter
-    def _quest_briefing(self, value: str | None) -> None:
-        if self.memory_module is not None:
-            self.memory_module._quest_briefing = value
-
-    @property
-    def _transcript(self) -> list[dict[str, Any]]:
-        return getattr(self.memory_module, "_transcript", [])
-
-    @_transcript.setter
-    def _transcript(self, value: list[dict[str, Any]]) -> None:
-        if self.memory_module is not None:
-            self.memory_module._transcript = value
-
-    @property
-    def _steps_since_compaction(self) -> int:
-        return getattr(self.memory_module, "_steps_since_compaction", 0)
-
-    @_steps_since_compaction.setter
-    def _steps_since_compaction(self, value: int) -> None:
-        if self.memory_module is not None:
-            self.memory_module._steps_since_compaction = value
 
     def _build_contextual_state(self, state: str) -> str:
         if self.memory_module is None:

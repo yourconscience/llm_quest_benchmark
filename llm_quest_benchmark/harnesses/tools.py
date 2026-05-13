@@ -1,4 +1,4 @@
-"""Reusable tools for harness-based quest agents."""
+"""Reusable tools for harness-based quest players."""
 
 import ast
 import re

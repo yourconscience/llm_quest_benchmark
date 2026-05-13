@@ -63,13 +63,13 @@ def test_quest_run_with_llm(caplog):
 
 @pytest.mark.e2e
 @pytest.mark.timeout(TIMEOUT)
-def test_random_agent_on_test_quest(caplog):
-    """Test that random agent can complete a test quest"""
+def test_random_player_on_test_quest(caplog):
+    """Test that random player can complete a test quest"""
     caplog.set_level(logging.DEBUG)  # Show all logs in test output
 
-    # Create random agent
+    # Create random player
     agent = create_harness("random_choice", skip_single=True, debug=True)
-    assert agent is not None, "Failed to create random agent"
+    assert agent is not None, "Failed to create random player"
 
     # Mock callback for testing
     def mock_callback(event: str, data: Any) -> None:
@@ -80,7 +80,7 @@ def test_random_agent_on_test_quest(caplog):
         elif event == "error":
             caplog.error(f"Error: {data}")
 
-    # Run quest with random agent
+    # Run quest with random player
     try:
         outcome = run_quest_with_timeout(
             quest_path=str(DEFAULT_QUEST),

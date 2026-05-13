@@ -1,7 +1,7 @@
 """Factory for creating appropriate renderers based on agent type and mode"""
 
-from llm_quest_benchmark.agents.base import QuestPlayer
-from llm_quest_benchmark.agents.human_player import HumanPlayer
+from llm_quest_benchmark.players.base import QuestPlayer
+from llm_quest_benchmark.players.human import HumanPlayer
 from llm_quest_benchmark.renderers.base import BaseRenderer
 from llm_quest_benchmark.renderers.null import NoRenderer
 from llm_quest_benchmark.renderers.progress import ProgressRenderer
@@ -25,7 +25,7 @@ def create_renderer(
     The factory follows these rules:
     1. In debug mode, always use NoRenderer
     2. For human players, use RichRenderer
-    3. For automated agents (LLM, Random):
+    3. For automated players (LLM, Random):
        - In benchmark mode (total_quests provided), use ProgressRenderer
        - Otherwise, use NoRenderer
     """

@@ -184,20 +184,24 @@ class ToolCompactHarness(BaseHarness):
             tool_calls = self._extract_tool_calls(selection_response)
             parsed_response = self._parse_llm_response(selection_response, len(choices))
             tool_results: list[str] = []
+            final_choice_used = False
 
             total_usage = self._normalize_usage(selection_usage)
             if tool_calls:
                 tool_results = self._execute_tool_calls(tool_calls)
                 parsed_response, final_usage = self._final_choice(contextual_state, choices, tool_results=tool_results)
                 total_usage = self._normalize_usage(self._merge_usage(total_usage, final_usage))
+                final_choice_used = True
             elif parsed_response.is_default:
                 parsed_response, final_usage = self._final_choice(contextual_state, choices, tool_results=[])
                 total_usage = self._normalize_usage(self._merge_usage(total_usage, final_usage))
+                final_choice_used = True
 
-            action_before_policy = parsed_response.action
-            parsed_response.action = self._apply_safety_filter(choices, parsed_response.action)
-            if parsed_response.action != action_before_policy and not parsed_response.reasoning:
-                parsed_response.reasoning = "policy_safety_override"
+            if not final_choice_used:
+                action_before_policy = parsed_response.action
+                parsed_response.action = self._apply_safety_filter(choices, parsed_response.action)
+                if parsed_response.action != action_before_policy and not parsed_response.reasoning:
+                    parsed_response.reasoning = "policy_safety_override"
 
             parsed_response.prompt_tokens = total_usage["prompt_tokens"]
             parsed_response.completion_tokens = total_usage["completion_tokens"]
