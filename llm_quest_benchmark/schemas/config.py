@@ -26,6 +26,18 @@ DEFAULT_BENCHMARK_CONFIG = {
     "name": "Default Benchmark",
 }
 
+COMPACTION_HARNESSES = {
+    "memo_compact",
+    "hinted_compact",
+    "tool_compact",
+    "tool_hinted",
+    "planner",
+    "compaction_no_memo",
+    "memo_cot",
+    "memo_extended",
+    "memo_structured",
+}
+
 
 def get_default_benchmark_yaml() -> str:
     """Get the default benchmark configuration from default.yaml file"""
@@ -111,8 +123,12 @@ class HarnessConfig:
         ):
             valid = [*sorted(HARNESS_REGISTRY), *SPECIAL_HARNESSES]
             raise ValueError(f"Invalid harness: {self.harness}. Supported harnesses: {valid}")
+        if self.harness == "human" and self.model != "human":
+            raise ValueError("Use model: human with harness: human")
         if self.model == "human" and self.harness != "human":
             raise ValueError("Use harness: human with model: human")
+        if is_random_choice_harness(self.harness) and self.model != "random_choice":
+            raise ValueError("Use model: random_choice with random_choice harnesses")
         if is_random_choice_harness(self.model) and not is_random_choice_harness(self.harness):
             raise ValueError("Use harness: random_choice with model: random_choice")
         if self.model not in ("human",) and not is_random_choice_harness(self.model):
@@ -132,7 +148,8 @@ class HarnessConfig:
         """Generate a stable harness ID based on configuration values"""
         import hashlib
 
-        config_str = f"{self.model}_{self.temperature}_{self.harness}_{self.system_template}_{self.compaction_interval}"
+        interval_tag = f"_ci{self.compaction_interval}" if self.harness in COMPACTION_HARNESSES else ""
+        config_str = f"{self.model}_{self.temperature}_{self.harness}_{self.system_template}{interval_tag}"
         hash_val = hashlib.md5(config_str.encode()).hexdigest()[:8]
         return f"{self.model}_t{self.temperature}_{self.harness}_{hash_val}"
 

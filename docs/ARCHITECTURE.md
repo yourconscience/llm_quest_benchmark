@@ -99,6 +99,8 @@ and benchmark configuration parsing do not require API keys.
     harness memory.
   - `stateful_compact.jinja`: Compact memory / 20-word memo prompt.
   - `stateful_compact_hints.jinja`: Compact memo prompt with mechanics hints.
+  - `memo_cot.jinja`, `memo_extended.jinja`, `memo_structured.jinja`:
+    retained Exp 4 memo variants.
   - `planner.jinja`: Planner loop prompt.
   - `tool_augmented.jinja`, `tool_augmented_hints.jinja`: Tool prompts with
     compact memory, optionally with hints.

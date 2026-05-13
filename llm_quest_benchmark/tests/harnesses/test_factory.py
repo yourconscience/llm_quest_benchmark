@@ -34,7 +34,7 @@ def test_create_random_choice_harness():
 
 
 def test_create_seeded_random_choice_harness():
-    harness = create_harness("random_choice_123")
+    harness = create_harness("random_choice_123", model="random_choice")
 
     assert isinstance(harness, RandomAgent)
     assert harness.agent_id == "random_123"
@@ -60,6 +60,11 @@ def test_random_choice_model_requires_random_harness():
         create_harness("minimal", model="random_choice")
 
 
+def test_seeded_random_model_is_rejected():
+    with pytest.raises(ValueError, match="Encode random seeds in harness"):
+        create_harness("random_choice", model="random_choice_123")
+
+
 def test_human_model_requires_human_harness():
     with pytest.raises(ValueError, match="harness='human'"):
         create_harness("minimal", model="human")
@@ -74,15 +79,39 @@ def test_harness_config_stable_harness_id():
 
 def test_harness_config_system_template_affects_harness_id():
     first = HarnessConfig(harness="memo_compact", model="gpt-5-mini", system_template="system_role.jinja")
-    second = HarnessConfig(harness="memo_compact", model="gpt-5-mini", system_template="system_role_risk.jinja")
+    second = HarnessConfig(harness="memo_compact", model="gpt-5-mini", system_template="custom_system_role.jinja")
+
+    assert first.harness_id != second.harness_id
+
+
+def test_non_compaction_harness_id_ignores_compaction_interval():
+    first = HarnessConfig(harness="reasoning_recent", model="gpt-5-mini", compaction_interval=10)
+    second = HarnessConfig(harness="reasoning_recent", model="gpt-5-mini", compaction_interval=99)
+
+    assert first.harness_id == second.harness_id
+
+
+def test_compaction_harness_id_includes_compaction_interval():
+    first = HarnessConfig(harness="memo_compact", model="gpt-5-mini", compaction_interval=10)
+    second = HarnessConfig(harness="memo_compact", model="gpt-5-mini", compaction_interval=99)
 
     assert first.harness_id != second.harness_id
 
 
 def test_harness_config_allows_seeded_random_choice_harness():
-    config = HarnessConfig(harness="random_choice_123", model="gpt-5-mini")
+    config = HarnessConfig(harness="random_choice_123", model="random_choice")
 
     assert config.harness == "random_choice_123"
+
+
+def test_harness_config_rejects_llm_model_with_random_harness():
+    with pytest.raises(ValueError, match="model: random_choice"):
+        HarnessConfig(harness="random_choice", model="gpt-5-mini")
+
+
+def test_harness_config_rejects_llm_model_with_human_harness():
+    with pytest.raises(ValueError, match="model: human"):
+        HarnessConfig(harness="human", model="gpt-5-mini")
 
 
 def test_harness_config_rejects_random_model_with_llm_harness():

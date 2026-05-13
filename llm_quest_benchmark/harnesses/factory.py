@@ -60,7 +60,12 @@ def create_harness(
 ) -> QuestPlayer:
     valid = [*sorted(HARNESS_REGISTRY), *SPECIAL_HARNESSES]
     is_random_harness, seed = _parse_random_choice_seed(harness)
+    is_random_model, _ = _parse_random_choice_seed(model)
     if is_random_harness:
+        if is_random_model and model != "random_choice":
+            raise ValueError("Encode random seeds in harness, for example harness='random_choice_123'")
+        if model not in (DEFAULT_MODEL, "random_choice"):
+            raise ValueError("Use model='random_choice' with random_choice harnesses")
         return RandomAgent(seed=seed, debug=debug, skip_single=skip_single)
     if harness.startswith("random_choice"):
         raise ValueError(f"Unknown harness '{harness}'. Valid: {valid}")
@@ -68,7 +73,6 @@ def create_harness(
         return HumanPlayer(skip_single=skip_single)
     if harness not in HARNESS_REGISTRY:
         raise ValueError(f"Unknown harness '{harness}'. Valid: {valid}")
-    is_random_model, seed = _parse_random_choice_seed(model)
     if is_random_model:
         raise ValueError(
             "Use harness='random_choice' for random policy runs instead of pairing random_choice model with an LLM harness"

@@ -29,7 +29,7 @@ def create_test_config():
 
 def test_result_entry_logs_random_harness_model_as_random_policy():
     """Random harness results should not be attributed to the default LLM model."""
-    agent_config = HarnessConfig(harness="random_choice", model="gpt-5-mini")
+    agent_config = HarnessConfig(harness="random_choice", model="random_choice")
 
     result = _result_entry("quests/Boat.qm", agent_config, 1, "FAILURE")
 
@@ -39,7 +39,7 @@ def test_result_entry_logs_random_harness_model_as_random_policy():
 
 def test_result_entry_logs_human_harness_model_as_human():
     """Human harness results should not be attributed to the default LLM model."""
-    agent_config = HarnessConfig(harness="human", model="gpt-5-mini")
+    agent_config = HarnessConfig(harness="human", model="human")
 
     result = _result_entry("quests/Boat.qm", agent_config, 1, "FAILURE")
 

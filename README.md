@@ -107,7 +107,8 @@ Provider-specific keys in `.env`:
 
 ## Project Structure
 
-- `llm_quest_benchmark/agents/` - Agent implementations (LLM, planner, tool-augmented)
+- `llm_quest_benchmark/harnesses/` - LLM harness implementations for prompt, memory, tools, and planning experiments
+- `llm_quest_benchmark/agents/` - Non-LLM player primitives (`human`, `random_choice`)
 - `llm_quest_benchmark/prompt_templates/` - Jinja2 prompt templates for the public context-scaffold taxonomy
 - `llm_quest_benchmark/executors/` - CLI, benchmark orchestration, TS bridge
 - `configs/benchmarks/` - YAML benchmark configurations
