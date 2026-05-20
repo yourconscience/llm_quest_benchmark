@@ -154,6 +154,17 @@ function sortQuests(quests) {
 const PLAY_URL = 'https://yourconscience.github.io/llm_quest_benchmark/play.html';
 const SHARE_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
 const MIN_COHORT_LOCATION_RUNS = 3;
+const MEDIA_BASE = 'play/media/';
+
+function mediaUrl(name, kind) {
+  if (!name) return null;
+  const raw = String(name);
+  const lower = raw.toLowerCase();
+  if (lower.startsWith('http://') || lower.startsWith('https://')) return raw;
+  const ext = kind === 'img' ? '.jpg' : '.mp3';
+  const folder = kind === 'img' ? 'img' : kind;
+  return MEDIA_BASE + folder + '/' + lower + (lower.endsWith(ext) ? '' : ext);
+}
 
 function drawTextLine(ctx, text, x, y, maxWidth) {
   ctx.fillText(text, x, y, maxWidth);
@@ -220,6 +231,79 @@ function CohortBars({ cohortLoc, playerChoiceNorm, activeFamily, onFamilyChange,
         })}
       </div>
     </>
+  );
+}
+
+// ---- Media ----
+
+function QuestImage({ src }) {
+  const [failedSrc, setFailedSrc] = useState(null);
+
+  useEffect(() => {
+    setFailedSrc(null);
+  }, [src]);
+
+  if (!src || failedSrc === src) {
+    return <div className="media-placeholder">Space Rangers</div>;
+  }
+
+  return <img src={src} alt="" onError={() => setFailedSrc(src)} />;
+}
+
+function QuestAudio({ gameState, audioEnabled }) {
+  const trackRef = useRef(null);
+  const soundRef = useRef(null);
+  const trackSrc = mediaUrl(gameState && gameState.trackName, 'track');
+  const soundSrc = mediaUrl(gameState && gameState.soundName, 'sound');
+
+  useEffect(() => {
+    if (!audioEnabled || !trackRef.current) return;
+    trackRef.current.volume = 0.55;
+    trackRef.current.play().catch(() => {});
+  }, [audioEnabled, trackSrc]);
+
+  useEffect(() => {
+    if (!audioEnabled || !soundRef.current) return;
+    soundRef.current.volume = 0.75;
+    soundRef.current.play().catch(() => {});
+  }, [audioEnabled, soundSrc]);
+
+  if (!audioEnabled) return null;
+
+  return (
+    <>
+      {trackSrc && <audio key={trackSrc} ref={trackRef} src={trackSrc} loop preload="none" />}
+      {soundSrc && <audio key={soundSrc} ref={soundRef} src={soundSrc} preload="none" />}
+    </>
+  );
+}
+
+function MediaStage({ gameState, audioEnabled }) {
+  const imageSrc = mediaUrl(gameState && gameState.imageName, 'img');
+  return (
+    <div className="media-stage">
+      <QuestAudio gameState={gameState} audioEnabled={audioEnabled} />
+      <div className="media-frame">
+        <QuestImage src={imageSrc} />
+      </div>
+    </div>
+  );
+}
+
+function CurrentDecisionInsight({ cohortLoc, isBranching, activeFamily, onFamilyChange, families }) {
+  if (!isBranching) return null;
+
+  return (
+    <div className="cohort-panel">
+      <div className="panel-label">AI answers</div>
+      <CohortBars
+        cohortLoc={cohortLoc}
+        playerChoiceNorm={null}
+        activeFamily={activeFamily}
+        onFamilyChange={onFamilyChange}
+        families={families}
+      />
+    </div>
   );
 }
 
@@ -450,7 +534,7 @@ function buildShareText(questTitle, outcomeLabel, path, cohortWinRate) {
   return lines.join('\n');
 }
 
-function EndScreen({ outcome, cohortWinRate, path, questTitle, endText, families, onPlayAgain, onTryAnother }) {
+function EndScreen({ outcome, cohortWinRate, path, questTitle, endText, mediaState, audioEnabled, families, onPlayAgain, onTryAnother }) {
   const [shareStatus, setShareStatus] = useState('');
   const outcomeLabel = { win: 'SUCCESS', fail: 'FAILURE', dead: 'DEAD' }[outcome] || 'FAILURE';
   const agreementSteps = path.filter(e => e.agreed !== null);
@@ -499,9 +583,12 @@ function EndScreen({ outcome, cohortWinRate, path, questTitle, endText, families
         )}
       </div>
       {endText && (
-        <div className="card-table" style={{ marginBottom: '1.5rem', textAlign: 'left', padding: '1rem 1.25rem', lineHeight: 1.7 }}>
-          <QuestTags str={endText} />
-        </div>
+        <>
+          <MediaStage gameState={mediaState} audioEnabled={audioEnabled} />
+          <div className="card-table" style={{ marginBottom: '1.5rem', textAlign: 'left', padding: '1rem 1.25rem', lineHeight: 1.7 }}>
+            <QuestTags str={endText} />
+          </div>
+        </>
       )}
       <DecisionHistory path={path} families={families} />
       <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap', marginTop: '1.5rem' }}>
@@ -529,7 +616,10 @@ function QuestPlay({ quest, cohortData, onQuit }) {
   const [path, setPath] = useState([]);
   const [ended, setEnded] = useState(null);
   const [endText, setEndText] = useState('');
+  const [endMediaState, setEndMediaState] = useState(null);
   const [obsKey, setObsKey] = useState(0);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [activeFamily, setActiveFamily] = useState('all');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -616,6 +706,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
     if (isTerminal) {
       setEnded(gs);
       setEndText(nextState.text || '');
+      setEndMediaState(nextState);
     } else {
       setGameState(player.getState());
       setStepNum(n => n + 1);
@@ -636,6 +727,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
     setPath(prev => prev.slice(0, -1));
     setObsKey(k => k + 1);
     setEnded(null);
+    setEndMediaState(null);
   }
 
   if (loading) {
@@ -664,6 +756,8 @@ function QuestPlay({ quest, cohortData, onQuit }) {
         path={path}
         questTitle={quest.title || quest.id}
         endText={endText}
+        mediaState={endMediaState}
+        audioEnabled={audioEnabled}
         families={(cohortData && cohortData.model_families) || []}
         onPlayAgain={() => {
           player.start();
@@ -674,6 +768,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
           setStepHistory([]);
           setEnded(null);
           setEndText('');
+          setEndMediaState(null);
           setObsKey(k => k + 1);
         }}
         onTryAnother={onQuit}
@@ -686,46 +781,74 @@ function QuestPlay({ quest, cohortData, onQuit }) {
   const choices = gameState.choices || [];
   const activeChoices = choices.filter(c => c.active);
   const params = (gameState.paramsState || []).filter(p => p && p.trim());
+  const currentLocationId = canonicalPlayer ? canonicalPlayer.getSaving().locationId : player.getSaving().locationId;
+  const currentCohortLoc = getCohortLoc(currentLocationId);
+  const isCurrentBranching = activeChoices.length >= 2;
 
   return (
-    <div className="container py-4" style={{ maxWidth: 800 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-        <div>
-          <h4 style={{ marginBottom: 0 }}>{quest.title}</h4>
-          <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Step {stepNum}</span>
+    <div className="play-shell">
+      <div className="play-wrap">
+        <div className="play-topbar">
+          <div className="play-title">
+            <h1>{quest.title}</h1>
+            <div className="play-meta">Step {stepNum}</div>
+          </div>
+          <div className="play-actions">
+            {stepHistory.length > 0 && (
+              <button className="play-action" onClick={handleBack} aria-label="Back" title="Back">&#8592;</button>
+            )}
+            <button
+              className="play-action"
+              onClick={() => setAudioEnabled(v => !v)}
+              aria-label={audioEnabled ? 'Mute sound' : 'Enable sound'}
+              title={audioEnabled ? 'Mute sound' : 'Enable sound'}
+            >
+              {audioEnabled ? '\u266a' : '\u266b'}
+            </button>
+            <button className="play-action" onClick={onQuit} aria-label="Quit" title="Quit">&#10005;</button>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          {stepHistory.length > 0 && (
-            <button className="btn btn-sm btn-outline-secondary" onClick={handleBack}>&#8592; Back</button>
-          )}
-          <button className="btn btn-sm btn-outline-secondary" onClick={onQuit}>Quit</button>
+
+        <div className="play-layout">
+          <main className="story-column">
+            {params.length > 0 && (
+              <div className="params-strip">
+                {params.map((p, i) => <span key={i} className="param-pill"><QuestTags str={p} /></span>)}
+              </div>
+            )}
+
+            <MediaStage gameState={gameState} audioEnabled={audioEnabled} />
+
+            <div key={obsKey} className="obs-panel">
+              <QuestTags str={gameState.text || ''} />
+            </div>
+
+            <div className="choices-panel">
+              {choices.map((choice, i) => (
+                <button
+                  key={i}
+                  className={'choice-btn' + (choice.active ? '' : ' inactive')}
+                  disabled={!choice.active}
+                  onClick={() => choice.active && handleChoice(choice, activeChoices)}
+                >
+                  <QuestTags str={choice.text || ''} />
+                </button>
+              ))}
+            </div>
+          </main>
+
+          <aside className="ai-column">
+            <CurrentDecisionInsight
+              cohortLoc={currentCohortLoc}
+              isBranching={isCurrentBranching}
+              activeFamily={activeFamily}
+              onFamilyChange={setActiveFamily}
+              families={families}
+            />
+            <DecisionHistory path={path} families={families} />
+          </aside>
         </div>
       </div>
-
-      {params.length > 0 && (
-        <div className="params-strip">
-          {params.map((p, i) => <span key={i} className="param-pill"><QuestTags str={p} /></span>)}
-        </div>
-      )}
-
-      <div key={obsKey} className="obs-panel">
-        <QuestTags str={gameState.text || ''} />
-      </div>
-
-      <div>
-        {choices.map((choice, i) => (
-          <button
-            key={i}
-            className={'choice-btn' + (choice.active ? '' : ' inactive')}
-            disabled={!choice.active}
-            onClick={() => choice.active && handleChoice(choice, activeChoices)}
-          >
-            <QuestTags str={choice.text || ''} />
-          </button>
-        ))}
-      </div>
-
-      <DecisionHistory path={path} families={families} />
     </div>
   );
 }
