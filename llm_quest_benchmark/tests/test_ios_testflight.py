@@ -105,11 +105,8 @@ def test_ios_bundled_play_page_assets_are_present_after_site_build():
     parser = AssetHTMLParser()
     parser.feed(page)
 
-    local_runtime_assets = [
-        asset
-        for asset in parser.assets
-        if not asset.startswith(("http://", "https://", "#")) and asset.startswith("play/")
-    ]
+    local_assets = [asset for asset in parser.assets if not asset.startswith(("http://", "https://", "#"))]
+    local_runtime_assets = [asset for asset in local_assets if asset.startswith("play/")]
 
     assert "play/qmengine.js" in local_runtime_assets
     assert "play/app.js" in local_runtime_assets
@@ -121,7 +118,7 @@ def test_ios_bundled_play_page_assets_are_present_after_site_build():
     assert "https://cdn.jsdelivr.net" not in page
     assert "https://unpkg.com" not in page
 
-    for asset in [*local_runtime_assets, "play/questplay/background.jpg"]:
+    for asset in [*local_assets, "play/questplay/background.jpg"]:
         assert (SITE_DIR / asset).exists(), asset
 
 
@@ -137,6 +134,11 @@ def test_ios_bundled_quest_archives_cover_play_index_after_site_build():
         archive = PLAY_QUESTS_DIR / f"{quest_id}.qm.gz"
         assert archive.exists(), quest_id
         assert archive.stat().st_size > 0, quest_id
+
+    for canonical_id in canonical_ids:
+        cohort = PLAY_DIR / f"{canonical_id}.json"
+        assert cohort.exists(), canonical_id
+        assert cohort.stat().st_size > 0, canonical_id
 
 
 def test_ios_app_icon_files_match_declared_sizes():
