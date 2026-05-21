@@ -158,6 +158,7 @@ def test_ios_bundled_play_page_assets_are_present_after_site_build():
 
 def test_ios_site_staging_input_file_list_covers_copied_assets():
     entries = set(STAGE_SITE_INPUTS.read_text(encoding="utf-8").splitlines())
+    script = read_text(STAGE_SITE_SCRIPT)
     expected = {
         "$(SRCROOT)/scripts/stage_site.sh",
         "$(SRCROOT)/../site/play.html",
@@ -177,6 +178,8 @@ def test_ios_site_staging_input_file_list_covers_copied_assets():
     assert expected <= entries
     assert "$(SRCROOT)/../site/play/app.jsx" not in entries
     assert "$(SRCROOT)/../site/play/engine-entry.ts" not in entries
+    assert "-exec cp" not in script
+    assert "cp -R" not in script
 
 
 def test_ios_site_staging_includes_only_play_runtime_payload(tmp_path):
@@ -200,6 +203,14 @@ def test_ios_site_staging_includes_only_play_runtime_payload(tmp_path):
     assert (destination / "play" / "questplay" / "background.jpg").exists()
     assert (destination / "play" / "vendor" / "NOTICE.md").exists()
 
+    staged_files = {path.relative_to(destination).as_posix() for path in destination.rglob("*") if path.is_file()}
+    expected_files = {
+        entry.replace("$(SRCROOT)/../site/", "")
+        for entry in STAGE_SITE_INPUTS.read_text(encoding="utf-8").splitlines()
+        if entry.startswith("$(SRCROOT)/../site/")
+    }
+
+    assert staged_files == expected_files
     assert not (destination / "index.html").exists()
     assert not (destination / "about.html").exists()
     assert not (destination / "traces.html").exists()

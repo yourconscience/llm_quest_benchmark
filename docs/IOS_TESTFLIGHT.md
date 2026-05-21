@@ -35,9 +35,9 @@ The Xcode target then stages only the Play runtime payload into the app bundle:
 `play.html`, compiled JavaScript, quest archives, generated cohort JSON, frame
 media, and vendored runtime files. It does not bundle benchmark trace pages,
 ignored local trace artifacts, or source-only files such as `app.jsx` and
-`engine-entry.ts`. The staged inputs are declared in
-`ios/LLMQuest/StageSiteInputs.xcfilelist` for Xcode's script-phase dependency
-tracking and sandboxed file access.
+`engine-entry.ts`. The staging script copies from
+`ios/LLMQuest/StageSiteInputs.xcfilelist`, which declares the exact inputs for
+Xcode's script-phase dependency tracking and sandboxed file access.
 
 ## Pull Request Build Gate
 

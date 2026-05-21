@@ -3,12 +3,16 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd)
 
+if [ -z "${SRCROOT:-}" ]; then
+  SRCROOT=$(CDPATH= cd "${SCRIPT_DIR}/.." && pwd)
+fi
+
 if [ -z "${SOURCE_SITE:-}" ]; then
-  if [ -n "${SRCROOT:-}" ]; then
-    SOURCE_SITE="${SRCROOT}/../site"
-  else
-    SOURCE_SITE="${SCRIPT_DIR}/../../site"
-  fi
+  SOURCE_SITE="${SRCROOT}/../site"
+fi
+
+if [ -z "${STAGE_SITE_INPUTS:-}" ]; then
+  STAGE_SITE_INPUTS="${SRCROOT}/LLMQuest/StageSiteInputs.xcfilelist"
 fi
 
 if [ -z "${DEST_SITE:-}" ]; then
@@ -19,25 +23,37 @@ if [ -z "${DEST_SITE:-}" ]; then
   DEST_SITE="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/site"
 fi
 
+SOURCE_SITE=$(CDPATH= cd "${SOURCE_SITE}" && pwd)
+
 if [ ! -f "${SOURCE_SITE}/play.html" ]; then
   echo "Missing ${SOURCE_SITE}/play.html. Run pnpm run build before archiving." >&2
   exit 1
 fi
 
+if [ ! -f "${STAGE_SITE_INPUTS}" ]; then
+  echo "Missing ${STAGE_SITE_INPUTS}." >&2
+  exit 1
+fi
+
 mkdir -p "$(dirname "${DEST_SITE}")"
 rm -rf "${DEST_SITE}"
-mkdir -p "${DEST_SITE}/play"
+mkdir -p "${DEST_SITE}"
 
-cp "${SOURCE_SITE}/play.html" "${DEST_SITE}/play.html"
-cp "${SOURCE_SITE}/play/app.js" "${DEST_SITE}/play/app.js"
-cp "${SOURCE_SITE}/play/qmengine.js" "${DEST_SITE}/play/qmengine.js"
-cp "${SOURCE_SITE}/play/qmengine.js.LICENSE.txt" "${DEST_SITE}/play/qmengine.js.LICENSE.txt"
+while IFS= read -r input || [ -n "${input}" ]; do
+  case "${input}" in
+    ""|\#*) continue ;;
+  esac
 
-find "${SOURCE_SITE}/play" -maxdepth 1 -type f -name "*.json" -exec cp {} "${DEST_SITE}/play/" \;
-
-for directory in questplay quests vendor; do
-  cp -R "${SOURCE_SITE}/play/${directory}" "${DEST_SITE}/play/"
-done
+  source_path=$(printf "%s\n" "${input}" | awk -v srcroot="${SRCROOT}" '{gsub(/[$][(]SRCROOT[)]/, srcroot); print}')
+  source_path=$(CDPATH= cd "$(dirname "${source_path}")" && pwd)/$(basename "${source_path}")
+  case "${source_path}" in
+    "${SOURCE_SITE}"/*)
+      relative_path=${source_path#"${SOURCE_SITE}/"}
+      mkdir -p "$(dirname "${DEST_SITE}/${relative_path}")"
+      cp "${source_path}" "${DEST_SITE}/${relative_path}"
+      ;;
+  esac
+done < "${STAGE_SITE_INPUTS}"
 
 for required in \
   play.html \
