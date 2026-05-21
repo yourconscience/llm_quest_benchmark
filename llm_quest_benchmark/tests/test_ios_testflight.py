@@ -80,6 +80,7 @@ def test_ios_app_serves_play_page_from_bundle_scheme():
 
 
 def test_ios_metadata_and_export_options_are_valid():
+    project = read_text(PROJECT_FILE)
     info = plistlib.loads(INFO_PLIST.read_bytes())
     privacy = plistlib.loads(PRIVACY_MANIFEST.read_bytes())
     export = plistlib.loads(EXPORT_OPTIONS.read_bytes())
@@ -96,6 +97,8 @@ def test_ios_metadata_and_export_options_are_valid():
 
     assert info["CFBundleDisplayName"] == "LLM Quest"
     assert info["CFBundleIdentifier"] == "$(PRODUCT_BUNDLE_IDENTIFIER)"
+    assert info["CFBundleShortVersionString"] == "$(MARKETING_VERSION)"
+    assert info["CFBundleVersion"] == "$(CURRENT_PROJECT_VERSION)"
     assert info["LSRequiresIPhoneOS"] is True
     assert info["ITSAppUsesNonExemptEncryption"] is False
     assert "UILaunchScreen" in info
@@ -114,6 +117,8 @@ def test_ios_metadata_and_export_options_are_valid():
     assert export["destination"] == "upload"
     assert export["signingStyle"] == "automatic"
     assert any(icon.get("idiom") == "ios-marketing" for icon in icons["images"])
+    assert project.count("MARKETING_VERSION = 1.0;") == 2
+    assert project.count("CURRENT_PROJECT_VERSION = 1;") == 2
     assert privacy["NSPrivacyCollectedDataTypes"] == []
     assert privacy["NSPrivacyTracking"] is False
     assert privacy["NSPrivacyTrackingDomains"] == []
@@ -237,6 +242,8 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "App Store Connect API" in doc
     assert "Transporter-based uploads" in doc
     assert "CURRENT_PROJECT_VERSION" in doc
+    assert "MARKETING_VERSION" in doc
+    assert "starts at marketing version 1.0 and build number 1" in doc
     assert "ITSAppUsesNonExemptEncryption" in doc
     assert "PrivacyInfo.xcprivacy" in doc
     assert "stages only the Play runtime payload" in doc

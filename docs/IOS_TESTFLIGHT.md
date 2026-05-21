@@ -53,8 +53,9 @@ export APPLE_TEAM_ID=YOURTEAMID
 export IOS_BUNDLE_ID=com.example.llmquest
 ```
 
-Before each upload, bump the Xcode build number (`CURRENT_PROJECT_VERSION`) so App
-Store Connect can distinguish the new build for the same marketing version.
+The project starts at marketing version 1.0 and build number 1. Before each
+upload, bump the Xcode build number (`CURRENT_PROJECT_VERSION`) so App Store
+Connect can distinguish the new build for the same `MARKETING_VERSION`.
 The app declares `ITSAppUsesNonExemptEncryption` as false because it does not
 ship custom or non-exempt encryption code.
 The app also bundles `PrivacyInfo.xcprivacy`, declaring no tracking, no collected
