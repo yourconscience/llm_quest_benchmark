@@ -70,9 +70,16 @@ def test_ios_metadata_and_export_options_are_valid():
     info = plistlib.loads(INFO_PLIST.read_bytes())
     privacy = plistlib.loads(PRIVACY_MANIFEST.read_bytes())
     export = plistlib.loads(EXPORT_OPTIONS.read_bytes())
-    ElementTree.parse(SCHEME_FILE)
+    scheme = ElementTree.parse(SCHEME_FILE).getroot()
     json.loads((IOS_DIR / "LLMQuest" / "Assets.xcassets" / "Contents.json").read_text())
     icons = json.loads((APP_ICON_SET / "Contents.json").read_text())
+
+    build_action_entry = scheme.find("./BuildAction/BuildActionEntries/BuildActionEntry")
+    archive_action = scheme.find("./ArchiveAction")
+    assert build_action_entry is not None
+    assert build_action_entry.attrib["buildForArchiving"] == "YES"
+    assert archive_action is not None
+    assert archive_action.attrib["buildConfiguration"] == "Release"
 
     assert info["CFBundleDisplayName"] == "LLM Quest"
     assert info["CFBundleIdentifier"] == "$(PRODUCT_BUNDLE_IDENTIFIER)"
