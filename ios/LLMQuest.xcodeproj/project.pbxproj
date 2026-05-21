@@ -26,6 +26,7 @@
 		4B0000010000000000000017 /* site */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ../site; sourceTree = "<group>"; };
 		4B0000010000000000000018 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = LLMQuest/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		4B0000010000000000000019 /* stage_site.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = scripts/stage_site.sh; sourceTree = "<group>"; };
+		4B000001000000000000001A /* StageSiteInputs.xcfilelist */ = {isa = PBXFileReference; lastKnownFileType = text.xcfilelist; path = LLMQuest/StageSiteInputs.xcfilelist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +59,7 @@
 				4B0000010000000000000015 /* Info.plist */,
 				4B0000010000000000000018 /* PrivacyInfo.xcprivacy */,
 				4B0000010000000000000016 /* Assets.xcassets */,
+				4B000001000000000000001A /* StageSiteInputs.xcfilelist */,
 				4B0000010000000000000019 /* stage_site.sh */,
 			);
 			path = "";
@@ -148,6 +150,9 @@
 				"$(SRCROOT)/../site/play.html",
 				"$(SRCROOT)/../site/play",
 				"$(SRCROOT)/scripts/stage_site.sh",
+			);
+			inputFileListPaths = (
+				"$(SRCROOT)/LLMQuest/StageSiteInputs.xcfilelist",
 			);
 			name = "Stage Play Site";
 			outputPaths = (

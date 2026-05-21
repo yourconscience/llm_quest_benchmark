@@ -18,6 +18,7 @@ PROJECT_FILE = IOS_DIR / "LLMQuest.xcodeproj" / "project.pbxproj"
 SCHEME_FILE = IOS_DIR / "LLMQuest.xcodeproj" / "xcshareddata" / "xcschemes" / "LLMQuest.xcscheme"
 INFO_PLIST = IOS_DIR / "LLMQuest" / "Info.plist"
 PRIVACY_MANIFEST = IOS_DIR / "LLMQuest" / "PrivacyInfo.xcprivacy"
+STAGE_SITE_INPUTS = IOS_DIR / "LLMQuest" / "StageSiteInputs.xcfilelist"
 STAGE_SITE_SCRIPT = IOS_DIR / "scripts" / "stage_site.sh"
 APP_ICON_SET = IOS_DIR / "LLMQuest" / "Assets.xcassets" / "AppIcon.appiconset"
 EXPORT_OPTIONS = IOS_DIR / "export" / "ExportOptions.plist.template"
@@ -50,6 +51,7 @@ def test_ios_project_bundles_static_site_and_swift_sources():
     assert "PrivacyInfo.xcprivacy in Resources" in project
     assert "Stage Play Site" in project
     assert "alwaysOutOfDate = 1;" in project
+    assert "$(SRCROOT)/LLMQuest/StageSiteInputs.xcfilelist" in project
     assert 'shellScript = "\\"${SRCROOT}/scripts/stage_site.sh\\"\\n";' in project
     assert "path = ../site;" in project
     assert "site in Resources" not in project
@@ -150,6 +152,29 @@ def test_ios_bundled_play_page_assets_are_present_after_site_build():
 
     for asset in [*local_assets, "play/questplay/background.jpg"]:
         assert (SITE_DIR / asset).exists(), asset
+
+
+def test_ios_site_staging_input_file_list_covers_copied_assets():
+    entries = set(STAGE_SITE_INPUTS.read_text(encoding="utf-8").splitlines())
+    expected = {
+        "$(SRCROOT)/scripts/stage_site.sh",
+        "$(SRCROOT)/../site/play.html",
+        "$(SRCROOT)/../site/play/app.js",
+        "$(SRCROOT)/../site/play/qmengine.js",
+        "$(SRCROOT)/../site/play/qmengine.js.LICENSE.txt",
+    }
+
+    expected.update(f"$(SRCROOT)/../{path.relative_to(REPO_ROOT)}" for path in PLAY_DIR.glob("*.json"))
+    for directory in ("questplay", "quests", "vendor"):
+        expected.update(
+            f"$(SRCROOT)/../{path.relative_to(REPO_ROOT)}"
+            for path in (PLAY_DIR / directory).rglob("*")
+            if path.is_file()
+        )
+
+    assert expected <= entries
+    assert "$(SRCROOT)/../site/play/app.jsx" not in entries
+    assert "$(SRCROOT)/../site/play/engine-entry.ts" not in entries
 
 
 def test_ios_site_staging_includes_only_play_runtime_payload(tmp_path):
