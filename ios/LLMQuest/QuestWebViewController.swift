@@ -53,17 +53,15 @@ extension QuestWebViewController: WKNavigationDelegate {
             return
         }
 
-        if url.scheme == "lqb" || url.host == "yourconscience.github.io" {
+        if url.scheme == "lqb" {
             decisionHandler(.allow)
             return
         }
 
         if navigationAction.navigationType == .linkActivated {
             UIApplication.shared.open(url)
-            decisionHandler(.cancel)
-            return
         }
 
-        decisionHandler(.allow)
+        decisionHandler(.cancel)
     }
 }

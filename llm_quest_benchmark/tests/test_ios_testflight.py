@@ -61,6 +61,9 @@ def test_ios_app_serves_play_page_from_bundle_scheme():
     assert 'URL(string: "lqb://app/play.html")' in controller
     assert "allowsInlineMediaPlayback = true" in controller
     assert "mediaTypesRequiringUserActionForPlayback = []" in controller
+    assert 'url.scheme == "lqb"' in controller
+    assert 'url.host == "yourconscience.github.io"' not in controller
+    assert "UIApplication.shared.open(url)" in controller
     assert 'appendingPathComponent("site", isDirectory: true)' in scheme_handler
     assert 'let relativePath = requestedPath.isEmpty ? "play.html" : requestedPath' in scheme_handler
     assert "statusCode: 404" in scheme_handler
