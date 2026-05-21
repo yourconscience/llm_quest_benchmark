@@ -11,6 +11,8 @@ media paths are used on iOS.
 - Apple Developer Program membership with App Store Connect access.
 - A unique bundle id, for example `com.example.llmquest`.
 - An App Store Connect app record that uses the same bundle id.
+- Xcode signed in to the Apple Developer account, or App Store Connect API
+  credentials available for Transporter-based uploads.
 - At least one supported physical iPhone or iPad for release testing.
 
 Apple documents App Store Connect as the distribution method for TestFlight and the
@@ -49,6 +51,9 @@ ship custom or non-exempt encryption code.
 The app also bundles `PrivacyInfo.xcprivacy`, declaring no tracking, no collected
 data, and the required-reason file timestamp access used while serving bundled
 local quest assets.
+The local browser runtime files under `site/play/vendor/` are included in the
+iOS app bundle for offline TestFlight execution; keep their `NOTICE.md` file with
+the vendored assets.
 
 Archive the app:
 

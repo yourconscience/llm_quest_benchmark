@@ -136,6 +136,17 @@ def test_ios_bundled_play_page_assets_are_present_after_site_build():
         assert (SITE_DIR / asset).exists(), asset
 
 
+def test_ios_bundled_vendor_runtime_assets_include_license_notice():
+    notice = read_text(PLAY_DIR / "vendor" / "NOTICE.md")
+
+    assert "Bootstrap 5.3.3" in notice
+    assert "React 18.3.1" in notice
+    assert "React DOM 18.3.1" in notice
+    assert "pako 2.1.0" in notice
+    assert "MIT" in notice
+    assert "Zlib" in notice
+
+
 def test_ios_bundled_quest_archives_cover_play_index_after_site_build():
     index = json.loads((PLAY_DIR / "quest-index.json").read_text(encoding="utf-8"))
     quest_ids = {quest["id"] for quest in index["quests"]}
@@ -183,9 +194,13 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "APPLE_TEAM_ID" in doc
     assert "IOS_BUNDLE_ID" in doc
     assert "App Store Connect app record" in doc
+    assert "App Store Connect API" in doc
+    assert "Transporter-based uploads" in doc
     assert "CURRENT_PROJECT_VERSION" in doc
     assert "ITSAppUsesNonExemptEncryption" in doc
     assert "PrivacyInfo.xcprivacy" in doc
+    assert "site/play/vendor/" in doc
+    assert "NOTICE.md" in doc
     assert "no tracking" in doc
     assert "no collected" in doc
     assert re.search(r"xcodebuild archive\s+\\", doc)
