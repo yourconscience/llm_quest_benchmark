@@ -1,6 +1,8 @@
 import json
+import os
 import plistlib
 import re
+import subprocess
 from html.parser import HTMLParser
 from pathlib import Path
 from xml.etree import ElementTree
@@ -16,6 +18,7 @@ PROJECT_FILE = IOS_DIR / "LLMQuest.xcodeproj" / "project.pbxproj"
 SCHEME_FILE = IOS_DIR / "LLMQuest.xcodeproj" / "xcshareddata" / "xcschemes" / "LLMQuest.xcscheme"
 INFO_PLIST = IOS_DIR / "LLMQuest" / "Info.plist"
 PRIVACY_MANIFEST = IOS_DIR / "LLMQuest" / "PrivacyInfo.xcprivacy"
+STAGE_SITE_SCRIPT = IOS_DIR / "scripts" / "stage_site.sh"
 APP_ICON_SET = IOS_DIR / "LLMQuest" / "Assets.xcassets" / "AppIcon.appiconset"
 EXPORT_OPTIONS = IOS_DIR / "export" / "ExportOptions.plist.template"
 TESTFLIGHT_DOC = REPO_ROOT / "docs" / "IOS_TESTFLIGHT.md"
@@ -44,9 +47,12 @@ def test_ios_project_bundles_static_site_and_swift_sources():
     assert "SceneDelegate.swift in Sources" in project
     assert "QuestWebViewController.swift in Sources" in project
     assert "LocalSiteSchemeHandler.swift in Sources" in project
-    assert "site in Resources" in project
     assert "PrivacyInfo.xcprivacy in Resources" in project
+    assert "Stage Play Site" in project
+    assert "alwaysOutOfDate = 1;" in project
+    assert 'shellScript = "\\"${SRCROOT}/scripts/stage_site.sh\\"\\n";' in project
     assert "path = ../site;" in project
+    assert "site in Resources" not in project
     assert "PRODUCT_BUNDLE_IDENTIFIER = io.github.yourconscience.llmquestbenchmark;" in project
     assert "IPHONEOS_DEPLOYMENT_TARGET = 16.0;" in project
     assert 'SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";' in project
@@ -141,6 +147,35 @@ def test_ios_bundled_play_page_assets_are_present_after_site_build():
         assert (SITE_DIR / asset).exists(), asset
 
 
+def test_ios_site_staging_includes_only_play_runtime_payload(tmp_path):
+    destination = tmp_path / "bundle" / "site"
+
+    subprocess.run(
+        ["sh", str(STAGE_SITE_SCRIPT)],
+        check=True,
+        env={
+            **os.environ,
+            "SOURCE_SITE": str(SITE_DIR),
+            "DEST_SITE": str(destination),
+        },
+    )
+
+    assert (destination / "play.html").exists()
+    assert (destination / "play" / "app.js").exists()
+    assert (destination / "play" / "qmengine.js").exists()
+    assert (destination / "play" / "quest-index.json").exists()
+    assert (destination / "play" / "quests" / "Badday_eng.qm.gz").exists()
+    assert (destination / "play" / "questplay" / "background.jpg").exists()
+    assert (destination / "play" / "vendor" / "NOTICE.md").exists()
+
+    assert not (destination / "index.html").exists()
+    assert not (destination / "about.html").exists()
+    assert not (destination / "traces.html").exists()
+    assert not (destination / "traces").exists()
+    assert not (destination / "play" / "app.jsx").exists()
+    assert not (destination / "play" / "engine-entry.ts").exists()
+
+
 def test_ios_bundled_vendor_runtime_assets_include_license_notice():
     notice = read_text(PLAY_DIR / "vendor" / "NOTICE.md")
 
@@ -204,6 +239,8 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "CURRENT_PROJECT_VERSION" in doc
     assert "ITSAppUsesNonExemptEncryption" in doc
     assert "PrivacyInfo.xcprivacy" in doc
+    assert "stages only the Play runtime payload" in doc
+    assert "source-only files" in doc
     assert "site/play/vendor/" in doc
     assert "NOTICE.md" in doc
     assert "App Privacy" in doc

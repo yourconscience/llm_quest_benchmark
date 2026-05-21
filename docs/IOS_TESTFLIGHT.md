@@ -1,7 +1,7 @@
 # iOS TestFlight Build
 
 This repo ships the Play experience as a small native iOS app in `ios/LLMQuest.xcodeproj`.
-The app uses `WKWebView` and serves the bundled `site/` directory through the local
+The app uses `WKWebView` and serves a staged `site/` bundle through the local
 `lqb://app/` scheme, so the same static quest UI, quest engine, AI answer panels, and
 media paths are used on iOS.
 
@@ -30,6 +30,12 @@ App Store:
 ```sh
 pnpm run build
 ```
+
+The Xcode target then stages only the Play runtime payload into the app bundle:
+`play.html`, compiled JavaScript, quest archives, generated cohort JSON, frame
+media, and vendored runtime files. It does not bundle benchmark trace pages,
+ignored local trace artifacts, or source-only files such as `app.jsx` and
+`engine-entry.ts`.
 
 ## Pull Request Build Gate
 
