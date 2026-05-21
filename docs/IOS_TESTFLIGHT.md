@@ -7,21 +7,30 @@ media paths are used on iOS.
 
 ## Prerequisites
 
-- Full Xcode, not Command Line Tools only.
+- Full Xcode 16 or later, not Command Line Tools only.
 - Apple Developer Program membership with App Store Connect access.
 - A unique bundle id, for example `com.example.llmquest`.
+- At least one supported physical iPhone or iPad for release testing.
 
 Apple documents App Store Connect as the distribution method for TestFlight and the
 App Store:
 
 - https://help.apple.com/xcode/mac/current/en.lproj/dev31de635e5.html
 - https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds/
+- https://help.apple.com/xcode/mac/current/en.lproj/dev2539d985f.html
 
 ## Build Site Assets
 
 ```sh
 pnpm run build
 ```
+
+## Pull Request Build Gate
+
+The `ios-build` CI job builds `ios/LLMQuest.xcodeproj` on a macOS runner for the
+iOS Simulator after rebuilding the bundled static site assets. A passing PR build
+proves the Xcode project compiles and can bundle the current Play payload before
+manual archive/signing work starts.
 
 ## Archive for TestFlight
 
@@ -31,6 +40,9 @@ Set the signing values for your account:
 export APPLE_TEAM_ID=YOURTEAMID
 export IOS_BUNDLE_ID=com.example.llmquest
 ```
+
+Before each upload, bump the Xcode build number (`CURRENT_PROJECT_VERSION`) so App
+Store Connect can distinguish the new build for the same marketing version.
 
 Archive the app:
 
@@ -58,3 +70,6 @@ xcodebuild -exportArchive \
 
 After Apple finishes processing the uploaded build, enable it for internal or external
 TestFlight testing in App Store Connect.
+
+Apple recommends testing on the physical devices and OS versions you support before
+distribution; simulator-only testing is not enough for TestFlight readiness.

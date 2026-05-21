@@ -1,20 +1,19 @@
 import json
 import plistlib
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 from xml.etree import ElementTree
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 IOS_DIR = REPO_ROOT / "ios"
+SITE_DIR = REPO_ROOT / "site"
+PLAY_PAGE = SITE_DIR / "play.html"
+PLAY_DIR = SITE_DIR / "play"
+PLAY_QUESTS_DIR = PLAY_DIR / "quests"
+CI_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "ci.yml"
 PROJECT_FILE = IOS_DIR / "LLMQuest.xcodeproj" / "project.pbxproj"
-SCHEME_FILE = (
-    IOS_DIR
-    / "LLMQuest.xcodeproj"
-    / "xcshareddata"
-    / "xcschemes"
-    / "LLMQuest.xcscheme"
-)
+SCHEME_FILE = IOS_DIR / "LLMQuest.xcodeproj" / "xcshareddata" / "xcschemes" / "LLMQuest.xcscheme"
 INFO_PLIST = IOS_DIR / "LLMQuest" / "Info.plist"
 APP_ICON_SET = IOS_DIR / "LLMQuest" / "Assets.xcassets" / "AppIcon.appiconset"
 EXPORT_OPTIONS = IOS_DIR / "export" / "ExportOptions.plist.template"
@@ -23,6 +22,17 @@ TESTFLIGHT_DOC = REPO_ROOT / "docs" / "IOS_TESTFLIGHT.md"
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+class AssetHTMLParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.assets = []
+
+    def handle_starttag(self, tag, attrs):
+        for attr, value in attrs:
+            if attr in {"href", "src"} and value:
+                self.assets.append(value)
 
 
 def test_ios_project_bundles_static_site_and_swift_sources():
@@ -70,6 +80,39 @@ def test_ios_metadata_and_export_options_are_valid():
     assert any(icon.get("idiom") == "ios-marketing" for icon in icons["images"])
 
 
+def test_ios_bundled_play_page_assets_are_present_after_site_build():
+    page = read_text(PLAY_PAGE)
+    parser = AssetHTMLParser()
+    parser.feed(page)
+
+    local_runtime_assets = [
+        asset
+        for asset in parser.assets
+        if not asset.startswith(("http://", "https://", "#")) and asset.startswith("play/")
+    ]
+
+    assert "play/qmengine.js" in local_runtime_assets
+    assert "play/app.js" in local_runtime_assets
+    assert "play/questplay/background.jpg" in page
+
+    for asset in [*local_runtime_assets, "play/questplay/background.jpg"]:
+        assert (SITE_DIR / asset).exists(), asset
+
+
+def test_ios_bundled_quest_archives_cover_play_index_after_site_build():
+    index = json.loads((PLAY_DIR / "quest-index.json").read_text(encoding="utf-8"))
+    quest_ids = {quest["id"] for quest in index["quests"]}
+    canonical_ids = {quest["canonical_id"] for quest in index["quests"] if quest.get("canonical_id")}
+
+    assert quest_ids
+    assert canonical_ids <= quest_ids
+
+    for quest_id in quest_ids:
+        archive = PLAY_QUESTS_DIR / f"{quest_id}.qm.gz"
+        assert archive.exists(), quest_id
+        assert archive.stat().st_size > 0, quest_id
+
+
 def test_ios_app_icon_files_match_declared_sizes():
     icons = json.loads((APP_ICON_SET / "Contents.json").read_text())["images"]
 
@@ -89,12 +132,30 @@ def test_ios_app_icon_files_match_declared_sizes():
 def test_ios_testflight_docs_include_archive_and_upload_commands():
     doc = read_text(TESTFLIGHT_DOC)
 
-    assert "Full Xcode, not Command Line Tools only." in doc
+    assert "Full Xcode 16 or later, not Command Line Tools only." in doc
+    assert "physical iPhone or iPad" in doc
+    assert "ios-build" in doc
+    assert "iOS Simulator" in doc
     assert "APPLE_TEAM_ID" in doc
     assert "IOS_BUNDLE_ID" in doc
+    assert "CURRENT_PROJECT_VERSION" in doc
     assert re.search(r"xcodebuild archive\s+\\", doc)
     assert "-project ios/LLMQuest.xcodeproj" in doc
     assert "-scheme LLMQuest" in doc
     assert "-destination 'generic/platform=iOS'" in doc
     assert "xcodebuild -exportArchive" in doc
     assert "-exportOptionsPlist ios/export/ExportOptions.plist.template" in doc
+    assert "simulator-only testing is not enough" in doc
+
+
+def test_ci_builds_ios_project_on_macos_for_prs():
+    workflow = read_text(CI_WORKFLOW)
+
+    assert "ios-build:" in workflow
+    assert "runs-on: macos-15" in workflow
+    assert "pnpm run build" in workflow
+    assert "xcodebuild build" in workflow
+    assert "-project ios/LLMQuest.xcodeproj" in workflow
+    assert "-scheme LLMQuest" in workflow
+    assert "-destination 'generic/platform=iOS Simulator'" in workflow
+    assert "CODE_SIGNING_ALLOWED=NO" in workflow
