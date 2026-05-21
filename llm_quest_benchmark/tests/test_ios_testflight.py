@@ -49,6 +49,8 @@ def test_ios_project_bundles_static_site_and_swift_sources():
     assert "path = ../site;" in project
     assert "PRODUCT_BUNDLE_IDENTIFIER = io.github.yourconscience.llmquestbenchmark;" in project
     assert "IPHONEOS_DEPLOYMENT_TARGET = 16.0;" in project
+    assert 'SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";' in project
+    assert 'TARGETED_DEVICE_FAMILY = "1,2";' in project
 
 
 def test_ios_app_serves_play_page_from_bundle_scheme():
@@ -85,6 +87,18 @@ def test_ios_metadata_and_export_options_are_valid():
     assert info["CFBundleIdentifier"] == "$(PRODUCT_BUNDLE_IDENTIFIER)"
     assert info["LSRequiresIPhoneOS"] is True
     assert info["ITSAppUsesNonExemptEncryption"] is False
+    assert "UILaunchScreen" in info
+    assert info["UISupportedInterfaceOrientations"] == [
+        "UIInterfaceOrientationPortrait",
+        "UIInterfaceOrientationLandscapeLeft",
+        "UIInterfaceOrientationLandscapeRight",
+    ]
+    assert info["UISupportedInterfaceOrientations~ipad"] == [
+        "UIInterfaceOrientationPortrait",
+        "UIInterfaceOrientationPortraitUpsideDown",
+        "UIInterfaceOrientationLandscapeLeft",
+        "UIInterfaceOrientationLandscapeRight",
+    ]
     assert export["method"] == "app-store-connect"
     assert export["destination"] == "upload"
     assert export["signingStyle"] == "automatic"
