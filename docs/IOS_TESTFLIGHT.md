@@ -100,13 +100,20 @@ xcodebuild archive \
   -allowProvisioningUpdates
 ```
 
-Upload to App Store Connect:
+Prepare local export options with your Apple team id, then upload to App Store
+Connect. Keep the generated `build/ExportOptions.plist` out of git.
+
+```sh
+cp ios/export/ExportOptions.plist.template build/ExportOptions.plist
+/usr/libexec/PlistBuddy -c "Add :teamID string $APPLE_TEAM_ID" build/ExportOptions.plist 2>/dev/null || \
+  /usr/libexec/PlistBuddy -c "Set :teamID $APPLE_TEAM_ID" build/ExportOptions.plist
+```
 
 ```sh
 xcodebuild -exportArchive \
   -archivePath build/LLMQuest.xcarchive \
   -exportPath build/LLMQuest-export \
-  -exportOptionsPlist ios/export/ExportOptions.plist.template \
+  -exportOptionsPlist build/ExportOptions.plist \
   -allowProvisioningUpdates
 ```
 

@@ -306,8 +306,12 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "-project ios/LLMQuest.xcodeproj" in doc
     assert "-scheme LLMQuest" in doc
     assert "-destination 'generic/platform=iOS'" in doc
+    assert "build/ExportOptions.plist" in doc
+    assert "PlistBuddy" in doc
+    assert "teamID" in doc
+    assert "Keep the generated `build/ExportOptions.plist` out of git." in doc
     assert "xcodebuild -exportArchive" in doc
-    assert "-exportOptionsPlist ios/export/ExportOptions.plist.template" in doc
+    assert "-exportOptionsPlist build/ExportOptions.plist" in doc
     assert "Test Information" in doc
     assert "Beta App Description" in doc
     assert "Feedback Email" in doc
