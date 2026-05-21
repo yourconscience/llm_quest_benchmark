@@ -168,6 +168,7 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "iOS Simulator" in doc
     assert "APPLE_TEAM_ID" in doc
     assert "IOS_BUNDLE_ID" in doc
+    assert "App Store Connect app record" in doc
     assert "CURRENT_PROJECT_VERSION" in doc
     assert "ITSAppUsesNonExemptEncryption" in doc
     assert "PrivacyInfo.xcprivacy" in doc
@@ -179,6 +180,7 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "-destination 'generic/platform=iOS'" in doc
     assert "xcodebuild -exportArchive" in doc
     assert "-exportOptionsPlist ios/export/ExportOptions.plist.template" in doc
+    assert "External testing requires Beta App Review." in doc
     assert "simulator-only testing is not enough" in doc
 
 

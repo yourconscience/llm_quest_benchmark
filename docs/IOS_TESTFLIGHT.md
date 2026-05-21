@@ -10,6 +10,7 @@ media paths are used on iOS.
 - Full Xcode 16 or later, not Command Line Tools only.
 - Apple Developer Program membership with App Store Connect access.
 - A unique bundle id, for example `com.example.llmquest`.
+- An App Store Connect app record that uses the same bundle id.
 - At least one supported physical iPhone or iPad for release testing.
 
 Apple documents App Store Connect as the distribution method for TestFlight and the
@@ -73,8 +74,9 @@ xcodebuild -exportArchive \
   -allowProvisioningUpdates
 ```
 
-After Apple finishes processing the uploaded build, enable it for internal or external
-TestFlight testing in App Store Connect.
+After Apple finishes processing the uploaded build, review the build details and
+metadata in App Store Connect, then enable it for internal or external TestFlight
+testing. External testing requires Beta App Review.
 
 Apple recommends testing on the physical devices and OS versions you support before
 distribution; simulator-only testing is not enough for TestFlight readiness.
