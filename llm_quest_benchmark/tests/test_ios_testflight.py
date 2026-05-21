@@ -15,6 +15,7 @@ CI_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "ci.yml"
 PROJECT_FILE = IOS_DIR / "LLMQuest.xcodeproj" / "project.pbxproj"
 SCHEME_FILE = IOS_DIR / "LLMQuest.xcodeproj" / "xcshareddata" / "xcschemes" / "LLMQuest.xcscheme"
 INFO_PLIST = IOS_DIR / "LLMQuest" / "Info.plist"
+PRIVACY_MANIFEST = IOS_DIR / "LLMQuest" / "PrivacyInfo.xcprivacy"
 APP_ICON_SET = IOS_DIR / "LLMQuest" / "Assets.xcassets" / "AppIcon.appiconset"
 EXPORT_OPTIONS = IOS_DIR / "export" / "ExportOptions.plist.template"
 TESTFLIGHT_DOC = REPO_ROOT / "docs" / "IOS_TESTFLIGHT.md"
@@ -44,6 +45,7 @@ def test_ios_project_bundles_static_site_and_swift_sources():
     assert "QuestWebViewController.swift in Sources" in project
     assert "LocalSiteSchemeHandler.swift in Sources" in project
     assert "site in Resources" in project
+    assert "PrivacyInfo.xcprivacy in Resources" in project
     assert "path = ../site;" in project
     assert "PRODUCT_BUNDLE_IDENTIFIER = io.github.yourconscience.llmquestbenchmark;" in project
     assert "IPHONEOS_DEPLOYMENT_TARGET = 16.0;" in project
@@ -66,6 +68,7 @@ def test_ios_app_serves_play_page_from_bundle_scheme():
 
 def test_ios_metadata_and_export_options_are_valid():
     info = plistlib.loads(INFO_PLIST.read_bytes())
+    privacy = plistlib.loads(PRIVACY_MANIFEST.read_bytes())
     export = plistlib.loads(EXPORT_OPTIONS.read_bytes())
     ElementTree.parse(SCHEME_FILE)
     json.loads((IOS_DIR / "LLMQuest" / "Assets.xcassets" / "Contents.json").read_text())
@@ -79,6 +82,15 @@ def test_ios_metadata_and_export_options_are_valid():
     assert export["destination"] == "upload"
     assert export["signingStyle"] == "automatic"
     assert any(icon.get("idiom") == "ios-marketing" for icon in icons["images"])
+    assert privacy["NSPrivacyCollectedDataTypes"] == []
+    assert privacy["NSPrivacyTracking"] is False
+    assert privacy["NSPrivacyTrackingDomains"] == []
+    assert privacy["NSPrivacyAccessedAPITypes"] == [
+        {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1"],
+        }
+    ]
 
 
 def test_ios_bundled_play_page_assets_are_present_after_site_build():
@@ -149,6 +161,9 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "IOS_BUNDLE_ID" in doc
     assert "CURRENT_PROJECT_VERSION" in doc
     assert "ITSAppUsesNonExemptEncryption" in doc
+    assert "PrivacyInfo.xcprivacy" in doc
+    assert "no tracking" in doc
+    assert "no collected" in doc
     assert re.search(r"xcodebuild archive\s+\\", doc)
     assert "-project ios/LLMQuest.xcodeproj" in doc
     assert "-scheme LLMQuest" in doc

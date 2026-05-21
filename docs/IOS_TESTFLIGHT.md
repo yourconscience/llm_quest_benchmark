@@ -45,6 +45,9 @@ Before each upload, bump the Xcode build number (`CURRENT_PROJECT_VERSION`) so A
 Store Connect can distinguish the new build for the same marketing version.
 The app declares `ITSAppUsesNonExemptEncryption` as false because it does not
 ship custom or non-exempt encryption code.
+The app also bundles `PrivacyInfo.xcprivacy`, declaring no tracking, no collected
+data, and the required-reason file timestamp access used while serving bundled
+local quest assets.
 
 Archive the app:
 
