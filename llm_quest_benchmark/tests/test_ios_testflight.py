@@ -52,6 +52,8 @@ def test_ios_project_bundles_static_site_and_swift_sources():
     assert "Stage Play Site" in project
     assert "alwaysOutOfDate = 1;" in project
     assert "$(SRCROOT)/LLMQuest/StageSiteInputs.xcfilelist" in project
+    assert '"$(SRCROOT)/../site/play",' not in project
+    assert '"$(SRCROOT)/../site/play.html",' not in project
     assert 'shellScript = "\\"${SRCROOT}/scripts/stage_site.sh\\"\\n";' in project
     assert "path = ../site;" in project
     assert "site in Resources" not in project

@@ -147,9 +147,6 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/../site/play.html",
-				"$(SRCROOT)/../site/play",
-				"$(SRCROOT)/scripts/stage_site.sh",
 			);
 			inputFileListPaths = (
 				"$(SRCROOT)/LLMQuest/StageSiteInputs.xcfilelist",
