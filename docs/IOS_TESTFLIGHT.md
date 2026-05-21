@@ -21,6 +21,7 @@ App Store:
 - https://help.apple.com/xcode/mac/current/en.lproj/dev31de635e5.html
 - https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds/
 - https://help.apple.com/xcode/mac/current/en.lproj/dev2539d985f.html
+- https://developer.apple.com/help/app-store-connect/test-a-beta-version/provide-test-information/
 
 ## Build Site Assets
 
@@ -82,6 +83,16 @@ xcodebuild -exportArchive \
 After Apple finishes processing the uploaded build, review the build details and
 metadata in App Store Connect, then enable it for internal or external TestFlight
 testing. External testing requires Beta App Review.
+
+For external TestFlight testing, fill in App Store Connect > TestFlight >
+Test Information before inviting testers:
+
+- Beta App Description: `LLM Quest is a beta iOS wrapper for the LLM Quest
+  Benchmark Play experience. Please load the quest list, start a quest, make at
+  least two choices, and confirm the AI answer panels, quest text, and media load
+  correctly.`
+- Feedback Email: use the project support address for TestFlight replies. Do not
+  commit personal App Store Connect contact details to the repo.
 
 Apple recommends testing on the physical devices and OS versions you support before
 distribution; simulator-only testing is not enough for TestFlight readiness.

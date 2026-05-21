@@ -209,6 +209,10 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "-destination 'generic/platform=iOS'" in doc
     assert "xcodebuild -exportArchive" in doc
     assert "-exportOptionsPlist ios/export/ExportOptions.plist.template" in doc
+    assert "Test Information" in doc
+    assert "Beta App Description" in doc
+    assert "Feedback Email" in doc
+    assert "project support address" in doc
     assert "External testing requires Beta App Review." in doc
     assert "simulator-only testing is not enough" in doc
 
