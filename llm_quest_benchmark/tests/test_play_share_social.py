@@ -47,4 +47,6 @@ def test_play_surface_keeps_mobile_ai_and_media_support():
     assert "gameState && gameState.trackName" in source
     assert "gameState && gameState.soundName" in source
     assert "const MEDIA_BASE = 'play/media/';" in source
+    assert "lower.includes('.') ? '' : ext" in source
+    assert 'preload="auto"' in source
     assert "setAudioEnabled(v => !v)" in source

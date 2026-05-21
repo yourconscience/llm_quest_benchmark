@@ -196,7 +196,7 @@ function mediaUrl(name, kind) {
   if (lower.startsWith('http://') || lower.startsWith('https://')) return raw;
   const ext = kind === 'img' ? '.jpg' : '.mp3';
   const folder = kind === 'img' ? 'img' : kind;
-  return MEDIA_BASE + folder + '/' + lower + (lower.endsWith(ext) ? '' : ext);
+  return MEDIA_BASE + folder + '/' + lower + (lower.includes('.') ? '' : ext);
 }
 function drawTextLine(ctx, text, x, y, maxWidth) {
   ctx.fillText(text, x, y, maxWidth);
@@ -324,12 +324,12 @@ function QuestAudio({
     ref: trackRef,
     src: trackSrc,
     loop: true,
-    preload: "none"
+    preload: "auto"
   }), soundSrc && /*#__PURE__*/React.createElement("audio", {
     key: soundSrc,
     ref: soundRef,
     src: soundSrc,
-    preload: "none"
+    preload: "auto"
   }));
 }
 function MediaStage({

@@ -29,6 +29,21 @@ final class LocalSiteSchemeHandler: NSObject, WKURLSchemeHandler {
 
         let fileURL = siteRoot.appendingPathComponent(relativePath, isDirectory: false)
 
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            guard let response = HTTPURLResponse(
+                url: requestURL,
+                statusCode: 404,
+                httpVersion: nil,
+                headerFields: nil
+            ) else {
+                urlSchemeTask.didFailWithError(LocalSiteError.invalidURL)
+                return
+            }
+            urlSchemeTask.didReceive(response)
+            urlSchemeTask.didFinish()
+            return
+        }
+
         do {
             let data = try Data(contentsOf: fileURL)
             let response = URLResponse(

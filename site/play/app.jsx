@@ -163,7 +163,7 @@ function mediaUrl(name, kind) {
   if (lower.startsWith('http://') || lower.startsWith('https://')) return raw;
   const ext = kind === 'img' ? '.jpg' : '.mp3';
   const folder = kind === 'img' ? 'img' : kind;
-  return MEDIA_BASE + folder + '/' + lower + (lower.endsWith(ext) ? '' : ext);
+  return MEDIA_BASE + folder + '/' + lower + (lower.includes('.') ? '' : ext);
 }
 
 function drawTextLine(ctx, text, x, y, maxWidth) {
@@ -272,8 +272,8 @@ function QuestAudio({ gameState, audioEnabled }) {
 
   return (
     <>
-      {trackSrc && <audio key={trackSrc} ref={trackRef} src={trackSrc} loop preload="none" />}
-      {soundSrc && <audio key={soundSrc} ref={soundRef} src={soundSrc} preload="none" />}
+      {trackSrc && <audio key={trackSrc} ref={trackRef} src={trackSrc} loop preload="auto" />}
+      {soundSrc && <audio key={soundSrc} ref={soundRef} src={soundSrc} preload="auto" />}
     </>
   );
 }
