@@ -121,12 +121,14 @@ def test_ios_app_icon_files_match_declared_sizes():
         expected_size = int(float(icon["size"].split("x", 1)[0]) * int(icon["scale"].rstrip("x")))
         path = APP_ICON_SET / filename
         assert path.exists(), filename
-        header = path.read_bytes()[:24]
+        header = path.read_bytes()[:26]
         assert header[:8] == b"\x89PNG\r\n\x1a\n", filename
         width = int.from_bytes(header[16:20], "big")
         height = int.from_bytes(header[20:24], "big")
+        color_type = header[25]
         assert width == expected_size, filename
         assert height == expected_size, filename
+        assert color_type == 2, f"{filename} should be RGB PNG without alpha"
 
 
 def test_ios_testflight_docs_include_archive_and_upload_commands():
