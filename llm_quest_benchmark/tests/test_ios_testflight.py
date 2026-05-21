@@ -74,6 +74,7 @@ def test_ios_metadata_and_export_options_are_valid():
     assert info["CFBundleDisplayName"] == "LLM Quest"
     assert info["CFBundleIdentifier"] == "$(PRODUCT_BUNDLE_IDENTIFIER)"
     assert info["LSRequiresIPhoneOS"] is True
+    assert info["ITSAppUsesNonExemptEncryption"] is False
     assert export["method"] == "app-store-connect"
     assert export["destination"] == "upload"
     assert export["signingStyle"] == "automatic"
@@ -147,6 +148,7 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "APPLE_TEAM_ID" in doc
     assert "IOS_BUNDLE_ID" in doc
     assert "CURRENT_PROJECT_VERSION" in doc
+    assert "ITSAppUsesNonExemptEncryption" in doc
     assert re.search(r"xcodebuild archive\s+\\", doc)
     assert "-project ios/LLMQuest.xcodeproj" in doc
     assert "-scheme LLMQuest" in doc
