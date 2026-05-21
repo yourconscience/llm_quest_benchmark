@@ -212,6 +212,10 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "no collected" in doc
     assert "Export Compliance" in doc
     assert "missing compliance" in doc
+    assert "Beta App Review Information" in doc
+    assert "review contact name" in doc
+    assert "phone" in doc
+    assert "No sign-in or demo account is required." in doc
     assert re.search(r"xcodebuild archive\s+\\", doc)
     assert "-project ios/LLMQuest.xcodeproj" in doc
     assert "-scheme LLMQuest" in doc
@@ -222,6 +226,7 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "Beta App Description" in doc
     assert "Feedback Email" in doc
     assert "What to Test" in doc
+    assert "Review Notes" in doc
     assert "project support address" in doc
     assert "External testing requires Beta App Review." in doc
     assert "simulator-only testing is not enough" in doc

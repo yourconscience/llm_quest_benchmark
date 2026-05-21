@@ -69,6 +69,10 @@ in the Xcode project:
   `Info.plist`, which should prevent each TestFlight build from being marked as
   missing compliance. If App Store Connect still prompts for export compliance,
   answer that the app does not use encryption or is exempt from documentation.
+- Beta App Review Information: provide the required review contact name, phone
+  number, and email address in App Store Connect. This app does not require
+  sign-in or a demo account; mention that in the review notes if the field is
+  available.
 
 Archive the app:
 
@@ -110,6 +114,10 @@ Test Information before inviting testers:
 - What to Test: `Open the quest list, start Bad Day or another short quest, make
   at least two choices, and report whether quest text, images, audio, and AI
   answer panels load correctly on your device.`
+- Review Notes: `No sign-in or demo account is required. The app is a bundled
+  WKWebView wrapper around the static LLM Quest Benchmark Play experience. Start
+  from the quest list, choose Bad Day, and make two choices to reach the AI answer
+  comparison panel.`
 
 Apple recommends testing on the physical devices and OS versions you support before
 distribution; simulator-only testing is not enough for TestFlight readiness.
