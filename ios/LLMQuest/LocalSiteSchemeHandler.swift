@@ -27,7 +27,13 @@ final class LocalSiteSchemeHandler: NSObject, WKURLSchemeHandler {
             return
         }
 
-        let fileURL = siteRoot.appendingPathComponent(relativePath, isDirectory: false)
+        let fileURL = siteRoot.appendingPathComponent(relativePath, isDirectory: false).standardizedFileURL
+        let siteRootPath = siteRoot.standardizedFileURL.path
+
+        guard fileURL.path == siteRootPath || fileURL.path.hasPrefix(siteRootPath + "/") else {
+            urlSchemeTask.didFailWithError(LocalSiteError.invalidURL)
+            return
+        }
 
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             guard let response = HTTPURLResponse(

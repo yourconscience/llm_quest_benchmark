@@ -67,6 +67,8 @@ def test_ios_app_serves_play_page_from_bundle_scheme():
     assert 'appendingPathComponent("site", isDirectory: true)' in scheme_handler
     assert 'let relativePath = requestedPath.isEmpty ? "play.html" : requestedPath' in scheme_handler
     assert "statusCode: 404" in scheme_handler
+    assert "standardizedFileURL" in scheme_handler
+    assert "fileURL.path.hasPrefix(siteRootPath + " in scheme_handler
     assert '"application/gzip"' in scheme_handler
     assert '"audio/mpeg"' in scheme_handler
 
