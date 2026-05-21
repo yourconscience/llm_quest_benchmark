@@ -93,7 +93,13 @@ def test_ios_bundled_play_page_assets_are_present_after_site_build():
 
     assert "play/qmengine.js" in local_runtime_assets
     assert "play/app.js" in local_runtime_assets
+    assert "play/vendor/bootstrap-5.3.3.min.css" in local_runtime_assets
+    assert "play/vendor/react-18.3.1.production.min.js" in local_runtime_assets
+    assert "play/vendor/react-dom-18.3.1.production.min.js" in local_runtime_assets
+    assert "play/vendor/pako-2.1.0.min.js" in local_runtime_assets
     assert "play/questplay/background.jpg" in page
+    assert "https://cdn.jsdelivr.net" not in page
+    assert "https://unpkg.com" not in page
 
     for asset in [*local_runtime_assets, "play/questplay/background.jpg"]:
         assert (SITE_DIR / asset).exists(), asset
