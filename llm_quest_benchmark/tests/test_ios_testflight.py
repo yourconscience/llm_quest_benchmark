@@ -120,6 +120,8 @@ def test_ios_metadata_and_export_options_are_valid():
     assert export["method"] == "app-store-connect"
     assert export["destination"] == "upload"
     assert export["signingStyle"] == "automatic"
+    assert export["stripSwiftSymbols"] is True
+    assert export["uploadSymbols"] is True
     assert any(icon.get("idiom") == "ios-marketing" for icon in icons["images"])
     assert project.count("MARKETING_VERSION = 1.0;") == 2
     assert project.count("CURRENT_PROJECT_VERSION = 1;") == 2
@@ -282,6 +284,8 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "CURRENT_PROJECT_VERSION" in doc
     assert "MARKETING_VERSION" in doc
     assert "starts at marketing version 1.0 and build number 1" in doc
+    assert "uploadSymbols" in doc
+    assert "stripSwiftSymbols" in doc
     assert "ITSAppUsesNonExemptEncryption" in doc
     assert "PrivacyInfo.xcprivacy" in doc
     assert "stages only the Play runtime payload" in doc

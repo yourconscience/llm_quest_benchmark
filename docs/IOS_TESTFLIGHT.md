@@ -66,6 +66,9 @@ local quest assets.
 The local browser runtime files under `site/play/vendor/` are included in the
 iOS app bundle for offline TestFlight execution; keep their `NOTICE.md` file with
 the vendored assets.
+`ios/export/ExportOptions.plist.template` uploads debug symbols with
+`uploadSymbols=true` and strips Swift symbols with `stripSwiftSymbols=true` for
+the App Store Connect export.
 
 Before inviting testers, complete the App Store Connect metadata that is not stored
 in the Xcode project:
