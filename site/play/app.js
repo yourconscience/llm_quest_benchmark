@@ -438,6 +438,65 @@ function downloadCanvas(canvas, filename) {
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
+function downloadJson(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2) + '\n'], {
+    type: 'application/json'
+  });
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+function safeFilenamePart(value) {
+  return String(value || 'quest').replace(/[^A-Za-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '') || 'quest';
+}
+function choicesToTraceMap(choices) {
+  const out = {};
+  (choices || []).forEach((choice, i) => {
+    out[String(i + 1)] = stripClr(choice.text || '');
+  });
+  return out;
+}
+function paramsToTraceList(paramsState) {
+  return (paramsState || []).filter(p => p && p.trim()).map(p => stripClr(p));
+}
+function buildHumanTrace({
+  quest,
+  outcome,
+  steps,
+  terminalText,
+  startedAt
+}) {
+  const now = new Date().toISOString();
+  const outcomeLabel = {
+    win: 'SUCCESS',
+    fail: 'FAILURE',
+    dead: 'FAILURE'
+  }[outcome] || 'INCOMPLETE';
+  return {
+    schema_version: 'human_trace_v1',
+    source: 'web_play',
+    quest_id: quest.id,
+    quest_title: quest.title || quest.id,
+    quest_lang: quest.lang || 'en',
+    canonical_id: quest.canonical_id || quest.id,
+    started_at: startedAt || now,
+    ended_at: now,
+    outcome: outcomeLabel,
+    steps,
+    terminal: {
+      game_state: outcome,
+      text: stripClr(terminalText || '')
+    },
+    undo_events: [],
+    metadata: {
+      app_url: PLAY_URL,
+      user_agent: navigator.userAgent || '',
+      exported_at: now
+    }
+  };
+}
 async function copyShareText(text, url) {
   if (!navigator.clipboard || !navigator.clipboard.writeText) return false;
   await navigator.clipboard.writeText(url ? text + '\n' + url : text);
@@ -497,9 +556,11 @@ function EndScreen({
   outcome,
   cohortWinRate,
   path,
-  questTitle,
+  quest,
   endText,
   families,
+  traceSteps,
+  startedAt,
   onPlayAgain,
   onTryAnother
 }) {
@@ -509,6 +570,7 @@ function EndScreen({
     fail: 'FAILURE',
     dead: 'DEAD'
   }[outcome] || 'FAILURE';
+  const questTitle = quest.title || quest.id;
   const branchingSteps = path.filter(e => e.agreed !== null);
   const agreeCount = branchingSteps.filter(e => e.agreed === true).length;
   const aiAgreeRate = branchingSteps.length > 0 ? Math.round(agreeCount / branchingSteps.length * 100) : 0;
@@ -549,6 +611,18 @@ function EndScreen({
         setShareStatus('Downloaded image.');
       }
     });
+  }
+  function handleExportTrace() {
+    const trace = buildHumanTrace({
+      quest,
+      outcome,
+      steps: traceSteps,
+      terminalText: endText,
+      startedAt
+    });
+    const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..*/, 'Z');
+    downloadJson(trace, 'human_trace_' + safeFilenamePart(quest.id) + '_' + stamp + '.json');
+    setShareStatus('Downloaded trace JSON.');
   }
   return /*#__PURE__*/React.createElement("div", {
     className: "container py-5",
@@ -600,7 +674,10 @@ function EndScreen({
   }, "Try Another Quest"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-outline-info",
     onClick: handleShare
-  }, "Share Result")), shareStatus && /*#__PURE__*/React.createElement("p", {
+  }, "Share Result"), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-outline-warning",
+    onClick: handleExportTrace
+  }, "Export Trace JSON")), shareStatus && /*#__PURE__*/React.createElement("p", {
     style: {
       color: 'var(--muted)',
       fontSize: '0.9rem',
@@ -625,9 +702,11 @@ function QuestPlay({
   const [stepHistory, setStepHistory] = useState([]);
   const [stepNum, setStepNum] = useState(0);
   const [path, setPath] = useState([]);
+  const [traceSteps, setTraceSteps] = useState([]);
   const [ended, setEnded] = useState(null);
   const [endText, setEndText] = useState('');
   const [obsKey, setObsKey] = useState(0);
+  const startedAtRef = useRef(new Date().toISOString());
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -651,6 +730,8 @@ function QuestPlay({
       setCanonicalPlayer(canonical);
       setGameState(p.getState());
       setStepNum(1);
+      setTraceSteps([]);
+      startedAtRef.current = new Date().toISOString();
       setLoading(false);
     }).catch(err => {
       if (err.name === 'AbortError') return;
@@ -685,6 +766,8 @@ function QuestPlay({
   }
   function handleChoice(choice, activeChoices) {
     const locationId = player.getSaving().locationId;
+    const choices = gameState.choices || [];
+    const choiceIndex = Math.max(0, choices.findIndex(c => c.jumpId === choice.jumpId));
     const choiceNorm = canonicalChoiceNorm(choice);
     const cohortLoc = getCohortLoc(locationId);
     const isBranching = activeChoices.length >= 2;
@@ -700,6 +783,18 @@ function QuestPlay({
     setStepHistory(prev => [...prev, {
       player: player.getSaving(),
       canonicalPlayer: canonicalPlayer ? canonicalPlayer.getSaving() : null
+    }]);
+    setTraceSteps(prev => [...prev, {
+      step: stepNum,
+      location_id: locationId,
+      observation: stripClr(gameState.text || ''),
+      params: paramsToTraceList(gameState.paramsState),
+      choices: choicesToTraceMap(choices),
+      human_decision: {
+        choice_index: String(choiceIndex + 1),
+        choice_text: stripClr(choice.text || ''),
+        jump_id: choice.jumpId
+      }
     }]);
     player.performJump(choice.jumpId);
     if (canonicalPlayer) canonicalPlayer.performJump(choice.jumpId);
@@ -726,6 +821,7 @@ function QuestPlay({
     setGameState(player.getState());
     setStepNum(n => Math.max(1, n - 1));
     setPath(prev => prev.slice(0, -1));
+    setTraceSteps(prev => prev.slice(0, -1));
     setObsKey(k => k + 1);
     setEnded(null);
   }
@@ -762,18 +858,22 @@ function QuestPlay({
       outcome: ended,
       cohortWinRate: cohortData ? cohortData.win_rate : null,
       path: path,
-      questTitle: quest.title || quest.id,
+      quest: quest,
       endText: endText,
       families: cohortData && cohortData.model_families || [],
+      traceSteps: traceSteps,
+      startedAt: startedAtRef.current,
       onPlayAgain: () => {
         player.start();
         if (canonicalPlayer) canonicalPlayer.loadSaving(player.getSaving());
         setGameState(player.getState());
         setStepNum(1);
         setPath([]);
+        setTraceSteps([]);
         setStepHistory([]);
         setEnded(null);
         setEndText('');
+        startedAtRef.current = new Date().toISOString();
         setObsKey(k => k + 1);
       },
       onTryAnother: onQuit
