@@ -22,6 +22,8 @@ App Store:
 - https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds/
 - https://help.apple.com/xcode/mac/current/en.lproj/dev2539d985f.html
 - https://developer.apple.com/help/app-store-connect/test-a-beta-version/provide-test-information/
+- https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy/
+- https://developer.apple.com/help/app-store-connect/test-a-beta-version/invite-external-testers/
 
 ## Build Site Assets
 
@@ -55,6 +57,18 @@ local quest assets.
 The local browser runtime files under `site/play/vendor/` are included in the
 iOS app bundle for offline TestFlight execution; keep their `NOTICE.md` file with
 the vendored assets.
+
+Before inviting testers, complete the App Store Connect metadata that is not stored
+in the Xcode project:
+
+- App Privacy: set the privacy policy URL for the iOS app. Apple requires a
+  privacy policy URL for all apps. The current app-side privacy manifest declares
+  no tracking and no collected data; keep the App Store Connect privacy responses
+  aligned with that behavior unless the app starts collecting data.
+- Export Compliance: the app declares `ITSAppUsesNonExemptEncryption=false` in
+  `Info.plist`, which should prevent each TestFlight build from being marked as
+  missing compliance. If App Store Connect still prompts for export compliance,
+  answer that the app does not use encryption or is exempt from documentation.
 
 Archive the app:
 
@@ -93,6 +107,9 @@ Test Information before inviting testers:
   correctly.`
 - Feedback Email: use the project support address for TestFlight replies. Do not
   commit personal App Store Connect contact details to the repo.
+- What to Test: `Open the quest list, start Bad Day or another short quest, make
+  at least two choices, and report whether quest text, images, audio, and AI
+  answer panels load correctly on your device.`
 
 Apple recommends testing on the physical devices and OS versions you support before
 distribution; simulator-only testing is not enough for TestFlight readiness.

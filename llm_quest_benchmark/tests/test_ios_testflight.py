@@ -201,8 +201,12 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "PrivacyInfo.xcprivacy" in doc
     assert "site/play/vendor/" in doc
     assert "NOTICE.md" in doc
+    assert "App Privacy" in doc
+    assert "privacy policy URL" in doc
     assert "no tracking" in doc
     assert "no collected" in doc
+    assert "Export Compliance" in doc
+    assert "missing compliance" in doc
     assert re.search(r"xcodebuild archive\s+\\", doc)
     assert "-project ios/LLMQuest.xcodeproj" in doc
     assert "-scheme LLMQuest" in doc
@@ -212,6 +216,7 @@ def test_ios_testflight_docs_include_archive_and_upload_commands():
     assert "Test Information" in doc
     assert "Beta App Description" in doc
     assert "Feedback Email" in doc
+    assert "What to Test" in doc
     assert "project support address" in doc
     assert "External testing requires Beta App Review." in doc
     assert "simulator-only testing is not enough" in doc
