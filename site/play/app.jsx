@@ -469,6 +469,14 @@ function makeShareText(questTitle, outcomeLabel) {
 }
 
 function downloadCanvas(canvas, filename) {
+  if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.shareFile) {
+    window.webkit.messageHandlers.shareFile.postMessage({
+      content: canvas.toDataURL('image/png'),
+      filename: filename,
+      mimeType: 'image/png',
+    });
+    return;
+  }
   const link = document.createElement('a');
   link.download = filename;
   link.href = canvas.toDataURL('image/png');
@@ -476,7 +484,16 @@ function downloadCanvas(canvas, filename) {
 }
 
 function downloadJson(data, filename) {
-  const blob = new Blob([JSON.stringify(data, null, 2) + '\n'], { type: 'application/json' });
+  const content = JSON.stringify(data, null, 2) + '\n';
+  if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.shareFile) {
+    window.webkit.messageHandlers.shareFile.postMessage({
+      content: content,
+      filename: filename,
+      mimeType: 'application/json',
+    });
+    return;
+  }
+  const blob = new Blob([content], { type: 'application/json' });
   const link = document.createElement('a');
   link.download = filename;
   link.href = URL.createObjectURL(blob);

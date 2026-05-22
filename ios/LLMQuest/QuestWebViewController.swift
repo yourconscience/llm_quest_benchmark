@@ -13,6 +13,9 @@ final class QuestWebViewController: UIViewController {
         configuration.allowsInlineMediaPlayback = true
         configuration.mediaTypesRequiringUserActionForPlayback = []
 
+        let contentController = configuration.userContentController
+        contentController.add(self, name: "shareFile")
+
         webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = self
         webView.allowsBackForwardNavigationGestures = true
@@ -40,7 +43,54 @@ final class QuestWebViewController: UIViewController {
         }
         webView.load(URLRequest(url: url))
     }
+
+    private func presentShareSheet(items: [Any]) {
+        let vc = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        vc.popoverPresentationController?.sourceView = webView
+        vc.popoverPresentationController?.sourceRect = CGRect(
+            x: webView.bounds.midX, y: webView.bounds.maxY - 40,
+            width: 1, height: 1
+        )
+        present(vc, animated: true)
+    }
 }
+
+// MARK: - WKScriptMessageHandler
+
+extension QuestWebViewController: WKScriptMessageHandler {
+    func userContentController(
+        _ userContentController: WKUserContentController,
+        didReceive message: WKScriptMessage
+    ) {
+        guard message.name == "shareFile",
+              let body = message.body as? [String: Any],
+              let content = body["content"] as? String,
+              let filename = body["filename"] as? String
+        else { return }
+
+        let mimeType = body["mimeType"] as? String ?? "application/octet-stream"
+        let tmpDir = FileManager.default.temporaryDirectory
+        let fileURL = tmpDir.appendingPathComponent(filename)
+
+        let data: Data?
+        if mimeType.hasPrefix("image/"), let b64 = content.split(separator: ",").last {
+            data = Data(base64Encoded: String(b64))
+        } else {
+            data = content.data(using: .utf8)
+        }
+
+        guard let fileData = data else { return }
+
+        do {
+            try fileData.write(to: fileURL, options: .atomic)
+            presentShareSheet(items: [fileURL])
+        } catch {
+            // File write failed — fall through silently.
+        }
+    }
+}
+
+// MARK: - WKNavigationDelegate
 
 extension QuestWebViewController: WKNavigationDelegate {
     func webView(
