@@ -329,11 +329,14 @@ function renderStats() {
   const wAvg = (key) => totalRuns ? rows.reduce((s, r) => s + (r[key] * r.runs), 0) / totalRuns : 0;
   const stats = [
     {value: (wAvg('success_rate')*100).toFixed(0)+'%', label: 'Avg Success Rate'},
-    {value: wAvg('avg_steps').toFixed(0), label: 'Avg Steps/Run'},
-    {value: wAvg('avg_tokens').toFixed(0), label: 'Avg Tokens/Run'},
     {value: totalRuns.toLocaleString(), label: 'Total Runs'},
   ];
-  document.getElementById('stats-row').innerHTML = stats.map(s => `<div class="col-6 col-md-3"><div class="card stat-card"><div class="stat-value">${s.value}</div><div class="stat-label">${s.label}</div></div></div>`).join('');
+  const avgSteps = wAvg('avg_steps');
+  const avgTokens = wAvg('avg_tokens');
+  if (avgSteps > 0) stats.splice(1, 0, {value: avgSteps.toFixed(0), label: 'Avg Steps/Run'});
+  if (avgTokens > 0) stats.splice(stats.length - 1, 0, {value: avgTokens.toFixed(0), label: 'Avg Tokens/Run'});
+  const colClass = stats.length <= 2 ? 'col-6' : 'col-6 col-md-3';
+  document.getElementById('stats-row').innerHTML = stats.map(s => `<div class="${colClass}"><div class="card stat-card"><div class="stat-value">${s.value}</div><div class="stat-label">${s.label}</div></div></div>`).join('');
 }
 
 function sortArrow(col) {
