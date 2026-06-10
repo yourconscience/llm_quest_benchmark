@@ -56,3 +56,45 @@ jobs:
 
       - name: Run tests with coverage
         run: pytest --cov=llm_quest_benchmark --cov-report=term-missing -v
+
+  ios-build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+
+      - name: Install Node dependencies
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
+        run: |
+          pnpm install --frozen-lockfile
+          cd space-rangers-quest && npm install --legacy-peer-deps && npm run build
+
+      - name: Build static site play assets
+        run: pnpm run build
+
+      - name: Show Xcode version
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks
+
+      - name: Build iOS app for simulator
+        run: |
+          xcodebuild build \
+            -project ios/LLMQuest.xcodeproj \
+            -scheme LLMQuest \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO

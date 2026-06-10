@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -42,7 +42,7 @@ def make_run_id(trace: dict[str, Any]) -> str:
     if exported_at:
         safe_time = "".join(ch for ch in str(exported_at) if ch.isdigit())[:14]
     else:
-        safe_time = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+        safe_time = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
     safe_quest = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "_" for ch in quest_id)
     return f"human_web_{safe_quest}_{safe_time}"
 

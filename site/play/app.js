@@ -188,6 +188,16 @@ function sortQuests(quests) {
 const PLAY_URL = 'https://yourconscience.github.io/llm_quest_benchmark/play.html';
 const SHARE_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
 const MIN_COHORT_LOCATION_RUNS = 3;
+const MEDIA_BASE = 'play/media/';
+function mediaUrl(name, kind) {
+  if (!name) return null;
+  const raw = String(name);
+  const lower = raw.toLowerCase();
+  if (lower.startsWith('http://') || lower.startsWith('https://')) return raw;
+  const ext = kind === 'img' ? '.jpg' : '.mp3';
+  const folder = kind === 'img' ? 'img' : kind;
+  return MEDIA_BASE + folder + '/' + lower + (lower.includes('.') ? '' : ext);
+}
 function drawTextLine(ctx, text, x, y, maxWidth) {
   ctx.fillText(text, x, y, maxWidth);
 }
@@ -268,6 +278,95 @@ function CohortBars({
       className: "cohort-pct"
     }, pct, "%")));
   })));
+}
+
+// ---- Media ----
+
+function QuestImage({
+  src
+}) {
+  const [failedSrc, setFailedSrc] = useState(null);
+  useEffect(() => {
+    setFailedSrc(null);
+  }, [src]);
+  if (!src || failedSrc === src) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "media-placeholder"
+    }, "Space Rangers");
+  }
+  return /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: "",
+    onError: () => setFailedSrc(src)
+  });
+}
+function QuestAudio({
+  gameState,
+  audioEnabled
+}) {
+  const trackRef = useRef(null);
+  const soundRef = useRef(null);
+  const trackSrc = mediaUrl(gameState && gameState.trackName, 'track');
+  const soundSrc = mediaUrl(gameState && gameState.soundName, 'sound');
+  useEffect(() => {
+    if (!audioEnabled || !trackRef.current) return;
+    trackRef.current.volume = 0.55;
+    trackRef.current.play().catch(() => {});
+  }, [audioEnabled, trackSrc]);
+  useEffect(() => {
+    if (!audioEnabled || !soundRef.current) return;
+    soundRef.current.volume = 0.75;
+    soundRef.current.play().catch(() => {});
+  }, [audioEnabled, soundSrc]);
+  if (!audioEnabled) return null;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, trackSrc && /*#__PURE__*/React.createElement("audio", {
+    key: trackSrc,
+    ref: trackRef,
+    src: trackSrc,
+    loop: true,
+    preload: "auto"
+  }), soundSrc && /*#__PURE__*/React.createElement("audio", {
+    key: soundSrc,
+    ref: soundRef,
+    src: soundSrc,
+    preload: "auto"
+  }));
+}
+function MediaStage({
+  gameState,
+  audioEnabled
+}) {
+  const imageSrc = mediaUrl(gameState && gameState.imageName, 'img');
+  return /*#__PURE__*/React.createElement("div", {
+    className: "media-stage"
+  }, /*#__PURE__*/React.createElement(QuestAudio, {
+    gameState: gameState,
+    audioEnabled: audioEnabled
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "media-frame"
+  }, /*#__PURE__*/React.createElement(QuestImage, {
+    src: imageSrc
+  })));
+}
+function CurrentDecisionInsight({
+  cohortLoc,
+  isBranching,
+  activeFamily,
+  onFamilyChange,
+  families
+}) {
+  if (!isBranching) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cohort-panel"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "panel-label"
+  }, "AI answers"), /*#__PURE__*/React.createElement(CohortBars, {
+    cohortLoc: cohortLoc,
+    playerChoiceNorm: null,
+    activeFamily: activeFamily,
+    onFamilyChange: onFamilyChange,
+    families: families
+  }));
 }
 
 // ---- DecisionHistory ----
@@ -440,13 +539,30 @@ function makeShareText(questTitle, outcomeLabel) {
   return 'I ' + verb + ' "' + questTitle + '" on LLM-Quest Benchmark. Can you do better?';
 }
 function downloadCanvas(canvas, filename) {
+  if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.shareFile) {
+    window.webkit.messageHandlers.shareFile.postMessage({
+      content: canvas.toDataURL('image/png'),
+      filename: filename,
+      mimeType: 'image/png'
+    });
+    return;
+  }
   const link = document.createElement('a');
   link.download = filename;
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
 function downloadJson(data, filename) {
-  const blob = new Blob([JSON.stringify(data, null, 2) + '\n'], {
+  const content = JSON.stringify(data, null, 2) + '\n';
+  if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.shareFile) {
+    window.webkit.messageHandlers.shareFile.postMessage({
+      content: content,
+      filename: filename,
+      mimeType: 'application/json'
+    });
+    return;
+  }
+  const blob = new Blob([content], {
     type: 'application/json'
   });
   const link = document.createElement('a');
@@ -568,6 +684,8 @@ function EndScreen({
   path,
   quest,
   endText,
+  mediaState,
+  audioEnabled,
   families,
   traceSteps,
   startedAt,
@@ -654,7 +772,10 @@ function EndScreen({
       color: 'var(--muted)',
       marginBottom: '1.5rem'
     }
-  }, "AI cohort: ", Math.round(cohortWinRate * 100), "% won this quest.")), endText && /*#__PURE__*/React.createElement("div", {
+  }, "AI cohort: ", Math.round(cohortWinRate * 100), "% won this quest.")), endText && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(MediaStage, {
+    gameState: mediaState,
+    audioEnabled: audioEnabled
+  }), /*#__PURE__*/React.createElement("div", {
     className: "card-table",
     style: {
       marginBottom: '1.5rem',
@@ -664,7 +785,7 @@ function EndScreen({
     }
   }, /*#__PURE__*/React.createElement(QuestTags, {
     str: endText
-  })), /*#__PURE__*/React.createElement(DecisionHistory, {
+  }))), /*#__PURE__*/React.createElement(DecisionHistory, {
     path: path,
     families: families
   }), /*#__PURE__*/React.createElement("div", {
@@ -715,7 +836,10 @@ function QuestPlay({
   const [traceSteps, setTraceSteps] = useState([]);
   const [ended, setEnded] = useState(null);
   const [endText, setEndText] = useState('');
+  const [endMediaState, setEndMediaState] = useState(null);
   const [obsKey, setObsKey] = useState(0);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [activeFamily, setActiveFamily] = useState('all');
   const startedAtRef = useRef(new Date().toISOString());
   useEffect(() => {
     const controller = new AbortController();
@@ -817,6 +941,7 @@ function QuestPlay({
     if (isTerminal) {
       setEnded(gs);
       setEndText(nextState.text || '');
+      setEndMediaState(nextState);
     } else {
       setGameState(player.getState());
       setStepNum(n => n + 1);
@@ -837,6 +962,7 @@ function QuestPlay({
     setTraceSteps(prev => prev.slice(0, -1));
     setObsKey(k => k + 1);
     setEnded(null);
+    setEndMediaState(null);
   }
   if (loading) {
     return /*#__PURE__*/React.createElement("div", {
@@ -873,6 +999,8 @@ function QuestPlay({
       path: path,
       quest: quest,
       endText: endText,
+      mediaState: endMediaState,
+      audioEnabled: audioEnabled,
       families: cohortData && cohortData.model_families || [],
       traceSteps: traceSteps,
       startedAt: startedAtRef.current,
@@ -886,6 +1014,7 @@ function QuestPlay({
         setStepHistory([]);
         setEnded(null);
         setEndText('');
+        setEndMediaState(null);
         startedAtRef.current = new Date().toISOString();
         setObsKey(k => k + 1);
       },
@@ -896,61 +1025,76 @@ function QuestPlay({
   const choices = gameState.choices || [];
   const activeChoices = choices.filter(c => c.active);
   const params = (gameState.paramsState || []).filter(p => p && p.trim());
+  const currentLocationId = canonicalPlayer ? canonicalPlayer.getSaving().locationId : player.getSaving().locationId;
+  const currentCohortLoc = getCohortLoc(currentLocationId);
+  const isCurrentBranching = activeChoices.length >= 2;
   return /*#__PURE__*/React.createElement("div", {
-    className: "container py-4",
-    style: {
-      maxWidth: 800
-    }
+    className: "play-shell"
   }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: '1rem'
-    }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h4", {
-    style: {
-      marginBottom: 0
-    }
-  }, quest.title), /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: 'var(--muted)',
-      fontSize: '0.85rem'
-    }
+    className: "play-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "play-topbar"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "play-title"
+  }, /*#__PURE__*/React.createElement("h1", null, quest.title), /*#__PURE__*/React.createElement("div", {
+    className: "play-meta"
   }, "Step ", stepNum)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      gap: '0.5rem'
-    }
+    className: "play-actions"
   }, stepHistory.length > 0 && /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-sm btn-outline-secondary",
-    onClick: handleBack
-  }, "\u2190 Back"), /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-sm btn-outline-secondary",
-    onClick: onQuit
-  }, "Quit"))), params.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "play-action",
+    onClick: handleBack,
+    "aria-label": "Back",
+    title: "Back"
+  }, "\u2190"), /*#__PURE__*/React.createElement("button", {
+    className: "play-action",
+    onClick: () => setAudioEnabled(v => !v),
+    "aria-label": audioEnabled ? 'Mute sound' : 'Enable sound',
+    title: audioEnabled ? 'Mute sound' : 'Enable sound'
+  }, audioEnabled ? '\u266a' : '\u266b'), /*#__PURE__*/React.createElement("button", {
+    className: "play-action",
+    onClick: onQuit,
+    "aria-label": "Quit",
+    title: "Quit"
+  }, "\u2715"))), /*#__PURE__*/React.createElement("div", {
+    className: "play-layout"
+  }, /*#__PURE__*/React.createElement("main", {
+    className: "story-column"
+  }, params.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "params-strip"
   }, params.map((p, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
     className: "param-pill"
   }, /*#__PURE__*/React.createElement(QuestTags, {
     str: p
-  })))), /*#__PURE__*/React.createElement("div", {
+  })))), /*#__PURE__*/React.createElement(MediaStage, {
+    gameState: gameState,
+    audioEnabled: audioEnabled
+  }), /*#__PURE__*/React.createElement("div", {
     key: obsKey,
     className: "obs-panel"
   }, /*#__PURE__*/React.createElement(QuestTags, {
     str: gameState.text || ''
-  })), /*#__PURE__*/React.createElement("div", null, choices.map((choice, i) => /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "choices-panel"
+  }, choices.map((choice, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
     className: 'choice-btn' + (choice.active ? '' : ' inactive'),
     disabled: !choice.active,
     onClick: () => choice.active && handleChoice(choice, activeChoices)
   }, /*#__PURE__*/React.createElement(QuestTags, {
     str: choice.text || ''
-  })))), /*#__PURE__*/React.createElement(DecisionHistory, {
+  }))))), /*#__PURE__*/React.createElement("aside", {
+    className: "ai-column"
+  }, /*#__PURE__*/React.createElement(CurrentDecisionInsight, {
+    cohortLoc: currentCohortLoc,
+    isBranching: isCurrentBranching,
+    activeFamily: activeFamily,
+    onFamilyChange: setActiveFamily,
+    families: families
+  }), /*#__PURE__*/React.createElement(DecisionHistory, {
     path: path,
     families: families
-  }));
+  })))));
 }
 
 // ---- Language helpers ----

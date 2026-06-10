@@ -35,3 +35,18 @@ def test_play_history_does_not_claim_ai_agreement_with_limited_data():
     assert "if (aiAgreeRate != null)" in source
     assert "Limited AI data: " in source
     assert "Limited AI data" in source
+
+
+def test_play_surface_keeps_mobile_ai_and_media_support():
+    source = APP_SOURCE.read_text(encoding="utf-8")
+
+    assert "function CurrentDecisionInsight" in source
+    assert "AI answers" in source
+    assert "function MediaStage" in source
+    assert "gameState && gameState.imageName" in source
+    assert "gameState && gameState.trackName" in source
+    assert "gameState && gameState.soundName" in source
+    assert "const MEDIA_BASE = 'play/media/';" in source
+    assert "lower.includes('.') ? '' : ext" in source
+    assert 'preload="auto"' in source
+    assert "setAudioEnabled(v => !v)" in source

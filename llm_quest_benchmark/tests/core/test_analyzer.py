@@ -1,14 +1,28 @@
 """Tests for quest run analyzer"""
 
 import json
+import os
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from typer.testing import CliRunner
 
 from llm_quest_benchmark.core.analyzer import analyze_quest_run
 from llm_quest_benchmark.executors.cli.commands import app
+
+
+@contextmanager
+def isolated_filesystem():
+    previous_cwd = Path.cwd()
+    with TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
+        try:
+            yield Path(temp_dir)
+        finally:
+            os.chdir(previous_cwd)
 
 
 def setup_test_db(db_path: Path):
@@ -132,7 +146,7 @@ def test_analyze_quest_run(tmp_path):
 
     # Test CLI command
     runner = CliRunner()
-    with runner.isolated_filesystem():
+    with isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--quest", "test1.qm", "--db", str(db_path), "--debug"])
         assert result.exit_code == 0
 
@@ -155,7 +169,7 @@ def test_analyze_benchmark(tmp_path):
 
     # Test CLI command for all benchmarks
     runner = CliRunner()
-    with runner.isolated_filesystem():
+    with isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--benchmark", "baseline", "--db", str(db_path)])
         assert result.exit_code == 0
 
@@ -183,7 +197,7 @@ def test_analyze_specific_benchmark(tmp_path):
 
     # Test CLI command for specific benchmark
     runner = CliRunner()
-    with runner.isolated_filesystem():
+    with isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--benchmark", "experimental", "--db", str(db_path)])
         assert result.exit_code == 0
 
@@ -220,7 +234,7 @@ def test_analyze_metrics(tmp_path):
 
     # Test CLI command
     runner = CliRunner()
-    with runner.isolated_filesystem():
+    with isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--quest", "test1.qm", "--db", str(db_path)])
         assert result.exit_code == 0
         assert "Quest Run Summary" in result.stdout
@@ -233,7 +247,7 @@ def test_analyze_metrics(tmp_path):
 def test_analyze_no_metrics_dir(tmp_path):
     """Test analyze command with non-existent metrics directory"""
     runner = CliRunner()
-    with runner.isolated_filesystem():
+    with isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--quest", "test1.qm"])
         assert result.exit_code == 1
         assert "Database not found" in result.output
@@ -261,7 +275,7 @@ def test_analyze_empty_metrics_dir(tmp_path):
     conn.close()
 
     runner = CliRunner()
-    with runner.isolated_filesystem():
+    with isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--quest", "test1.qm", "--db", str(db_path)])
         assert result.exit_code == 1
         assert "No runs found for quest" in result.output
@@ -275,7 +289,7 @@ def test_analyze_invalid_file(tmp_path):
         f.write("invalid data")
 
     runner = CliRunner()
-    with runner.isolated_filesystem():
+    with isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--quest", "test1.qm", "--db", str(db_path)])
         assert result.exit_code == 1
         assert "Error analyzing quest run" in result.output
@@ -288,7 +302,7 @@ def test_analyze_invalid_benchmark_file(tmp_path):
     setup_test_db(db_path)
 
     runner = CliRunner()
-    with runner.isolated_filesystem():
+    with isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--benchmark", "nonexistent", "--db", str(db_path)])
         assert result.exit_code == 1
         assert "No benchmark data found for nonexistent" in result.output
@@ -337,7 +351,7 @@ def test_analyze_benchmark_directory(tmp_path):
 
     # Test CLI command
     runner = CliRunner()
-    with runner.isolated_filesystem():
+    with isolated_filesystem():
         result = runner.invoke(app, ["analyze", "--benchmark", "benchmark1", "--db", str(db_path)])
         assert result.exit_code == 0
 
