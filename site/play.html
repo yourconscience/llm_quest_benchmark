@@ -205,6 +205,14 @@ a { color: var(--accent); }
 
 <div id="root"></div>
 
+<script>
+// The iOS bundle (lqb:// scheme) ships only play.html; hide links to pages it doesn't include.
+if (location.protocol === 'lqb:') {
+  document.querySelectorAll('a[href="about.html"], a[href="index.html"]').forEach(function (el) {
+    el.style.display = 'none';
+  });
+}
+</script>
 <script src="play/app.js"></script>
 
 </body>
