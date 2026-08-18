@@ -29,8 +29,13 @@ def run_quest_with_timeout(
     agent_config: HarnessConfig | Any | None = None,
     debug: bool = False,
     callbacks: list[Callable[[str, Any], None]] = None,
+    max_steps: int | None = None,
 ) -> QuestOutcome | None:
-    """Run quest with timeout."""
+    """Run quest with timeout.
+
+    max_steps: optional shared cap on agent steps per quest. None (default)
+    preserves the prior unbounded-loop behavior.
+    """
     logger: QuestLogger | None = None
     executor: ThreadPoolExecutor | None = None
     benchmark_id = getattr(agent_config, "benchmark_id", None) if agent_config else None
@@ -46,7 +51,12 @@ def run_quest_with_timeout(
         # Create quest environment and runner
         QuestEnvironment(quest_path)  # validates quest path
         runner = QuestRunner(
-            agent=agent, debug=debug, callbacks=callbacks or [], quest_logger=logger, agent_config=agent_config
+            agent=agent,
+            debug=debug,
+            callbacks=callbacks or [],
+            quest_logger=logger,
+            agent_config=agent_config,
+            max_steps=max_steps,
         )
 
         # Run quest with timeout
@@ -138,14 +148,20 @@ class QuestRunner:
         callbacks: list[Callable[[str, Any], None]] = None,
         quest_logger: QuestLogger = None,
         agent_config=None,
+        max_steps: int | None = None,
     ):
-        """Initialize components needed for quest execution"""
+        """Initialize components needed for quest execution.
+
+        max_steps: optional shared cap on agent steps per quest. None (default)
+        preserves the prior unbounded-loop behavior.
+        """
         self.agent = agent
         self.debug = debug
         self.callbacks = callbacks or []
         self.step_count = 0
         self.env = None
         self.agent_config = agent_config
+        self.max_steps = max_steps
         self._stop_requested = threading.Event()
         self._stop_reason = ""
 
@@ -224,6 +240,25 @@ class QuestRunner:
                 if self._stop_requested.is_set():
                     self.logger.warning("Quest runner stop requested: %s", self._stop_reason or "unknown")
                     return QuestOutcome.TIMEOUT
+
+                if self.max_steps is not None and self.step_count >= self.max_steps:
+                    self.logger.warning(
+                        "Quest exceeded max steps (%s); ending as FAILURE to break a non-terminating loop",
+                        self.max_steps,
+                    )
+                    if self.env and self.env.state:
+                        self.agent.on_game_end(self.env.state)
+
+                    outcome = QuestOutcome.FAILURE
+                    reward = self.env.state.get("reward", 0.0) if self.env and self.env.state else 0.0
+                    if self.quest_logger:
+                        self.quest_logger.set_quest_outcome(
+                            outcome.name,
+                            reward,
+                            final_state=self.env.state if self.env else None,
+                        )
+
+                    return outcome
 
                 self.step_count += 1
                 self._notify_callbacks(

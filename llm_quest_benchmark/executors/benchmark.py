@@ -185,6 +185,7 @@ def _run_benchmark_task(task: dict[str, Any], result_queue) -> None:
     agent_config.benchmark_id = task["benchmark_id"]
     quest = task["quest"]
     attempt = task["attempt"]
+    max_steps = task.get("max_steps")
 
     def callback(event: str, data: Any = None) -> None:
         if event == "run_record" and isinstance(data, dict):
@@ -213,6 +214,7 @@ def _run_benchmark_task(task: dict[str, Any], result_queue) -> None:
             agent_config=agent_config,
             debug=agent_config.debug,
             callbacks=[callback],
+            max_steps=max_steps,
         )
         outcome_name = outcome.name if outcome else QuestOutcome.TIMEOUT.name
         result_queue.put(
@@ -335,6 +337,7 @@ def _write_benchmark_artifacts(config: BenchmarkConfig, results: list[dict[str, 
         "debug": config.debug,
         "quest_timeout": config.quest_timeout,
         "benchmark_timeout": config.benchmark_timeout,
+        "max_steps": config.max_steps,
         "output_dir": config.output_dir,
         "name": config.name,
         "renderer": config.renderer,
@@ -405,6 +408,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                         "agent_config": task_agent_config,
                         "attempt": attempt,
                         "benchmark_id": config.benchmark_id,
+                        "max_steps": config.max_steps,
                     }
                 )
 

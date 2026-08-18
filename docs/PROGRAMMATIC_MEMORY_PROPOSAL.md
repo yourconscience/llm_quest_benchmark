@@ -57,7 +57,10 @@ The gap is narrower than “add RGB-Agent”:
 - Keep only bounded recent context in ordinary prompts.
 - Let the model retrieve exact earlier steps by range or literal search.
 - Record every retrieval and result through the existing `LLMResponse.tool_calls` and `tool_results` path.
-- Isolate programmatic memory as a benchmark dimension against existing harnesses.
+- Compare programmatic memory against existing harnesses as a new benchmark
+  dimension; the pilot in this proposal is an exploratory bundled-harness
+  comparison, not an isolated single-variable treatment (see Evaluation
+  Design and Risks).
 - Keep provider APIs, quest execution, timeouts, result layout, and public action numbering unchanged.
 
 ## Non-goals
@@ -155,13 +158,29 @@ If retrieval-only results reveal repeated failures that require exact computatio
 
 Hold model, quest set, temperature, timeout, maximum steps, and repetitions constant.
 
+This is an exploratory bundled-harness comparison, not an isolated
+single-dimension treatment. Holding the axes above constant controls for
+confounds outside the harness itself (model, quest set, timeouts, step
+budget, sample count), but `programmatic_memory` still differs from each
+baseline row by more than one property at once: versus `tool_compact` it
+simultaneously removes `CompactionMemory` and replaces clipped keyword search
+with full read/search; versus `reasoning_recent` it also adds a
+tool-selection call, calculator/scratchpad tools, and a memo-producing
+prompt. A result from this table can say whether the `programmatic_memory`
+harness as a whole out- or under-performs a given baseline; it cannot
+attribute that difference to programmatic retrieval specifically. Isolating
+retrieval fidelity from compaction would need a separate ablation family
+(compaction on/off with retrieval fixed, retrieval fidelity varied with
+compaction fixed) — out of scope for this pilot; see Risks: Confounded
+comparison.
+
 | Harness | History available in prompt | External history | LLM compaction | Purpose |
 |---|---|---|---|---|
 | `reasoning_recent` | recent bounded context | none | no | minimal bounded-context baseline |
 | `reasoning_full` | full transcript | none | no | capacity-heavy baseline |
 | `memo_compact` | recent + summary/memo | none | yes | summary baseline |
 | `tool_compact` | recent + compacted context | clipped keyword search | yes | current closest tool baseline |
-| `programmatic_memory` | recent bounded context | full read/search | no | proposed treatment |
+| `programmatic_memory` | recent bounded context | full read/search | no | proposed treatment (bundles memory, tool-surface, and prompt/loop changes; see paragraph above) |
 
 Use quests with enough turns and revisitation to exercise memory. Select them from existing run distributions before launching the matrix; do not choose only quests where the proposed harness already appears favorable.
 
@@ -187,7 +206,7 @@ Do not add a new public metric until it is deterministic, documented, and useful
 
 ### Decision rule
 
-Proceed beyond the experiment only if `programmatic_memory` improves success on long/stateful quests without an unacceptable increase in timeout or total cost. Report per-quest effects; an aggregate gain that comes only from easy quests is insufficient.
+Proceed beyond the experiment only if `programmatic_memory` improves success on long/stateful quests without an unacceptable increase in timeout or total cost. Report per-quest effects; an aggregate gain that comes only from easy quests is insufficient. Because this pilot is a bundled-harness comparison, a positive result is evidence for the full `programmatic_memory` harness design, not proof that retrieval specifically (versus dropping compaction, or the tool/prompt change) drove it; treat "proceed" as licensing further, more isolated investigation, not as attribution to any one component.
 
 ## Verification Plan
 
@@ -222,7 +241,7 @@ Run the focused harness and persistence tests, then smoke one deterministic ques
 - **Weak lexical match:** story paraphrases may evade literal search. Start deterministic; add richer retrieval only after observed misses justify it.
 - **History poisoning:** observations are untrusted quest text. Prompt the model to treat retrieved text as data and never as tool instructions.
 - **Duplicate state stores:** the code already has multiple histories. Keep the new component scoped to the harness and do not create another persisted schema.
-- **Confounded comparison:** changing prompts, tools, memory, and call budget together would invalidate conclusions. Match `tool_compact` wherever possible.
+- **Confounded comparison:** the pilot in `configs/benchmarks/programmatic_memory_pilot.yaml` already changes prompt, tool surface, and memory strategy together relative to `tool_compact`/`reasoning_recent` (see Evaluation Design: Primary comparison), so it cannot attribute an observed effect to programmatic retrieval alone. This pilot's comparison is deliberately bundled/exploratory, not a fix for this risk; a real ablation (retrieval fidelity varied with compaction fixed, and vice versa) is required before drawing a causal conclusion, and is out of scope for this pilot.
 - **Hypothesis lock-in:** complete evidence does not guarantee revision. Diagnose repeated failed strategies before adding a structured hypothesis ledger.
 
 ## Delivery Sequence

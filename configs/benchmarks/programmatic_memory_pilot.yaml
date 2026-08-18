@@ -1,7 +1,20 @@
 # Small pilot comparison for docs/PROGRAMMATIC_MEMORY_PROPOSAL.md.
-# Holds model, temperature, timeout, and quest set constant across the five
-# harnesses in the proposal's "Primary comparison" table so programmatic_memory
-# can be isolated as a single-dimension treatment against existing baselines.
+# Holds model, temperature, quest set, quest_timeout, and max_steps constant
+# across the five harnesses in the proposal's "Primary comparison" table.
+#
+# This is an EXPLORATORY BUNDLED-HARNESS COMPARISON, not an isolated
+# single-dimension treatment: programmatic_memory simultaneously removes
+# CompactionMemory (compaction) and replaces tool_compact's clipped
+# quest_history search with full read/search, and its tool/prompt path also
+# differs from reasoning_recent's (tool-select-then-act loop, calculator and
+# scratchpad tools, memo-producing prompt) rather than varying retrieval
+# fidelity alone. A result from this pilot cannot attribute a success-rate or
+# cost change to programmatic retrieval specifically -- it can only say
+# whether the programmatic_memory harness, as a whole, out- or
+# under-performs each existing baseline harness on this quest set. Isolating
+# retrieval fidelity from compaction would need a separate ablation family
+# (e.g. compaction on/off with retrieval fixed, and retrieval fidelity varied
+# with compaction fixed); that is out of scope for this pilot.
 #
 # Quests are reused from existing benchmark configs (exp3/exp5/exp6,
 # memory_modes_pilot) and the fake-provider e2e smoke quest rather than
@@ -51,5 +64,11 @@ agents:
 
 debug: false
 quest_timeout: 600
+# Shared step cap: reasoning_recent/reasoning_full make one model call per
+# decision while tool_compact/programmatic_memory can make two, so without a
+# shared max_steps a faster one-call harness could execute more quest actions
+# before quest_timeout than a slower one, confounding success/timeout
+# comparisons independent of the memory/retrieval difference under test.
+max_steps: 60
 max_workers: 2
 output_dir: results/benchmarks

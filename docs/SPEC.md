@@ -61,11 +61,15 @@ deliberately excluded from the Current Taxonomy table above. It pairs
 `DefaultMemory` (recent bounded context, no compaction, no full transcript)
 with a full-fidelity, append-only, run-local `Trajectory` and two bounded
 deterministic retrieval tools, `history_read` and `history_search`, capped at
-one retrieval call per decision. It is a controlled test of whether complete
-external history with targeted retrieval outperforms `tool_compact`'s clipped
-keyword search or `memo_compact`'s LLM-compacted summary on long/stateful
-quests; it should not be treated as a public result until a benchmark matrix
-(`configs/benchmarks/programmatic_memory_pilot.yaml`) has run and been reported.
+one retrieval call per decision. The pilot benchmark
+(`configs/benchmarks/programmatic_memory_pilot.yaml`) is an exploratory
+bundled-harness comparison of whether the full `programmatic_memory` harness
+outperforms `tool_compact`'s clipped keyword search or `memo_compact`'s
+LLM-compacted summary on long/stateful quests, not an isolated test of
+retrieval alone: relative to those baselines it also removes compaction and
+changes the tool/prompt path, so an observed effect cannot be attributed to
+retrieval specifically. It should not be treated as a public result until
+that benchmark matrix has run and been reported.
 
 ## Current Interpretation
 
