@@ -271,6 +271,33 @@ def test_search_matches_choices_and_selected_choice_text_too():
     assert "vault" in result.lower()
 
 
+def test_search_does_not_match_short_token_as_substring_of_longer_word():
+    """A short query token like 'he' must not match merely because it
+    appears as a substring inside a longer word like 'the' or 'chest'."""
+    trajectory = Trajectory()
+    trajectory.append("The old chest sits in the corner.", ["Wait"], 1, "Wait")
+
+    result = trajectory.search("he", 3)
+
+    assert not result.startswith("error:")
+    assert "no matches" in result
+    assert "Step 1:" not in result
+
+
+def test_search_matches_short_token_only_as_a_whole_word():
+    """The same short token must still match when it appears as an actual
+    standalone word, proving the fix isn't just refusing all short tokens."""
+    trajectory = Trajectory()
+    trajectory.append("The old chest sits in the corner.", ["Wait"], 1, "Wait")  # no standalone 'he' token
+    trajectory.append("He opens the heavy door.", ["Enter"], 1, "Enter")  # 'He' is a standalone token
+
+    result = trajectory.search("he", 3)
+
+    assert not result.startswith("error:")
+    assert "Step 2:" in result
+    assert "Step 1:" not in result  # 'the'/'chest' substrings must not count as a match
+
+
 def test_single_oversized_entry_is_hard_bounded_not_returned_in_full():
     """A single entry larger than MAX_OUTPUT_CHARS must still yield a result
     <= MAX_OUTPUT_CHARS: only the FORMATTED output is truncated (with a clear
