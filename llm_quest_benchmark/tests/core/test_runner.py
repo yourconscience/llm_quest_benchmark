@@ -213,7 +213,9 @@ def test_run_quest_with_timeout_forwards_max_steps_to_runner(monkeypatch):
     class DummyLogger:
         def __init__(self, debug=False, agent=None):  # noqa: ARG002
             self.current_run_id = 1
-            self.logger = SimpleNamespace(warning=lambda *a, **k: None, error=lambda *a, **k: None, info=lambda *a, **k: None)
+            self.logger = SimpleNamespace(
+                warning=lambda *a, **k: None, error=lambda *a, **k: None, info=lambda *a, **k: None
+            )
 
         def set_quest_file(self, quest_path):  # noqa: ARG002
             return None
