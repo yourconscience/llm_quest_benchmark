@@ -97,6 +97,34 @@ def _agent_memory_mode(agent_config) -> str:
     return harness_memory_modes.get(_agent_harness(agent_config), "default")
 
 
+def _harnesses_by_model(results: list[dict[str, Any]]) -> dict[str, set[str]]:
+    """Map each result model to the set of distinct harness values run under it."""
+    by_model: dict[str, set[str]] = {}
+    for r in results:
+        by_model.setdefault(r.get("model", "unknown"), set()).add(r.get("harness") or "")
+    return by_model
+
+
+def _result_group_label(result: dict[str, Any], harnesses_by_model: dict[str, set[str]]) -> str:
+    """Stable per-agent-variant label for grouping/reporting results.
+
+    Distinguishes agents that share a model but run under different harnesses
+    (e.g. a benchmark comparing several harnesses on the same model), so
+    summary stats never silently collapse them into one row. Stays the bare
+    model name -- preserving prior output exactly -- whenever that model only
+    ran under one harness in these results, or the harness is one whose model
+    label already encodes it (human, random_choice), or no harness is
+    recorded at all.
+    """
+    model = result.get("model", "unknown")
+    harness = result.get("harness") or ""
+    if not harness or harness == "human" or harness.startswith("random_choice"):
+        return model
+    if len(harnesses_by_model.get(model, set())) <= 1:
+        return model
+    return f"{model} [{harness}]"
+
+
 def _result_entry(
     quest: str,
     agent_config,
@@ -599,17 +627,19 @@ def calculate_summary_stats(results: list[dict[str, Any]]) -> dict[str, Any]:
         "timeout_rate": 0,
     }
 
-    # Calculate per-model statistics
-    models = {r["model"] for r in results}
-    for model in sorted(models):
-        model_results = [r for r in results if r["model"] == model]
+    # Calculate per-agent-variant statistics, keyed by model or, when distinct
+    # harnesses share a model, by "model [harness]" so results never collapse.
+    harnesses_by_model = _harnesses_by_model(results)
+    groups = {_result_group_label(r, harnesses_by_model) for r in results}
+    for group in sorted(groups):
+        model_results = [r for r in results if _result_group_label(r, harnesses_by_model) == group]
         success = len([r for r in model_results if r["outcome"] == QuestOutcome.SUCCESS.name])
         failed = len([r for r in model_results if r["outcome"] == QuestOutcome.FAILURE.name])
         error = len([r for r in model_results if r["outcome"] == QuestOutcome.ERROR.name])
         timeout = len([r for r in model_results if r["outcome"] == QuestOutcome.TIMEOUT.name])
         total = len(model_results)
 
-        summary["models"][model] = {
+        summary["models"][group] = {
             "total_runs": total,
             "success": success,
             "success_rate": success / total if total > 0 else 0,
@@ -648,23 +678,26 @@ def print_summary(results: list[dict[str, Any]]) -> None:
         total_steps = sum(len(r.get("steps", [])) for r in results)
         steps_by_model = {}
 
-    # Group by model
-    models = {r["model"] for r in results}
-    for model in sorted(models):
-        model_results = [r for r in results if r["model"] == model]
+    # Group by agent variant (model, or "model [harness]" when a model is run
+    # under more than one harness in these results).
+    harnesses_by_model = _harnesses_by_model(results)
+    groups = {_result_group_label(r, harnesses_by_model) for r in results}
+    for group in sorted(groups):
+        model_results = [r for r in results if _result_group_label(r, harnesses_by_model) == group]
         success = len([r for r in model_results if r["outcome"] == QuestOutcome.SUCCESS.name])
         failed = len([r for r in model_results if r["outcome"] == QuestOutcome.FAILURE.name])
         error = len([r for r in model_results if r["outcome"] == QuestOutcome.ERROR.name])
         timeout = len([r for r in model_results if r["outcome"] == QuestOutcome.TIMEOUT.name])
         total = len(model_results)
 
-        # Calculate steps for this model (if available)
+        # Calculate steps for this group (if available)
         if steps_info_available:
             model_steps = sum(len(r.get("steps", [])) for r in model_results)
             avg_steps = model_steps / total if total > 0 else 0
-            steps_by_model[model] = (model_steps, avg_steps)
+            steps_by_model[group] = (model_steps, avg_steps)
 
-        print(f"\nModel: {model}")
+        label = "Agent" if "[" in group else "Model"
+        print(f"\n{label}: {group}")
         print(f"Total quests: {total}")
         print(f"Success: {success} ({success / total * 100:.1f}%)")
         print(f"Failed: {failed} ({failed / total * 100:.1f}%)")
@@ -688,4 +721,4 @@ def print_summary(results: list[dict[str, Any]]) -> None:
         print("\nErrors encountered:")
         print("=" * 80)
         for r in errors:
-            print(f"{r['quest']} - {r['model']}: Error - {r['error']}")
+            print(f"{r['quest']} - {_result_group_label(r, harnesses_by_model)}: Error - {r['error']}")
