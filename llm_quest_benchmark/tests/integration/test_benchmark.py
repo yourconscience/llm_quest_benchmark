@@ -32,6 +32,16 @@ def _slow_task_for_timeout_test(task, result_queue):
     time.sleep(5)
 
 
+def _task_reporting_max_steps_seen(task, result_queue):
+    """Module-level (spawn-picklable) fake task: reports what task['max_steps']
+    it received back through the result, instead of doing real quest work."""
+    result = benchmark_module._result_entry(
+        task["quest"], task["agent_config"], task["attempt"], QuestOutcome.FAILURE.name
+    )
+    result["max_steps_seen"] = task.get("max_steps")
+    result_queue.put({"event": "done", "run_index": task["run_index"], "result": result})
+
+
 @pytest.mark.timeout(20)  # 20 seconds timeout for benchmark test
 def test_benchmark_e2e(caplog, tmp_path):
     """Test end-to-end benchmark functionality."""
@@ -166,6 +176,96 @@ def test_benchmark_uses_max_workers(monkeypatch, tmp_path):
 
     assert len(results) == 4
     assert elapsed < 5.0
+
+
+@pytest.mark.timeout(10)
+def test_run_benchmark_includes_max_steps_in_each_task(monkeypatch, tmp_path):
+    """run_benchmark must thread BenchmarkConfig.max_steps into every queued
+    task so _run_benchmark_task (running in a spawned child process) can see
+    it. Substitutes the child-process entry point to avoid the cost/flakiness
+    of a real subprocess+quest-engine run; the fake task reports what
+    task['max_steps'] it actually received, back through the normal result
+    channel (a local closure can't be pickled across the spawn boundary)."""
+    quest_path = tmp_path / "quest.qm"
+    quest_path.write_text("""
+    [start]
+    text: Done.
+    failure: true
+    """)
+
+    monkeypatch.setattr(benchmark_module, "_run_benchmark_task", _task_reporting_max_steps_seen)
+
+    config = BenchmarkConfig(
+        quests=[str(quest_path)],
+        agents=[HarnessConfig(model="random_choice", harness="random_choice", runs=1)],
+        quest_timeout=5,
+        max_steps=7,
+        max_workers=1,
+        output_dir=str(tmp_path),
+    )
+
+    results = run_benchmark(config)
+
+    assert len(results) == 1
+    assert results[0]["max_steps_seen"] == 7
+
+
+@pytest.mark.timeout(10)
+def test_run_benchmark_max_steps_defaults_to_none_in_tasks(monkeypatch, tmp_path):
+    """Backward compatibility: a config without max_steps must thread None
+    through, not silently invent a cap."""
+    quest_path = tmp_path / "quest.qm"
+    quest_path.write_text("""
+    [start]
+    text: Done.
+    failure: true
+    """)
+
+    monkeypatch.setattr(benchmark_module, "_run_benchmark_task", _task_reporting_max_steps_seen)
+
+    config = BenchmarkConfig(
+        quests=[str(quest_path)],
+        agents=[HarnessConfig(model="random_choice", harness="random_choice", runs=1)],
+        quest_timeout=5,
+        max_workers=1,
+        output_dir=str(tmp_path),
+    )
+
+    results = run_benchmark(config)
+
+    assert results[0]["max_steps_seen"] is None
+
+
+def test_run_benchmark_task_forwards_max_steps_to_run_quest_with_timeout(monkeypatch):
+    """_run_benchmark_task (the actual child-process entry point) must forward
+    task['max_steps'] to run_quest_with_timeout. Called directly in-process
+    (it is a plain function) with run_quest_with_timeout monkeypatched, so this
+    checks the wiring without needing a real quest engine or subprocess."""
+    captured = {}
+
+    def fake_run_quest_with_timeout(quest, agent, **kwargs):  # noqa: ARG001
+        captured.update(kwargs)
+        return QuestOutcome.FAILURE
+
+    monkeypatch.setattr(benchmark_module, "run_quest_with_timeout", fake_run_quest_with_timeout)
+    monkeypatch.setattr(benchmark_module, "create_harness", lambda **kwargs: object())  # noqa: ARG005
+
+    task = {
+        "run_index": 1,
+        "quest": "quests/Boat.qm",
+        "attempt": 1,
+        "agent_config": HarnessConfig(model="random_choice", harness="random_choice", runs=1),
+        "benchmark_id": "bench_max_steps_1",
+        "max_steps": 12,
+    }
+
+    class _FakeQueue:
+        def put(self, message):  # noqa: ARG002
+            return None
+
+    benchmark_module._run_benchmark_task(task, _FakeQueue())
+
+    assert captured["max_steps"] == 12
 
 
 @pytest.mark.timeout(10)

@@ -17,6 +17,7 @@ class RunInsight:
     benchmark_id: str
     run_id: int
     model: str
+    harness: str
     quest_name: str
     outcome: str
     duration: float
@@ -67,6 +68,44 @@ def _extract_model(run_row: dict[str, Any]) -> str:
     if agent_id.startswith("llm_"):
         return agent_id[len("llm_") :]
     return agent_id or "unknown"
+
+
+def _extract_harness(run_row: dict[str, Any]) -> str:
+    raw_cfg = run_row.get("agent_config")
+    harness = None
+    if isinstance(raw_cfg, dict):
+        harness = raw_cfg.get("harness")
+    elif isinstance(raw_cfg, str):
+        try:
+            harness = json.loads(raw_cfg).get("harness")
+        except json.JSONDecodeError:
+            harness = None
+    return str(harness) if harness else ""
+
+
+def _harnesses_by_model(insights: list[RunInsight]) -> dict[str, set[str]]:
+    """Map each insight's model to the set of distinct harness values run under it."""
+    by_model: dict[str, set[str]] = {}
+    for insight in insights:
+        by_model.setdefault(insight.model, set()).add(insight.harness or "")
+    return by_model
+
+
+def _group_label(model: str, harness: str, harnesses_by_model: dict[str, set[str]] | None = None) -> str:
+    """Stable per-agent-variant label matching executors.benchmark._result_group_label.
+
+    Keeps this report's grouping key format identical to
+    calculate_summary_stats's, since render_benchmark_report looks up
+    per-group outcome overrides from benchmark_summary.json's
+    summary_stats.models by this same key. Stays the bare model name --
+    preserving prior report output exactly -- whenever that model only ran
+    under one harness among the insights being summarized.
+    """
+    if not harness or harness == "human" or harness.startswith("random_choice"):
+        return model
+    if harnesses_by_model is not None and len(harnesses_by_model.get(model, set())) <= 1:
+        return model
+    return f"{model} [{harness}]"
 
 
 def _extract_last_decision(
@@ -154,6 +193,7 @@ def _parse_run_insight(benchmark_id: str, run_row: dict[str, Any]) -> RunInsight
         benchmark_id=benchmark_id,
         run_id=run_id,
         model=_extract_model(run_row),
+        harness=_extract_harness(run_row),
         quest_name=str(run_row.get("quest_name") or "unknown"),
         outcome=outcome,
         duration=duration,
@@ -223,13 +263,17 @@ def _format_benchmark_summary(insights: list[RunInsight]) -> dict[str, Any]:
 def _format_model_summary(
     insights: list[RunInsight],
     outcome_overrides: dict[str, dict[str, Any]] | None = None,
+    harnesses_by_model: dict[str, set[str]] | None = None,
 ) -> dict[str, dict[str, Any]]:
+    if harnesses_by_model is None:
+        harnesses_by_model = _harnesses_by_model(insights)
+
     grouped: dict[str, list[RunInsight]] = defaultdict(list)
     for insight in insights:
-        grouped[insight.model].append(insight)
+        grouped[_group_label(insight.model, insight.harness, harnesses_by_model)].append(insight)
 
     model_summary: dict[str, dict[str, Any]] = {}
-    for model, rows in sorted(grouped.items()):
+    for group, rows in sorted(grouped.items()):
         outcomes = Counter(r.outcome for r in rows)
         total = len(rows)
         success = outcomes.get("SUCCESS", 0)
@@ -239,7 +283,7 @@ def _format_model_summary(
         decision_steps = sum(r.decision_steps for r in rows)
         default_steps = sum(r.default_decision_steps for r in rows)
 
-        override = (outcome_overrides or {}).get(model, {})
+        override = (outcome_overrides or {}).get(group, {})
         success_override = override.get("success")
         failure_override = override.get("failed")
         timeout_override = override.get("timeouts")
@@ -261,7 +305,7 @@ def _format_model_summary(
         else:
             success_rate = (success / total * 100.0) if total else 0.0
 
-        model_summary[model] = {
+        model_summary[group] = {
             "runs": total,
             "success": success,
             "failure": failure,
@@ -277,7 +321,7 @@ def _format_model_summary(
 
 def _format_failure_rows(insights: list[RunInsight], limit: int = 12) -> list[RunInsight]:
     failed = [i for i in insights if i.outcome in {"FAILURE", "TIMEOUT", "ERROR"}]
-    failed.sort(key=lambda row: (row.outcome, row.model, row.quest_name, row.run_id))
+    failed.sort(key=lambda row: (row.outcome, row.model, row.harness, row.quest_name, row.run_id))
     return failed[:limit]
 
 
@@ -324,8 +368,12 @@ def render_benchmark_report(
                 summary["success_rate"] = raw_success_rate * 100.0 if raw_success_rate <= 1.0 else raw_success_rate
                 model_overrides = summary_stats.get("models") if isinstance(summary_stats.get("models"), dict) else {}
 
-        model_summary = _format_model_summary(insights, outcome_overrides=model_overrides)
+        harnesses_by_model = _harnesses_by_model(insights)
+        model_summary = _format_model_summary(
+            insights, outcome_overrides=model_overrides, harnesses_by_model=harnesses_by_model
+        )
         failure_rows = _format_failure_rows(insights)
+        breakdown_label = "Agent" if any("[" in group for group in model_summary) else "Model"
 
         sections.append(f"## {benchmark_id}")
         sections.append("")
@@ -345,16 +393,17 @@ def render_benchmark_report(
             sections.append(f"| Estimated cost (USD) | {summary['total_cost']:.6f} |")
         sections.append("")
 
-        sections.append("### Model Breakdown")
+        sections.append(f"### {breakdown_label} Breakdown")
         sections.append("")
         sections.append(
-            "| Model | Runs | Success | Failure | Timeout | Error | Success Rate | Tokens | Est. Cost (USD) | Default Decision Rate |"
+            f"| {breakdown_label} | Runs | Success | Failure | Timeout | Error | Success Rate | Tokens | "
+            "Est. Cost (USD) | Default Decision Rate |"
         )
         sections.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
-        for model, row in model_summary.items():
+        for group, row in model_summary.items():
             cost = "n/a" if row["cost"] is None else f"{row['cost']:.6f}"
             sections.append(
-                f"| {model} | {row['runs']} | {row['success']} | {row['failure']} | {row['timeout']} | "
+                f"| {group} | {row['runs']} | {row['success']} | {row['failure']} | {row['timeout']} | "
                 f"{row['error']} | {row['success_rate']:.1f}% | {row['tokens']} | {cost} | {row['default_rate']:.1f}% |"
             )
         sections.append("")
@@ -363,8 +412,9 @@ def render_benchmark_report(
             sections.append("### Failure Highlights")
             sections.append("")
             for row in failure_rows:
+                agent_label = _group_label(row.model, row.harness, harnesses_by_model)
                 sections.append(
-                    f"- run `{row.run_id}` | model `{row.model}` | quest `{row.quest_name}` | outcome `{row.outcome}`"
+                    f"- run `{row.run_id}` | agent `{agent_label}` | quest `{row.quest_name}` | outcome `{row.outcome}`"
                 )
                 if row.selected_choice:
                     sections.append(f"  selected: {row.selected_choice}")

@@ -201,3 +201,56 @@ agents:
 
     with pytest.raises(ValueError, match="Use harness: key instead of memory_mode:"):
         BenchmarkConfig.from_yaml(str(config_path))
+
+
+def test_benchmark_config_max_steps_defaults_to_none(tmp_path):
+    """Backward compatibility: configs without max_steps stay unbounded."""
+    quest_path = tmp_path / "quest.qm"
+    quest_path.write_text("", encoding="utf-8")
+    config_path = tmp_path / "benchmark.yaml"
+    config_path.write_text(
+        f"""
+quests:
+  - {quest_path}
+agents:
+  - model: gpt-5-mini
+    harness: memo_compact
+""",
+        encoding="utf-8",
+    )
+
+    config = BenchmarkConfig.from_yaml(str(config_path))
+
+    assert config.max_steps is None
+
+
+def test_benchmark_config_from_yaml_parses_max_steps(tmp_path):
+    quest_path = tmp_path / "quest.qm"
+    quest_path.write_text("", encoding="utf-8")
+    config_path = tmp_path / "benchmark.yaml"
+    config_path.write_text(
+        f"""
+quests:
+  - {quest_path}
+agents:
+  - model: gpt-5-mini
+    harness: memo_compact
+max_steps: 40
+""",
+        encoding="utf-8",
+    )
+
+    config = BenchmarkConfig.from_yaml(str(config_path))
+
+    assert config.max_steps == 40
+
+
+def test_benchmark_config_rejects_non_positive_max_steps(tmp_path):
+    quest_path = tmp_path / "quest.qm"
+    quest_path.write_text("", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="max_steps must be >= 1"):
+        BenchmarkConfig(quests=[str(quest_path)], agents=[], max_steps=0)
+
+    with pytest.raises(ValueError, match="max_steps must be >= 1"):
+        BenchmarkConfig(quests=[str(quest_path)], agents=[], max_steps=-5)

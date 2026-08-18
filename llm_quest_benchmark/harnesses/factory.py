@@ -12,7 +12,7 @@ from llm_quest_benchmark.harnesses.memo import (
 from llm_quest_benchmark.harnesses.minimal import MinimalHarness
 from llm_quest_benchmark.harnesses.planner import PlannerHarness
 from llm_quest_benchmark.harnesses.reasoning import ReasoningFullTranscriptHarness, ReasoningRecentHarness
-from llm_quest_benchmark.harnesses.tool_harness import ToolCompactHarness, ToolHintedHarness
+from llm_quest_benchmark.harnesses.tool_harness import ProgrammaticMemoryHarness, ToolCompactHarness, ToolHintedHarness
 from llm_quest_benchmark.players.base import QuestPlayer
 from llm_quest_benchmark.players.human import HumanPlayer
 from llm_quest_benchmark.players.random import RandomPlayer
@@ -25,6 +25,7 @@ HARNESS_REGISTRY = {
     "hinted_compact": HintedCompactHarness,
     "tool_compact": ToolCompactHarness,
     "tool_hinted": ToolHintedHarness,
+    "programmatic_memory": ProgrammaticMemoryHarness,
     "planner": PlannerHarness,
     "compaction_no_memo": CompactionNoMemoHarness,
     "memo_cot": MemoCotHarness,

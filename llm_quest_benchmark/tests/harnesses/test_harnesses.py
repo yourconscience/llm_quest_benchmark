@@ -15,7 +15,8 @@ from llm_quest_benchmark.harnesses.memory import CompactionMemory, DefaultMemory
 from llm_quest_benchmark.harnesses.minimal import MinimalHarness
 from llm_quest_benchmark.harnesses.planner import PlannerHarness
 from llm_quest_benchmark.harnesses.reasoning import ReasoningFullTranscriptHarness, ReasoningRecentHarness
-from llm_quest_benchmark.harnesses.tool_harness import ToolCompactHarness, ToolHintedHarness
+from llm_quest_benchmark.harnesses.tool_harness import ProgrammaticMemoryHarness, ToolCompactHarness, ToolHintedHarness
+from llm_quest_benchmark.schemas.state import AgentState
 
 HARNESS_SPECS = {
     "minimal": (MinimalHarness, "stub.jinja", DefaultMemory),
@@ -25,6 +26,7 @@ HARNESS_SPECS = {
     "hinted_compact": (HintedCompactHarness, "stateful_compact_hints.jinja", CompactionMemory),
     "tool_compact": (ToolCompactHarness, "tool_augmented.jinja", CompactionMemory),
     "tool_hinted": (ToolHintedHarness, "tool_augmented_hints.jinja", CompactionMemory),
+    "programmatic_memory": (ProgrammaticMemoryHarness, "programmatic_memory.jinja", DefaultMemory),
     "planner": (PlannerHarness, "planner.jinja", CompactionMemory),
     "compaction_no_memo": (CompactionNoMemoHarness, "reasoning.jinja", CompactionMemory),
     "memo_cot": (MemoCotHarness, "memo_cot.jinja", CompactionMemory),
@@ -70,6 +72,10 @@ def test_tool_compact_harness_configuration():
 
 def test_tool_hinted_harness_configuration():
     assert_harness_configuration("tool_hinted")
+
+
+def test_programmatic_memory_harness_configuration():
+    assert_harness_configuration("programmatic_memory")
 
 
 def test_planner_harness_configuration():
@@ -372,3 +378,285 @@ def test_tool_compact_harness_can_finish_without_tools_in_one_call():
 
     assert action == 2
     assert mocked_llm.get_completion.call_count == 1
+
+
+# --- programmatic_memory harness ---------------------------------------------
+
+
+def _mock_llm(*responses, usage=None):
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = list(responses)
+    mocked_llm.get_last_usage.return_value = usage or {
+        "prompt_tokens": 10,
+        "completion_tokens": 5,
+        "total_tokens": 15,
+        "estimated_cost_usd": 0.0,
+    }
+    return mocked_llm
+
+
+def _record_executed_step(
+    harness: ProgrammaticMemoryHarness,
+    observation: str,
+    choices: list[dict[str, str]],
+    action: int,
+) -> AgentState:
+    """Deliver the post-env-step lifecycle event a runner would emit."""
+    agent_state = AgentState(
+        step=len(harness._trajectory) + 1,
+        location_id="test",
+        observation=observation,
+        choices=choices,
+        action=str(action),
+        llm_response=harness.get_last_response(),
+    )
+    harness.on_step(agent_state)
+    return agent_state
+
+
+def test_programmatic_memory_harness_can_use_history_search():
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini")
+    harness.llm = _mock_llm(
+        '{"analysis":"no tools needed","tool_calls":[],"result":1}',
+        '{"analysis":"need history","tool_calls":[{"tool":"history_search","input":"fuel"}],"result":null}',
+        '{"analysis":"fuel clue matters","reasoning":"play safe","result":2}',
+    )
+    first_observation = "Merchant mentions low fuel."
+    first_choices = [{"text": "Buy fuel"}, {"text": "Keep flying"}]
+    first_action = harness.get_action(first_observation, first_choices)
+    first_state = _record_executed_step(harness, first_observation, first_choices, first_action)
+
+    second_observation = "Your fuel gauge is blinking."
+    second_choices = [{"text": "Refuel"}, {"text": "Attack pirates"}]
+    action = harness.get_action(second_observation, second_choices)
+
+    assert action == 2
+    response = harness.get_last_response()
+    assert response.tool_calls[0]["tool"] == "history_search"
+    assert response.tool_results
+    assert "Merchant mentions low fuel" in response.tool_results[0]
+    assert harness._trajectory.recent(1)[0] is first_state
+    _record_executed_step(harness, second_observation, second_choices, action)
+    assert len(harness._trajectory) == 2
+
+
+def test_programmatic_memory_harness_can_use_history_read():
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini")
+    harness.llm = _mock_llm(
+        '{"analysis":"no tools needed","tool_calls":[],"result":1}',
+        (
+            '{"analysis":"check chronology","tool_calls":['
+            '{"tool":"history_read","start_step":1,"count":1}],"result":null}'
+        ),
+        '{"analysis":"order confirms it","reasoning":"go north","result":1}',
+    )
+    first_observation = "You are in the entry hall."
+    first_choices = [{"text": "Look around"}, {"text": "Leave"}]
+    first_action = harness.get_action(first_observation, first_choices)
+    _record_executed_step(harness, first_observation, first_choices, first_action)
+
+    second_observation = "The hall splits into two paths."
+    second_choices = [{"text": "North"}, {"text": "South"}]
+    action = harness.get_action(second_observation, second_choices)
+
+    assert action == 1
+    response = harness.get_last_response()
+    assert response.tool_calls == [
+        {
+            "tool": "history_read",
+            "input": "",
+            "start_step": 1,
+            "count": 1,
+            "limit": None,
+            "operation": "",
+            "content": "",
+        }
+    ]
+    assert "You are in the entry hall" in response.tool_results[0]
+
+
+def test_programmatic_memory_harness_permits_at_most_one_retrieval_call():
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini")
+    harness.llm = _mock_llm(
+        (
+            '{"analysis":"need two","tool_calls":['
+            '{"tool":"history_search","input":"a"},{"tool":"calculator","input":"1+1"}],"result":null}'
+        ),
+        '{"analysis":"done","reasoning":"one call only","result":1}',
+    )
+    observation = "Some state."
+    choices = [{"text": "A"}, {"text": "B"}]
+    action = harness.get_action(observation, choices)
+    _record_executed_step(harness, observation, choices, action)
+
+    response = harness.get_last_response()
+    assert len(response.tool_calls) == 1
+    assert response.tool_calls[0]["tool"] == "history_search"
+    assert len(response.tool_results) == 1
+    assert harness.llm.get_completion.call_count == 2  # select + final only, no second tool round
+
+
+def test_programmatic_memory_harness_reuses_calculator_and_scratchpad_unchanged():
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini")
+
+    assert ProgrammaticMemoryHarness.calculator("2 + 2") == "2 + 2 = 4"
+    assert harness.scratchpad("read") == "(empty)"
+    assert harness.scratchpad("write_replace", "note") == "updated: note"
+    assert harness.scratchpad("read") == "note"
+
+
+def test_programmatic_memory_harness_prompt_has_single_recent_context_source():
+    """DefaultMemory is the only bounded recent-context source in the select
+    prompt. The trajectory contributes no second recent-context block -- only
+    on-demand history_read/history_search retrieval, exercised separately."""
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini")
+    choices = [{"text": "A"}, {"text": "B"}]
+    for i in range(3):
+        observation = f"Observation number {i + 1}."
+        harness.llm = _mock_llm('{"analysis":"ok","tool_calls":[],"reasoning":"r","result":1}')
+        action = harness.get_action(observation, choices)
+        _record_executed_step(harness, observation, choices, action)
+
+    harness.llm = _mock_llm('{"analysis":"ok","tool_calls":[],"reasoning":"r","result":1}')
+    harness.get_action("Observation number 4.", choices)
+    prompt = harness.llm.get_completion.call_args_list[0].args[0]
+
+    assert "Recent context from previous steps" in prompt  # DefaultMemory block
+    assert "Recent quest history:" not in prompt  # no separate trajectory block
+    assert "Observation number 1" in prompt  # DefaultMemory's own previous-steps window
+    assert harness._recent_steps() == []
+
+
+def test_programmatic_memory_harness_reset_clears_trajectory():
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini")
+    harness.llm = _mock_llm('{"analysis":"ok","tool_calls":[],"reasoning":"r","result":1}')
+    observation = "Some state."
+    choices = [{"text": "A"}]
+    action = harness.get_action(observation, choices)
+    _record_executed_step(harness, observation, choices, action)
+
+    assert len(harness._trajectory) == 1
+
+    harness.reset()
+
+    assert len(harness._trajectory) == 0
+    assert harness.scratchpad("read") == "(empty)"
+
+
+# --- programmatic_memory canonical lifecycle bookkeeping ---------------------
+
+
+def test_programmatic_memory_normal_path_appends_exactly_one_step():
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini")
+    harness.llm = _mock_llm('{"analysis":"ok","tool_calls":[],"reasoning":"r","result":2}')
+    observation = "Normal state."
+    choices = [{"text": "A"}, {"text": "B"}]
+
+    action = harness.get_action(observation, choices)
+    state = _record_executed_step(harness, observation, choices, action)
+
+    assert action == 2
+    assert len(harness._trajectory) == 1
+    assert harness._trajectory.recent(1)[0] is state
+    assert state.action == "2"
+
+
+def test_programmatic_memory_retry_path_appends_exactly_one_step():
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini")
+    harness.llm = _mock_llm(
+        "not parseable at all",
+        '{"analysis":"recovered","reasoning":"r","result":2}',
+    )
+    observation = "State needing retry."
+    choices = [{"text": "A"}, {"text": "B"}]
+
+    action = harness.get_action(observation, choices)
+    _record_executed_step(harness, observation, choices, action)
+
+    assert action == 2
+    assert len(harness._trajectory) == 1
+
+
+def test_programmatic_memory_safety_override_path_appends_exactly_one_step():
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini")
+    harness.llm = _mock_llm('{"analysis":"go","tool_calls":[],"reasoning":"r","result":1}')
+    choices = [
+        {"text": "Пойти в космопорт и улететь, чтобы завтра не позориться"},
+        {"text": "Постараться пройти мимо"},
+    ]
+
+    action = harness.get_action("Risky moment.", choices)
+    state = _record_executed_step(harness, "Risky moment.", choices, action)
+
+    assert action == 2  # safety filter overrides the risky first choice
+    assert len(harness._trajectory) == 1
+    assert state.action == "2"
+    assert state.choices[1]["text"] == "Постараться пройти мимо"
+
+
+def test_programmatic_memory_error_default_path_appends_exactly_one_step():
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini")
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = RuntimeError("provider unavailable")
+    mocked_llm.get_last_usage.return_value = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "estimated_cost_usd": None,
+    }
+    harness.llm = mocked_llm
+    observation = "Broken state."
+    choices = [{"text": "A"}, {"text": "B"}]
+
+    action = harness.get_action(observation, choices)
+    _record_executed_step(harness, observation, choices, action)
+
+    assert action == 1
+    assert harness.get_last_response().is_default is True
+    assert harness.get_last_response().parse_mode == "error_default"
+    assert len(harness._trajectory) == 1
+    assert harness._trajectory.recent(1)[0].action == "1"
+
+
+def test_programmatic_memory_skip_single_path_appends_exactly_one_step():
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini", skip_single=True)
+    observation = "Only one door here."
+    choices = [{"text": "Open the only door"}]
+
+    action = harness.get_action(observation, choices)
+    state = _record_executed_step(harness, observation, choices, action)
+
+    assert action == 1
+    assert harness.get_last_response().reasoning == "auto_single_choice"
+    assert len(harness._trajectory) == 1
+    assert state.action == "1"
+    assert state.choices[0]["text"] == "Open the only door"
+
+
+def test_programmatic_memory_multi_turn_bookkeeping_stays_exactly_one_per_turn():
+    """Mixed decision paths never double- or under-count lifecycle events."""
+    harness = ProgrammaticMemoryHarness(model_name="gpt-5-mini")
+    choices = [{"text": "A"}, {"text": "B"}]
+
+    harness.llm = _mock_llm('{"analysis":"ok","tool_calls":[],"reasoning":"r","result":1}')
+    action = harness.get_action("Turn 1 normal.", choices)
+    _record_executed_step(harness, "Turn 1 normal.", choices, action)
+
+    mocked_llm = Mock()
+    mocked_llm.get_completion.side_effect = RuntimeError("boom")
+    mocked_llm.get_last_usage.return_value = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "estimated_cost_usd": None,
+    }
+    harness.llm = mocked_llm
+    action = harness.get_action("Turn 2 errors.", choices)
+    _record_executed_step(harness, "Turn 2 errors.", choices, action)
+
+    harness.llm = _mock_llm('{"analysis":"ok","tool_calls":[],"reasoning":"r","result":1}')
+    single_choice = [{"text": "Only choice"}]
+    action = harness.get_action("Turn 3 single choice, LLM path since skip_single is off.", single_choice)
+    _record_executed_step(harness, "Turn 3 single choice, LLM path since skip_single is off.", single_choice, action)
+
+    assert [state.step for state in harness._trajectory.recent(10)] == [1, 2, 3]

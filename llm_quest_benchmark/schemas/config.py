@@ -168,6 +168,7 @@ class BenchmarkConfig:
     debug: bool = False
     quest_timeout: int = 60  # Timeout per quest
     benchmark_timeout: int | None = None  # Total timeout for all quests, defaults to quest_timeout * num_quests
+    max_steps: int | None = None  # Shared cap on agent steps per quest; None preserves unbounded behavior
     output_dir: str | None = "results/benchmarks"
     name: str | None = "baseline"  # Name of the benchmark run
     renderer: str = "progress"  # Type of renderer to use (progress, simple, etc.)
@@ -187,6 +188,9 @@ class BenchmarkConfig:
                 raise ValueError(f"Quest path does not exist: {quest_path}")
             if not (path.is_file() and path.suffix == ".qm") and not path.is_dir():
                 raise ValueError(f"Quest path must be a .qm file or directory: {quest_path}")
+
+        if self.max_steps is not None and self.max_steps < 1:
+            raise ValueError(f"max_steps must be >= 1, got {self.max_steps}")
 
     @classmethod
     def from_yaml(cls, yaml_path: str) -> "BenchmarkConfig":

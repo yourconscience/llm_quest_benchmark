@@ -78,3 +78,49 @@ def test_render_benchmark_report_reads_run_summaries(tmp_path, monkeypatch):
     assert "| Success | 1 |" in report
     assert "| Total tokens | 120 |" in report
     assert "| gpt-5-mini | 1 | 1 | 0 | 0 | 0 | 100.0% | 120 | 0.001000 | 0.0% |" in report
+
+
+def test_render_benchmark_report_splits_same_model_different_harness(tmp_path, monkeypatch):
+    """Two agents sharing a model but running under different harnesses must
+    appear as two distinct Agent Breakdown rows, not one collapsed row."""
+    monkeypatch.chdir(tmp_path)
+
+    benchmark_id = "bench_test_harness_split"
+    benchmark_dir = Path("results/benchmarks") / benchmark_id
+    benchmark_dir.mkdir(parents=True, exist_ok=True)
+
+    def _db_run(run_id, harness, outcome):
+        return {
+            "id": run_id,
+            "quest_file": "quests/Boat.qm",
+            "quest_name": "Boat",
+            "start_time": "2026-02-15T00:00:00",
+            "end_time": "2026-02-15T00:00:10",
+            "agent_id": f"llm_gemini-3-flash_{harness}",
+            "agent_config": json.dumps({"model": "gemini-3-flash", "harness": harness}),
+            "outcome": outcome,
+            "reward": 1.0 if outcome == "SUCCESS" else 0.0,
+            "run_duration": 10.0,
+            "benchmark_id": benchmark_id,
+        }
+
+    db_runs = [
+        _db_run(1, "reasoning_recent", "SUCCESS"),
+        _db_run(2, "programmatic_memory", "FAILURE"),
+    ]
+    summary = {"benchmark_id": benchmark_id, "db_runs": db_runs, "results": []}
+    (benchmark_dir / "benchmark_summary.json").write_text(
+        json.dumps(summary, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    report, selected = render_benchmark_report(
+        benchmark_ids=[benchmark_id],
+        output_dir="results/benchmarks",
+    )
+
+    assert selected == [benchmark_id]
+    assert "gemini-3-flash [reasoning_recent]" in report
+    assert "gemini-3-flash [programmatic_memory]" in report
+    # Neither harness-qualified row should collapse into a bare "gemini-3-flash" row.
+    assert "| gemini-3-flash |" not in report
