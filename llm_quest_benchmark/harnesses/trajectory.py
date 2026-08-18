@@ -1,12 +1,16 @@
-"""Append-only, full-fidelity, in-memory quest trajectory with bounded retrieval.
+"""Bounded retrieval over canonical executed quest steps.
 
-This is an online retrieval substrate for the ``programmatic_memory`` harness only.
-``QuestLogger``/``run_summary.json`` remain the canonical persisted trajectory; this
-component intentionally stores nothing to disk and is scoped to a single episode.
+This is an in-memory retrieval/index view for the ``programmatic_memory``
+harness only. The runner creates each ``AgentState`` once, delivers that exact
+object to the harness and callbacks, then ``QuestLogger`` serializes it to the
+persisted ``run_summary.json`` trajectory. This component stores references to
+those canonical executed-decision objects for one episode; it creates no
+parallel step representation and writes nothing to disk.
 """
 
 import re
-from dataclasses import dataclass
+
+from llm_quest_benchmark.schemas.state import AgentState
 
 MAX_READ_COUNT = 6
 MAX_SEARCH_RESULTS = 5
@@ -15,17 +19,6 @@ MAX_OUTPUT_CHARS = 8000
 _SEARCH_TOKEN_PATTERN = re.compile(r"[a-zA-ZЀ-ӿ0-9_]+")
 _INTEGER_STRING_PATTERN = re.compile(r"[+-]?\d+")
 _ENTRY_TRUNCATION_MARKER = "... [entry truncated, exceeds character budget]"
-
-
-@dataclass(frozen=True)
-class TrajectoryStep:
-    """One immutable, full-fidelity executed quest step."""
-
-    step: int
-    observation: str
-    choices: tuple[str, ...]
-    selected_action: int
-    selected_choice: str
 
 
 def _coerce_positive_int(value) -> int | None:
@@ -50,17 +43,29 @@ def _coerce_positive_int(value) -> int | None:
     return None
 
 
-class Trajectory:
-    """Append-only, full-fidelity step history for one quest episode.
+def _selected_choice(entry: AgentState) -> str:
+    """Return the selected choice text from a canonical decision state."""
+    try:
+        action = int(entry.action)
+    except (TypeError, ValueError):
+        return ""
+    if 1 <= action <= len(entry.choices):
+        return entry.choices[action - 1].get("text", "")
+    return ""
 
-    Invariants: append once per executed step, preserve insertion order, never
-    mutate earlier entries, and reset entirely between episodes. Read/search bound
-    their OUTPUT by entry count and character budget; they never truncate what is
-    stored.
+
+class Trajectory:
+    """Append-only references to canonical executed decision steps.
+
+    The runner owns step construction and ordering. This view stores each
+    ``AgentState`` reference once after the action has executed, resets between
+    episodes, and never mutates the state object. Read/search bound their
+    OUTPUT by entry count and character budget; they never truncate stored
+    state.
     """
 
     def __init__(self):
-        self._steps: list[TrajectoryStep] = []
+        self._steps: list[AgentState] = []
 
     def __len__(self) -> int:
         return len(self._steps)
@@ -68,27 +73,13 @@ class Trajectory:
     def reset(self) -> None:
         self._steps = []
 
-    def append(
-        self,
-        observation: str,
-        choices: list[str],
-        selected_action: int,
-        selected_choice: str,
-    ) -> TrajectoryStep:
-        """Append one executed step. Call exactly once per decision, after the
-        final executed choice is known."""
-        step = TrajectoryStep(
-            step=len(self._steps) + 1,
-            observation=(observation or "").strip(),
-            choices=tuple(choices),
-            selected_action=selected_action,
-            selected_choice=selected_choice or "",
-        )
-        self._steps.append(step)
-        return step
+    def append(self, agent_state: AgentState) -> AgentState:
+        """Store the canonical executed-decision state by reference."""
+        self._steps.append(agent_state)
+        return agent_state
 
-    def recent(self, window: int) -> list[TrajectoryStep]:
-        """Return copies (immutable dataclasses) of the last `window` steps."""
+    def recent(self, window: int) -> list[AgentState]:
+        """Return canonical references for the last ``window`` steps."""
         if window <= 0:
             return []
         return list(self._steps[-window:])
@@ -133,7 +124,8 @@ class Trajectory:
 
         scored = []
         for entry in self._steps:
-            haystack = " ".join([entry.observation, " ".join(entry.choices), entry.selected_choice]).lower()
+            choices_text = " ".join(choice.get("text", "") for choice in entry.choices)
+            haystack = " ".join([entry.observation, choices_text, _selected_choice(entry)]).lower()
             entry_tokens = set(_SEARCH_TOKEN_PATTERN.findall(haystack))
             score = sum(1 for token in tokens if token in entry_tokens)
             if score > 0:
@@ -147,11 +139,11 @@ class Trajectory:
         return self._format_entries(entries)
 
     @staticmethod
-    def _format_entries(entries: list[TrajectoryStep]) -> str:
+    def _format_entries(entries: list[AgentState]) -> str:
         """Join formatted entries into a result hard-bounded by MAX_OUTPUT_CHARS.
 
-        Only the FORMATTED output is ever truncated; the underlying
-        `TrajectoryStep` objects (stored history) are immutable and untouched.
+        Only the formatted output is truncated; canonical ``AgentState``
+        objects remain untouched.
 
         Room for the trailing omission marker ("N of M steps shown...") is
         reserved up front, before any entry is admitted, by capping entry
@@ -189,10 +181,11 @@ class Trajectory:
         lines = []
         total_len = 0
         for entry in entries:
-            choices_text = "; ".join(entry.choices) if entry.choices else "(none)"
+            choices_text = "; ".join(choice.get("text", "") for choice in entry.choices) or "(none)"
+            selected_choice = _selected_choice(entry)
             line = (
                 f"Step {entry.step}: observation={entry.observation} | "
-                f"choices={choices_text} | selected={entry.selected_action}: {entry.selected_choice}"
+                f"choices={choices_text} | selected={entry.action}: {selected_choice}"
             )
             projected_len = total_len + len(line) + (1 if lines else 0)
             if lines and projected_len > entry_budget:

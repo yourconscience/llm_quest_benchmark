@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from llm_quest_benchmark.schemas.response import LLMResponse
+from llm_quest_benchmark.schemas.state import AgentState
 
 
 class QuestPlayer(ABC):
@@ -57,6 +58,10 @@ class QuestPlayer(ABC):
     def get_last_response(self) -> LLMResponse:
         """Get the last response from the player or harness."""
         return self._last_response
+
+    def on_step(self, agent_state: AgentState) -> None:
+        """Receive one canonical executed decision step from the runner."""
+        pass
 
     @abstractmethod
     def reset(self) -> None:

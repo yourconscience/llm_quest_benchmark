@@ -59,17 +59,21 @@ the current public taxonomy.
 implemented and registered but has no published benchmark runs, so it is
 deliberately excluded from the Current Taxonomy table above. It pairs
 `DefaultMemory` (recent bounded context, no compaction, no full transcript)
-with a full-fidelity, append-only, run-local `Trajectory` and two bounded
-deterministic retrieval tools, `history_read` and `history_search`, capped at
-one retrieval call per decision. The pilot benchmark
+with a run-local `Trajectory` retrieval view over canonical executed
+`AgentState` objects and two bounded deterministic retrieval tools,
+`history_read` and `history_search`, capped at one retrieval call per decision.
+`QuestRunner` creates each `AgentState` once after an action executes, passes
+that object to the harness, callbacks, and `QuestLogger`, and the logger
+serializes it into the persisted trace; the retrieval view creates no second
+step representation or artifact. The pilot benchmark
 (`configs/benchmarks/programmatic_memory_pilot.yaml`) is an exploratory
 bundled-harness comparison of whether the full `programmatic_memory` harness
 outperforms `tool_compact`'s clipped keyword search or `memo_compact`'s
 LLM-compacted summary on long/stateful quests, not an isolated test of
 retrieval alone: relative to those baselines it also removes compaction and
 changes the tool/prompt path, so an observed effect cannot be attributed to
-retrieval specifically. It should not be treated as a public result until
-that benchmark matrix has run and been reported.
+retrieval specifically. It should not be treated as a public result until that
+benchmark matrix has run and been reported.
 
 ## Current Interpretation
 

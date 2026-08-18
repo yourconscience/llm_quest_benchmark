@@ -113,6 +113,7 @@ class _TerminatingEnv:
 class _FakeAgent:
     def __init__(self):
         self.action_calls = 0
+        self.step_states = []
 
     def reset(self):
         return None
@@ -122,6 +123,9 @@ class _FakeAgent:
 
     def on_game_end(self, final_state):  # noqa: ARG002
         return None
+
+    def on_step(self, agent_state):
+        self.step_states.append(agent_state)
 
     def get_action(self, observation, choices):  # noqa: ARG002
         self.action_calls += 1
@@ -138,13 +142,15 @@ class _DummyQuestLogger:
     def __init__(self):
         self.current_run_id = 1
         self.steps_logged = 0
+        self.step_states = []
         self.outcomes = []
 
     def set_quest_file(self, quest_path):  # noqa: ARG002
         return None
 
-    def log_step(self, agent_state):  # noqa: ARG002
+    def log_step(self, agent_state):
         self.steps_logged += 1
+        self.step_states.append(agent_state)
 
     def set_quest_outcome(self, outcome, reward, benchmark_id=None, final_state=None):
         self.outcomes.append(
@@ -204,6 +210,26 @@ def test_max_steps_larger_than_natural_termination_does_not_interfere(monkeypatc
     assert outcome == QuestOutcome.SUCCESS
     assert agent.action_calls == 2
     assert runner.step_count == 2
+
+
+def test_runner_delivers_one_canonical_state_to_agent_callback_and_logger(monkeypatch):
+    env = _TerminatingEnv(terminate_at=1)
+    monkeypatch.setattr("llm_quest_benchmark.core.runner.QuestEnvironment", lambda *a, **k: env)
+    agent = _FakeAgent()
+    quest_logger = _DummyQuestLogger()
+    callback_states = []
+
+    runner = QuestRunner(
+        agent=agent,
+        quest_logger=quest_logger,
+        callbacks=[lambda event, data: callback_states.append(data) if event == "game_state" else None],
+    )
+
+    assert runner.run("quests/mock.qm") == QuestOutcome.SUCCESS
+    assert len(agent.step_states) == 1
+    assert len(callback_states) == 1
+    assert quest_logger.steps_logged == 2  # executed decision plus logger-only terminal state
+    assert agent.step_states[0] is callback_states[0] is quest_logger.step_states[0]
 
 
 def test_run_quest_with_timeout_forwards_max_steps_to_runner(monkeypatch):

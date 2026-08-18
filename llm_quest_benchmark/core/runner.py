@@ -311,7 +311,8 @@ class QuestRunner:
                     self.logger.debug(f"Taking step with final action: {action}")
                     observation, done, success, info = self.env.step(action)
 
-                    # Create agent state and notify callbacks
+                    # One canonical executed decision step: consumers receive
+                    # this same object before it is serialized by QuestLogger.
                     agent_state = AgentState(
                         step=self.step_count,
                         location_id=current_location_id,
@@ -320,9 +321,9 @@ class QuestRunner:
                         action=str(action),
                         llm_response=self.agent.get_last_response(),
                     )
+                    self.agent.on_step(agent_state)
                     self._notify_callbacks("game_state", agent_state)
 
-                    # Log step to database
                     if self.quest_logger:
                         self.quest_logger.log_step(agent_state)
 

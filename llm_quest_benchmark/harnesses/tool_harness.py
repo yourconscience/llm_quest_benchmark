@@ -8,6 +8,7 @@ from llm_quest_benchmark.harnesses.memory import CompactionMemory, DefaultMemory
 from llm_quest_benchmark.harnesses.tools import QuestHistoryTool, Scratchpad, calculator
 from llm_quest_benchmark.harnesses.trajectory import MAX_READ_COUNT, MAX_SEARCH_RESULTS, Trajectory
 from llm_quest_benchmark.schemas.response import LLMResponse
+from llm_quest_benchmark.schemas.state import AgentState
 
 
 class ToolCompactHarness(BaseHarness):
@@ -251,8 +252,8 @@ class ProgrammaticMemoryHarness(ToolCompactHarness):
     duplicated invariant. Memory, tool set, and step bookkeeping are overridden:
     this harness carries no compaction and no clipped step log. `DefaultMemory`
     is the single bounded recent-context source in the prompt; the trajectory
-    contributes no separate recent-context block, only on-demand
-    `history_read`/`history_search` retrieval.
+    is an on-demand retrieval view of the canonical `AgentState` objects emitted
+    by the runner after each executed decision.
     """
 
     harness_name = "programmatic_memory"
@@ -284,24 +285,9 @@ class ProgrammaticMemoryHarness(ToolCompactHarness):
             tools=[calculator, self._scratchpad_tool, self._trajectory],
         )
 
-    def get_action(self, observation: str, choices: list[dict[str, str]]) -> int:
-        """Append exactly one full-fidelity trajectory step per call.
-
-        Covers every path uniformly: normal, retry, safety-override, and
-        error-default all return through `_get_action_impl` below; skip_single
-        returns from `QuestPlayer.get_action` without ever calling it. Appending
-        once here, after the single upstream call, is what makes all five paths
-        append exactly one step without touching their internal control flow.
-        """
-        action = super().get_action(observation, choices)
-        selected_choice = choices[action - 1].get("text", "") if 1 <= action <= len(choices) else ""
-        self._trajectory.append(
-            observation=observation,
-            choices=[c.get("text", "") for c in choices],
-            selected_action=action,
-            selected_choice=selected_choice,
-        )
-        return action
+    def on_step(self, agent_state: AgentState) -> None:
+        """Index the runner's canonical executed decision for retrieval."""
+        self._trajectory.append(agent_state)
 
     def _tool_descriptions(self) -> list[str]:
         return [
@@ -399,8 +385,8 @@ class ProgrammaticMemoryHarness(ToolCompactHarness):
         return results
 
     def _log_step(self, observation: str, choices: list[dict[str, str]], response: LLMResponse) -> None:
-        # Trajectory bookkeeping happens once in get_action(); this harness has no
-        # separate clipped step log for `_get_action_impl` to populate.
+        # The runner emits the canonical AgentState to on_step after env.step;
+        # this harness has no separate clipped step log to populate here.
         pass
 
     def reset(self) -> None:

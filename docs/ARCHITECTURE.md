@@ -59,10 +59,12 @@ planning choices change behavior.
   `FullTranscriptMemory`, and `CompactionMemory`.
 - `llm_quest_benchmark/harnesses/tools.py`: Calculator, scratchpad, and quest
   history helpers used by tool harnesses.
-- `llm_quest_benchmark/harnesses/trajectory.py`: `Trajectory`, an append-only,
-  full-fidelity, in-memory step history scoped to one `programmatic_memory` run,
-  with bounded deterministic `read`/`search`. Online retrieval substrate only;
-  `QuestLogger`/`run_summary.json` remain the canonical persisted trajectory.
+- `llm_quest_benchmark/harnesses/trajectory.py`: `Trajectory`, a run-local
+  retrieval/index view holding references to canonical executed `AgentState`
+  objects for `programmatic_memory`, with bounded deterministic `read`/`search`.
+  `QuestRunner` emits the same object to the harness, callbacks, and
+  `QuestLogger`; `QuestLogger` serializes the persisted `run_summary.json`
+  trace.
 - `llm_quest_benchmark/harnesses/factory.py`: `create_harness()` and the
   canonical harness registry.
 - `llm_quest_benchmark/players/human.py`,
@@ -150,11 +152,14 @@ remain comparable.
 `programmatic_memory` is an experimental treatment (see
 `docs/PROGRAMMATIC_MEMORY_PROPOSAL.md`): it replaces `tool_compact`'s clipped
 `quest_history` keyword search with bounded deterministic reads/searches over a
-full-fidelity, append-only, run-local `Trajectory`, and replaces `CompactionMemory`
-with `DefaultMemory` so no LLM compaction and no full transcript run in the
-background. It reuses `ToolCompactHarness`'s tool-select-then-act call budget, so
-the model gets at most one retrieval call before its final action, matching
-`tool_compact`. `DefaultMemory` is the single bounded recent-context source in
-its select-turn prompt; the trajectory contributes no separate recent-context
-block, only on-demand `history_read`/`history_search` retrieval. It is not yet
-part of the public leaderboard taxonomy.
+run-local `Trajectory` view of canonical executed `AgentState` objects, and
+replaces `CompactionMemory` with `DefaultMemory` so no LLM compaction and no
+full transcript run in the background. `QuestRunner` constructs each
+`AgentState` once after an action executes, then sends that exact object to the
+harness retrieval view, callbacks, and `QuestLogger` for persistence. It reuses
+`ToolCompactHarness`'s tool-select-then-act call budget, so the model gets at
+most one retrieval call before its final action, matching `tool_compact`.
+`DefaultMemory` is the single bounded recent-context source in its select-turn
+prompt; the trajectory contributes no separate recent-context block, only
+on-demand `history_read`/`history_search` retrieval. It is not yet part of the
+public leaderboard taxonomy.

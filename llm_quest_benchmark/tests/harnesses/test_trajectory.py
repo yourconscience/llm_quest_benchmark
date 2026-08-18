@@ -7,11 +7,34 @@ from llm_quest_benchmark.harnesses.trajectory import (
     Trajectory,
     _coerce_positive_int,
 )
+from llm_quest_benchmark.schemas.state import AgentState
+
+
+def _append_step(
+    trajectory: Trajectory,
+    observation: str,
+    choices: list[str],
+    selected_action: int,
+    selected_choice: str,
+) -> AgentState:
+    expected_choice = choices[selected_action - 1] if 1 <= selected_action <= len(choices) else ""
+    assert selected_choice == expected_choice
+    return trajectory.append(
+        AgentState(
+            step=len(trajectory) + 1,
+            location_id="test",
+            observation=observation,
+            choices=[{"text": choice} for choice in choices],
+            action=str(selected_action),
+            llm_response=None,
+        )
+    )
 
 
 def _fill(trajectory: Trajectory, n: int) -> None:
     for i in range(1, n + 1):
-        trajectory.append(
+        _append_step(
+            trajectory,
             observation=f"Observation {i} with detail.",
             choices=[f"Choice {i}A", f"Choice {i}B"],
             selected_action=1,
@@ -24,7 +47,8 @@ def test_append_retains_full_observation_and_choices_without_clipping():
     long_observation = "You enter the hall. " * 60  # far beyond any prompt-window clip budget
     long_choice = "Investigate the strange machinery in the corner. " * 5
 
-    step = trajectory.append(
+    step = _append_step(
+        trajectory,
         observation=long_observation,
         choices=[long_choice, "Leave"],
         selected_action=1,
@@ -32,10 +56,11 @@ def test_append_retains_full_observation_and_choices_without_clipping():
     )
 
     assert step.step == 1
-    assert step.observation == long_observation.strip()
-    assert step.choices == (long_choice, "Leave")
-    assert step.selected_action == 1
-    assert step.selected_choice == long_choice
+    assert step.observation == long_observation
+    assert step.choices == [{"text": long_choice}, {"text": "Leave"}]
+    assert step.action == "1"
+    assert step.choices[0]["text"] == long_choice
+    assert trajectory.recent(1)[0] is step
 
     read_output = trajectory.read(1, 1)
     assert long_observation.strip() in read_output
@@ -56,11 +81,13 @@ def test_append_preserves_insertion_order_and_increments_step():
     ]
 
 
-def test_recent_returns_copies_not_live_references():
+def test_recent_returns_a_mutable_collection_of_canonical_references():
     trajectory = Trajectory()
-    _fill(trajectory, 2)
+    first = _append_step(trajectory, "First.", ["A"], 1, "A")
+    _append_step(trajectory, "Second.", ["B"], 1, "B")
 
     snapshot = trajectory.recent(10)
+    assert snapshot[0] is first
     snapshot.clear()
 
     assert len(trajectory) == 2
@@ -102,7 +129,7 @@ def test_read_with_realistic_observation_sizes_never_slices_an_entry():
     trajectory = Trajectory()
     sizes = [250, 500, 900, 1200, 1500, 300, 1100, 800, 1500, 400, 1200, 600]
     for size in sizes:
-        trajectory.append("x" * size, ["Choice A text here", "Choice B text here"], 1, "Choice A text here")
+        _append_step(trajectory, "x" * size, ["Choice A text here", "Choice B text here"], 1, "Choice A text here")
 
     typical = trajectory.read(1, MAX_READ_COUNT)
     assert typical.count("Step ") == MAX_READ_COUNT
@@ -110,7 +137,7 @@ def test_read_with_realistic_observation_sizes_never_slices_an_entry():
 
     worst_case = Trajectory()
     for _ in range(MAX_READ_COUNT + 4):
-        worst_case.append("x" * 1500, ["Choice A text here", "Choice B text here"], 1, "Choice A text here")
+        _append_step(worst_case, "x" * 1500, ["Choice A text here", "Choice B text here"], 1, "Choice A text here")
 
     result = worst_case.read(1, MAX_READ_COUNT)
     shown = result.count("Step ")
@@ -231,10 +258,14 @@ def test_search_handles_no_match_query_deterministically_without_error():
 
 def test_search_ranking_is_deterministic_by_match_count_then_recency():
     trajectory = Trajectory()
-    trajectory.append("A quiet corridor.", ["Wait"], 1, "Wait")  # step 1: matches neither token
-    trajectory.append("Merchant mentions fuel is low.", ["Buy fuel", "Leave"], 1, "Buy fuel")  # step 2: both tokens
-    trajectory.append("Fuel gauge blinks red now.", ["Refuel"], 1, "Refuel")  # step 3: one token
-    trajectory.append("A trader mentions urgent fuel needs.", ["Pay"], 1, "Pay")  # step 4: one token, ties step 3
+    _append_step(trajectory, "A quiet corridor.", ["Wait"], 1, "Wait")  # step 1: matches neither token
+    _append_step(
+        trajectory, "Merchant mentions fuel is low.", ["Buy fuel", "Leave"], 1, "Buy fuel"
+    )  # step 2: both tokens
+    _append_step(trajectory, "Fuel gauge blinks red now.", ["Refuel"], 1, "Refuel")  # step 3: one token
+    _append_step(
+        trajectory, "A trader mentions urgent fuel needs.", ["Pay"], 1, "Pay"
+    )  # step 4: one token, ties step 3
 
     result_first = trajectory.search("fuel merchant", 3)
     result_second = trajectory.search("fuel merchant", 3)
@@ -249,7 +280,7 @@ def test_search_ranking_is_deterministic_by_match_count_then_recency():
 def test_search_limit_clamps_to_max_and_rejects_non_positive():
     trajectory = Trajectory()
     for i in range(MAX_SEARCH_RESULTS + 3):
-        trajectory.append(f"repeat token step {i}", ["A"], 1, "A")
+        _append_step(trajectory, f"repeat token step {i}", ["A"], 1, "A")
 
     over_max = trajectory.search("token", MAX_SEARCH_RESULTS + 10)
     assert over_max.count("Step ") == MAX_SEARCH_RESULTS
@@ -263,7 +294,7 @@ def test_search_limit_clamps_to_max_and_rejects_non_positive():
 
 def test_search_matches_choices_and_selected_choice_text_too():
     trajectory = Trajectory()
-    trajectory.append("Unrelated scene.", ["Open the vault door"], 1, "Open the vault door")
+    _append_step(trajectory, "Unrelated scene.", ["Open the vault door"], 1, "Open the vault door")
 
     result = trajectory.search("vault", 3)
 
@@ -275,7 +306,7 @@ def test_search_does_not_match_short_token_as_substring_of_longer_word():
     """A short query token like 'he' must not match merely because it
     appears as a substring inside a longer word like 'the' or 'chest'."""
     trajectory = Trajectory()
-    trajectory.append("The old chest sits in the corner.", ["Wait"], 1, "Wait")
+    _append_step(trajectory, "The old chest sits in the corner.", ["Wait"], 1, "Wait")
 
     result = trajectory.search("he", 3)
 
@@ -288,8 +319,8 @@ def test_search_matches_short_token_only_as_a_whole_word():
     """The same short token must still match when it appears as an actual
     standalone word, proving the fix isn't just refusing all short tokens."""
     trajectory = Trajectory()
-    trajectory.append("The old chest sits in the corner.", ["Wait"], 1, "Wait")  # no standalone 'he' token
-    trajectory.append("He opens the heavy door.", ["Enter"], 1, "Enter")  # 'He' is a standalone token
+    _append_step(trajectory, "The old chest sits in the corner.", ["Wait"], 1, "Wait")  # no standalone 'he' token
+    _append_step(trajectory, "He opens the heavy door.", ["Enter"], 1, "Enter")  # 'He' is a standalone token
 
     result = trajectory.search("he", 3)
 
@@ -301,10 +332,10 @@ def test_search_matches_short_token_only_as_a_whole_word():
 def test_single_oversized_entry_is_hard_bounded_not_returned_in_full():
     """A single entry larger than MAX_OUTPUT_CHARS must still yield a result
     <= MAX_OUTPUT_CHARS: only the FORMATTED output is truncated (with a clear
-    marker), the stored TrajectoryStep itself is never touched."""
+    marker), the stored canonical AgentState itself is never touched."""
     trajectory = Trajectory()
     huge_observation = "x" * (MAX_OUTPUT_CHARS * 2)
-    trajectory.append(huge_observation, ["A"], 1, "A")
+    _append_step(trajectory, huge_observation, ["A"], 1, "A")
 
     # Stored, full-fidelity entry is never truncated.
     assert trajectory.recent(1)[0].observation == huge_observation
@@ -325,8 +356,8 @@ def test_first_entry_near_full_budget_plus_second_entry_never_silently_slices():
     marked as truncated; it must never be silently cut."""
     trajectory = Trajectory()
     first_observation = "y" * 7900  # formatted line ~7948 chars: just below MAX_OUTPUT_CHARS
-    trajectory.append(first_observation, ["A"], 1, "A")
-    trajectory.append("small second entry", ["B"], 1, "B")
+    _append_step(trajectory, first_observation, ["A"], 1, "A")
+    _append_step(trajectory, "small second entry", ["B"], 1, "B")
 
     result = trajectory.read(1, 2)
 
@@ -348,7 +379,7 @@ def test_output_omits_whole_trailing_entries_once_budget_is_exceeded():
     comfortably alone, so this exercises entry-dropping, not entry-truncation."""
     trajectory = Trajectory()
     for _ in range(3):
-        trajectory.append("y" * 3800, ["A"], 1, "A")  # ~3848 chars formatted, 2 fit in 8000, 3 do not
+        _append_step(trajectory, "y" * 3800, ["A"], 1, "A")  # ~3848 chars formatted, 2 fit in 8000, 3 do not
 
     output = trajectory.read(1, 3)
 
@@ -363,7 +394,7 @@ def test_every_read_and_search_result_respects_the_hard_output_bound():
     across a spread of adversarial entry sizes, never just the common case."""
     trajectory = Trajectory()
     for size in [1, 100, MAX_OUTPUT_CHARS - 1, MAX_OUTPUT_CHARS, MAX_OUTPUT_CHARS + 1, MAX_OUTPUT_CHARS * 5]:
-        trajectory.append("z" * size, ["choice text"], 1, "choice text")
+        _append_step(trajectory, "z" * size, ["choice text"], 1, "choice text")
 
     for start in range(1, len(trajectory) + 1):
         assert len(trajectory.read(start, MAX_READ_COUNT)) <= MAX_OUTPUT_CHARS
@@ -389,15 +420,15 @@ def test_reset_restarts_step_numbering_from_one():
     _fill(trajectory, 2)
     trajectory.reset()
 
-    new_step = trajectory.append("Fresh episode start.", ["Go"], 1, "Go")
+    new_step = _append_step(trajectory, "Fresh episode start.", ["Go"], 1, "Go")
 
     assert new_step.step == 1
 
 
 def test_never_mutates_earlier_entries_on_append():
     trajectory = Trajectory()
-    first = trajectory.append("First.", ["A"], 1, "A")
-    trajectory.append("Second.", ["B"], 1, "B")
+    first = _append_step(trajectory, "First.", ["A"], 1, "A")
+    _append_step(trajectory, "Second.", ["B"], 1, "B")
 
     assert first.step == 1
     assert first.observation == "First."

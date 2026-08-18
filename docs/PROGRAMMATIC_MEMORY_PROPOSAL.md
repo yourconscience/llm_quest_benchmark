@@ -75,39 +75,54 @@ The gap is narrower than “add RGB-Agent”:
 
 ```mermaid
 flowchart LR
-    E[Quest environment] --> H[ProgrammaticMemoryHarness]
-    H --> T[Append-only in-memory trajectory]
+    E[Quest environment] --> R[QuestRunner]
+    R --> S[Canonical AgentState<br/>executed decision]
+    S --> H[ProgrammaticMemoryHarness]
+    S --> C[Callbacks]
+    S --> L[QuestLogger<br/>run_summary.json]
+    H --> T[Run-local retrieval view<br/>AgentState references]
     H --> P[Bounded recent-context prompt]
     P --> M[Model: select tool or action]
     M -->|history_read / history_search| T
-    T --> R[Bounded tool result]
-    R --> M2[Model: choose action]
+    T --> B[Bounded tool result]
+    B --> M2[Model: choose action]
     M2 --> E
-    H --> L[Existing QuestLogger and run_summary.json]
 ```
 
-### 1. Append-only trajectory
+### 1. Canonical executed-step trajectory
 
-Add a small run-local trajectory component under `harnesses/` with one responsibility: retain full-fidelity steps and answer bounded queries. A step contains:
+`QuestRunner` constructs one `AgentState` only after `env.step` accepts an
+action. It passes that exact object, in order, to the player lifecycle hook,
+callbacks, and `QuestLogger.log_step`. `ProgrammaticMemoryHarness.on_step`
+adds a reference to that canonical state to a small run-local retrieval view
+under `harnesses/`; `QuestLogger` serializes the same object to
+`run_summary.json`. There is no second step dataclass, copied step log, or
+additional persisted artifact.
+
+The canonical `AgentState` contains:
 
 ```text
 step: positive integer
+location_id: quest location before the executed action
 observation: full normalized observation text
-choices: ordered full choice texts
-selected_action: executed 1-based ordinal
-selected_choice: full selected choice text
+choices: ordered full choice records
+action: executed 1-based ordinal
+llm_response: selected model response, including tool calls/results
 ```
 
 Invariants:
 
-- append once after the final executed choice is known;
-- preserve insertion order;
-- reset on every episode;
-- never mutate earlier entries;
-- return copies or formatted strings, not mutable internal entries;
-- cap query output by entries and characters, not by truncating stored history.
+- the runner emits exactly one canonical state after every successfully
+  executed decision, including skip-single, retry, safety-override, and
+  error-default decisions;
+- preserve runner order and reset the retrieval view on every episode;
+- retrieval stores canonical references and never mutates them;
+- terminal logger-only states are not executed decisions and do not enter
+  retrieval;
+- cap query output by entries and characters, not by truncating stored state.
 
-This component is an online retrieval substrate only. `QuestLogger` remains the canonical persisted trajectory; no second artifact format is introduced.
+`Trajectory` is an online retrieval/index view only. `QuestLogger` remains the
+canonical persisted trace; no second artifact format is introduced.
 
 ### 2. Generic retrieval tools
 
@@ -240,13 +255,13 @@ Run the focused harness and persistence tests, then smoke one deterministic ques
 - **Retrieval overhead:** the two-call loop may cost more than compact memory. Measure call-level usage.
 - **Weak lexical match:** story paraphrases may evade literal search. Start deterministic; add richer retrieval only after observed misses justify it.
 - **History poisoning:** observations are untrusted quest text. Prompt the model to treat retrieved text as data and never as tool instructions.
-- **Duplicate state stores:** the code already has multiple histories. Keep the new component scoped to the harness and do not create another persisted schema.
+- **Duplicate state stores:** `AgentState` is the canonical executed-decision entity. The run-local retrieval view holds references to it and `QuestLogger` serializes the same object; do not introduce copied step records or another persisted schema.
 - **Confounded comparison:** the pilot in `configs/benchmarks/programmatic_memory_pilot.yaml` already changes prompt, tool surface, and memory strategy together relative to `tool_compact`/`reasoning_recent` (see Evaluation Design: Primary comparison), so it cannot attribute an observed effect to programmatic retrieval alone. This pilot's comparison is deliberately bundled/exploratory, not a fix for this risk; a real ablation (retrieval fidelity varied with compaction fixed, and vice versa) is required before drawing a causal conclusion, and is out of scope for this pilot.
 - **Hypothesis lock-in:** complete evidence does not guarantee revision. Diagnose repeated failed strategies before adding a structured hypothesis ledger.
 
 ## Delivery Sequence
 
-1. Implement the append-only trajectory and deterministic read/search tests.
+1. Implement the canonical executed-step retrieval view and deterministic read/search tests.
 2. Add `programmatic_memory` using the existing tool loop and result logging.
 3. Verify a fake-provider deterministic quest end to end.
 4. Add a small benchmark configuration comparing the five harnesses above on preselected long/stateful quests.
@@ -257,47 +272,42 @@ Run the focused harness and persistence tests, then smoke one deterministic ques
 
 ### Delivered
 
-- `llm_quest_benchmark/harnesses/trajectory.py`: `Trajectory`/`TrajectoryStep`,
-  the append-only full-fidelity substrate, plus bounded `read`/`search`.
-  Bounds: `MAX_READ_COUNT = 6`, `MAX_SEARCH_RESULTS = 5`,
-  `MAX_OUTPUT_CHARS = 8000`. `count`/`limit` above the max are silently
-  clamped; non-positive or non-integral `start_step`/`count`/`limit`, an
-  out-of-range `start_step`, and an empty or no-searchable-token query are
-  explicit `"error: ..."` strings. Integer coercion is strict: `bool`, any
-  `float` (including a whole number like `2.0`), and decimal strings are
-  rejected rather than silently truncated via `int()`. A query with matchable
-  tokens but zero hits is a deterministic non-error `"no matches for query in
-  N recorded steps"` message. Every `read`/`search` result is hard-bounded to
-  `len(result) <= MAX_OUTPUT_CHARS`. Room for the trailing omission marker
-  ("N of M steps shown") is reserved before any entry is admitted, so an
-  already-admitted whole entry is never retroactively sliced to make room for
-  it; a later entry that would not fit is instead dropped whole. Only the
-  formatted output is ever truncated, never the stored `TrajectoryStep`
-  objects. If even the first entry alone exceeds that reserved budget, its
-  formatted text is truncated with an explicit marker (plus the omission
-  marker too, if further entries were also dropped) rather than returned
-  oversized or silently cut without any marker.
+- `llm_quest_benchmark/harnesses/trajectory.py`: `Trajectory`, a run-local
+  retrieval/index view holding references to canonical `AgentState` objects.
+  It provides bounded `read`/`search` with `MAX_READ_COUNT = 6`,
+  `MAX_SEARCH_RESULTS = 5`, and `MAX_OUTPUT_CHARS = 8000`.
+  `count`/`limit` above the max are silently clamped; non-positive or
+  non-integral `start_step`/`count`/`limit`, an out-of-range `start_step`,
+  and an empty or no-searchable-token query are explicit `"error: ..."`
+  strings. Integer coercion is strict: `bool`, any `float` (including a whole
+  number like `2.0`), and decimal strings are rejected rather than silently
+  truncated via `int()`. A query with matchable tokens but zero hits is a
+  deterministic non-error `"no matches for query in N recorded steps"`
+  message. Search compares whole tokens, not substrings. Every `read`/`search`
+  result is hard-bounded to `len(result) <= MAX_OUTPUT_CHARS`. Room for the
+  trailing omission marker ("N of M steps shown") is reserved before any entry
+  is admitted, so an already-admitted whole entry is never retroactively
+  sliced to make room for it; a later entry that would not fit is dropped
+  whole. Only formatted output is truncated, never the canonical `AgentState`.
+- `llm_quest_benchmark/core/runner.py` and
+  `llm_quest_benchmark/players/base.py`: `QuestRunner` creates each
+  executed-decision `AgentState` once, then emits the same object to
+  `QuestPlayer.on_step`, game-state callbacks, and `QuestLogger.log_step`.
+  `QuestPlayer.on_step` is a default no-op, preserving other players.
 - `llm_quest_benchmark/harnesses/tool_harness.py`: `ProgrammaticMemoryHarness`
-  (`harness_name = "programmatic_memory"`), a focused subclass of
+  (`harness_name = "programmatic_memory"`) is a focused subclass of
   `ToolCompactHarness`. It reuses `_build_tool_prompt`, `_final_choice`, and
-  `_get_action_impl` unchanged, which is what keeps "at most one retrieval
-  call" a structural property of the shared tool-select-then-act loop rather
-  than a duplicated invariant. It overrides tool set/prompt wiring
-  (`_tool_descriptions`, `_extract_tool_calls`, `_execute_tool_calls`),
-  replaces `_log_step` with a no-op (trajectory bookkeeping happens once,
-  centrally), and overrides `get_action` as the single exactly-once append
-  point: it calls `super().get_action(...)` and appends to the trajectory
-  afterward unconditionally. Because normal, retry, safety-override, and
-  error-default decisions all return through `_get_action_impl`, and
-  `skip_single` returns from `QuestPlayer.get_action` without ever calling
-  it, appending once after the single upstream call covers all five paths
-  uniformly. `__init__`/`reset` intentionally call
-  `BaseHarness.__init__`/`BaseHarness.reset` directly (bypassing
-  `ToolCompactHarness`'s versions), since those wire `CompactionMemory` and
-  the `quest_history`/`QuestHistoryTool` this harness replaces.
-  `DefaultMemory` is the single bounded recent-context source in the prompt;
-  `_recent_steps()` returns `[]` unconditionally, so the trajectory
-  contributes no second recent-context block, only on-demand retrieval.
+  `_get_action_impl` unchanged, which keeps "at most one retrieval call" a
+  structural property of the shared tool-select-then-act loop. It overrides
+  tool set/prompt wiring (`_tool_descriptions`, `_extract_tool_calls`,
+  `_execute_tool_calls`), leaves `_log_step` as a no-op, and implements
+  `on_step` to index the runner-emitted canonical `AgentState`. `__init__` and
+  `reset` intentionally call `BaseHarness.__init__`/`BaseHarness.reset`
+  directly (bypassing `ToolCompactHarness`'s versions), since those wire
+  `CompactionMemory` and the `quest_history`/`QuestHistoryTool` this harness
+  replaces. `DefaultMemory` is the single bounded recent-context source in the
+  prompt; `_recent_steps()` returns `[]` unconditionally, so the retrieval
+  view contributes no second recent-context block.
 - `llm_quest_benchmark/prompt_templates/programmatic_memory.jinja`: new
   prompt, not copied from `tool_augmented.jinja`, describing evidence
   retrieval per the Prompt contract section above.
@@ -316,50 +326,32 @@ Run the focused harness and persistence tests, then smoke one deterministic ques
 
 ### Verification coverage
 
-- `llm_quest_benchmark/tests/harnesses/test_trajectory.py`: append fidelity,
-  range-read bounds/chronology, search ranking/empty/no-match determinism,
-  reset, strict integer coercion, and the hard `MAX_OUTPUT_CHARS` bound
-  (including the single-oversized-entry case) — covers Verification Plan
-  items 1-4.
+- `llm_quest_benchmark/tests/harnesses/test_trajectory.py`: canonical-state
+  reference fidelity, range-read bounds/chronology, search ranking and
+  whole-token behavior, reset, strict integer coercion, and the hard
+  `MAX_OUTPUT_CHARS` bound.
+- `llm_quest_benchmark/tests/core/test_runner.py`: the runner creates one
+  `AgentState` per executed decision and passes that exact object to the player
+  hook, game-state callbacks, and `QuestLogger`.
 - `llm_quest_benchmark/tests/harnesses/test_harnesses.py`: tool round-trips
   (`history_read`, `history_search`), the one-retrieval-call cap, the
-  single-recent-context-source prompt contract, and exactly-once trajectory
-  bookkeeping for all five paths (normal, retry, safety-override,
-  error-default, skip-single) — covers item 6.
+  single-recent-context-source prompt contract, and exactly-once canonical
+  lifecycle bookkeeping for normal, retry, safety-override, error-default, and
+  skip-single paths.
 - `llm_quest_benchmark/tests/integration/test_mode_agents_e2e.py`: one
   fake-provider deterministic quest test runs `programmatic_memory` on
   `quests/Boat.qm` end to end and asserts the persisted `run_summary.json`
-  contains the `history_search` tool call/result — covers item 5's
-  `run_summary.json` half.
-- `test_all_registry_harnesses_have_configuration_specs`/
-  `test_all_harness_names_instantiate` (existing, parametrized over the
-  registry) cover item 7 for this addition; the full existing
-  `ToolCompactHarness`/memo/planner/reasoning test suites passing unmodified
-  is what actually verifies existing harness behavior is unchanged.
-
-### Known limitations
-
-- **Not run**: the pilot YAML has not been executed against a live provider.
-  `BenchmarkConfig.from_yaml` validates quest-path existence, so it cannot be
-  parsed in a checkout without the downloaded `sr_2_1_2121_eng` quest pack —
-  matching every other `configs/benchmarks/*.yaml` that references those
-  quests. Its harness/agent structure was validated by substituting
-  `quests/Boat.qm` for all three quest entries.
-- **Inherited generic error text**: the error-default path's log message and
+  contains the `history_search` tool call/result.
+- The pilot YAML is validated by substituting `quests/Boat.qm` for its
+  downloaded-engine quest entries; the harness/agent structure then parses
+  without requiring the unavailable quest pack.
+- **Inherited generic error text:** the error-default path's log message and
   `reasoning` marker come from the unmodified, inherited `_get_action_impl`
   and say "tool harness" rather than "programmatic memory". Cosmetic only
   (`parse_mode == "error_default"` and `is_default is True` are what tests
   and downstream analysis key on); left as-is rather than duplicating the
   method solely to reword a log string.
-- **skip_single bookkeeping asymmetry, unchanged from every other harness**:
-  `skip_single` bypasses `_get_action_impl` entirely, so `self.history`,
-  `_step_count`, and `memory_module.update(...)` are not touched for that
-  turn, exactly as in every existing harness. Only the `Trajectory` was given
-  an exactly-once guarantee across `skip_single`, since that is what
-  Verification Plan item 6 asks for; widening the fix to
-  `history`/`memory_module` bookkeeping across all harnesses would be a
-  behavior change outside this proposal's scope.
-- **Token/call cost is unmeasured**: the select prompt is materially smaller
+- **Token/call cost is unmeasured:** the select prompt is materially smaller
   than before (no second recent-context block), but actual call-level token
   and cost usage relative to `tool_compact` has not been measured against a
   live provider. That is exactly what the pilot run is for (Risks: Retrieval
