@@ -67,6 +67,7 @@ def _agent_template(agent_config) -> str:
         "hinted_compact": "stateful_compact_hints.jinja",
         "tool_compact": "tool_augmented.jinja",
         "tool_hinted": "tool_augmented_hints.jinja",
+        "programmatic_memory": "programmatic_memory.jinja",
         "planner": "planner.jinja",
         "compaction_no_memo": "reasoning.jinja",
         "memo_cot": "memo_cot.jinja",

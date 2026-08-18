@@ -59,6 +59,10 @@ planning choices change behavior.
   `FullTranscriptMemory`, and `CompactionMemory`.
 - `llm_quest_benchmark/harnesses/tools.py`: Calculator, scratchpad, and quest
   history helpers used by tool harnesses.
+- `llm_quest_benchmark/harnesses/trajectory.py`: `Trajectory`, an append-only,
+  full-fidelity, in-memory step history scoped to one `programmatic_memory` run,
+  with bounded deterministic `read`/`search`. Online retrieval substrate only;
+  `QuestLogger`/`run_summary.json` remain the canonical persisted trajectory.
 - `llm_quest_benchmark/harnesses/factory.py`: `create_harness()` and the
   canonical harness registry.
 - `llm_quest_benchmark/players/human.py`,
@@ -104,6 +108,8 @@ and benchmark configuration parsing do not require API keys.
   - `planner.jinja`: Planner loop prompt.
   - `tool_augmented.jinja`, `tool_augmented_hints.jinja`: Tool prompts with
     compact memory, optionally with hints.
+  - `programmatic_memory.jinja`: Tool prompt for bounded recent context plus
+    full-fidelity `history_read`/`history_search` retrieval, no compaction.
 
 ## Persistence
 
@@ -134,3 +140,21 @@ The harness names above are canonical snake_case identifiers used in YAML
 configs, the CLI, result artifacts, and documentation. Public labels can be
 friendlier, but experiment records should preserve the canonical names so runs
 remain comparable.
+
+## Experimental Harnesses (Not Yet Public)
+
+| Label | Harness name | Template | Memory | Tools | Loop |
+|---|---|---|---|---|---|
+| Programmatic memory (experimental) | `programmatic_memory` | `programmatic_memory.jinja` | `DefaultMemory` | calculator, scratchpad, history_read, history_search | tool-select-then-act |
+
+`programmatic_memory` is an experimental treatment (see
+`docs/PROGRAMMATIC_MEMORY_PROPOSAL.md`): it replaces `tool_compact`'s clipped
+`quest_history` keyword search with bounded deterministic reads/searches over a
+full-fidelity, append-only, run-local `Trajectory`, and replaces `CompactionMemory`
+with `DefaultMemory` so no LLM compaction and no full transcript run in the
+background. It reuses `ToolCompactHarness`'s tool-select-then-act call budget, so
+the model gets at most one retrieval call before its final action, matching
+`tool_compact`. `DefaultMemory` is the single bounded recent-context source in
+its select-turn prompt; the trajectory contributes no separate recent-context
+block, only on-demand `history_read`/`history_search` retrieval. It is not yet
+part of the public leaderboard taxonomy.

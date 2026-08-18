@@ -1,0 +1,55 @@
+# Small pilot comparison for docs/PROGRAMMATIC_MEMORY_PROPOSAL.md.
+# Holds model, temperature, timeout, and quest set constant across the five
+# harnesses in the proposal's "Primary comparison" table so programmatic_memory
+# can be isolated as a single-dimension treatment against existing baselines.
+#
+# Quests are reused from existing benchmark configs (exp3/exp5/exp6,
+# memory_modes_pilot) and the fake-provider e2e smoke quest rather than
+# cherry-picked for this comparison: Boat.qm is a short stateful puzzle
+# (present locally, always runnable), Banket_eng.qm and Borzukhan_eng.qm are
+# longer multi-turn quests already exercised together in
+# tests/integration/test_mode_agents_e2e.py. This is a pilot scale to validate
+# the matrix and artifacts before increasing repetitions or quest count.
+name: programmatic_memory_pilot
+quests:
+  - quests/Boat.qm
+  - quests/sr_2_1_2121_eng/Banket_eng.qm
+  - quests/sr_2_1_2121_eng/Borzukhan_eng.qm
+agents:
+  # Minimal bounded-context baseline: recent context only, no external history.
+  - model: openrouter:google/gemini-3-flash-preview
+    harness: reasoning_recent
+    temperature: 0.4
+    runs: 3
+
+  # Capacity-heavy baseline: full transcript in every prompt, no external history.
+  - model: openrouter:google/gemini-3-flash-preview
+    harness: reasoning_full
+    temperature: 0.4
+    runs: 3
+
+  # Summary baseline: recent context plus LLM-compacted summary/memo.
+  - model: openrouter:google/gemini-3-flash-preview
+    harness: memo_compact
+    temperature: 0.4
+    runs: 3
+    compaction_interval: 10
+
+  # Current closest tool baseline: compacted memory plus clipped keyword search.
+  - model: openrouter:google/gemini-3-flash-preview
+    harness: tool_compact
+    temperature: 0.4
+    runs: 3
+    compaction_interval: 10
+
+  # Proposed treatment: recent bounded context plus full read/search retrieval,
+  # no LLM compaction.
+  - model: openrouter:google/gemini-3-flash-preview
+    harness: programmatic_memory
+    temperature: 0.4
+    runs: 3
+
+debug: false
+quest_timeout: 600
+max_workers: 2
+output_dir: results/benchmarks

@@ -53,6 +53,20 @@ Use these labels for current public descriptions of benchmark harnesses:
 Older internal experiment labels are historical and should not be presented as
 the current public taxonomy.
 
+## Experimental Harnesses (Not Yet Public)
+
+`programmatic_memory` (see `docs/PROGRAMMATIC_MEMORY_PROPOSAL.md`) is
+implemented and registered but has no published benchmark runs, so it is
+deliberately excluded from the Current Taxonomy table above. It pairs
+`DefaultMemory` (recent bounded context, no compaction, no full transcript)
+with a full-fidelity, append-only, run-local `Trajectory` and two bounded
+deterministic retrieval tools, `history_read` and `history_search`, capped at
+one retrieval call per decision. It is a controlled test of whether complete
+external history with targeted retrieval outperforms `tool_compact`'s clipped
+keyword search or `memo_compact`'s LLM-compacted summary on long/stateful
+quests; it should not be treated as a public result until a benchmark matrix
+(`configs/benchmarks/programmatic_memory_pilot.yaml`) has run and been reported.
+
 ## Current Interpretation
 
 The strongest pattern so far is that bigger scaffolds are not automatically

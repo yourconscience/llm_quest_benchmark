@@ -1,9 +1,11 @@
 """Integration tests for planner/tool harness modes on real quest execution loops."""
 
+import json
 from pathlib import Path
 
 import pytest
 
+from llm_quest_benchmark.core import logging as logging_module
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.harnesses.factory import create_harness
@@ -18,6 +20,7 @@ QUEST_PATHS = [
 class FakeLLM:
     def __init__(self, mode: str):
         self.mode = mode
+        self._select_calls = 0
         self._last_usage = {
             "prompt_tokens": 12,
             "completion_tokens": 6,
@@ -30,6 +33,14 @@ class FakeLLM:
             return "Gather clues, avoid obvious risks, and take the safest route to progress."
         if self.mode == "tool" and "Decide whether you need a tool before choosing an action." in prompt:
             return '{"analysis":"no tool needed","tool_calls":[],"result":1}'
+        if self.mode == "programmatic_memory" and "Decide whether you need to retrieve evidence" in prompt:
+            self._select_calls += 1
+            if self._select_calls == 2:
+                return (
+                    '{"analysis":"check earlier state","tool_calls":'
+                    '[{"tool":"history_search","input":"лодка"}],"result":null}'
+                )
+            return '{"analysis":"no retrieval needed","tool_calls":[],"result":1}'
         return '{"analysis":"safe branch","reasoning":"first option progresses","result":1}'
 
     def get_last_usage(self):
@@ -111,3 +122,41 @@ def test_reused_mode_harnesses_reset_between_quest_runs():
     assert tool_agent._step_log
     assert tool_agent._step_log[0]["step"] != 999
     assert all(entry["observation"] != "stale observation" for entry in tool_agent._step_log)
+
+
+@pytest.mark.timeout(15)
+def test_programmatic_memory_harness_deterministic_smoke_persists_retrieval_to_run_summary(tmp_path, monkeypatch):
+    """One deterministic fake-provider quest smoke: programmatic_memory on Boat.qm.
+
+    Verifies the harness runs a real quest loop end to end, and that the
+    history_search retrieval call/result it issues is persisted through the
+    existing LLMResponse -> QuestLogger -> run_summary.json path (contract item 5).
+    """
+    monkeypatch.setattr(logging_module, "RESULTS_DIR", tmp_path)
+
+    agent = create_harness("programmatic_memory", model="gpt-5-mini", skip_single=True)
+    agent.llm = FakeLLM("programmatic_memory")
+
+    outcome = run_quest_with_timeout("quests/Boat.qm", agent, timeout=10)
+
+    assert outcome in {QuestOutcome.SUCCESS, QuestOutcome.FAILURE, QuestOutcome.TIMEOUT}
+    assert outcome != QuestOutcome.ERROR
+
+    summary_paths = list(tmp_path.rglob("run_summary.json"))
+    assert len(summary_paths) == 1
+    data = json.loads(summary_paths[0].read_text(encoding="utf-8"))
+
+    assert data["quest_name"] == "Boat"
+    steps = data["steps"]
+    assert len(steps) >= 2
+
+    retrieval_steps = [
+        step
+        for step in steps
+        if (step.get("llm_decision") or {}).get("tool_calls")
+        and step["llm_decision"]["tool_calls"][0].get("tool") == "history_search"
+    ]
+    assert retrieval_steps, "expected at least one persisted history_search tool call"
+    retrieved_decision = retrieval_steps[0]["llm_decision"]
+    assert retrieved_decision["tool_results"]
+    assert "history_search(" in retrieved_decision["tool_results"][0]
