@@ -517,11 +517,25 @@ function paramsToTraceList(paramsState) {
   return (paramsState || []).filter(p => p && p.trim()).map(p => stripClr(p));
 }
 
-function buildHumanTrace({ quest, outcome, steps, terminalText, startedAt }) {
+// One canonical snapshot: full engine saving plus the state the player saw.
+function traceSnapshot(player, state, canonicalLocationId) {
+  const activeChoices = (state.choices || []).filter(c => c.active);
+  return {
+    location_id: String(player.getSaving().locationId),
+    canonical_location_id: canonicalLocationId != null ? String(canonicalLocationId) : null,
+    observation: stripClr(state.text || ''),
+    params: paramsToTraceList(state.paramsState),
+    choices: choicesToTraceMap(activeChoices),
+    game_state: state.gameState || 'running',
+    saving: player.getSaving(),
+  };
+}
+
+function buildHumanTrace({ quest, outcome, transitions, terminalText, startedAt }) {
   const now = new Date().toISOString();
   const outcomeLabel = { win: 'SUCCESS', fail: 'FAILURE', dead: 'FAILURE' }[outcome] || 'INCOMPLETE';
   return {
-    schema_version: 'human_trace_v1',
+    schema_version: 'human_trace_v2',
     source: 'web_play',
     quest_id: quest.id,
     quest_title: quest.title || quest.id,
@@ -530,12 +544,13 @@ function buildHumanTrace({ quest, outcome, steps, terminalText, startedAt }) {
     started_at: startedAt || now,
     ended_at: now,
     outcome: outcomeLabel,
-    steps,
+    // Chronological log of every executed transition, including restores.
+    // Backtracking truncates only the active branch, never this history.
+    transitions,
     terminal: {
       game_state: outcome,
       text: stripClr(terminalText || ''),
     },
-    undo_events: [],
     metadata: {
       app_url: PLAY_URL,
       user_agent: navigator.userAgent || '',
@@ -603,7 +618,7 @@ function buildShareText(questTitle, outcomeLabel, path, cohortWinRate) {
   return lines.join('\n');
 }
 
-function EndScreen({ outcome, cohortWinRate, path, quest, endText, mediaState, audioEnabled, families, traceSteps, startedAt, onPlayAgain, onTryAnother }) {
+function EndScreen({ outcome, cohortWinRate, path, quest, endText, mediaState, audioEnabled, families, traceTransitions, startedAt, onPlayAgain, onTryAnother }) {
   const [shareStatus, setShareStatus] = useState('');
   const outcomeLabel = { win: 'SUCCESS', fail: 'FAILURE', dead: 'DEAD' }[outcome] || 'FAILURE';
   const questTitle = quest.title || quest.id;
@@ -641,7 +656,7 @@ function EndScreen({ outcome, cohortWinRate, path, quest, endText, mediaState, a
   }
 
   function handleExportTrace() {
-    const trace = buildHumanTrace({ quest, outcome, steps: traceSteps, terminalText: endText, startedAt });
+    const trace = buildHumanTrace({ quest, outcome, transitions: traceTransitions, terminalText: endText, startedAt });
     const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..*/, 'Z');
     downloadJson(trace, 'human_trace_' + safeFilenamePart(quest.id) + '_' + stamp + '.json');
     setShareStatus('Downloaded trace JSON.');
@@ -692,7 +707,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
   const [stepHistory, setStepHistory] = useState([]);
   const [stepNum, setStepNum] = useState(0);
   const [path, setPath] = useState([]);
-  const [traceSteps, setTraceSteps] = useState([]);
+  const [traceTransitions, setTraceTransitions] = useState([]);
   const [ended, setEnded] = useState(null);
   const [endText, setEndText] = useState('');
   const [endMediaState, setEndMediaState] = useState(null);
@@ -719,7 +734,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
         setCanonicalPlayer(canonical);
         setGameState(p.getState());
         setStepNum(1);
-        setTraceSteps([]);
+        setTraceTransitions([]);
         startedAtRef.current = new Date().toISOString();
         setLoading(false);
       })
@@ -757,8 +772,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
 
   function handleChoice(choice, activeChoices) {
     const locationId = canonicalPlayer ? canonicalPlayer.getSaving().locationId : player.getSaving().locationId;
-    const choices = gameState.choices || [];
-    const choiceIndex = Math.max(0, choices.findIndex(c => c.jumpId === choice.jumpId));
+    const choiceIndex = Math.max(0, activeChoices.findIndex(c => c.jumpId === choice.jumpId));
     const choiceNorm = canonicalChoiceNorm(choice);
     const cohortLoc = getCohortLoc(locationId);
     const isBranching = activeChoices.length >= 2;
@@ -776,26 +790,35 @@ function QuestPlay({ quest, cohortData, onQuit }) {
       playerChoiceNorm: isBranching ? choiceNorm : null,
     }]);
 
+    const before = traceSnapshot(player, gameState, locationId);
     setStepHistory(prev => [...prev, {
       player: player.getSaving(),
       canonicalPlayer: canonicalPlayer ? canonicalPlayer.getSaving() : null,
+      trace: before,
     }]);
-    setTraceSteps(prev => [...prev, {
-      step: stepNum,
-      location_id: locationId,
-      observation: stripClr(gameState.text || ''),
-      params: paramsToTraceList(gameState.paramsState),
-      choices: choicesToTraceMap(choices),
-      human_decision: {
-        choice_index: String(choiceIndex + 1),
-        choice_text: stripClr(choice.text || ''),
-        jump_id: choice.jumpId,
-      },
-    }]);
+
     player.performJump(choice.jumpId);
     if (canonicalPlayer) canonicalPlayer.performJump(choice.jumpId);
 
     const nextState = player.getState();
+    const afterLocationId = canonicalPlayer ? canonicalPlayer.getSaving().locationId : player.getSaving().locationId;
+    setTraceTransitions(prev => [...prev, {
+      index: prev.length + 1,
+      step: stepNum,
+      kind: 'choose',
+      before,
+      action: {
+        kind: 'choose',
+        choice_index: String(choiceIndex + 1),
+        choice_text: stripClr(choice.text || ''),
+        jump_id: choice.jumpId,
+        // QMPlayer.performJump generates its own engine timestamp, so the exact
+        // value is not observable here and is never invented.
+        performed_at_ms: null,
+      },
+      after: traceSnapshot(player, nextState, afterLocationId),
+    }]);
+
     const gs = nextState.gameState;
     const isTerminal = gs === 'win' || gs === 'fail' || gs === 'dead';
 
@@ -812,16 +835,37 @@ function QuestPlay({ quest, cohortData, onQuit }) {
 
   function handleBack() {
     if (stepHistory.length === 0) return;
-    const prevSaving = stepHistory[stepHistory.length - 1];
-    player.loadSaving(prevSaving.player || prevSaving);
-    if (canonicalPlayer && prevSaving.canonicalPlayer) {
-      canonicalPlayer.loadSaving(prevSaving.canonicalPlayer);
+    const checkpoint = stepHistory[stepHistory.length - 1];
+    const beforeState = ended ? (endMediaState || player.getState()) : gameState;
+    const beforeLocationId = canonicalPlayer ? canonicalPlayer.getSaving().locationId : player.getSaving().locationId;
+    const before = traceSnapshot(player, beforeState, beforeLocationId);
+    const checkpointIndex = stepHistory.length;
+
+    player.loadSaving(checkpoint.player || checkpoint);
+    if (canonicalPlayer && checkpoint.canonicalPlayer) {
+      canonicalPlayer.loadSaving(checkpoint.canonicalPlayer);
     }
+
+    const restoredState = player.getState();
+    const restoredLocationId = canonicalPlayer ? canonicalPlayer.getSaving().locationId : player.getSaving().locationId;
+    // The restore is itself a transition: undone steps stay in the exported
+    // trace, and only the active checkpoint branch is truncated.
+    setTraceTransitions(prev => [...prev, {
+      index: prev.length + 1,
+      step: stepNum,
+      kind: 'restore',
+      before,
+      action: {
+        kind: 'restore',
+        checkpoint_index: checkpointIndex,
+      },
+      after: checkpoint.trace || traceSnapshot(player, restoredState, restoredLocationId),
+    }]);
+
     setStepHistory(prev => prev.slice(0, -1));
-    setGameState(player.getState());
+    setGameState(restoredState);
     setStepNum(n => Math.max(1, n - 1));
     setPath(prev => prev.slice(0, -1));
-    setTraceSteps(prev => prev.slice(0, -1));
     setObsKey(k => k + 1);
     setEnded(null);
     setEndMediaState(null);
@@ -856,7 +900,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
         mediaState={endMediaState}
         audioEnabled={audioEnabled}
         families={(cohortData && cohortData.model_families) || []}
-        traceSteps={traceSteps}
+        traceTransitions={traceTransitions}
         startedAt={startedAtRef.current}
         onPlayAgain={() => {
           player.start();
@@ -864,7 +908,7 @@ function QuestPlay({ quest, cohortData, onQuit }) {
           setGameState(player.getState());
           setStepNum(1);
           setPath([]);
-          setTraceSteps([]);
+          setTraceTransitions([]);
           setStepHistory([]);
           setEnded(null);
           setEndText('');

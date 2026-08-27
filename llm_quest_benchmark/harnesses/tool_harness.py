@@ -7,8 +7,8 @@ from llm_quest_benchmark.harnesses.base import BaseHarness, _parse_json_response
 from llm_quest_benchmark.harnesses.memory import CompactionMemory, DefaultMemory
 from llm_quest_benchmark.harnesses.tools import QuestHistoryTool, Scratchpad, calculator
 from llm_quest_benchmark.harnesses.trajectory import MAX_READ_COUNT, MAX_SEARCH_RESULTS, Trajectory
+from llm_quest_benchmark.schemas.records import QuestTransition
 from llm_quest_benchmark.schemas.response import LLMResponse
-from llm_quest_benchmark.schemas.state import AgentState
 
 
 class ToolCompactHarness(BaseHarness):
@@ -252,8 +252,8 @@ class ProgrammaticMemoryHarness(ToolCompactHarness):
     duplicated invariant. Memory, tool set, and step bookkeeping are overridden:
     this harness carries no compaction and no clipped step log. `DefaultMemory`
     is the single bounded recent-context source in the prompt; the trajectory
-    is an on-demand retrieval view of the canonical `AgentState` objects emitted
-    by the runner after each executed decision.
+    is an on-demand retrieval view of the canonical `QuestTransition` objects
+    emitted by the runner after each executed decision.
     """
 
     harness_name = "programmatic_memory"
@@ -285,9 +285,9 @@ class ProgrammaticMemoryHarness(ToolCompactHarness):
             tools=[calculator, self._scratchpad_tool, self._trajectory],
         )
 
-    def on_step(self, agent_state: AgentState) -> None:
-        """Index the runner's canonical executed decision for retrieval."""
-        self._trajectory.append(agent_state)
+    def on_transition(self, transition: QuestTransition) -> None:
+        """Index the runner's canonical executed transition for retrieval."""
+        self._trajectory.append(transition)
 
     def _tool_descriptions(self) -> list[str]:
         return [
@@ -385,8 +385,8 @@ class ProgrammaticMemoryHarness(ToolCompactHarness):
         return results
 
     def _log_step(self, observation: str, choices: list[dict[str, str]], response: LLMResponse) -> None:
-        # The runner emits the canonical AgentState to on_step after env.step;
-        # this harness has no separate clipped step log to populate here.
+        # The runner emits the canonical QuestTransition to on_transition after
+        # env.step; this harness has no separate clipped step log to populate here.
         pass
 
     def reset(self) -> None:

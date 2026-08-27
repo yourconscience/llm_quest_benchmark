@@ -26,10 +26,11 @@ from llm_quest_benchmark.constants import (
     MODEL_CHOICES,
     SYSTEM_ROLE_TEMPLATE,
 )
-from llm_quest_benchmark.core.analyzer import analyze_benchmark, analyze_quest_run
+from llm_quest_benchmark.core.analyzer import analyze_benchmark, analyze_quest_run, load_transitions
 from llm_quest_benchmark.core.benchmark_report import render_benchmark_report
 from llm_quest_benchmark.core.leaderboard import generate_leaderboard
-from llm_quest_benchmark.core.logging import LogManager
+from llm_quest_benchmark.core.logging import LogManager, default_db_path
+from llm_quest_benchmark.core.replay import harness_config_from_record
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.executors.benchmark import (
@@ -37,10 +38,12 @@ from llm_quest_benchmark.executors.benchmark import (
     print_summary,
     run_benchmark,
 )
-from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY, create_harness
+from llm_quest_benchmark.harnesses.factory import create_harness
+from llm_quest_benchmark.harnesses.specs import LLM_HARNESS_NAMES
 from llm_quest_benchmark.llm import tracing
 from llm_quest_benchmark.renderers.terminal import RichRenderer
 from llm_quest_benchmark.schemas.config import BenchmarkConfig, HarnessConfig
+from llm_quest_benchmark.schemas.records import RunRecord, load_run_record
 
 # Initialize logging
 log_manager = LogManager()
@@ -51,7 +54,7 @@ app = typer.Typer(
     rich_markup_mode="rich",
 )
 
-HARNESS_CHOICES = list(HARNESS_REGISTRY.keys())
+HARNESS_CHOICES = list(LLM_HARNESS_NAMES)
 
 
 def version_callback(value: bool):
@@ -68,9 +71,9 @@ def _parse_run_dir_id(path: Path) -> int:
         return -1
 
 
-def _load_run_summary(path: Path) -> dict[str, Any]:
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+def _load_run_summary(path: Path) -> RunRecord:
+    """Load a schema-v2 run record; legacy files are rejected with guidance."""
+    return load_run_record(str(path))
 
 
 def _count_quest_collections(quests_root: Path) -> list[dict[str, Any]]:
@@ -106,46 +109,20 @@ def _summarize_quest_collections(collections: list[dict[str, Any]]) -> dict[str,
     }
 
 
-def _coerce_choices(step: dict[str, Any]) -> dict[str, str]:
-    """Normalize old/new step choice formats to {index: text} map."""
-    choices = step.get("choices")
-    if isinstance(choices, dict):
-        return {str(k): str(v) for k, v in choices.items()}
-    if isinstance(choices, list):
-        return {str(i): c.get("text", "") for i, c in enumerate(choices, start=1) if isinstance(c, dict)}
-    indexed = step.get("choices_indexed")
-    if isinstance(indexed, list):
-        return {
-            str(c.get("index")): c.get("text", "")
-            for c in indexed
-            if isinstance(c, dict) and c.get("index") is not None
-        }
-    return {}
+def _choices_map(choices: list[dict[str, str]]) -> dict[str, str]:
+    """Index the choices of a snapshot for display."""
+    return {str(index): choice.get("text", "") for index, choice in enumerate(choices, start=1)}
 
 
-def _coerce_selected_choice(step: dict[str, Any], choices_map: dict[str, str]) -> dict[str, str] | None:
-    """Extract selected choice from old/new step schema."""
-    llm_decision = step.get("llm_decision") or {}
-    if isinstance(llm_decision, dict):
-        choice_map = llm_decision.get("choice")
-        if isinstance(choice_map, dict) and choice_map:
-            return {str(k): str(v) for k, v in choice_map.items()}
-
-    selected_choice = step.get("selected_choice")
-    if isinstance(selected_choice, dict):
-        idx = selected_choice.get("index")
-        text = selected_choice.get("text")
-        if idx is not None and text is not None:
-            return {str(idx): str(text)}
-
-    action_index = step.get("action_index") or step.get("action")
-    try:
-        idx = str(int(action_index))
-    except (TypeError, ValueError):
-        return None
-    if idx not in choices_map:
-        return None
-    return {idx: choices_map[idx]}
+def _selected_label(transition: Any, choices_map: dict[str, str]) -> str:
+    """Render the executed action of a transition for display."""
+    action = transition.action
+    if action.is_restore:
+        return f"restore checkpoint {action.checkpoint_index}"
+    index = str(action.choice_index) if action.choice_index is not None else ""
+    if index and index in choices_map:
+        return f"{index}:{choices_map[index]}"
+    return "none"
 
 
 def _handle_quest_outcome(outcome: QuestOutcome, log_prefix: str) -> None:
@@ -201,35 +178,36 @@ def analyze_run(
             typer.echo(f"run_summary not found: {summary_path}", err=True)
             raise typer.Exit(code=1)
 
-        data = _load_run_summary(summary_path)
-        steps = data.get("steps") or []
-        outcome = data.get("outcome", "UNKNOWN")
-        quest_name = data.get("quest_name", "unknown")
-        agent_id = data.get("agent_id", "unknown")
+        record = _load_run_summary(summary_path)
+        outcome = record.outcome or "UNKNOWN"
 
         typer.echo(f"Run: {summary_path}")
-        typer.echo(f"Quest: {quest_name}")
-        typer.echo(f"Agent: {agent_id}")
+        typer.echo(f"Quest: {record.quest_name}")
+        typer.echo(f"Agent: {record.agent_id}")
+        typer.echo(f"Treatment: {record.treatment_signature}")
         typer.echo(f"Outcome: {outcome}")
-        typer.echo(f"Total Steps: {len(steps)}")
+        typer.echo(f"Progress: {record.progress.current:.1f}% of {record.progress.maximum:.1f}%")
+        typer.echo(f"Total Steps: {len(record.transitions)}")
+        if record.lineage:
+            typer.echo(f"Resumed from: {record.lineage.source_path} (run {record.lineage.source_run_id})")
 
         decision_rows = []
-        for step in steps:
-            if not isinstance(step, dict):
+        for transition in record.transitions:
+            choices_map = _choices_map(transition.before.choices)
+            if len(choices_map) <= 1 and not transition.action.is_restore:
                 continue
-            choices_map = _coerce_choices(step)
-            if len(choices_map) <= 1:
-                continue
-            llm_decision = step.get("llm_decision") if isinstance(step.get("llm_decision"), dict) else {}
+            response = transition.response
             decision_rows.append(
                 {
-                    "step": step.get("step"),
-                    "observation": step.get("observation", ""),
+                    "step": transition.index,
+                    "observation": transition.before.agent_observation(),
                     "choices": choices_map,
-                    "selected": _coerce_selected_choice(step, choices_map),
-                    "analysis": llm_decision.get("analysis"),
-                    "reasoning": llm_decision.get("reasoning"),
-                    "is_default": bool(llm_decision.get("is_default", False)),
+                    "selected": _selected_label(transition, choices_map),
+                    "analysis": response.analysis if response else None,
+                    "reasoning": response.reasoning if response else None,
+                    "is_default": bool(response.is_default) if response else False,
+                    "reasoning_mode": transition.reasoning_mode,
+                    "progress": transition.progress.current,
                 }
             )
 
@@ -239,9 +217,11 @@ def analyze_run(
 
         typer.echo("\nDecision Trace:")
         for row in decision_rows[:max_steps]:
-            selected = row["selected"] or {}
-            selected_str = ", ".join(f"{k}:{v}" for k, v in selected.items()) if selected else "none"
-            typer.echo(f"- step {row['step']}: selected [{selected_str}] default={row['is_default']}")
+            mode = f" mode={row['reasoning_mode']}" if row["reasoning_mode"] else ""
+            typer.echo(
+                f"- step {row['step']}: selected [{row['selected']}] "
+                f"default={row['is_default']} progress={row['progress']:.1f}%{mode}"
+            )
             if row["reasoning"]:
                 typer.echo(f"  reasoning: {row['reasoning']}")
             if row["analysis"]:
@@ -255,10 +235,7 @@ def analyze_run(
             typer.echo("- available choices:")
             for idx, text in last["choices"].items():
                 typer.echo(f"  {idx}: {text}")
-            selected = last["selected"] or {}
-            if selected:
-                chosen_idx, chosen_text = next(iter(selected.items()))
-                typer.echo(f"- selected: {chosen_idx}: {chosen_text}")
+            typer.echo(f"- selected: {last['selected']}")
 
     except typer.Exit:
         raise
@@ -354,6 +331,15 @@ def run(
         help="Harness to use for quest decisions.",
     ),
     compaction_interval: int = typer.Option(50, help="Advanced override for compaction interval."),
+    restore_limit: int | None = typer.Option(None, help="Restore budget; valid only for the backtracking harness."),
+    adaptive_stall_steps: int | None = typer.Option(
+        None, help="Stall trigger; valid only for the adaptive_reasoning harness."
+    ),
+    max_steps: int | None = typer.Option(None, help="Stop after this many steps and record a resumable TRUNCATED run."),
+    progress_manifest: Path | None = typer.Option(None, help="Curated YAML progress manifest for this quest."),
+    resume_from: Path | None = typer.Option(
+        None, help="Resume a schema-v2 run_summary.json; quest and treatment come from the record."
+    ),
     timeout: int = typer.Option(60, help="Timeout in seconds for run (0 for no timeout)."),
     skip: bool = typer.Option(True, help="Auto-select single choices without asking agent."),
     debug: bool = typer.Option(False, help="Enable debug logging and output, remove terminal UI."),
@@ -365,30 +351,52 @@ def run(
 
     Example:
         llm-quest run --quest quests/boat.qm --model sonnet --debug
+        llm-quest run --quest quests/Boat.qm --max-steps 5
+        llm-quest run --resume-from results/<agent>/Boat/run_12/run_summary.json
     """
     try:
         log_manager.setup(debug)
 
-        # Create agent config
-        agent_config = HarnessConfig(
-            model=model,
-            system_template=system_template,
-            harness=harness,
-            temperature=temperature,
-            skip_single=skip,
-            debug=debug,
-            compaction_interval=compaction_interval,
-        )
+        resume_record = None
+        if resume_from is not None:
+            resume_record = load_run_record(str(resume_from))
+            if not resume_record.is_resumable:
+                typer.echo(
+                    f"Run {resume_from} is not resumable "
+                    f"(outcome={resume_record.outcome}); only verified TRUNCATED runs can continue.",
+                    err=True,
+                )
+                raise typer.Exit(code=1)
+            # Quest and treatment come from the record, not from the CLI flags.
+            agent_config = harness_config_from_record(resume_record)
+            quest = Path(resume_record.quest_file)
+            agent_config.skip_single = skip
+            agent_config.debug = debug
+            log.warning(f"Resuming run {resume_record.run_id} from {resume_from}")
+        else:
+            agent_config = HarnessConfig(
+                model=model,
+                system_template=system_template,
+                harness=harness,
+                temperature=temperature,
+                skip_single=skip,
+                debug=debug,
+                compaction_interval=compaction_interval,
+                restore_limit=restore_limit,
+                adaptive_stall_steps=adaptive_stall_steps,
+            )
 
         # Create agent
         agent = create_harness(
-            harness=harness,
-            model=model,
-            system_template=system_template,
-            temperature=temperature,
-            skip_single=skip,
-            debug=debug,
-            compaction_interval=compaction_interval,
+            harness=agent_config.harness,
+            model=agent_config.model,
+            system_template=agent_config.system_template,
+            temperature=agent_config.temperature,
+            skip_single=agent_config.skip_single,
+            debug=agent_config.debug,
+            compaction_interval=agent_config.compaction_interval,
+            restore_limit=agent_config.restore_limit,
+            adaptive_stall_steps=agent_config.adaptive_stall_steps,
         )
 
         log.warning(f"Starting quest run with agent {str(agent)}")
@@ -433,6 +441,10 @@ def run(
             timeout=timeout,
             agent_config=agent_config,
             callbacks=callbacks,
+            max_steps=max_steps,
+            progress_manifest=str(progress_manifest) if progress_manifest else None,
+            resume_record=resume_record,
+            resume_path=str(resume_from) if resume_from else None,
         )
         _handle_quest_outcome(result, "Quest run")
 
@@ -523,10 +535,12 @@ def download_quests() -> None:
 @app.command()
 def analyze(
     quest: str | None = typer.Option(None, help="Name of the quest to analyze (e.g. 'boat.qm')."),
-    benchmark: str | None = typer.Option(None, help="Name of the benchmark to analyze (e.g. 'baseline')."),
+    benchmark: str | None = typer.Option(None, help="Benchmark ID to analyze (e.g. 'CLI_benchmark_20260101_...')."),
     run_id: int | None = typer.Option(None, help="Specific run ID to analyze in detail."),
     last: bool = typer.Option(False, help="Analyze the most recent quest run."),
-    db: Path = typer.Option("metrics.db", help="Path to SQLite database."),
+    db: Path | None = typer.Option(
+        None, help="Path to SQLite database (defaults to $LLM_QUEST_DB_PATH, else metrics.db)."
+    ),
     export: Path | None = typer.Option(None, help="Export results to JSON file."),
     format: str = typer.Option("summary", help="Output format (summary, detail, or compact)."),
     debug: bool = typer.Option(False, help="Enable debug logging and output."),
@@ -557,6 +571,7 @@ def analyze(
             raise typer.Exit(code=1)
 
         # Validate database exists
+        db = db or Path(default_db_path())
         if not db.exists():
             typer.echo(f"Database not found: {db}", err=True)
             raise typer.Exit(code=1)
@@ -577,99 +592,68 @@ def analyze(
 
         # Analyze specific run by ID
         if run_id:
-            # First check schema to handle older database versions
-            cursor.execute("PRAGMA table_info(runs)")
-            columns = [column[1] for column in cursor.fetchall()]
-
-            # Construct query based on available columns
-            select_fields = ["r.id", "r.quest_name", "r.start_time", "r.end_time", "r.agent_id", "r.agent_config"]
-            if "outcome" in columns:
-                select_fields.append("r.outcome")
-            else:
-                select_fields.append("'UNKNOWN' as outcome")
-
-            if "reward" in columns:
-                select_fields.append("r.reward")
-            else:
-                select_fields.append("0.0 as reward")
-
-            if "run_duration" in columns:
-                select_fields.append("r.run_duration")
-            else:
-                select_fields.append("NULL as run_duration")
-
-            query = f"""
-                SELECT {", ".join(select_fields)}
-                FROM runs r
-                WHERE r.id = ?
-            """
-            cursor.execute(query, (run_id,))
+            cursor.execute(
+                """
+                SELECT id, quest_name, start_time, end_time, agent_id, treatment, treatment_signature,
+                       outcome, reward, run_duration, usage, transcript_diagnostics, progress
+                FROM runs
+                WHERE id = ?
+                """,
+                (run_id,),
+            )
 
             run = cursor.fetchone()
             if not run:
                 typer.echo(f"Run ID {run_id} not found", err=True)
                 raise typer.Exit(code=1)
 
-            run_id, quest_name, start_time, end_time, agent_id, agent_config, outcome, reward, run_duration = run
+            (
+                run_id,
+                quest_name,
+                start_time,
+                end_time,
+                agent_id,
+                treatment_json,
+                treatment_signature,
+                outcome,
+                reward,
+                run_duration,
+                usage_json,
+                diagnostics_json,
+                progress_json,
+            ) = run
 
-            # Get steps for this run
-            cursor.execute(
-                """
-                SELECT step, location_id, observation, choices, action, llm_response
-                FROM steps
-                WHERE run_id = ?
-                ORDER BY step
-            """,
-                (run_id,),
-            )
+            treatment = json.loads(treatment_json) if treatment_json else {}
+            transitions = load_transitions(conn, run_id)
+            decision_points = sum(1 for t in transitions if len(t.before.choices) > 1)
 
-            steps = []
-            step_count = 0
-            success_choices = 0
-            total_choices = 0
-
-            for step_data in cursor.fetchall():
-                step_count += 1
-                step_num, location_id, obs, choices_json, action, llm_response = step_data
-                choices = json.loads(choices_json) if choices_json else []
-                total_choices += len(choices)
-                if len(choices) == 1:
-                    success_choices += 1
-
-                step = {
-                    "step": step_num,
-                    "location_id": location_id,
-                    "observation": obs,
-                    "choices": choices,
-                    "action": action,
-                    "llm_response": json.loads(llm_response) if llm_response else None,
-                }
-                steps.append(step)
-
+            # Exported in canonical domains, matching run_summary.json.
             run_data = {
-                "run_id": run_id,
-                "quest_name": quest_name,
-                "start_time": start_time,
-                "end_time": end_time,
-                "agent_id": agent_id,
-                "agent_config": json.loads(agent_config) if agent_config else None,
-                "outcome": outcome,
-                "reward": reward,
-                "run_duration": run_duration,
-                "steps": steps,
-                "stats": {
-                    "total_steps": step_count,
-                    "total_choices": total_choices,
-                    "auto_choices": success_choices,
-                    "decision_points": total_choices - success_choices,
+                "schema_version": 2,
+                "run": {
+                    "id": run_id,
+                    "agent_id": agent_id,
+                    "started_at": start_time,
+                    "ended_at": end_time,
+                    "duration": run_duration,
                 },
+                "quest": {"name": quest_name},
+                "treatment": treatment,
+                "terminal": {"outcome": outcome, "reward": reward},
+                "usage": json.loads(usage_json) if usage_json else {},
+                "progress": json.loads(progress_json) if progress_json else {},
+                "transcript_diagnostics": json.loads(diagnostics_json) if diagnostics_json else {},
+                "transitions": [t.to_dict() for t in transitions],
             }
 
             # Export if requested
             if export:
                 with open(export, "w") as f:
-                    json.dump(run_data, f, indent=2)
+                    json.dump(run_data, f, indent=2, ensure_ascii=False)
                 typer.echo(f"Results exported to {export}")
+
+            duration_text = f"{run_duration:.2f}" if run_duration is not None else "n/a"
+            progress_text = f"{run_data['progress'].get('current', 0.0):.1f}%"
 
             # Print human-readable summary based on format
             if format == "summary":
@@ -678,12 +662,14 @@ def analyze(
                 typer.echo(f"Run ID: {run_id}")
                 typer.echo(f"Quest: {quest_name}")
                 typer.echo(f"Agent: {agent_id}")
+                typer.echo(f"Treatment: {treatment_signature}")
                 typer.echo(f"Start Time: {start_time}")
-                typer.echo(f"Duration: {run_duration:.2f} seconds")
+                typer.echo(f"Duration: {duration_text} seconds")
                 typer.echo(f"Outcome: {outcome}")
                 typer.echo(f"Reward: {reward}")
-                typer.echo(f"Total Steps: {step_count}")
-                typer.echo(f"Decision Points: {total_choices - success_choices}")
+                typer.echo(f"Progress: {progress_text}")
+                typer.echo(f"Total Transitions: {len(transitions)}")
+                typer.echo(f"Decision Points: {decision_points}")
 
             elif format == "detail":
                 typer.echo("\n📊 Run Details")
@@ -693,48 +679,42 @@ def analyze(
                 typer.echo(f"Agent: {agent_id}")
                 typer.echo(f"Start Time: {start_time}")
                 typer.echo(f"End Time: {end_time}")
-                typer.echo(f"Duration: {run_duration:.2f} seconds")
+                typer.echo(f"Duration: {duration_text} seconds")
                 typer.echo(f"Outcome: {outcome}")
                 typer.echo(f"Reward: {reward}")
+                typer.echo(f"Progress: {progress_text}")
 
-                # Agent config details if available
-                if run_data.get("agent_config"):
-                    typer.echo("\nAgent Configuration:")
-                    for key, value in run_data["agent_config"].items():
-                        typer.echo(f"  {key}: {value}")
+                typer.echo("\nTreatment:")
+                for key, value in sorted(treatment.items()):
+                    typer.echo(f"  {key}: {value}")
 
-                # Step details
-                typer.echo(f"\nSteps ({len(steps)} total):")
-                for i, step in enumerate(steps, 1):
-                    typer.echo(f"\n🔹 Step {i}:")
-                    typer.echo(f"  Location: {step['location_id']}")
+                typer.echo(f"\nTransitions ({len(transitions)} total):")
+                for transition in transitions:
+                    typer.echo(f"\n🔹 Transition {transition.index}:")
+                    typer.echo(f"  Location: {transition.before.location_id}")
 
-                    # Truncate observation for readability
-                    obs = step["observation"]
+                    obs = transition.before.observation
                     if len(obs) > 100:
                         obs = obs[:97] + "..."
                     typer.echo(f"  Observation: {obs}")
 
-                    # Show choices
-                    if step["choices"]:
-                        typer.echo(f"  Choices ({len(step['choices'])}):")
-                        for j, choice in enumerate(step["choices"], 1):
+                    if transition.before.choices:
+                        typer.echo(f"  Choices ({len(transition.before.choices)}):")
+                        for j, choice in enumerate(transition.before.choices, 1):
                             choice_text = choice["text"]
                             if len(choice_text) > 50:
                                 choice_text = choice_text[:47] + "..."
                             typer.echo(f"    {j}. {choice_text}")
 
-                    typer.echo(f"  Action: {step['action']}")
+                    typer.echo(f"  Action: {_selected_label(transition, _choices_map(transition.before.choices))}")
 
-                    # Show LLM reasoning if available and debug is enabled
-                    if debug and step.get("llm_response"):
-                        llm_resp = step["llm_response"]
-                        if isinstance(llm_resp, dict) and llm_resp.get("reasoning"):
-                            typer.echo(f"  Reasoning: {llm_resp['reasoning']}")
+                    if debug and transition.response and transition.response.reasoning:
+                        typer.echo(f"  Reasoning: {transition.response.reasoning}")
 
             elif format == "compact":
                 typer.echo(
-                    f"Run {run_id}: {quest_name} - {outcome} (Reward: {reward}) - Steps: {step_count} - Agent: {agent_id}"
+                    f"Run {run_id}: {quest_name} - {outcome} (Reward: {reward}) - "
+                    f"Transitions: {len(transitions)} - Agent: {agent_id}"
                 )
 
         # Analyze quest runs
@@ -790,14 +770,21 @@ def analyze(
                     typer.echo(f"\n🔸 Run {i} (ID: {run.get('id', 'unknown')}):")
                     typer.echo(f"  Start Time: {run['start_time']}")
                     typer.echo(f"  Agent: {run.get('model', 'unknown')}")
+                    typer.echo(f"  Harness: {run.get('harness', 'unknown')}")
                     typer.echo(f"  Outcome: {run['outcome']}")
                     typer.echo(f"  Reward: {run['reward']}")
 
-                    # Only show steps in debug mode to avoid output overload
-                    if debug and run.get("steps"):
-                        typer.echo(f"\n  Steps ({len(run['steps'])} total):")
-                        for step in run["steps"]:
-                            typer.echo(f"    Step {step['step']}: Action {step['action']}")
+                    # Only show transitions in debug mode to avoid output overload
+                    if debug and run.get("transitions"):
+                        typer.echo(f"\n  Transitions ({len(run['transitions'])} total):")
+                        for transition in run["transitions"]:
+                            action = transition["action"]
+                            label = (
+                                f"restore {action['checkpoint_index']}"
+                                if action["kind"] == "restore"
+                                else f"choose {action['choice_index']}"
+                            )
+                            typer.echo(f"    Transition {transition['index']}: {label}")
 
         # Analyze benchmark results
         else:
@@ -823,7 +810,9 @@ def analyze(
 
 @app.command()
 def cleanup(
-    db_path: Path = typer.Option("metrics.db", help="Path to SQLite database file."),
+    db_path: Path | None = typer.Option(
+        None, help="Path to SQLite database file (defaults to $LLM_QUEST_DB_PATH, else metrics.db)."
+    ),
     older_than: str | None = typer.Option(None, help="ISO date (YYYY-MM-DD) to delete records older than this date."),
     all: bool = typer.Option(False, help="Delete all records from the database."),
     truncate_json: bool = typer.Option(False, help="Also remove JSON result files from results/ directory."),
@@ -841,6 +830,7 @@ def cleanup(
     """
     try:
         # Check if database exists
+        db_path = db_path or Path(default_db_path())
         if not db_path.exists():
             typer.echo(f"Database not found: {db_path}", err=True)
             raise typer.Exit(code=1)
@@ -858,11 +848,11 @@ def cleanup(
         # Get initial counts
         cursor.execute("SELECT count(*) FROM runs")
         initial_runs = cursor.fetchone()[0]
-        cursor.execute("SELECT count(*) FROM steps")
-        initial_steps = cursor.fetchone()[0]
+        cursor.execute("SELECT count(*) FROM transitions")
+        initial_transitions = cursor.fetchone()[0]
 
         deleted_runs = 0
-        deleted_steps = 0
+        deleted_transitions = 0
 
         # Delete by date
         if older_than:
@@ -875,18 +865,18 @@ def cleanup(
                 cursor.execute("SELECT id FROM runs WHERE start_time < ?", (cutoff_date.isoformat(),))
                 run_ids = [row[0] for row in cursor.fetchall()]
 
-                # Delete steps first
+                # Delete transitions first
                 if run_ids:
                     placeholders = ",".join("?" for _ in run_ids)
-                    cursor.execute(f"DELETE FROM steps WHERE run_id IN ({placeholders})", run_ids)
-                    deleted_steps = cursor.rowcount
+                    cursor.execute(f"DELETE FROM transitions WHERE run_id IN ({placeholders})", run_ids)
+                    deleted_transitions = cursor.rowcount
 
                     # Then delete runs
                     cursor.execute(f"DELETE FROM runs WHERE id IN ({placeholders})", run_ids)
                     deleted_runs = cursor.rowcount
 
                 conn.commit()
-                typer.echo(f"Deleted {deleted_runs} runs and {deleted_steps} steps")
+                typer.echo(f"Deleted {deleted_runs} runs and {deleted_transitions} transitions")
 
             except ValueError:
                 typer.echo(f"Invalid date format: {older_than}. Use YYYY-MM-DD format.", err=True)
@@ -896,16 +886,16 @@ def cleanup(
         elif all:
             typer.echo("Deleting all records from database")
 
-            # Delete steps first (due to foreign key constraints)
-            cursor.execute("DELETE FROM steps")
-            deleted_steps = cursor.rowcount
+            # Delete transitions first (due to foreign key constraints)
+            cursor.execute("DELETE FROM transitions")
+            deleted_transitions = cursor.rowcount
 
             # Then delete runs
             cursor.execute("DELETE FROM runs")
             deleted_runs = cursor.rowcount
 
             conn.commit()
-            typer.echo(f"Deleted {deleted_runs} runs and {deleted_steps} steps")
+            typer.echo(f"Deleted {deleted_runs} runs and {deleted_transitions} transitions")
 
         else:
             typer.echo("No action specified. Use --older-than or --all to specify what to delete.")
@@ -935,12 +925,15 @@ def cleanup(
         # Print summary of changes
         cursor.execute("SELECT count(*) FROM runs")
         final_runs = cursor.fetchone()[0]
-        cursor.execute("SELECT count(*) FROM steps")
-        final_steps = cursor.fetchone()[0]
+        cursor.execute("SELECT count(*) FROM transitions")
+        final_transitions = cursor.fetchone()[0]
 
         typer.echo("\nSummary:")
         typer.echo(f"Runs: {initial_runs} -> {final_runs} ({initial_runs - final_runs} removed)")
-        typer.echo(f"Steps: {initial_steps} -> {final_steps} ({initial_steps - final_steps} removed)")
+        typer.echo(
+            f"Transitions: {initial_transitions} -> {final_transitions} "
+            f"({initial_transitions - final_transitions} removed)"
+        )
 
     except Exception as e:
         typer.echo(f"Error during cleanup: {str(e)}", err=True)

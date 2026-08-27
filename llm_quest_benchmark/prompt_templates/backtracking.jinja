@@ -1,0 +1,26 @@
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+{% if restore_allowed %}
+Recorded checkpoints you may return to instead of acting:
+{% for checkpoint in checkpoints %}
+{{ checkpoint }}
+{% endfor %}
+Restores remaining: {{ restores_remaining if restores_remaining is not none else "unlimited" }}
+Restore only when the current branch is clearly lost or blocked; otherwise act.
+{% else %}
+No checkpoint restore is available for this decision. You must choose an action.
+{% endif %}
+
+Goal: maximize chances to complete the mission successfully.
+
+Return ONLY valid JSON (no markdown/code fences), exactly one of:
+{"action":"choose","analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}
+{% if restore_allowed %}
+{"action":"restore","analysis":"<max 25 words>","reasoning":"<max 25 words>","checkpoint":<checkpoint_number>,"result":<fallback_action_number>}
+{% endif %}

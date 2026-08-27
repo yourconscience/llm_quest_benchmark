@@ -2,7 +2,9 @@
 
 from unittest.mock import Mock
 
-from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY, create_harness
+from llm_quest_benchmark.harnesses.adaptive import AdaptiveReasoningHarness
+from llm_quest_benchmark.harnesses.backtracking import BacktrackingHarness
+from llm_quest_benchmark.harnesses.factory import HARNESS_CLASSES, create_harness
 from llm_quest_benchmark.harnesses.memo import (
     CompactionNoMemoHarness,
     HintedCompactHarness,
@@ -16,9 +18,9 @@ from llm_quest_benchmark.harnesses.minimal import MinimalHarness
 from llm_quest_benchmark.harnesses.planner import PlannerHarness
 from llm_quest_benchmark.harnesses.reasoning import ReasoningFullTranscriptHarness, ReasoningRecentHarness
 from llm_quest_benchmark.harnesses.tool_harness import ProgrammaticMemoryHarness, ToolCompactHarness, ToolHintedHarness
-from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.schemas.records import QuestAction, QuestSnapshot, QuestTransition
 
-HARNESS_SPECS = {
+HARNESS_CONFIGURATIONS = {
     "minimal": (MinimalHarness, "stub.jinja", DefaultMemory),
     "reasoning_recent": (ReasoningRecentHarness, "reasoning.jinja", DefaultMemory),
     "reasoning_full": (ReasoningFullTranscriptHarness, "reasoning.jinja", FullTranscriptMemory),
@@ -32,11 +34,13 @@ HARNESS_SPECS = {
     "memo_cot": (MemoCotHarness, "memo_cot.jinja", CompactionMemory),
     "memo_extended": (MemoExtendedHarness, "memo_extended.jinja", CompactionMemory),
     "memo_structured": (MemoStructuredHarness, "memo_structured.jinja", CompactionMemory),
+    "backtracking": (BacktrackingHarness, "backtracking.jinja", CompactionMemory),
+    "adaptive_reasoning": (AdaptiveReasoningHarness, "adaptive_reasoning.jinja", DefaultMemory),
 }
 
 
 def assert_harness_configuration(harness_name: str) -> None:
-    expected_class, expected_template, expected_memory_class = HARNESS_SPECS[harness_name]
+    expected_class, expected_template, expected_memory_class = HARNESS_CONFIGURATIONS[harness_name]
 
     harness = create_harness(harness_name, model="gpt-5-mini")
 
@@ -90,11 +94,11 @@ def test_exp4_retired_harness_configuration():
 
 
 def test_all_registry_harnesses_have_configuration_specs():
-    assert set(HARNESS_REGISTRY) == set(HARNESS_SPECS)
+    assert set(HARNESS_CLASSES) == set(HARNESS_CONFIGURATIONS)
 
 
 def test_all_registry_harnesses_instantiate_with_expected_names():
-    for harness_name in HARNESS_REGISTRY:
+    for harness_name in HARNESS_CLASSES:
         harness = create_harness(harness_name, model="gpt-5-mini")
 
         assert harness.harness_name == harness_name
@@ -400,18 +404,24 @@ def _record_executed_step(
     observation: str,
     choices: list[dict[str, str]],
     action: int,
-) -> AgentState:
+) -> QuestTransition:
     """Deliver the post-env-step lifecycle event a runner would emit."""
-    agent_state = AgentState(
-        step=len(harness._trajectory) + 1,
+    index = len(harness._trajectory) + 1
+    before = QuestSnapshot(
         location_id="test",
         observation=observation,
-        choices=choices,
-        action=str(action),
-        llm_response=harness.get_last_response(),
+        choices=[{"id": str(i + 1), "text": c.get("text", "")} for i, c in enumerate(choices)],
+        saving={"locationId": index},
     )
-    harness.on_step(agent_state)
-    return agent_state
+    transition = QuestTransition(
+        index=index,
+        before=before,
+        action=QuestAction.choose(action, str(action), 1735689600000 + index),
+        after=QuestSnapshot(location_id="test", observation="after", saving={"locationId": index + 1}),
+        response=harness.get_last_response(),
+    )
+    harness.on_transition(transition)
+    return transition
 
 
 def test_programmatic_memory_harness_can_use_history_search():
@@ -424,7 +434,7 @@ def test_programmatic_memory_harness_can_use_history_search():
     first_observation = "Merchant mentions low fuel."
     first_choices = [{"text": "Buy fuel"}, {"text": "Keep flying"}]
     first_action = harness.get_action(first_observation, first_choices)
-    first_state = _record_executed_step(harness, first_observation, first_choices, first_action)
+    first_transition = _record_executed_step(harness, first_observation, first_choices, first_action)
 
     second_observation = "Your fuel gauge is blinking."
     second_choices = [{"text": "Refuel"}, {"text": "Attack pirates"}]
@@ -435,7 +445,7 @@ def test_programmatic_memory_harness_can_use_history_search():
     assert response.tool_calls[0]["tool"] == "history_search"
     assert response.tool_results
     assert "Merchant mentions low fuel" in response.tool_results[0]
-    assert harness._trajectory.recent(1)[0] is first_state
+    assert harness._trajectory.recent(1)[0] is first_transition
     _record_executed_step(harness, second_observation, second_choices, action)
     assert len(harness._trajectory) == 2
 
@@ -553,12 +563,12 @@ def test_programmatic_memory_normal_path_appends_exactly_one_step():
     choices = [{"text": "A"}, {"text": "B"}]
 
     action = harness.get_action(observation, choices)
-    state = _record_executed_step(harness, observation, choices, action)
+    transition = _record_executed_step(harness, observation, choices, action)
 
     assert action == 2
     assert len(harness._trajectory) == 1
-    assert harness._trajectory.recent(1)[0] is state
-    assert state.action == "2"
+    assert harness._trajectory.recent(1)[0] is transition
+    assert transition.action.choice_index == 2
 
 
 def test_programmatic_memory_retry_path_appends_exactly_one_step():
@@ -586,12 +596,12 @@ def test_programmatic_memory_safety_override_path_appends_exactly_one_step():
     ]
 
     action = harness.get_action("Risky moment.", choices)
-    state = _record_executed_step(harness, "Risky moment.", choices, action)
+    transition = _record_executed_step(harness, "Risky moment.", choices, action)
 
     assert action == 2  # safety filter overrides the risky first choice
     assert len(harness._trajectory) == 1
-    assert state.action == "2"
-    assert state.choices[1]["text"] == "Постараться пройти мимо"
+    assert transition.action.choice_index == 2
+    assert transition.before.choices[1]["text"] == "Постараться пройти мимо"
 
 
 def test_programmatic_memory_error_default_path_appends_exactly_one_step():
@@ -615,7 +625,7 @@ def test_programmatic_memory_error_default_path_appends_exactly_one_step():
     assert harness.get_last_response().is_default is True
     assert harness.get_last_response().parse_mode == "error_default"
     assert len(harness._trajectory) == 1
-    assert harness._trajectory.recent(1)[0].action == "1"
+    assert harness._trajectory.recent(1)[0].action.choice_index == 1
 
 
 def test_programmatic_memory_skip_single_path_appends_exactly_one_step():
@@ -624,13 +634,13 @@ def test_programmatic_memory_skip_single_path_appends_exactly_one_step():
     choices = [{"text": "Open the only door"}]
 
     action = harness.get_action(observation, choices)
-    state = _record_executed_step(harness, observation, choices, action)
+    transition = _record_executed_step(harness, observation, choices, action)
 
     assert action == 1
     assert harness.get_last_response().reasoning == "auto_single_choice"
     assert len(harness._trajectory) == 1
-    assert state.action == "1"
-    assert state.choices[0]["text"] == "Open the only door"
+    assert transition.action.choice_index == 1
+    assert transition.before.choices[0]["text"] == "Open the only door"
 
 
 def test_programmatic_memory_multi_turn_bookkeeping_stays_exactly_one_per_turn():
@@ -659,4 +669,4 @@ def test_programmatic_memory_multi_turn_bookkeeping_stays_exactly_one_per_turn()
     action = harness.get_action("Turn 3 single choice, LLM path since skip_single is off.", single_choice)
     _record_executed_step(harness, "Turn 3 single choice, LLM path since skip_single is off.", single_choice, action)
 
-    assert [state.step for state in harness._trajectory.recent(10)] == [1, 2, 3]
+    assert [t.index for t in harness._trajectory.recent(10)] == [1, 2, 3]

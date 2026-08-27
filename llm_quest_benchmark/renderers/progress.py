@@ -44,7 +44,7 @@ class ProgressRenderer(BaseRenderer):
         # Print initial header
         self.console.print("\n[bold cyan]Benchmark Progress[/]")
 
-    def render_game_state(self, state: dict[str, Any]) -> None:
+    def render_game_state(self, transition: Any) -> None:
         """No game state rendering needed for automated players"""
         pass
 

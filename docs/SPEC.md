@@ -1,155 +1,227 @@
-# SPEC: LLM-Quest Current State
+# SPEC: Replayable Harness Evaluation
 
-This document is a current-state project specification, not a roadmap promise.
-For the public narrative and interpretation of results, use the project
-[About page](../site/about.html) as the main story surface.
+## Goal
 
-## Purpose
+LLM Quest Benchmark evaluates the model-harness pair on sequential Space
+Rangers choices while holding the QM environment fixed. A run must be:
 
-LLM Quest Benchmark evaluates how LLMs make sequential choices in Space
-Rangers text quests. The benchmark varies the agent harness around a model
-while holding the quest environment and result logging consistent. A harness is
-the wrapper that decides what context the model sees and how its response is
-converted into an action: prompt template, memory strategy, tools, and loop
-shape.
+- attributable to an explicit prompt, memory, tool, loop, and reasoning
+  treatment;
+- recorded as exact environment transitions;
+- resumable when its engine state is complete and verified;
+- diagnosable through terminal outcome, curated progress, and transcript
+  metrics.
 
-The core question is practical: which kinds of context help, hurt, or expose
-state-tracking failures during 10-50 turn interactive fiction tasks?
+The current research question remains: which harness interventions recover
+state-tracking, planning, exploration, and memory failures during long-running
+interactive fiction?
 
-The current public result should be read as a selective-intervention story, not
-as a claim that larger context wrappers are universally better. Minimal prompts
-remain a strong baseline on easier local quests; heavier context scaffolds are
-most interesting when they recover specific stateful failures that the baseline
-cannot solve.
+## User-visible behavior
 
-## Current Public Scope
+### Run records
 
-The public leaderboard is a curated comparable slice, not the full raw
-experiment history. It currently reports:
+Every human, random, or LLM run writes a schema-v2 `run_summary.json` and the
+same logical data to SQLite. Each transition records:
 
-- 6 primary publication models.
-- 15 comparable quest IDs with coverage across all six primary models.
-- 1,584 published leaderboard runs.
-- Exploratory, one-model, and partial-coverage runs excluded from the public
-  comparison slice unless they support direct comparison.
+- the complete state before the action;
+- the executed choose or restore action;
+- the complete state after the action;
+- the agent response and usage;
+- progress and replay provenance.
 
-Raw benchmark artifacts and experiment notes remain useful for follow-up
-analysis, but the public slice is the authoritative comparison surface.
+The final environment state is the final transition's `after` state. Terminal
+states are not represented as fake agent decisions.
 
-## Current Taxonomy
+### Replay and resume
 
-Use these labels for current public descriptions of benchmark harnesses:
+`llm-quest run --resume-from PATH` loads the quest and treatment from a v2 run,
+verifies the quest checksum, engine revision, recorded transitions, and active
+checkpoint, then continues without losing harness memory.
 
-| Label | Harness name | Template | Memory | Tools / loop |
-|---|---|---|---|---|
-| Minimal prompt | `minimal` | `stub.jinja` | `DefaultMemory` | no tools, react loop |
-| Short-context reasoning | `reasoning_recent` | `reasoning.jinja` | `DefaultMemory` | no tools, react loop |
-| Compact memory / memo | `memo_compact` | `stateful_compact.jinja` | `CompactionMemory` | no tools, react loop |
-| Prompt hints | `hinted_compact` | `stateful_compact_hints.jinja` | `CompactionMemory` | no tools, react loop |
-| Tools + compact memory | `tool_compact` | `tool_augmented.jinja` | `CompactionMemory` | calculator, scratchpad, quest history |
-| Tools + hints + compact memory | `tool_hinted` | `tool_augmented_hints.jinja` | `CompactionMemory` | calculator, scratchpad, quest history |
-| Planner loop | `planner` | `planner.jinja` | `CompactionMemory` | plan-maintain-act loop |
+Explicit step limits produce `TRUNCATED`, which is resumable. Divergent or
+legacy-mapped records fail before a new model call.
 
-Older internal experiment labels are historical and should not be presented as
-the current public taxonomy.
+### Existing records
 
-## Experimental Harnesses (Not Yet Public)
+`scripts/migrate_records.py --source PATH --output PATH` maps legacy
+`run_summary.json` trees and SQLite databases into schema v2. Migration is the
+only legacy reader.
 
-`programmatic_memory` (see `docs/PROGRAMMATIC_MEMORY_PROPOSAL.md`) is
-implemented and registered but has no published benchmark runs, so it is
-deliberately excluded from the Current Taxonomy table above. It pairs
-`DefaultMemory` (recent bounded context, no compaction, no full transcript)
-with a run-local `Trajectory` retrieval view over canonical executed
-`AgentState` objects and two bounded deterministic retrieval tools,
-`history_read` and `history_search`, capped at one retrieval call per decision.
-`QuestRunner` creates each `AgentState` once after an action executes, passes
-that object to the harness, callbacks, and `QuestLogger`, and the logger
-serializes it into the persisted trace; the retrieval view creates no second
-step representation or artifact. The pilot benchmark
-(`configs/benchmarks/programmatic_memory_pilot.yaml`) is an exploratory
-bundled-harness comparison of whether the full `programmatic_memory` harness
-outperforms `tool_compact`'s clipped keyword search or `memo_compact`'s
-LLM-compacted summary on long/stateful quests, not an isolated test of
-retrieval alone: relative to those baselines it also removes compaction and
-changes the tool/prompt path, so an observed effect cannot be attributed to
-retrieval specifically. It should not be treated as a public result until that
-benchmark matrix has run and been reported.
+Migration never fabricates missing action, timestamp, parameter, saving, or
+post-state data. Records lacking deterministic state remain analyzable and are
+marked non-resumable.
 
-## Current Interpretation
+### Progress
 
-The strongest pattern so far is that bigger scaffolds are not automatically
-better. A concise 20-word memo produced a useful sweet spot: it improved over
-no-memo and full-transcript baselines, while longer or more structured memo
-variants regressed. The likely mechanism is selective pressure: the short memo
-forces the harness to preserve only state that matters for future decisions.
+A benchmark may declare `progress_manifest`, a validated YAML file of
+quest-specific state predicates and percentages. Runtime progress includes:
 
-Tools and hints showed a synergy effect. Prompt hints alone hurt, and tools
-alone were modest, but tools plus hints improved outcomes because the hints
-pointed the model toward quantities and quest mechanics while the calculator,
-scratchpad, and history search gave it ways to act on those signals.
+- current and maximum progress;
+- newly reached milestones;
+- transitions since the last new milestone.
 
-Verbosity is a recurring failure mode. Some newer or larger models timed out
-more often because they spent too much of the quest budget generating long step
-responses. For sequential decision tasks, a harness that elicits concise,
-actionable state updates can outperform one that invites broad reasoning.
+Progress is monotonic across restores. Terminal success is always 100 percent.
+Without a manifest, progress is terminal-only.
 
-## Implemented Runtime
+### Harness treatments
 
-- Quest execution uses the TypeScript `space-rangers-quest` submodule through
-  the Python bridge in `llm_quest_benchmark/executors/ts_bridge/`.
-- Environment state is exposed through `llm_quest_benchmark/environments/qm.py`.
-- Agent harnesses live under `llm_quest_benchmark/harnesses/` and are selected
-  by canonical snake_case harness names.
-- Provider calls are normalized in `llm_quest_benchmark/llm/client.py` with
-  OpenAI-compatible, Anthropic, Google, and DeepSeek adapters.
-- Benchmark execution is CLI + YAML driven through `uv run llm-quest ...`.
-- Static public results are generated into `site/leaderboard.json` and rendered
-  by `site/index.html`.
+The harness registry declares the material components of each treatment:
 
-## Metrics
+- prompt;
+- memory;
+- tools;
+- loop;
+- reasoning policy.
 
-Current public metrics include success rate, average steps, token/cost
-statistics, and repetition rate. Repetition is interpreted as a diagnostic
-signal for loopiness or context loss, not as a solved predictor of success.
+The persisted treatment signature is derived from canonical component data,
+model, temperature, and material harness knobs. Reports use this data directly
+and do not infer components from harness names.
 
-Aggregate success-rate rankings should be interpreted alongside the Per Quest
-view. A mode can rank well overall by solving easier quests while still failing
-harder stateful, search-heavy, or navigation-heavy quests.
+### Backtracking
 
-Progress-style metrics and richer quest difficulty annotations remain future
-work unless present in generated result artifacts.
+The experimental `backtracking` harness may either choose a current option or
+restore a recorded checkpoint. `restore_limit` applies only to this harness.
+Restores retain chronological history and truncate only the active branch.
+Existing harnesses cannot restore.
 
-## Data and Distribution
+### Adaptive reasoning
 
-Quest files are downloaded with `download_quests.sh` from the Space Rangers
-community archive and are not redistributed as benchmark source data. The
-repository includes benchmark code, configs, tests, static site assets, and the
-curated public leaderboard JSON.
+The experimental `adaptive_reasoning` harness uses concise reasoning by
+default. It switches to a deeper planning prompt after repeated state or a
+configured progress stall. `adaptive_stall_steps` applies only to this harness,
+and every transition records the reasoning mode used.
+
+## Acceptance tests
+
+1. A real Boat transition round-trips without losing choice IDs, full engine
+   saving, timestamp, executed action, or state digest.
+2. Exact engine saving restore reproduces the recorded digest.
+3. Replay detects any changed quest, action, timestamp, or resulting state
+   before model inference.
+4. A truncated deterministic run resumes to the same state as an uninterrupted
+   run.
+5. A legacy JSON fixture and SQLite fixture map into v2; ambiguous fields are
+   explicitly unavailable and prevent resume.
+6. All player types persist v2 JSON; random runs are not suppressed.
+7. Progress milestones are state-based, monotonic, and separate from terminal
+   outcome.
+8. A real restore returns to the selected checkpoint and remains visible as a
+   transition.
+9. Backtracking and adaptive-only knobs are rejected for other harnesses.
+10. Treatment signatures are stable for equivalent configs and distinct for
+    material differences.
+11. Existing analyzers, reports, leaderboard generation, replay scripts, and
+    web/human traces consume only v2.
+12. The Python suite, JavaScript build, random Boat smoke, migration smoke,
+    resume smoke, and restore smoke pass.
+
+## Constraints
+
+- Python 3.11 is the supported local runtime for the locked dependency set.
+- The TypeScript `space-rangers-quest` engine remains authoritative for game
+  state and win/fail outcome.
+- The environment remains unchanged for public harness comparisons.
+- Backtracking is an explicit experimental capability, not evaluator behavior.
+- Deterministic replay uses the full engine saving and the original transition
+  timestamp passed to `performJump`.
+- Existing public outcome metrics remain comparable; progress is diagnostic
+  until manifests are curated.
+- No legacy config aliases, database fallbacks, dual record writers, or runtime
+  schema adapters remain after cutover.
 
 ## Non-goals
 
-- Claiming that any context scaffold is universally best. Results are jagged by
-  quest and model.
-- Treating exploratory or partial-coverage runs as public comparison data.
-- Adding a production web service; the benchmark remains CLI/YAML first with a
-  static publication site.
-- Changing quest authoring or the upstream quest format.
+- OpenEnv, Gymnasium, Inspect, Harbor, remote environment, or RL integration.
+- Automatically generating or model-grading progress milestones.
+- Making every historical record resumable.
+- Treating more context, more reasoning, or backtracking as universally better.
+- Changing quest authoring or the upstream `.qm` format.
 
-## Reproducibility Entry Points
+## Dependencies and integrations
 
-```bash
-uv sync --extra dev
-pnpm install
-uv run llm-quest --help
-uv run llm-quest benchmark --config configs/benchmarks/memory_full_transcript.yaml
-pnpm run build
-```
+- `space-rangers-quest` supplies parser, state transition, saving, and outcome
+  semantics through the TypeScript bridge.
+- YAML benchmark configuration supplies an optional progress manifest.
+- SQLite and `run_summary.json` store the same schema-v2 logical record.
+- Existing static reports and the web player remain publication surfaces after
+  their v2 cutover.
 
-Provider API keys are required for real LLM runs. Tests and static validation
-should run without external credentials in a prepared checkout.
+## Risks
 
-Reproducible benchmark rows depend on recording the quest file, model/provider
-ID, harness name, run ID, outcome, and run summaries with usage/metrics.
-Harness responses are parsed into a chosen action plus optional
-analysis/reasoning so action validity, terminal outcome, steps, tokens/cost,
-and repetition diagnostics can be regenerated from stored artifacts.
+- Legacy compact JSON can contain the model-proposed action rather than the
+  runner-executed action. Migration prefers SQLite and otherwise marks the
+  action unverified.
+- Legacy records omit full engine saving and transition timestamps, so most are
+  not resumable.
+- Dynamic quest behavior can diverge if timestamps are regenerated. The bridge
+  therefore receives the recorded timestamp.
+- Restore can inflate apparent capability. It has a separate harness name,
+  explicit budget, and restore metrics.
+- Adaptive reasoning can hide extra inference cost. Reasoning mode and usage
+  remain visible per transition.
+
+## Codebase notes
+
+- Detailed implementation order and mapping rules live in `PLAN.md`.
+- `QMPlayerEnv` and `QMBridge` own environment snapshots and saving restore.
+- `QuestRunner` owns active checkpoints, replay verification, and transition
+  construction.
+- `QuestLogger` persists completed transitions and run metadata initialized
+  before execution.
+- Harness specifications and treatment signatures are canonical in the harness
+  registry/configuration layer.
+
+## Outcome / Deviations
+
+Implemented as a single schema-v2 cutover. No runtime reader accepts a pre-v2
+record; `scripts/migrate_records.py` is the only legacy reader.
+
+Delivered:
+
+- Canonical `QuestAction`, `QuestSnapshot`, `ProgressState`, `QuestTransition`,
+  and `RunRecord` types in `llm_quest_benchmark/schemas/records.py`.
+- Structured TypeScript bridge protocol (`state` / `jump` / `load`) carrying the
+  full engine saving; `performedAtMs` is supplied by the caller and never
+  generated inside the bridge.
+- `QMPlayerEnv.restore()` with digest verification, and a snapshot digest over
+  location, observation, choices, parameter state, terminal state, and saving.
+- v2 SQLite (`runs`, `transitions`) plus one `run_summary.json` per run for
+  every player type, with run metadata written before execution.
+- `scripts/migrate_records.py` for legacy JSON trees and SQLite databases.
+- `llm-quest run --resume-from`, replay verification, and the resumable
+  `TRUNCATED` outcome.
+- Validated YAML progress manifests with a state-based `configs/progress/Boat.yaml`.
+- Canonical harness specifications and `t2_` treatment signatures.
+- Experimental `backtracking` and `adaptive_reasoning` harnesses.
+
+Implementation details:
+
+1. **Progress fields.** `ProgressState.current` is the monotonic achieved
+   percentage and `maximum` is the manifest ceiling. `scored` distinguishes a
+   curated manifest from terminal-only progress.
+2. **Deterministic engine inputs.** The TypeScript player starts from a stable
+   quest-derived seed. The runner derives `performedAtMs` from the quest
+   checksum and transition index, then persists it. Independent runs with the
+   same actions therefore reproduce the same state, and replay compares exact
+   snapshot digests.
+3. **Web trace timestamps.** The browser player's engine timestamp is not
+   observable from the page. Human web traces record `performed_at_ms: null`
+   and `replay_status: unavailable`; they still retain full savings, abandoned
+   branches, and explicit restore transitions.
+4. **`progress_recovered`.** This diagnostic is the monotonic progress gained
+   after the last accepted restore. Individual restore effects remain
+   recoverable from transitions.
+5. **Leaderboard labels.** Friendly mode labels are presentation derived from
+   canonical treatment components. Persisted identity and grouping use the
+   treatment signature; no runtime reader accepts legacy record shapes.
+
+Verified:
+
+- `uv run pytest`: 370 passed, 4 skipped.
+- `uv run ruff check .`: passed.
+- `pnpm run build`: passed.
+- Existing SQLite data migrated: 8 runs and 73 transitions; all correctly
+  marked non-resumable because legacy records lack deterministic engine state.
+- A real random-policy Boat run wrote a nested schema-v2 record, truncated at
+  four transitions, replayed those transitions exactly, resumed to six, and
+  preserved lineage and progress.

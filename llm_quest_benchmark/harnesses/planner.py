@@ -192,7 +192,7 @@ class PlannerHarness(BaseHarness):
         self.current_plan = None
         self._plan_history = []
 
-    def on_game_end(self, final_state: dict[str, Any]) -> None:
+    def on_game_end(self, final_snapshot) -> None:
         if self.debug:
             logging.getLogger(self.__class__.__name__).debug("Planner finished with plan: %s", self.current_plan)
-        super().on_game_end(final_state)
+        super().on_game_end(final_snapshot)

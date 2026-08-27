@@ -12,6 +12,7 @@ from typing import Any, cast
 
 from llm_quest_benchmark.core.quest_lang import canonical_quest_id
 from llm_quest_benchmark.llm.client import parse_model_name
+from llm_quest_benchmark.schemas.records import RunRecord
 
 TAXONOMY_MODES = {
     "minimal_prompt": "Minimal prompt",
@@ -21,18 +22,11 @@ TAXONOMY_MODES = {
     "prompt_hints": "Prompt hints",
     "tools_compact_memory": "Tools + compact memory",
     "tools_hints_compact_memory": "Tools + hints + compact memory",
+    "tools_programmatic_memory": "Tools + programmatic memory",
     "planner_loop": "Planner loop",
-}
-
-TEMPLATE_TO_MODE = {
-    "stub": ("minimal_prompt", TAXONOMY_MODES["minimal_prompt"]),
-    "strategic": ("short_context_reasoning", TAXONOMY_MODES["short_context_reasoning"]),
-    "stateful_compact": ("compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]),
-    "light_hints": ("prompt_hints", TAXONOMY_MODES["prompt_hints"]),
-    "stateful_compact_hints": ("prompt_hints", TAXONOMY_MODES["prompt_hints"]),
-    "planner": ("planner_loop", TAXONOMY_MODES["planner_loop"]),
-    "tool_augmented": ("tools_compact_memory", TAXONOMY_MODES["tools_compact_memory"]),
-    "tool_augmented_hints": ("tools_hints_compact_memory", TAXONOMY_MODES["tools_hints_compact_memory"]),
+    "backtracking_loop": "Backtracking loop",
+    "adaptive_reasoning": "Adaptive reasoning",
+    "unknown": "Unknown treatment",
 }
 
 RETIRED_BENCHMARK_NAMES = {
@@ -47,21 +41,6 @@ RETIRED_HARNESSES = {
     "memo_cot",
     "memo_extended",
     "memo_structured",
-}
-
-RETIRED_TEMPLATE_IDS = {
-    "memo_cot",
-    "memo_extended",
-    "memo_structured",
-}
-
-REASONING_STYLE_TEMPLATES = {
-    "reasoning",
-    "strategic",
-    "loop_aware_reasoning",
-    "objective_guard",
-    "consequence_scan",
-    "consequence_scan_subgoal",
 }
 
 MODE_ORDER = list(TAXONOMY_MODES)
@@ -89,49 +68,68 @@ def _load_json(path: Path) -> dict[str, Any] | None:
         return json.load(f)
 
 
-def _strip_template_suffix(template_name: str) -> str:
-    return Path(template_name or "").stem
+def _mode_from_treatment(treatment: dict[str, Any]) -> tuple[str, str]:
+    """Group runs by declared treatment components, never by harness name."""
+    prompt = str(treatment.get("prompt") or "")
+    memory = str(treatment.get("memory") or "")
+    loop = str(treatment.get("loop") or "")
+    reasoning = str(treatment.get("reasoning") or "")
+    has_tools = bool(treatment.get("tools"))
+    hinted = Path(prompt).stem.endswith("_hints")
 
+    if loop == "choose_or_restore":
+        mode_id = "backtracking_loop"
+    elif loop == "adaptive_depth":
+        mode_id = "adaptive_reasoning"
+    elif loop == "plan_act":
+        mode_id = "planner_loop"
+    elif loop == "tool_select_act" or has_tools:
+        if hinted:
+            mode_id = "tools_hints_compact_memory"
+        elif memory == "compaction":
+            mode_id = "tools_compact_memory"
+        else:
+            mode_id = "tools_programmatic_memory"
+    elif hinted:
+        mode_id = "prompt_hints"
+    elif memory == "full_transcript":
+        mode_id = "full_history_reasoning"
+    elif memory == "compaction":
+        mode_id = "compact_memory_memo"
+    elif memory == "recent_window":
+        mode_id = "minimal_prompt" if reasoning == "none" else "short_context_reasoning"
+    else:
+        mode_id = "unknown"
 
-def _mode_from_template(template_name: str, memory_mode: str | None = None) -> tuple[str, str]:
-    template_id = _strip_template_suffix(template_name)
-    if template_id in REASONING_STYLE_TEMPLATES:
-        if memory_mode == "full_transcript":
-            return "full_history_reasoning", TAXONOMY_MODES["full_history_reasoning"]
-        if memory_mode == "compaction":
-            return "compact_memory_memo", TAXONOMY_MODES["compact_memory_memo"]
-        return "short_context_reasoning", TAXONOMY_MODES["short_context_reasoning"]
-    return TEMPLATE_TO_MODE.get(template_id, (template_id or "unknown", template_id or "unknown"))
+    return mode_id, TAXONOMY_MODES[mode_id]
 
 
 def _is_retired_result(
     source_name: str | None,
     benchmark_id: str | None,
     result_row: dict[str, Any],
-    agent_config: dict[str, Any],
-    template_name: str,
+    treatment: dict[str, Any],
 ) -> bool:
     source_names = {str(value) for value in (source_name, benchmark_id) if value}
     if source_names & RETIRED_BENCHMARK_NAMES:
         return True
 
-    harness = str(result_row.get("harness") or agent_config.get("harness") or "")
-    if harness in RETIRED_HARNESSES:
-        return True
-
-    template_id = _strip_template_suffix(template_name)
-    return template_id in RETIRED_TEMPLATE_IDS
+    harness = str(result_row.get("harness") or treatment.get("harness") or "")
+    return harness in RETIRED_HARNESSES
 
 
-def _agent_config(db_run: dict[str, Any]) -> dict[str, Any]:
-    raw_config = db_run.get("agent_config")
-    if not isinstance(raw_config, str) or not raw_config:
-        return {}
-    try:
-        parsed = json.loads(raw_config)
-    except json.JSONDecodeError:
-        return {}
-    return parsed if isinstance(parsed, dict) else {}
+def _run_treatment(db_run: dict[str, Any]) -> dict[str, Any]:
+    """Read the canonical treatment recorded on a schema-v2 run row."""
+    raw = db_run.get("treatment")
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, str) and raw:
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return {}
 
 
 def _combine_numeric_tokens(parts: list[str]) -> list[str]:
@@ -358,43 +356,43 @@ def generate_leaderboard(
                 continue
 
             model = str(result_row.get("model") or "unknown")
-            template = str(result_row.get("template") or "")
             quest_path = str(result_row.get("quest") or "")
             raw_quest_id = _quest_id_from_path(quest_path)
             quest_id = canonical_quest_id(raw_quest_id)
             source_lang = _detect_quest_lang(quest_path)
             outcome = str(result_row.get("outcome") or "UNKNOWN")
 
-            # TODO: cost tracking is broken - run_summary.json usage data is not populated by OpenRouter runs
-            # Correlate with db_runs to get run ID for metrics.
+            # Correlate with db_runs to get the run id for usage and metrics.
             usage: dict[str, Any] = {}
             metrics: dict[str, Any] = {}
-            config: dict[str, Any] = {}
+            progress: dict[str, Any] = {}
+            treatment: dict[str, Any] = result_row.get("treatment") or {}
             db_run = _db_run_for_result(result_row, i, db_runs, db_runs_by_id, db_run_queues, used_db_run_ids)
             if db_run is not None:
-                config = _agent_config(db_run)
+                treatment = _run_treatment(db_run) or treatment
+                usage = _dict_field(db_run, "usage")
+                metrics = _dict_field(db_run, "transcript_diagnostics")
+                progress = _dict_field(db_run, "progress")
                 run_id = db_run.get("id")
                 quest_name = db_run.get("quest_name")
                 agent_id = db_run.get("agent_id")
-                if run_id is not None and quest_name and agent_id:
+                if (not usage or not metrics) and run_id is not None and quest_name and agent_id:
                     run_path = Path("results") / str(agent_id) / str(quest_name) / f"run_{run_id}" / "run_summary.json"
-                    run_summary = _load_json(run_path) or {}
-                    usage = _dict_field(run_summary, "usage")
-                    metrics = _dict_field(run_summary, "metrics")
+                    run_summary = _load_json(run_path)
+                    if isinstance(run_summary, dict):
+                        record = RunRecord.from_dict(run_summary)
+                        usage = usage or record.usage
+                        metrics = metrics or record.transcript_diagnostics
+                        progress = progress or record.progress.to_dict()
 
-            template_from_config = str(config.get("action_template") or "")
-            if template_from_config:
-                template = template_from_config
-            memory_mode = config.get("memory_mode") or result_row.get("memory_mode")
             if _is_retired_result(
                 str(source_name) if source_name else None,
                 str(benchmark_id) if benchmark_id else None,
                 result_row,
-                config,
-                template,
+                treatment,
             ):
                 continue
-            mode_id, mode_label = _mode_from_template(template, str(memory_mode) if memory_mode is not None else None)
+            mode_id, mode_label = _mode_from_treatment(treatment)
 
             try:
                 spec = parse_model_name(model)
@@ -416,6 +414,7 @@ def generate_leaderboard(
                     "total_tokens": float(usage.get("total_tokens") or 0),
                     "estimated_cost_usd": float(usage.get("estimated_cost_usd") or 0),
                     "repetition_rate": float(metrics.get("repetition_rate") or 0),
+                    "progress": float(progress.get("current") or 0),
                 }
             )
             if display_id not in model_entries:
@@ -460,6 +459,7 @@ def generate_leaderboard(
                 "avg_tokens": _mean(row["total_tokens"] for row in rows),
                 "avg_cost_usd": _mean(row["estimated_cost_usd"] for row in rows),
                 "repetition_rate": _mean(row["repetition_rate"] for row in rows),
+                "avg_progress": _mean(row["progress"] for row in rows),
             }
         )
 

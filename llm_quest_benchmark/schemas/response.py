@@ -20,6 +20,15 @@ class LLMResponse:
     total_tokens: int | None = None
     estimated_cost_usd: float | None = None
 
+    def usage_payload(self) -> dict:
+        """Canonical usage domain persisted on transitions and run rows."""
+        return {
+            "prompt_tokens": self.prompt_tokens or 0,
+            "completion_tokens": self.completion_tokens or 0,
+            "total_tokens": self.total_tokens or 0,
+            "estimated_cost_usd": self.estimated_cost_usd,
+        }
+
     def to_choice_string(self) -> str:
         """Convert to choice string (1-based action number)"""
         return str(self.action)

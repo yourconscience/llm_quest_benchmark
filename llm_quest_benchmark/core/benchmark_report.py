@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from llm_quest_benchmark.schemas.records import QuestTransition, RunRecord
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -18,6 +23,8 @@ class RunInsight:
     run_id: int
     model: str
     harness: str
+    treatment_signature: str
+    progress: float
     quest_name: str
     outcome: str
     duration: float
@@ -51,35 +58,29 @@ def _shorten(text: str | None, limit: int = 180) -> str | None:
     return clean[: limit - 3] + "..."
 
 
-def _extract_model(run_row: dict[str, Any]) -> str:
-    model = None
-    raw_cfg = run_row.get("agent_config")
-    if isinstance(raw_cfg, dict):
-        model = raw_cfg.get("model")
-    elif isinstance(raw_cfg, str):
+def _treatment(run_row: dict[str, Any]) -> dict[str, Any]:
+    """Read the canonical treatment recorded on a schema-v2 run row."""
+    raw = run_row.get("treatment")
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, str) and raw:
         try:
-            model = json.loads(raw_cfg).get("model")
+            parsed = json.loads(raw)
         except json.JSONDecodeError:
-            model = None
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return {}
+
+
+def _extract_model(run_row: dict[str, Any]) -> str:
+    model = _treatment(run_row).get("model")
     if model:
         return str(model)
-
-    agent_id = str(run_row.get("agent_id") or "")
-    if agent_id.startswith("llm_"):
-        return agent_id[len("llm_") :]
-    return agent_id or "unknown"
+    return str(run_row.get("agent_id") or "unknown")
 
 
 def _extract_harness(run_row: dict[str, Any]) -> str:
-    raw_cfg = run_row.get("agent_config")
-    harness = None
-    if isinstance(raw_cfg, dict):
-        harness = raw_cfg.get("harness")
-    elif isinstance(raw_cfg, str):
-        try:
-            harness = json.loads(raw_cfg).get("harness")
-        except json.JSONDecodeError:
-            harness = None
+    harness = _treatment(run_row).get("harness")
     return str(harness) if harness else ""
 
 
@@ -109,7 +110,7 @@ def _group_label(model: str, harness: str, harnesses_by_model: dict[str, set[str
 
 
 def _extract_last_decision(
-    steps: list[dict[str, Any]],
+    transitions: list[QuestTransition],
 ) -> tuple[str | None, str | None, str | None, str | None, int, int]:
     decision_steps = 0
     default_decisions = 0
@@ -118,27 +119,25 @@ def _extract_last_decision(
     last_analysis = None
     last_observation = None
 
-    for step in steps:
-        if not isinstance(step, dict):
-            continue
-        choices = step.get("choices")
-        if not isinstance(choices, dict) or len(choices) <= 1:
+    for transition in transitions:
+        choices = transition.before.choices
+        if len(choices) <= 1:
             continue
         decision_steps += 1
-        llm_decision = step.get("llm_decision") if isinstance(step.get("llm_decision"), dict) else {}
-        if bool(llm_decision.get("is_default", False)):
+        response = transition.response
+        if response is not None and response.is_default:
             default_decisions += 1
 
-        choice_map = llm_decision.get("choice")
-        selected = None
-        if isinstance(choice_map, dict) and choice_map:
-            idx, text = next(iter(choice_map.items()))
-            selected = f"{idx}: {text}"
+        if transition.action.is_restore:
+            last_choice = f"restore checkpoint {transition.action.checkpoint_index}"
+        else:
+            index = transition.action.choice_index
+            text = choices[index - 1]["text"] if index and 1 <= index <= len(choices) else ""
+            last_choice = f"{index}: {text}"
 
-        last_choice = selected
-        last_reasoning = _shorten(llm_decision.get("reasoning"))
-        last_analysis = _shorten(llm_decision.get("analysis"))
-        last_observation = _shorten(step.get("observation"), 220)
+        last_reasoning = _shorten(response.reasoning if response else None)
+        last_analysis = _shorten(response.analysis if response else None)
+        last_observation = _shorten(transition.before.observation, 220)
 
     return (
         last_choice,
@@ -168,17 +167,29 @@ def _parse_run_insight(benchmark_id: str, run_row: dict[str, Any]) -> RunInsight
     # run_summary can drift for timeout/error cases when background execution finishes later.
     outcome = str(run_row.get("outcome") or "UNKNOWN")
     duration = float(run_row.get("run_duration") or 0.0)
-    usage = {}
-    steps: list[dict[str, Any]] = []
+    usage = run_row.get("usage") if isinstance(run_row.get("usage"), dict) else {}
+    progress = run_row.get("progress") if isinstance(run_row.get("progress"), dict) else {}
+    transitions: list[QuestTransition] = []
 
     if isinstance(run_summary, dict):
-        usage = run_summary.get("usage") if isinstance(run_summary.get("usage"), dict) else {}
-        loaded_steps = run_summary.get("steps")
-        if isinstance(loaded_steps, list):
-            steps = [s for s in loaded_steps if isinstance(s, dict)]
+        try:
+            record = RunRecord.from_dict(run_summary)
+        except (ValueError, TypeError) as exc:
+            log.warning(
+                "Skipping unparseable run summary for run %s (%s); DB row still counts toward totals: %s",
+                run_id,
+                summary_path,
+                exc,
+            )
+            run_summary = None
+    if isinstance(run_summary, dict):
+        record = RunRecord.from_dict(run_summary)
+        usage = usage or record.usage
+        progress = progress or record.progress.to_dict()
+        transitions = record.transitions
 
     selected_choice, selected_reasoning, selected_analysis, selected_observation, decision_steps, default_decisions = (
-        _extract_last_decision(steps)
+        _extract_last_decision(transitions)
     )
 
     prompt_tokens = int(usage.get("prompt_tokens") or 0)
@@ -194,6 +205,8 @@ def _parse_run_insight(benchmark_id: str, run_row: dict[str, Any]) -> RunInsight
         run_id=run_id,
         model=_extract_model(run_row),
         harness=_extract_harness(run_row),
+        treatment_signature=str(run_row.get("treatment_signature") or _treatment(run_row).get("signature") or ""),
+        progress=float(progress.get("current") or 0.0),
         quest_name=str(run_row.get("quest_name") or "unknown"),
         outcome=outcome,
         duration=duration,
@@ -315,6 +328,8 @@ def _format_model_summary(
             "tokens": total_tokens,
             "cost": total_cost if priced_runs else None,
             "default_rate": (default_steps / decision_steps * 100.0) if decision_steps else 0.0,
+            "avg_progress": (sum(r.progress for r in rows) / len(rows)) if rows else 0.0,
+            "treatment_signature": rows[0].treatment_signature if rows else "",
         }
     return model_summary
 
@@ -396,15 +411,16 @@ def render_benchmark_report(
         sections.append(f"### {breakdown_label} Breakdown")
         sections.append("")
         sections.append(
-            f"| {breakdown_label} | Runs | Success | Failure | Timeout | Error | Success Rate | Tokens | "
-            "Est. Cost (USD) | Default Decision Rate |"
+            f"| {breakdown_label} | Treatment | Runs | Success | Failure | Timeout | Error | Success Rate | "
+            "Avg Progress | Tokens | Est. Cost (USD) | Default Decision Rate |"
         )
-        sections.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+        sections.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
         for group, row in model_summary.items():
             cost = "n/a" if row["cost"] is None else f"{row['cost']:.6f}"
             sections.append(
-                f"| {group} | {row['runs']} | {row['success']} | {row['failure']} | {row['timeout']} | "
-                f"{row['error']} | {row['success_rate']:.1f}% | {row['tokens']} | {cost} | {row['default_rate']:.1f}% |"
+                f"| {group} | `{row['treatment_signature']}` | {row['runs']} | {row['success']} | {row['failure']} | "
+                f"{row['timeout']} | {row['error']} | {row['success_rate']:.1f}% | {row['avg_progress']:.1f}% | "
+                f"{row['tokens']} | {cost} | {row['default_rate']:.1f}% |"
             )
         sections.append("")
 

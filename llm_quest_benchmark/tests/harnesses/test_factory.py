@@ -1,8 +1,9 @@
 import pytest
 
-from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY, create_harness
+from llm_quest_benchmark.harnesses.factory import HARNESS_CLASSES, create_harness
 from llm_quest_benchmark.harnesses.memo import MemoCompactHarness
 from llm_quest_benchmark.harnesses.minimal import MinimalHarness
+from llm_quest_benchmark.harnesses.specs import HARNESS_SPECS
 from llm_quest_benchmark.players.human import HumanPlayer
 from llm_quest_benchmark.players.random import RandomPlayer
 from llm_quest_benchmark.schemas.config import BenchmarkConfig, HarnessConfig
@@ -15,10 +16,16 @@ def test_create_minimal_harness():
 
 
 def test_all_harness_names_instantiate():
-    for harness_name, harness_cls in HARNESS_REGISTRY.items():
+    for harness_name, harness_cls in HARNESS_CLASSES.items():
         harness = create_harness(harness_name, model="gpt-5-mini")
 
         assert isinstance(harness, harness_cls)
+
+
+def test_every_model_driven_spec_has_an_implementation():
+    model_driven = {name for name, spec in HARNESS_SPECS.items() if spec.requires_model}
+
+    assert model_driven == set(HARNESS_CLASSES)
 
 
 def test_create_human_harness():
@@ -68,6 +75,20 @@ def test_seeded_random_model_is_rejected():
 def test_human_model_requires_human_harness():
     with pytest.raises(ValueError, match="harness='human'"):
         create_harness("minimal", model="human")
+
+
+def test_backtracking_harness_receives_restore_limit():
+    harness = create_harness("backtracking", model="gpt-5-mini", restore_limit=2)
+
+    assert harness.restore_limit == 2
+    assert harness.supports_restore is True
+
+
+def test_adaptive_harness_receives_stall_steps():
+    harness = create_harness("adaptive_reasoning", model="gpt-5-mini", adaptive_stall_steps=5)
+
+    assert harness.adaptive_stall_steps == 5
+    assert harness.supports_restore is False
 
 
 def test_harness_config_stable_harness_id():
@@ -124,21 +145,45 @@ def test_harness_config_rejects_human_model_with_llm_harness():
         HarnessConfig(harness="minimal", model="human")
 
 
-def test_harness_config_allows_retired_exp4_aliases():
+def test_harness_config_allows_retired_exp4_harnesses():
     for harness_name in ("compaction_no_memo", "memo_cot", "memo_extended", "memo_structured"):
         config = HarnessConfig(harness=harness_name, model="gpt-5-mini")
 
         assert config.harness == harness_name
 
 
-def test_harness_config_rejects_old_template_key():
-    with pytest.raises(ValueError, match="Use harness: key instead of template:"):
+def test_harness_config_rejects_removed_template_key():
+    with pytest.raises(TypeError, match="template"):
         HarnessConfig(model="gpt-5-mini", template="reasoning.jinja")
 
 
-def test_harness_config_rejects_old_memory_mode_key():
-    with pytest.raises(ValueError, match="Use harness: key instead of memory_mode:"):
+def test_harness_config_rejects_removed_memory_mode_key():
+    with pytest.raises(TypeError, match="memory_mode"):
         HarnessConfig(model="gpt-5-mini", harness="memo_compact", memory_mode="compaction")
+
+
+def test_restore_limit_is_rejected_for_non_backtracking_harnesses():
+    with pytest.raises(ValueError, match="restore_limit is only valid for harness: backtracking"):
+        HarnessConfig(harness="reasoning_recent", model="gpt-5-mini", restore_limit=3)
+
+
+def test_adaptive_stall_steps_is_rejected_for_other_harnesses():
+    with pytest.raises(ValueError, match="adaptive_stall_steps is only valid for harness: adaptive_reasoning"):
+        HarnessConfig(harness="memo_compact", model="gpt-5-mini", adaptive_stall_steps=3)
+
+
+def test_backtracking_accepts_restore_limit():
+    config = HarnessConfig(harness="backtracking", model="gpt-5-mini", restore_limit=3)
+
+    assert config.restore_limit == 3
+    assert config.treatment().knobs["restore_limit"] == 3
+
+
+def test_adaptive_reasoning_accepts_stall_steps():
+    config = HarnessConfig(harness="adaptive_reasoning", model="gpt-5-mini", adaptive_stall_steps=4)
+
+    assert config.adaptive_stall_steps == 4
+    assert config.treatment().knobs["adaptive_stall_steps"] == 4
 
 
 def test_benchmark_config_from_yaml_parses_harness(tmp_path):
@@ -179,7 +224,7 @@ agents:
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="Use harness: key instead of template:"):
+    with pytest.raises(TypeError, match="template"):
         BenchmarkConfig.from_yaml(str(config_path))
 
 
@@ -199,12 +244,12 @@ agents:
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="Use harness: key instead of memory_mode:"):
+    with pytest.raises(TypeError, match="memory_mode"):
         BenchmarkConfig.from_yaml(str(config_path))
 
 
 def test_benchmark_config_max_steps_defaults_to_none(tmp_path):
-    """Backward compatibility: configs without max_steps stay unbounded."""
+    """Configs without max_steps stay unbounded."""
     quest_path = tmp_path / "quest.qm"
     quest_path.write_text("", encoding="utf-8")
     config_path = tmp_path / "benchmark.yaml"
@@ -222,11 +267,25 @@ agents:
     config = BenchmarkConfig.from_yaml(str(config_path))
 
     assert config.max_steps is None
+    assert config.progress_manifest is None
 
 
-def test_benchmark_config_from_yaml_parses_max_steps(tmp_path):
+def test_benchmark_config_from_yaml_parses_max_steps_and_progress_manifest(tmp_path):
     quest_path = tmp_path / "quest.qm"
     quest_path.write_text("", encoding="utf-8")
+    manifest_path = tmp_path / "progress.yaml"
+    manifest_path.write_text(
+        """
+quest: Quest
+version: 1
+milestones:
+  - id: start
+    percent: 10
+    match:
+      location_id: ["1"]
+""",
+        encoding="utf-8",
+    )
     config_path = tmp_path / "benchmark.yaml"
     config_path.write_text(
         f"""
@@ -236,6 +295,7 @@ agents:
   - model: gpt-5-mini
     harness: memo_compact
 max_steps: 40
+progress_manifest: {manifest_path}
 """,
         encoding="utf-8",
     )
@@ -243,6 +303,17 @@ max_steps: 40
     config = BenchmarkConfig.from_yaml(str(config_path))
 
     assert config.max_steps == 40
+    assert config.progress_manifest == str(manifest_path)
+
+
+def test_benchmark_config_rejects_invalid_progress_manifest(tmp_path):
+    quest_path = tmp_path / "quest.qm"
+    quest_path.write_text("", encoding="utf-8")
+    manifest = tmp_path / "bad.yaml"
+    manifest.write_text("quest: Boat\nversion: 1\nmilestones: []\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="non-empty 'milestones' list"):
+        BenchmarkConfig(quests=[str(quest_path)], agents=[], progress_manifest=str(manifest))
 
 
 def test_benchmark_config_rejects_non_positive_max_steps(tmp_path):

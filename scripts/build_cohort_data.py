@@ -161,13 +161,15 @@ QUEST_METADATA: dict[str, dict] = {
     },
 }
 
-EXCLUDE_PATTERNS = ["random", "test", "planner", "tool"]
+# Loops whose runs are not comparable with the public prompt/memory cohort.
+EXCLUDED_LOOPS = {"random", "tool_select_act", "plan_act", "choose_or_restore", "interactive"}
+EXCLUDE_MODEL_PATTERNS = ["test", "unavailable", "unknown"]
 
 MIN_FAMILY_STEPS = 5
 
 
 def classify_agent(agent_id: str) -> str:
-    """Return model family string for a given agent_id."""
+    """Return model family string for a recorded model id."""
     a = agent_id.lower()
     # Claude (various prefix forms)
     if (
@@ -204,9 +206,12 @@ def classify_agent(agent_id: str) -> str:
     return "other"
 
 
-def is_excluded(agent_id: str) -> bool:
-    a = agent_id.lower()
-    return any(pat in a for pat in EXCLUDE_PATTERNS)
+def is_excluded(treatment: dict) -> bool:
+    """Exclude non-comparable treatments using declared components, not names."""
+    if str(treatment.get("loop") or "") in EXCLUDED_LOOPS:
+        return True
+    model = str(treatment.get("model") or "").lower()
+    return any(pat in model for pat in EXCLUDE_MODEL_PATTERNS)
 
 
 _CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
@@ -219,10 +224,10 @@ def has_cyrillic(text: str) -> bool:
 def build_quest_data(conn: sqlite3.Connection, quest_name: str) -> dict:
     cursor = conn.cursor()
 
-    # Fetch all runs for this quest (excluding filtered agent types, all outcomes)
+    # Fetch all runs for this quest (excluding filtered treatments, all outcomes)
     cursor.execute(
         """
-        SELECT r.id, r.agent_id, r.outcome
+        SELECT r.id, r.agent_id, r.outcome, r.treatment
         FROM runs r
         WHERE r.quest_name = ?
         """,
@@ -231,19 +236,24 @@ def build_quest_data(conn: sqlite3.Connection, quest_name: str) -> dict:
     all_runs = cursor.fetchall()
 
     # Filter runs
-    runs = {}  # run_id -> (agent_id, outcome)
+    runs = {}  # run_id -> (agent_id, outcome, family)
     unrecognized = set()
-    for run_id, agent_id, outcome in all_runs:
-        if is_excluded(agent_id):
+    for run_id, agent_id, outcome, treatment_json in all_runs:
+        try:
+            treatment = json.loads(treatment_json) if treatment_json else {}
+        except json.JSONDecodeError:
+            treatment = {}
+        if is_excluded(treatment):
             continue
-        family = classify_agent(agent_id)
+        model = str(treatment.get("model") or agent_id)
+        family = classify_agent(model)
         if family == "other":
-            unrecognized.add(agent_id)
+            unrecognized.add(model)
         runs[run_id] = (agent_id, outcome, family)
 
     if unrecognized:
-        for aid in sorted(unrecognized):
-            print(f"  [WARN] unrecognized agent_id: {aid}", file=sys.stderr)
+        for model in sorted(unrecognized):
+            print(f"  [WARN] unrecognized model: {model}", file=sys.stderr)
 
     total_runs = len(runs)
     success_runs = sum(1 for _, (_, outcome, _) in runs.items() if outcome == "SUCCESS")
@@ -260,14 +270,14 @@ def build_quest_data(conn: sqlite3.Connection, quest_name: str) -> dict:
         }
 
     run_ids = list(runs.keys())
-    # Fetch steps for all relevant runs
+    # Fetch executed transitions for all relevant runs
     placeholders = ",".join("?" * len(run_ids))
     cursor.execute(
         f"""
-        SELECT s.run_id, s.location_id, s.observation, s.choices, s.action
-        FROM steps s
-        WHERE s.run_id IN ({placeholders})
-        ORDER BY s.run_id, s.step
+        SELECT t.run_id, t.before_state, t.action
+        FROM transitions t
+        WHERE t.run_id IN ({placeholders})
+        ORDER BY t.run_id, t.transition_index
         """,
         run_ids,
     )
@@ -282,17 +292,21 @@ def build_quest_data(conn: sqlite3.Connection, quest_name: str) -> dict:
     # Track total steps per family (across all locations) for filtering
     family_total_steps: dict[str, int] = defaultdict(int)
 
-    for run_id, location_id, observation, choices_json, action in rows:
-        # Skip terminal/non-numeric actions
-        if not str(action).strip().isdigit():
-            continue
-
-        action_idx = int(action) - 1  # convert 1-based to 0-based
-
+    for run_id, before_json, action_json in rows:
         try:
-            choices = json.loads(choices_json)
+            before = json.loads(before_json)
+            action = json.loads(action_json)
         except (json.JSONDecodeError, TypeError):
             continue
+
+        # Restores are backtracking-harness only and never enter cohort choices.
+        if action.get("kind") != "choose" or action.get("choice_index") is None:
+            continue
+
+        action_idx = int(action["choice_index"]) - 1  # convert 1-based to 0-based
+        location_id = before.get("location_id")
+        observation = before.get("observation") or ""
+        choices = before.get("choices") or []
 
         if action_idx < 0 or action_idx >= len(choices):
             continue

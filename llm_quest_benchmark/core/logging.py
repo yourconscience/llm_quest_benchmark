@@ -1,4 +1,4 @@
-"""Unified logging module for LLM Quest Benchmark"""
+"""Unified logging and schema-v2 run persistence for LLM Quest Benchmark"""
 
 import json
 import logging
@@ -9,21 +9,98 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from llm_quest_benchmark.schemas import AgentState
+from llm_quest_benchmark.schemas.records import (
+    SCHEMA_VERSION,
+    ProgressState,
+    QuestSnapshot,
+    QuestTransition,
+    ResumeLineage,
+    RunRecord,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 # Constants
-DEFAULT_DB_PATH = "metrics.db"
-RESULTS_DIR = Path("results")
+#
+# Both stores are process-wide defaults resolved from the environment at import
+# time, so a benchmark worker started with ``spawn`` inherits the same isolated
+# database and results tree as its parent instead of silently writing to the
+# working directory.
+DB_PATH_ENV_VAR = "LLM_QUEST_DB_PATH"
+RESULTS_DIR_ENV_VAR = "LLM_QUEST_RESULTS_DIR"
+
+DEFAULT_DB_PATH = os.environ.get(DB_PATH_ENV_VAR) or "metrics.db"
+RESULTS_DIR = Path(os.environ.get(RESULTS_DIR_ENV_VAR) or "results")
+
+LEGACY_DB_MESSAGE = (
+    "metrics database uses the pre-v2 schema. Convert it with: "
+    "scripts/migrate_records.py --source <old.db> --output <new.db>"
+)
+
+
+def default_db_path() -> str:
+    """Metrics database used whenever a caller supplies no explicit path.
+
+    Frozen at import time from ``LLM_QUEST_DB_PATH``; subprocesses can redirect
+    via the environment variable, in-process overrides cannot.
+    """
+    return DEFAULT_DB_PATH
+
+
+RUNS_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS runs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        schema_version INTEGER NOT NULL,
+        quest_file TEXT NOT NULL,
+        quest_name TEXT NOT NULL,
+        quest_checksum TEXT NOT NULL,
+        quest_language TEXT NOT NULL,
+        engine_revision TEXT NOT NULL,
+        agent_id TEXT NOT NULL,
+        treatment TEXT NOT NULL,
+        treatment_signature TEXT NOT NULL,
+        benchmark_id TEXT,
+        lineage TEXT,
+        start_time TIMESTAMP NOT NULL,
+        end_time TIMESTAMP,
+        run_duration REAL,
+        outcome TEXT,
+        reward REAL,
+        usage TEXT,
+        transcript_diagnostics TEXT,
+        progress TEXT,
+        terminal_snapshot TEXT
+    )
+"""
+
+TRANSITIONS_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS transitions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        run_id INTEGER NOT NULL,
+        transition_index INTEGER NOT NULL,
+        before_state TEXT NOT NULL,
+        action TEXT NOT NULL,
+        after_state TEXT NOT NULL,
+        response TEXT,
+        usage TEXT,
+        progress TEXT,
+        provenance TEXT NOT NULL,
+        replay_status TEXT NOT NULL,
+        reasoning_mode TEXT,
+        FOREIGN KEY (run_id) REFERENCES runs (id)
+    )
+"""
+
+# SQLite stores the same logical record as run_summary.json, flattened: each
+# column is one field of a canonical domain.
 
 
 class LogManager:
     """Manages logging configuration"""
 
-    def __init__(self):
-        self.logger = logging.getLogger("llm_quest")
+    def __init__(self, name: str = "llm_quest"):
+        self.logger = logging.getLogger("llm_quest" if name == "llm_quest" else f"llm_quest.{name}")
 
     def setup(self, debug: bool = False):
         """Setup logging configuration"""
@@ -39,190 +116,97 @@ class LogManager:
         return self.logger
 
 
+def verify_v2_schema(conn: sqlite3.Connection) -> bool:
+    """Return whether a v2 ``runs`` table exists, refusing a legacy database.
+
+    A database with no ``runs`` table is simply empty, not legacy; readers use
+    that to distinguish "nothing recorded yet" from "needs migration".
+    """
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='runs'")
+    if cursor.fetchone() is None:
+        return False
+
+    cursor.execute("PRAGMA table_info(runs)")
+    columns = {row[1] for row in cursor.fetchall()}
+    if "schema_version" not in columns:
+        raise RuntimeError(LEGACY_DB_MESSAGE)
+    return True
+
+
+TRANSITION_INSERT_SQL = """
+        INSERT INTO transitions (
+            run_id, transition_index, before_state, action, after_state,
+            response, usage, progress, provenance, replay_status, reasoning_mode
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+
+
+def insert_transition_row(conn: sqlite3.Connection, run_id: int, transition: QuestTransition) -> None:
+    """Single writer for schema-v2 transition rows (runtime logger and migration)."""
+    payload = transition.to_dict()
+    conn.execute(
+        TRANSITION_INSERT_SQL,
+        (
+            run_id,
+            transition.index,
+            json.dumps(payload["before"], ensure_ascii=False),
+            json.dumps(payload["action"], ensure_ascii=False),
+            json.dumps(payload["after"], ensure_ascii=False),
+            json.dumps(payload["response"], ensure_ascii=False) if payload["response"] else None,
+            json.dumps(payload["usage"], ensure_ascii=False),
+            json.dumps(payload["progress"], ensure_ascii=False),
+            transition.provenance,
+            transition.replay_status,
+            transition.reasoning_mode,
+        ),
+    )
+
+
+def ensure_v2_schema(conn: sqlite3.Connection) -> None:
+    """Create the v2 tables, refusing to touch a legacy database.
+
+    There is no in-place upgrade path: legacy databases are converted once by
+    ``scripts/migrate_records.py`` into a fresh v2 destination.
+    """
+    verify_v2_schema(conn)
+    cursor = conn.cursor()
+    cursor.execute(RUNS_TABLE_SQL)
+    cursor.execute(TRANSITIONS_TABLE_SQL)
+    conn.commit()
+
+
 class QuestLogger:
-    """Logs quest runs to SQLite database and exports to JSON when complete"""
+    """Persists schema-v2 runs to SQLite and exports one run_summary.json.
+
+    Run identity, quest provenance, and the harness treatment are written
+    before the first transition, so nothing is patched into the record after
+    the JSON export.
+    """
 
     DEFAULT_REPETITION_WINDOW = 5
-
-    @staticmethod
-    def _safe_json_load(json_str, default=None):
-        """Safely load JSON with error handling and repair attempts"""
-        if not json_str:
-            return default
-
-        try:
-            return json.loads(json_str)
-        except json.JSONDecodeError:
-            # Try to repair damaged JSON
-            try:
-                from json_repair import repair_json
-
-                repaired = repair_json(json_str)
-                return json.loads(repaired)
-            except ImportError:
-                # Log warning about missing json-repair
-                import logging
-
-                logging.getLogger("quest_logger").warning(
-                    "json-repair module not available - some JSON may not parse correctly"
-                )
-
-                # Manual repair attempt
-                try:
-                    # If it starts with a string that looks like a dict
-                    if json_str.strip().startswith("{"):
-                        # Extract everything between the first { and the last }
-                        clean_str = json_str[json_str.find("{") : json_str.rfind("}") + 1]
-                        return json.loads(clean_str)
-                except Exception:
-                    pass
-
-            # Return default if all repair attempts failed
-            return default
-
-    @staticmethod
-    def _safe_int(value) -> int | None:
-        """Best-effort conversion to int."""
-        try:
-            if value is None:
-                return None
-            return int(value)
-        except (TypeError, ValueError):
-            return None
-
-    @staticmethod
-    def _choices_map(choices: list[dict[str, Any]]) -> dict[str, str]:
-        """Map quest choices to a compact indexed text dictionary."""
-        return {str(idx): choice.get("text", "") for idx, choice in enumerate(choices, start=1)}
-
-    @staticmethod
-    def _selected_choice_map(choices_map: dict[str, str], action_index: int | None) -> dict[str, str] | None:
-        """Return selected choice as {index: text} if action is valid."""
-        if action_index is None:
-            return None
-        key = str(action_index)
-        if key not in choices_map:
-            return None
-        return {key: choices_map[key]}
-
-    def _calculate_run_metrics(
-        self,
-        step_rows: list[tuple[Any, ...]],
-        outcome: str | None,
-    ) -> dict[str, Any]:
-        """Compute simple run-level behavior metrics from raw step rows."""
-        recent_actions: list[int] = []
-        repetition_count = 0
-        window = self._repetition_window
-
-        for _, _, _, _, action, _ in step_rows:
-            action_index = self._safe_int(action)
-            if action_index is None:
-                continue
-            if action_index in recent_actions:
-                repetition_count += 1
-            recent_actions.append(action_index)
-            recent_actions = recent_actions[-window:]
-
-        total_steps = len(step_rows)
-        bad_decision_count = 1 if outcome == "FAILURE" and total_steps > 0 else 0
-
-        return {
-            "total_steps": total_steps,
-            "repetition_window": window,
-            "repetition_count": repetition_count,
-            "repetition_rate": (repetition_count / total_steps) if total_steps else 0.0,
-            "bad_decision_count": bad_decision_count,
-            "bad_decision_rate": (bad_decision_count / total_steps) if total_steps else 0.0,
-        }
-
-    def _format_step_export(
-        self,
-        step_num: int,
-        location_id: str,
-        observation: str,
-        choices: list[dict[str, Any]],
-        action: Any,
-        llm_response: dict[str, Any] | None,
-    ) -> dict[str, Any]:
-        """Format an exported step in compact analysis-friendly form."""
-        choices_map = self._choices_map(choices)
-        parsed_action_index = self._safe_int(action)
-        analysis = None
-        reasoning = None
-        memo = None
-        tool_calls = None
-        tool_results = None
-        is_default = True
-        parse_mode = None
-        prompt_tokens = 0
-        completion_tokens = 0
-        total_tokens = 0
-        estimated_cost_usd = None
-
-        if isinstance(llm_response, dict):
-            parsed_action_index = self._safe_int(
-                llm_response.get("action") or llm_response.get("result") or llm_response.get("choice") or action
-            )
-            analysis = llm_response.get("analysis")
-            reasoning = llm_response.get("reasoning")
-            memo = llm_response.get("memo")
-            tool_calls = llm_response.get("tool_calls")
-            tool_results = llm_response.get("tool_results")
-            is_default = bool(llm_response.get("is_default", False))
-            parse_mode = llm_response.get("parse_mode")
-            prompt_tokens = int(llm_response.get("prompt_tokens") or 0)
-            completion_tokens = int(llm_response.get("completion_tokens") or 0)
-            total_tokens = int(llm_response.get("total_tokens") or (prompt_tokens + completion_tokens))
-            if llm_response.get("estimated_cost_usd") is not None:
-                estimated_cost_usd = float(llm_response.get("estimated_cost_usd"))
-
-        llm_decision = {
-            "analysis": analysis,
-            "reasoning": reasoning,
-            "memo": memo,
-            "tool_calls": tool_calls,
-            "tool_results": tool_results,
-            "is_default": is_default,
-            "parse_mode": parse_mode,
-            "choice": self._selected_choice_map(choices_map, parsed_action_index),
-            "prompt_tokens": prompt_tokens,
-            "completion_tokens": completion_tokens,
-            "total_tokens": total_tokens,
-            "estimated_cost_usd": estimated_cost_usd,
-        }
-
-        return {
-            "step": step_num,
-            "location_id": location_id,
-            "observation": observation,
-            "choices": choices_map,
-            "llm_decision": llm_decision,
-        }
 
     # Thread-local storage for database connections
     _local = threading.local()
     # Track all instances for cleanup
     _instances = []
 
-    def __init__(self, db_path: str = DEFAULT_DB_PATH, debug: bool = False, agent: str | None = None):
+    def __init__(self, db_path: str | None = None, debug: bool = False, agent: str | None = None):
         """Initialize the quest logger.
 
         Args:
-            db_path: Path to SQLite database
+            db_path: Path to SQLite database; defaults to DEFAULT_DB_PATH at call time
             debug: Enable debug logging
-            agent: Agent identifier
+            agent: Agent identifier used for the results directory
         """
-        self.db_path = db_path
+        self.db_path = db_path or default_db_path()
         self.debug = debug
         self.agent = agent
         self._repetition_window = self.DEFAULT_REPETITION_WINDOW
         self.current_run_id = None
-        self.quest_file = None
-        self.steps = []
-        self.run_outcome = None
-        self.end_time = None
-        self.final_state = None
+        self.record: RunRecord | None = None
+        self.start_time: datetime | None = None
         self._finalize_lock = threading.Lock()
         self._finalized = False
 
@@ -264,190 +248,129 @@ class QuestLogger:
                         self.logger.debug("Skipping signal handlers in non-main thread")
 
     def _init_connection(self):
-        """Initialize a thread-local database connection"""
-        # Create a new connection for this thread if it doesn't exist
-        if not hasattr(self._local, "conn") or self._local.conn is None:
-            # Reducing debug logging
-            pass  # Skip thread connection logging
-            self._local.conn = sqlite3.connect(self.db_path)
-            self._local.cursor = self._local.conn.cursor()
+        """Initialize a thread-local database connection.
 
-            # Create tables if they don't exist
-            self._create_tables()
-
-    def _create_tables(self):
-        """Create database tables if they don't exist"""
-        # Check if the runs table already exists
-        self._local.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='runs'")
-        table_exists = self._local.cursor.fetchone() is not None
-
-        if table_exists:
-            # Check if we need to add columns to existing table
-            self._local.cursor.execute("PRAGMA table_info(runs)")
-            columns = [column[1] for column in self._local.cursor.fetchall()]
-
-            # Add missing columns
-            if "outcome" not in columns:
-                self._local.cursor.execute("ALTER TABLE runs ADD COLUMN outcome TEXT")
-            if "reward" not in columns:
-                self._local.cursor.execute("ALTER TABLE runs ADD COLUMN reward REAL")
-            if "run_duration" not in columns:
-                self._local.cursor.execute("ALTER TABLE runs ADD COLUMN run_duration REAL")
-            if "benchmark_id" not in columns:
-                self._local.cursor.execute("ALTER TABLE runs ADD COLUMN benchmark_id TEXT")
-        else:
-            # Create the runs table if it doesn't exist
-            self._local.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS runs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    quest_file TEXT,
-                    quest_name TEXT,
-                    start_time TIMESTAMP,
-                    end_time TIMESTAMP,
-                    agent_id TEXT,
-                    agent_config TEXT,
-                    outcome TEXT,
-                    reward REAL,
-                    run_duration REAL,
-                    benchmark_id TEXT
-                )
-            """)
-
-        # Create steps table
-        self._local.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS steps (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                run_id INTEGER,
-                step INTEGER,
-                location_id TEXT,
-                observation TEXT,
-                choices TEXT,
-                action TEXT,
-                llm_response TEXT,
-                FOREIGN KEY (run_id) REFERENCES runs (id)
-            )
-        """)
-
-        self._local.conn.commit()
-
-    def set_quest_file(self, quest_file: str):
-        """Set the quest file and create a new run record.
-
-        Args:
-            quest_file: Path to quest file
+        The connection cache is keyed by database path: two loggers in the same
+        thread pointing at different databases must never share a handle.
         """
-        # Ensure we have a connection for this thread
+        conn = getattr(self._local, "conn", None)
+        if conn is not None and getattr(self._local, "db_path", None) != self.db_path:
+            conn.close()
+            conn = None
+            self._local.conn = None
+            self._local.cursor = None
+
+        if conn is None:
+            connection = sqlite3.connect(self.db_path)
+            try:
+                ensure_v2_schema(connection)
+            except Exception:
+                connection.close()
+                raise
+            self._local.conn = connection
+            self._local.cursor = connection.cursor()
+            self._local.db_path = self.db_path
+
+    def start_run(
+        self,
+        *,
+        quest_file: str,
+        quest_name: str,
+        quest_checksum: str,
+        quest_language: str,
+        engine_revision: str,
+        agent_id: str,
+        treatment: dict[str, Any],
+        benchmark_id: str | None = None,
+        lineage: ResumeLineage | None = None,
+    ) -> int:
+        """Create the run row with complete metadata and return its id."""
         self._init_connection()
 
-        self.quest_file = quest_file
-        self.steps = []
+        self.agent = agent_id
         self.start_time = datetime.utcnow()
-        self.end_time = None
-        self.run_outcome = None
-        self.final_state = None
         self._finalized = False
 
-        try:
-            # Extract quest name from path (filename without extension)
-            quest_name = Path(quest_file).stem
-
-            # Create run record with both quest_file and quest_name
-            self._local.cursor.execute(
-                """
-                INSERT INTO runs (quest_file, quest_name, start_time, agent_id)
-                VALUES (?, ?, ?, ?)
-            """,
-                (quest_file, quest_name, self.start_time, self.agent),
+        self._local.cursor.execute(
+            """
+            INSERT INTO runs (
+                schema_version, quest_file, quest_name, quest_checksum, quest_language,
+                engine_revision, agent_id, treatment, treatment_signature, benchmark_id,
+                lineage, start_time
             )
-            self._local.conn.commit()
-        except sqlite3.OperationalError as e:
-            if "no such column: quest_file" in str(e):
-                # Fallback for older schema without quest_file column
-                self.logger.warning("quest_file column not found in database, using quest_name instead")
-
-                # Extract quest name from path (filename without extension)
-                quest_name = Path(quest_file).stem
-
-                self._local.cursor.execute(
-                    """
-                    INSERT INTO runs (quest_name, start_time, agent_id)
-                    VALUES (?, ?, ?)
-                """,
-                    (quest_name, self.start_time, self.agent),
-                )
-                self._local.conn.commit()
-            else:
-                raise
-
-        # Get the run ID
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                SCHEMA_VERSION,
+                quest_file,
+                quest_name,
+                quest_checksum,
+                quest_language,
+                engine_revision,
+                agent_id,
+                json.dumps(treatment, ensure_ascii=False),
+                str(treatment.get("signature") or ""),
+                benchmark_id,
+                json.dumps(lineage.to_dict(), ensure_ascii=False) if lineage else None,
+                self.start_time,
+            ),
+        )
+        self._local.conn.commit()
         self.current_run_id = self._local.cursor.lastrowid
-        # Skip logging run record ID to reduce output
-        pass
 
-    def log_step(self, agent_state: AgentState):
-        """Log a step to the database.
+        self.record = RunRecord(
+            run_id=self.current_run_id,
+            quest_file=quest_file,
+            quest_name=quest_name,
+            quest_checksum=quest_checksum,
+            quest_language=quest_language,
+            engine_revision=engine_revision,
+            agent_id=agent_id,
+            treatment=treatment,
+            started_at=self.start_time.isoformat(),
+            benchmark_id=benchmark_id,
+            lineage=lineage,
+        )
+        return self.current_run_id
 
-        Args:
-            agent_state: Agent state to log
-        """
-        # Ensure we have a connection for this thread
+    def log_transition(self, transition: QuestTransition) -> None:
+        """Persist one executed transition."""
+        if self.record is None or self.current_run_id is None:
+            self.logger.warning("Cannot log transition, no active run")
+            return
+
         self._init_connection()
-
-        self.steps.append(agent_state)
+        self.record.transitions.append(transition)
 
         if self.debug:
-            self.logger.debug(self.format_step_for_console(agent_state))
+            self.logger.debug(self.format_transition_for_console(transition))
 
         try:
-            # Format choices as JSON for storage
-            choices_json = json.dumps(agent_state.choices, ensure_ascii=False)
-
-            # Store all step data together including action and llm_response if available
-            if agent_state.observation:
-                llm_response_json = None
-                if agent_state.llm_response is not None:
-                    llm_response_json = json.dumps(
-                        agent_state.llm_response.to_dict(),
-                        ensure_ascii=False,
-                    )
-
-                self._local.cursor.execute(
-                    """
-                    INSERT INTO steps (run_id, step, location_id, observation, choices, action, llm_response)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                    (
-                        self.current_run_id,
-                        agent_state.step,
-                        agent_state.location_id,
-                        agent_state.observation,
-                        choices_json,
-                        agent_state.action,
-                        llm_response_json,
-                    ),
-                )
-                self._local.conn.commit()
-
+            insert_transition_row(self._local.conn, self.current_run_id, transition)
+            self._local.conn.commit()
         except Exception as e:
-            self.logger.error(f"Error logging step: {e}")
+            self.logger.error(f"Error logging transition: {e}")
 
-    def set_quest_outcome(
+    def adopt_transitions(self, transitions: list[QuestTransition]) -> None:
+        """Persist prior transitions carried over into a resumed run."""
+        for transition in transitions:
+            self.log_transition(transition)
+
+    def finish_run(
         self,
         outcome: str,
         reward: float = 0.0,
-        benchmark_id: str = None,
-        final_state: dict[str, Any] | None = None,
-    ):
-        """Set the quest outcome and finalize the run.
+        terminal_snapshot: QuestSnapshot | None = None,
+        progress: ProgressState | None = None,
+        diagnostics: dict[str, Any] | None = None,
+    ) -> None:
+        """Record the terminal outcome and export the v2 run summary.
 
-        Args:
-            outcome: Quest outcome (SUCCESS, FAILURE, etc.)
-            reward: Final reward value
-            benchmark_id: Optional benchmark ID to associate with this run
-            final_state: Optional final environment state snapshot for export
+        First write wins: late outcome updates from a background timeout race
+        cannot overwrite the outcome already recorded for this run.
         """
         with self._finalize_lock:
-            if not self.current_run_id:
+            if self.record is None or not self.current_run_id:
                 self.logger.warning("Cannot set outcome, no active run")
                 return
             if self._finalized:
@@ -455,197 +378,151 @@ class QuestLogger:
                     "Ignoring late outcome update for run %s: %s (already finalized as %s)",
                     self.current_run_id,
                     outcome,
-                    self.run_outcome,
+                    self.record.outcome,
                 )
                 return
 
-            self.run_outcome = outcome
-            self.final_state = final_state
-            self.end_time = datetime.utcnow()
-            run_duration = (self.end_time - self.start_time).total_seconds()
+            end_time = datetime.utcnow()
+            record = self.record
+            record.outcome = outcome
+            record.reward = reward
+            record.terminal_snapshot = terminal_snapshot
+            record.ended_at = end_time.isoformat()
+            record.run_duration = (end_time - self.start_time).total_seconds() if self.start_time else None
+            record.usage = self.aggregate_usage(record.transitions)
+            record.transcript_diagnostics = self.calculate_metrics(record.transitions, outcome, self._repetition_window)
+            if diagnostics:
+                record.transcript_diagnostics.update(diagnostics)
+            if progress is not None:
+                record.progress = progress
 
             try:
-                # Update the run record with outcome and end time
-                if benchmark_id:
-                    self.logger.debug(f"Setting quest outcome with benchmark_id: {benchmark_id}")
-                    self._local.cursor.execute(
-                        """
-                        UPDATE runs 
-                        SET outcome = ?, end_time = ?, reward = ?, run_duration = ?, benchmark_id = ?
-                        WHERE id = ?
+                self._local.cursor.execute(
+                    """
+                    UPDATE runs
+                    SET end_time = ?, run_duration = ?, outcome = ?, reward = ?,
+                        usage = ?, transcript_diagnostics = ?, progress = ?, terminal_snapshot = ?
+                    WHERE id = ?
                     """,
-                        (outcome, self.end_time, reward, run_duration, benchmark_id, self.current_run_id),
-                    )
-                else:
-                    self._local.cursor.execute(
-                        """
-                        UPDATE runs 
-                        SET outcome = ?, end_time = ?, reward = ?, run_duration = ?
-                        WHERE id = ?
-                    """,
-                        (outcome, self.end_time, reward, run_duration, self.current_run_id),
-                    )
+                    (
+                        end_time,
+                        record.run_duration,
+                        outcome,
+                        reward,
+                        json.dumps(record.usage, ensure_ascii=False),
+                        json.dumps(record.transcript_diagnostics, ensure_ascii=False),
+                        json.dumps(record.progress.to_dict(), ensure_ascii=False),
+                        json.dumps(terminal_snapshot.to_dict(), ensure_ascii=False) if terminal_snapshot else None,
+                        self.current_run_id,
+                    ),
+                )
                 self._local.conn.commit()
 
-                # Export the run to JSON
                 self._export_run_to_json()
                 self._finalized = True
-
             except Exception as e:
                 self.logger.error(f"Error setting quest outcome: {e}")
 
+    @staticmethod
+    def aggregate_usage(transitions: list[QuestTransition]) -> dict[str, Any]:
+        """Sum token usage and cost across transitions."""
+        prompt_tokens = completion_tokens = total_tokens = priced_steps = 0
+        estimated_cost = 0.0
+        for transition in transitions:
+            usage = transition.usage or {}
+            prompt = int(usage.get("prompt_tokens") or 0)
+            completion = int(usage.get("completion_tokens") or 0)
+            prompt_tokens += prompt
+            completion_tokens += completion
+            total_tokens += int(usage.get("total_tokens") or (prompt + completion))
+            if usage.get("estimated_cost_usd") is not None:
+                estimated_cost += float(usage["estimated_cost_usd"])
+                priced_steps += 1
+        return {
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
+            "estimated_cost_usd": round(estimated_cost, 8) if priced_steps > 0 else None,
+            "priced_steps": priced_steps,
+        }
+
+    @staticmethod
+    def calculate_metrics(
+        transitions: list[QuestTransition],
+        outcome: str | None,
+        window: int = DEFAULT_REPETITION_WINDOW,
+    ) -> dict[str, Any]:
+        """Compute run-level behaviour metrics from canonical transitions."""
+        recent_actions: list[int] = []
+        repetition_count = 0
+        choose_count = 0
+        restore_count = 0
+        default_decisions = 0
+        reasoning_modes: dict[str, int] = {}
+
+        for transition in transitions:
+            if transition.reasoning_mode:
+                reasoning_modes[transition.reasoning_mode] = reasoning_modes.get(transition.reasoning_mode, 0) + 1
+            if transition.action.is_restore:
+                restore_count += 1
+                continue
+            choose_count += 1
+            if transition.response is not None and transition.response.is_default:
+                default_decisions += 1
+            index = transition.action.choice_index
+            if index is None:
+                continue
+            if index in recent_actions:
+                repetition_count += 1
+            recent_actions.append(index)
+            recent_actions = recent_actions[-window:]
+
+        bad_decision_count = 1 if outcome == "FAILURE" and choose_count > 0 else 0
+        return {
+            "total_steps": choose_count,
+            "total_transitions": len(transitions),
+            "choose_transitions": choose_count,
+            "restore_transitions": restore_count,
+            "repetition_window": window,
+            "repetition_count": repetition_count,
+            "repetition_rate": (repetition_count / choose_count) if choose_count else 0.0,
+            "bad_decision_count": bad_decision_count,
+            "bad_decision_rate": (bad_decision_count / choose_count) if choose_count else 0.0,
+            "default_decisions": default_decisions,
+            "reasoning_modes": reasoning_modes,
+        }
+
     def _export_run_to_json(self):
         """Export the complete run to a single run_summary.json file."""
-        if not self.agent or not self.quest_file or not self.current_run_id:
-            return
-        if self.agent.startswith("random"):
-            # Keep random-agent runs in DB for diagnostics, but avoid result-dir clutter.
+        if self.record is None or not self.agent or not self.current_run_id:
             return
 
         try:
-            # Create agent directory if it doesn't exist
-            agent_dir = RESULTS_DIR / self.agent
-            agent_dir.mkdir(parents=True, exist_ok=True)
+            run_dir = RESULTS_DIR / self.agent / self.record.quest_name / f"run_{self.current_run_id}"
+            run_dir.mkdir(parents=True, exist_ok=True)
 
-            # Create quest directory if it doesn't exist
-            quest_name = Path(self.quest_file).stem
-            quest_dir = agent_dir / quest_name
-            quest_dir.mkdir(exist_ok=True)
-
-            # Create run directory if it doesn't exist
-            run_dir = quest_dir / f"run_{self.current_run_id}"
-            run_dir.mkdir(exist_ok=True)
-
-            # Fetch complete run data from database
-            run_data = self._get_run_data()
-
-            # Save complete run summary
             run_summary_file = run_dir / "run_summary.json"
             with open(run_summary_file, "w", encoding="utf-8") as f:
-                json.dump(run_data, f, indent=2, ensure_ascii=False)
+                json.dump(self.record.to_dict(), f, indent=2, ensure_ascii=False)
 
             self.logger.debug(f"Exported run data to {run_summary_file}")
-
         except Exception as e:
             self.logger.error(f"Error exporting run to JSON: {e}")
 
-    def _get_run_data(self) -> dict[str, Any]:
-        """Get complete run data from the database for the current run.
-
-        Returns:
-            Dict containing run and step data
-        """
-        # Ensure we have a connection for this thread
-        self._init_connection()
-
-        # Get run data
-        self._local.cursor.execute(
-            """
-            SELECT quest_file, quest_name, start_time, end_time, agent_id, 
-                   agent_config, outcome, reward, run_duration, benchmark_id
-            FROM runs
-            WHERE id = ?
-        """,
-            (self.current_run_id,),
+    @staticmethod
+    def format_transition_for_console(transition: QuestTransition) -> str:
+        """Format a transition for console output."""
+        choices_str = "\n".join(f"{i + 1}. {choice['text']}" for i, choice in enumerate(transition.before.choices))
+        if transition.action.is_restore:
+            action_str = f"restore checkpoint {transition.action.checkpoint_index}"
+        else:
+            action_str = f"choose {transition.action.choice_index}"
+        return (
+            f"Transition {transition.index}:\n"
+            f"Observation: {transition.before.observation}\n"
+            f"Choices:\n{choices_str}\n"
+            f"Action: {action_str}"
         )
-
-        run = self._local.cursor.fetchone()
-        if not run:
-            return {"error": f"Run with ID {self.current_run_id} not found"}
-
-        (
-            quest_file,
-            quest_name,
-            start_time,
-            end_time,
-            agent_id,
-            agent_config,
-            outcome,
-            reward,
-            run_duration,
-            benchmark_id,
-        ) = run
-
-        # Get steps for this run
-        self._local.cursor.execute(
-            """
-            SELECT step, location_id, observation, choices, action, llm_response
-            FROM steps
-            WHERE run_id = ?
-            ORDER BY step
-        """,
-            (self.current_run_id,),
-        )
-
-        step_rows = self._local.cursor.fetchall()
-        steps = []
-        usage_prompt_tokens = 0
-        usage_completion_tokens = 0
-        usage_total_tokens = 0
-        usage_estimated_cost = 0.0
-        usage_priced_steps = 0
-        for step_data in step_rows:
-            step_num, location_id, obs, choices_json, action, llm_response = step_data
-            parsed_choices = self._safe_json_load(choices_json, [])
-            parsed_response = self._safe_json_load(llm_response)
-            if isinstance(parsed_response, dict):
-                prompt_tokens = int(parsed_response.get("prompt_tokens") or 0)
-                completion_tokens = int(parsed_response.get("completion_tokens") or 0)
-                total_tokens = int(parsed_response.get("total_tokens") or (prompt_tokens + completion_tokens))
-                usage_prompt_tokens += prompt_tokens
-                usage_completion_tokens += completion_tokens
-                usage_total_tokens += total_tokens
-                if parsed_response.get("estimated_cost_usd") is not None:
-                    usage_estimated_cost += float(parsed_response.get("estimated_cost_usd"))
-                    usage_priced_steps += 1
-            steps.append(
-                self._format_step_export(
-                    step_num=step_num,
-                    location_id=location_id,
-                    observation=obs,
-                    choices=parsed_choices if isinstance(parsed_choices, list) else [],
-                    action=action,
-                    llm_response=parsed_response if isinstance(parsed_response, dict) else None,
-                )
-            )
-
-        metrics = self._calculate_run_metrics(step_rows, outcome)
-
-        return {
-            "run_id": self.current_run_id,
-            "quest_file": quest_file,
-            "quest_name": quest_name,
-            "start_time": start_time,
-            "end_time": end_time,
-            "agent_id": agent_id,
-            "agent_config": self._safe_json_load(agent_config),
-            "outcome": outcome,
-            "reward": reward,
-            "run_duration": run_duration,
-            "benchmark_id": benchmark_id,
-            "final_state": self.final_state,
-            "usage": {
-                "prompt_tokens": usage_prompt_tokens,
-                "completion_tokens": usage_completion_tokens,
-                "total_tokens": usage_total_tokens,
-                "estimated_cost_usd": (round(usage_estimated_cost, 8) if usage_priced_steps > 0 else None),
-                "priced_steps": usage_priced_steps,
-            },
-            "metrics": metrics,
-            "steps": steps,
-        }
-
-    def format_step_for_console(self, agent_state: AgentState) -> str:
-        """Format step for console output.
-
-        Args:
-            agent_state: Agent state to format
-
-        Returns:
-            Formatted step string
-        """
-        choices_str = "\n".join([f"{i + 1}. {choice['text']}" for i, choice in enumerate(agent_state.choices)])
-        return f"Step {agent_state.step}:\nObservation: {agent_state.observation}\nChoices:\n{choices_str}\nAction: {agent_state.action}"
 
     def close(self):
         """Close the database connection for this thread"""
@@ -653,3 +530,4 @@ class QuestLogger:
             self._local.conn.close()
             self._local.conn = None
             self._local.cursor = None
+            self._local.db_path = None

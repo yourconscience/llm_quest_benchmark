@@ -21,16 +21,7 @@ sys.path.insert(0, str(repo_root))
 
 from llm_quest_benchmark.llm.client import parse_model_name  # noqa: E402, I001
 from llm_quest_benchmark.llm.cost import estimate_cost_usd  # noqa: E402
-
-
-_AGENT_ID_PREFIXES = ("llm_", "planner_", "tool_")
-
-
-def _model_name_from_agent_id(agent_id: str) -> str | None:
-    for prefix in _AGENT_ID_PREFIXES:
-        if agent_id.startswith(prefix):
-            return agent_id[len(prefix) :]
-    return None
+from llm_quest_benchmark.schemas.records import SCHEMA_VERSION  # noqa: E402
 
 
 def backfill(results_dir: Path, dry_run: bool) -> None:
@@ -45,6 +36,11 @@ def backfill(results_dir: Path, dry_run: bool) -> None:
         except (OSError, json.JSONDecodeError) as exc:
             print(f"  SKIP (unreadable: {exc}): {path}")
             continue
+
+        if data.get("schema_version") != SCHEMA_VERSION:
+            print(f"  SKIP (not schema v{SCHEMA_VERSION}; run migrate-records): {path.relative_to(results_dir)}")
+            continue
+
         usage = data.get("usage") or {}
 
         if usage.get("estimated_cost_usd") is not None:
@@ -57,9 +53,9 @@ def backfill(results_dir: Path, dry_run: bool) -> None:
             skipped_no_tokens += 1
             continue
 
-        agent_id = data.get("agent_id") or ""
-        model_name = _model_name_from_agent_id(agent_id)
-        if not model_name:
+        # The canonical treatment records the exact model that produced the run.
+        model_name = (data.get("treatment") or {}).get("model")
+        if not model_name or model_name == "unavailable":
             skipped_no_model += 1
             print(f"  SKIP (no model): {path.relative_to(results_dir)}")
             continue
@@ -77,7 +73,7 @@ def backfill(results_dir: Path, dry_run: bool) -> None:
             print(f"  SKIP (no price for {spec.provider}:{spec.model_id}): {path.relative_to(results_dir)}")
             continue
 
-        total_steps = (data.get("metrics") or {}).get("total_steps") or 1
+        total_steps = (data.get("transcript_diagnostics") or {}).get("total_steps") or 1
         print(
             f"  {'[DRY]' if dry_run else 'UPDATE'} {path.relative_to(results_dir)}"
             f"  {spec.provider}:{spec.model_id}"

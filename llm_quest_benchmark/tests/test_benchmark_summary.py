@@ -9,8 +9,6 @@ def _result(model, harness, outcome, agent_id=None):
         "model": model,
         "temperature": 0.4,
         "harness": harness,
-        "template": "reasoning.jinja",
-        "memory_mode": "default",
         "agent_id": agent_id or f"llm_{model}_{harness}",
         "attempt": 1,
         "outcome": outcome,

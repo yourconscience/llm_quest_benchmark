@@ -5,7 +5,7 @@ import { parse } from "../../../space-rangers-quest/src/lib/qmreader";
 import * as fs from "fs";
 import * as process from "process";
 import { QMPlayer } from "../../../space-rangers-quest/src/lib/qmplayer";
-import { performJump } from "../../../space-rangers-quest/src/lib/qmplayer/funcs";
+import { initGame, performJump } from "../../../space-rangers-quest/src/lib/qmplayer/funcs";
 
 // Get the quest file path and language from command line arguments
 if (process.argv.length < 3) {
@@ -34,9 +34,24 @@ try {
 
 const qm = parse(data);
 
-// Initialize player
+// Initialize from an explicit stable seed. The bridge records timestamps for
+// every jump; a stable initial PRNG state makes independent runs comparable.
 const player = new QMPlayer(qm, language as "rus" | "eng");
-player.start();
+const seed = process.env.QM_SEED || "llm-quest-default";
+player.loadSaving(initGame(qm, seed));
+
+function emitState() {
+    console.log(JSON.stringify({
+        state: player.getState(),
+        saving: player.getSaving()
+    }));
+}
+
+function emitError(message: string) {
+    // Protocol errors go to stdout so the Python bridge fails fast instead of
+    // waiting for a state packet that will never arrive.
+    console.log(JSON.stringify({ error: message }));
+}
 
 // If parse mode, output raw QM structure and exit
 if (parseMode) {
@@ -55,12 +70,12 @@ if (parseMode) {
 }
 
 // Output initial raw state
-console.log(JSON.stringify({
-    state: player.getState(),
-    saving: player.getSaving()
-}));
+emitState();
 
-// Read commands and return raw state
+// Structured command protocol: one JSON object per stdin line.
+//   {"cmd":"state"}
+//   {"cmd":"jump","jumpId":<int>,"performedAtMs":<int>}
+//   {"cmd":"load","saving":{...}}
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -68,34 +83,64 @@ const rl = readline.createInterface({
 
 rl.on('line', (input) => {
     try {
-        const command = input.trim();
-
-        // Handle special commands
-        if (command === "get_state") {
-            console.log(JSON.stringify({
-                state: player.getState(),
-                saving: player.getSaving()
-            }));
+        const raw = input.trim();
+        if (!raw) {
             return;
         }
 
-        // Try to perform jump
-        const jumpId = parseInt(command, 10);
-        if (!isNaN(jumpId)) {
-            // IMPORTANT: keep stdout protocol clean.
-            // space-rangers-quest performJump defaults showDebug=true, which can emit console.info lines
-            // (e.g. autojump logs) to stdout and break the Python bridge parser.
-            const currentSaving = player.getSaving();
-            const nextSaving = performJump(jumpId, qm, currentSaving, Date.now(), false);
-            player.loadSaving(nextSaving);
-            console.log(JSON.stringify({
-                state: player.getState(),
-                saving: player.getSaving()
-            }));
-        } else {
-            console.error(JSON.stringify({ error: "Invalid jump ID" }));
+        let command: any;
+        try {
+            command = JSON.parse(raw);
+        } catch (parseError) {
+            emitError(`Malformed command JSON: ${raw}`);
+            return;
+        }
+        if (!command || typeof command !== "object") {
+            emitError("Command must be a JSON object");
+            return;
+        }
+
+        switch (command.cmd) {
+            case "state": {
+                emitState();
+                return;
+            }
+            case "jump": {
+                const jumpId = Number(command.jumpId);
+                const performedAtMs = Number(command.performedAtMs);
+                if (!Number.isFinite(jumpId)) {
+                    emitError("jump requires a numeric jumpId");
+                    return;
+                }
+                if (!Number.isFinite(performedAtMs)) {
+                    // Deterministic replay depends on the caller-supplied timestamp,
+                    // so the bridge never invents one.
+                    emitError("jump requires a numeric performedAtMs");
+                    return;
+                }
+                // IMPORTANT: keep stdout protocol clean.
+                // space-rangers-quest performJump defaults showDebug=true, which can emit console.info lines
+                // (e.g. autojump logs) to stdout and break the Python bridge parser.
+                const nextSaving = performJump(jumpId, qm, player.getSaving(), performedAtMs, false);
+                player.loadSaving(nextSaving);
+                emitState();
+                return;
+            }
+            case "load": {
+                if (!command.saving || typeof command.saving !== "object") {
+                    emitError("load requires a saving object");
+                    return;
+                }
+                player.loadSaving(command.saving);
+                emitState();
+                return;
+            }
+            default: {
+                emitError(`Unknown command: ${String(command.cmd)}`);
+                return;
+            }
         }
     } catch (error) {
-        console.error(JSON.stringify({ error: String(error) }));
+        emitError(String(error));
     }
 });

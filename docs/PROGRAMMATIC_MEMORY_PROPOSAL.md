@@ -2,6 +2,13 @@
 
 Status: implemented, unbenchmarked
 
+Historical note: this proposal was written against the pre-v2 record schema.
+Its `AgentState` step object is now `QuestTransition`, and `run_summary.json`
+is a schema-v2 record. The design contract is unchanged: `QuestRunner` builds
+one canonical object per executed action and hands that same object to the
+harness retrieval view, callbacks, and `QuestLogger`. See `docs/SPEC.md` and
+`docs/ARCHITECTURE.md` for the current schema.
+
 Delivery Sequence steps 1-4 below are complete: the append-only trajectory,
 the `programmatic_memory` harness, a passing fake-provider deterministic quest
 smoke, and `configs/benchmarks/programmatic_memory_pilot.yaml`. Steps 5-6 (run

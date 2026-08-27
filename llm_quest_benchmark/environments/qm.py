@@ -1,11 +1,15 @@
 """QM environment for Space Rangers quests"""
 
 import logging
-from typing import Any
+from collections import Counter
 
 from llm_quest_benchmark.executors.ts_bridge.bridge import QMBridge
-from llm_quest_benchmark.schemas.state import QMState
-from llm_quest_benchmark.utils.choice_mapper import ChoiceMapper
+from llm_quest_benchmark.schemas.records import QuestSnapshot
+
+LOOP_GUARD_MIN_STATES = 30
+LOOP_GUARD_WINDOW = 10
+LOOP_GUARD_REPEATS = 5
+FORCED_STOP_TEXT = "[Forced stop: repetitive state loop detected before terminal quest outcome]"
 
 
 def find_quest_file(quest_path: str) -> str:
@@ -43,14 +47,11 @@ def find_quest_file(quest_path: str) -> str:
 
 
 class QMPlayerEnv:
-    """Environment for playing QM files using TypeScript bridge
+    """Environment for playing QM files using the TypeScript bridge.
 
-    This environment provides a clean interface to Space Rangers quests.
-    All game state and logic is handled by the TypeScript bridge, while this class:
-    1. Manages the bridge lifecycle
-    2. Handles choice mapping between sequential numbers and jump IDs
-    3. Formats observations and state
-    4. Tracks game history
+    The environment owns canonical snapshots: every reset, step, and restore
+    returns a ``QuestSnapshot`` carrying the full engine saving and a
+    deterministic digest over the canonical state fields.
     """
 
     def __init__(self, quest_file: str, language: str = "rus", debug: bool = False):
@@ -63,6 +64,7 @@ class QMPlayerEnv:
         """
         self.debug = debug
         self.language = language
+        self.forced_stop_reason: str | None = None
 
         # Initialize logger
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -77,212 +79,123 @@ class QMPlayerEnv:
 
             # Initialize bridge
             self.bridge = QMBridge(self.quest_file, language=self.language, debug=debug)
-            self.state_history: list[QMState] = []
-            self.choice_mapper: ChoiceMapper | None = None
-            self._current_state: dict[str, Any] = {}  # Internal state storage
+            self._snapshot: QuestSnapshot | None = None
         except Exception as e:
             self.logger.error(f"Failed to initialize QMPlayerEnv: {e}")
             raise RuntimeError(f"Failed to initialize QMPlayerEnv: {e}")
 
-    @staticmethod
-    def _format_params_state(params_state: Any) -> str:
-        if not params_state:
-            return ""
-        if isinstance(params_state, list):
-            lines = [str(x).strip() for x in params_state if str(x).strip()]
-        else:
-            lines = [str(params_state).strip()]
-        if not lines:
-            return ""
-        return "Status:\n" + "\n".join(lines)
+    @property
+    def snapshot(self) -> QuestSnapshot | None:
+        """Current canonical snapshot, or None before reset."""
+        return self._snapshot
 
-    def _compose_observation_text(self, text: str, params_state: Any) -> str:
-        base = (text or "").strip()
-        params_block = self._format_params_state(params_state)
-        if not params_block:
-            return base
-        if not base:
-            return params_block
-        return f"{base}\n\n{params_block}"
+    def _require_snapshot(self) -> QuestSnapshot:
+        if self._snapshot is None:
+            raise RuntimeError("Environment not initialized - call reset() first")
+        return self._snapshot
 
-    def _format_observation(self, state) -> str:
-        """Format observation text from game state"""
-        if not state:
-            return "No state available"
-
-        # Support both QMState-like objects and internal dict state.
-        if isinstance(state, dict):
-            text = state.get("text") or ""
-            params_state = state.get("params_state") or []
-            choices = state.get("choices") or []
-        else:
-            text = getattr(state, "text", "") or ""
-            params_state = getattr(state, "params_state", []) or []
-            choices = getattr(state, "choices", []) or []
-
-        text = self._compose_observation_text(text, params_state)
-
-        # Add choices if available
-        if choices:
-            text += "\n\nAvailable actions:\n"
-            for i, choice in enumerate(choices, 1):
-                text += f"{i}. {choice['text']}\n"
-
-        return text
-
-    def reset(self) -> str:
-        """Reset environment to initial state"""
+    def reset(self) -> QuestSnapshot:
+        """Start the quest and return the initial snapshot."""
         try:
+            self.forced_stop_reason = None
             initial_bridge_state = self.bridge.start_game()
             if not initial_bridge_state:
                 raise RuntimeError("Failed to get initial state from bridge")
 
-            self._current_state = {
-                "location_id": initial_bridge_state.location_id,
-                "text": initial_bridge_state.text,
-                "params_state": initial_bridge_state.params_state,
-                "choices": initial_bridge_state.choices,
-                "reward": initial_bridge_state.reward,
-                "done": initial_bridge_state.game_ended,
-                "info": {},
-            }
-
-            if not self._current_state["choices"]:
+            self._snapshot = initial_bridge_state.to_snapshot()
+            if not self._snapshot.choices and not self._snapshot.done:
                 raise RuntimeError("No valid choices in initial state")
-
-            return self._compose_observation_text(self._current_state["text"], self._current_state.get("params_state"))
+            return self._snapshot
         except Exception as e:
             self.logger.error(f"Failed to reset environment: {e}")
             self.bridge.close()  # Clean up on error
             raise RuntimeError(f"Failed to reset environment: {e}")
 
-    def step(self, action: str) -> tuple[str, bool, bool, dict[str, Any]]:
-        """Take action in environment and return new state
+    def _detect_state_loop(self) -> bool:
+        """Detect a repeating non-terminal state loop across recent engine states.
 
-        Args:
-            action: Action to take (choice number or text)
-
-        Returns:
-            Tuple of (observation, done, success, info)
+        This is a general guard for quests (like Prison.qm) whose daily-routine
+        branches can cycle forever without reaching a terminal outcome.
         """
-        if not self._current_state:
-            raise RuntimeError("Environment not initialized - call reset() first")
+        history = self.bridge.state_history
+        if len(history) <= LOOP_GUARD_MIN_STATES:
+            return False
 
-        # Check for patterns that might indicate an infinite loop
-        # This is a general solution that works for any quest that might get stuck
-        if len(self.bridge.state_history) > 30:  # Only check after a reasonable number of steps
-            # Get the current state text
-            current_text = self._current_state.get("text", "")
+        fragments = [state.text[:20].strip() for state in history[-LOOP_GUARD_WINDOW:] if state.text]
+        counts = Counter(fragments)
+        return any(count >= LOOP_GUARD_REPEATS for count in counts.values())
 
-            # Check for repeating daily routine patterns (like in Prison.qm)
-            repeat_day_pattern_count = 0
-            _ = 0  # reserved for future repeat text detection
+    def _forced_stop_snapshot(self) -> QuestSnapshot:
+        """Terminal snapshot for the loop guard; never a quest success."""
+        current = self._require_snapshot()
+        return QuestSnapshot(
+            location_id=current.location_id,
+            observation=f"{current.observation}\n\n{FORCED_STOP_TEXT}",
+            choices=[],
+            params_state=list(current.params_state),
+            reward=current.reward,
+            done=True,
+            game_state="fail",
+            saving=current.saving,
+        )
 
-            # Check last 10 states for repetition
-            text_fragments = []
-            for state in self.bridge.state_history[-10:]:
-                if state.text:
-                    # Add first 20 chars of each state text for comparison
-                    text_fragment = state.text[:20].strip()
-                    text_fragments.append(text_fragment)
+    def step(self, choice_index: int, performed_at_ms: int) -> QuestSnapshot:
+        """Execute a one-based choice and return the resulting snapshot.
 
-                    # Specific check for daily pattern (appears in Prison.qm)
-                    if "Наступил новый день" in state.text:
-                        repeat_day_pattern_count += 1
+        ``performed_at_ms`` is recorded with the transition and handed to the
+        engine, so replaying the same timestamp reproduces dynamic branches.
+        """
+        self._require_snapshot()
 
-            # Count how many times each fragment appears
-            from collections import Counter
-
-            fragment_counts = Counter(text_fragments)
-
-            # If any single text fragment appears 5+ times in the last 10 states
-            # or if we see 5+ daily routine messages
-            if any(count >= 5 for count in fragment_counts.values()) or repeat_day_pattern_count >= 5:
-                self.logger.warning(f"Detected potential infinite loop after {len(self.bridge.state_history)} steps")
-
-                synthetic_text = (
-                    current_text + "\n\n[Forced stop: repetitive state loop detected before terminal quest outcome]"
-                )
-
-                forced_info = {"forced_completion": True, "reason": "infinite_loop_detected"}
-                self._current_state = {
-                    "location_id": self._current_state.get("location_id", "unknown"),
-                    "text": synthetic_text,
-                    "params_state": self._current_state.get("params_state", []),
-                    "choices": [],
-                    "reward": self._current_state.get("reward", 0.0),
-                    "done": True,
-                    "info": forced_info,
-                }
-
-                # Loop detection is a non-terminal fallback signal, not a quest success.
-                return (
-                    self._compose_observation_text(
-                        self._current_state["text"], self._current_state.get("params_state")
-                    ),
-                    True,
-                    False,
-                    forced_info,
-                )
+        if self._detect_state_loop():
+            self.logger.warning("Detected potential infinite loop after %s states", len(self.bridge.state_history))
+            self.forced_stop_reason = "infinite_loop_detected"
+            self._snapshot = self._forced_stop_snapshot()
+            return self._snapshot
 
         try:
-            # Take action in bridge
-            new_bridge_state = self.bridge.step(action)
+            new_bridge_state = self.bridge.step(choice_index, performed_at_ms)
             if not new_bridge_state:
                 raise RuntimeError("Failed to get new state from bridge")
 
-            # Update internal state
-            self._current_state = {
-                "location_id": new_bridge_state.location_id,
-                "text": new_bridge_state.text,
-                "params_state": new_bridge_state.params_state,
-                "choices": new_bridge_state.choices,
-                "reward": new_bridge_state.reward,
-                "done": new_bridge_state.game_ended,
-                "info": {},
-            }
+            self._snapshot = new_bridge_state.to_snapshot()
 
-            # Determine success from the TS engine's authoritative gameState.
-            # "win" = success, "fail"/"dead" = failure, "running" = not ended yet.
-            success = new_bridge_state.game_state == "win"
-
-            if new_bridge_state.game_ended:
+            if self._snapshot.done:
                 self.logger.info(
-                    f"Game ended: game_state={new_bridge_state.game_state}, "
-                    f"location={new_bridge_state.location_id}, success={success}"
+                    f"Game ended: game_state={self._snapshot.game_state}, "
+                    f"location={self._snapshot.location_id}, success={self._snapshot.game_state == 'win'}"
                 )
-
-            return (
-                self._compose_observation_text(self._current_state["text"], self._current_state.get("params_state")),
-                self._current_state["done"],
-                success,
-                self._current_state["info"],
-            )
+            return self._snapshot
         except Exception as e:
             self.logger.error(f"Failed to take step: {e}")
             self.bridge.close()  # Clean up on error
             raise RuntimeError(f"Failed to take step: {e}")
 
-    def get_state(self) -> dict[str, Any]:
-        """Get current environment state"""
-        if not self._current_state:
-            raise RuntimeError("Environment not initialized - call reset() first")
-        return self._current_state.copy()
+    def restore(self, snapshot: QuestSnapshot) -> QuestSnapshot:
+        """Restore the engine to an exact recorded snapshot.
+
+        The restored snapshot must reproduce the recorded digest; a mismatch
+        means the engine or the record diverged and the run cannot continue.
+        """
+        if not snapshot.is_resumable:
+            raise ValueError("Cannot restore a snapshot without a full engine saving")
+
+        try:
+            restored_state = self.bridge.load_saving(snapshot.saving)
+        except Exception as e:
+            self.logger.error(f"Failed to restore snapshot: {e}")
+            raise RuntimeError(f"Failed to restore snapshot: {e}")
+
+        restored = restored_state.to_snapshot()
+        if restored.digest != snapshot.digest:
+            raise RuntimeError(
+                f"Restored state digest does not match the recorded snapshot ({restored.digest} != {snapshot.digest})"
+            )
+        self.forced_stop_reason = None
+        self._snapshot = restored
+        return restored
 
     def close(self):
         """Clean up resources"""
         if hasattr(self, "bridge"):
             self.bridge.close()
-
-    @property
-    def state(self) -> dict[str, Any]:
-        """Get current state for renderer compatibility"""
-        if not self._current_state:
-            return {}
-        return self._current_state.copy()
-
-    def current_observation(self) -> str:
-        """Get current observation for renderer compatibility"""
-        if not self._current_state:
-            return ""
-        return self._format_observation(self._current_state)

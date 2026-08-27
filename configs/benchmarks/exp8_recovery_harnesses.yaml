@@ -1,0 +1,41 @@
+# Exp 8: recovery harnesses (experimental, not part of the public taxonomy).
+#
+# Compares the compact-memory baseline against two recovery treatments:
+#   backtracking       - may restore a recorded checkpoint, bounded by restore_limit
+#   adaptive_reasoning - deepens its prompt after a repeated state or progress stall
+#
+# restore_limit is valid only for backtracking; adaptive_stall_steps only for
+# adaptive_reasoning. Any other pairing is rejected at config load.
+
+name: exp8_recovery_harnesses
+
+quests:
+  - quests/Boat.qm
+
+agents:
+  - model: gpt-5-mini
+    harness: memo_compact
+    temperature: 0.4
+    skip_single: true
+    runs: 5
+
+  - model: gpt-5-mini
+    harness: backtracking
+    temperature: 0.4
+    skip_single: true
+    restore_limit: 3
+    runs: 5
+
+  - model: gpt-5-mini
+    harness: adaptive_reasoning
+    temperature: 0.4
+    skip_single: true
+    adaptive_stall_steps: 3
+    runs: 5
+
+debug: false
+quest_timeout: 300
+max_steps: 60
+max_workers: 2
+output_dir: results/benchmarks
+progress_manifest: configs/progress/Boat.yaml

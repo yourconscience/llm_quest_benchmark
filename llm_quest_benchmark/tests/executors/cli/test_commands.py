@@ -1,5 +1,8 @@
 """Tests for CLI commands"""
 
+import json
+import sqlite3
+from pathlib import Path
 from unittest.mock import Mock
 
 from typer.testing import CliRunner
@@ -7,8 +10,62 @@ from typer.testing import CliRunner
 from llm_quest_benchmark.constants import DEFAULT_QUEST
 from llm_quest_benchmark.executors.cli import commands
 from llm_quest_benchmark.executors.cli.commands import app
+from llm_quest_benchmark.harnesses.specs import build_treatment
+from llm_quest_benchmark.schemas.records import (
+    ProgressState,
+    QuestAction,
+    QuestSnapshot,
+    QuestTransition,
+    RunRecord,
+)
+from llm_quest_benchmark.schemas.response import LLMResponse
 
 runner = CliRunner()
+
+
+def _record(outcome: str = "FAILURE", resumable: bool = False) -> RunRecord:
+    before = QuestSnapshot(
+        location_id="1",
+        observation="State one",
+        choices=[{"id": "11", "text": "Go left"}, {"id": "12", "text": "Go right"}],
+        saving={"locationId": 1} if resumable else None,
+    )
+    after = QuestSnapshot(
+        location_id="2",
+        observation="State two",
+        choices=[],
+        done=True,
+        game_state="fail",
+        saving={"locationId": 2} if resumable else None,
+    )
+    return RunRecord(
+        run_id=1,
+        quest_file="quests/Boat.qm",
+        quest_name="TestQuest",
+        quest_checksum="sha256:test",
+        quest_language="rus",
+        engine_revision="git:test",
+        agent_id="llm_test",
+        treatment=build_treatment("reasoning_recent", "gpt-5-mini", 0.4, "system_role.jinja").to_dict(),
+        outcome=outcome,
+        progress=ProgressState(current=40.0),
+        terminal_snapshot=after,
+        transitions=[
+            QuestTransition(
+                index=1,
+                before=before,
+                action=QuestAction.choose(2, "12", 1735689600000),
+                after=after,
+                response=LLMResponse(action=2, analysis="Need progress", reasoning="Right seems safer"),
+                progress=ProgressState(current=40.0),
+            )
+        ],
+    )
+
+
+def _write_record(path: Path, record: RunRecord) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(record.to_dict(), ensure_ascii=False), encoding="utf-8")
 
 
 def test_version():
@@ -29,15 +86,41 @@ def test_run_quest():
 
 def test_run_quest_invalid_args():
     """Test run command with invalid arguments"""
-    # Test invalid model
     result = runner.invoke(app, ["run", "--quest", str(DEFAULT_QUEST), "--model", "invalid-model"])
     assert result.exit_code == 2
 
-    # Test missing quest file
     result = runner.invoke(
         app, ["run", "--quest", "nonexistent.qm", "--model", "random_choice", "--harness", "random_choice"]
     )
     assert result.exit_code == 2
+
+
+def test_run_rejects_restore_limit_for_other_harnesses():
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            "--quest",
+            str(DEFAULT_QUEST),
+            "--model",
+            "gpt-5-mini",
+            "--harness",
+            "reasoning_recent",
+            "--restore-limit",
+            "2",
+        ],
+    )
+    assert result.exit_code == 2
+
+
+def test_run_rejects_resuming_a_non_resumable_record(tmp_path):
+    path = tmp_path / "run_summary.json"
+    _write_record(path, _record(outcome="FAILURE"))
+
+    result = runner.invoke(app, ["run", "--resume-from", str(path)])
+
+    assert result.exit_code == 1
+    assert "not resumable" in result.output
 
 
 def test_analyze_invalid_input():
@@ -55,59 +138,54 @@ def test_benchmark_missing_config():
 
 
 def test_analyze_run_with_run_summary_path(tmp_path):
-    """Test analyze-run against explicit run_summary path."""
+    """analyze-run against an explicit schema-v2 run_summary path."""
     summary_path = tmp_path / "run_summary.json"
-    summary_path.write_text(
-        """
-{
-  "quest_name": "TestQuest",
-  "agent_id": "llm_test",
-  "outcome": "FAILURE",
-  "steps": [
-    {
-      "step": 1,
-      "observation": "State one",
-      "choices": {"1": "Go left", "2": "Go right"},
-      "llm_decision": {
-        "analysis": "Need progress",
-        "reasoning": "Right seems safer",
-        "is_default": false,
-        "choice": {"2": "Go right"}
-      }
-    }
-  ]
-}
-""".strip(),
-        encoding="utf-8",
-    )
+    _write_record(summary_path, _record())
 
     result = runner.invoke(app, ["analyze-run", "--run-summary", str(summary_path)])
     assert result.exit_code == 0
     assert "Decision Steps: 1" in result.stdout
     assert "selected [2:Go right]" in result.stdout
+    assert "Treatment: t2_" in result.stdout
+    assert "Progress: 40.0%" in result.stdout
+
+
+def test_analyze_run_rejects_legacy_records(tmp_path):
+    """A pre-v2 run summary must point at the migration command, not be parsed."""
+    summary_path = tmp_path / "run_summary.json"
+    summary_path.write_text(json.dumps({"run_id": 1, "steps": []}), encoding="utf-8")
+
+    result = runner.invoke(app, ["analyze-run", "--run-summary", str(summary_path)])
+
+    assert result.exit_code == 2
+    assert "scripts/migrate_records.py" in result.output
 
 
 def test_analyze_run_autolocates_latest_run(monkeypatch, tmp_path):
-    """Test analyze-run latest-run discovery with --agent and --quest."""
+    """analyze-run latest-run discovery with --agent and --quest."""
     monkeypatch.chdir(tmp_path)
-    run_dir = tmp_path / "results" / "llm_test" / "QuestA" / "run_42"
-    run_dir.mkdir(parents=True)
-    summary_path = run_dir / "run_summary.json"
-    summary_path.write_text(
-        """
-{
-  "quest_name": "QuestA",
-  "agent_id": "llm_test",
-  "outcome": "SUCCESS",
-  "steps": []
-}
-""".strip(),
-        encoding="utf-8",
+    _write_record(
+        tmp_path / "results" / "llm_test" / "QuestA" / "run_42" / "run_summary.json",
+        _record(outcome="SUCCESS"),
     )
 
     result = runner.invoke(app, ["analyze-run", "--agent", "llm_test", "--quest", "QuestA"])
     assert result.exit_code == 0
     assert "Outcome: SUCCESS" in result.stdout
+
+
+def test_cleanup_counts_transitions(tmp_path):
+    from llm_quest_benchmark.core.logging import ensure_v2_schema
+
+    db_path = tmp_path / "metrics.db"
+    conn = sqlite3.connect(db_path)
+    ensure_v2_schema(conn)
+    conn.close()
+
+    result = runner.invoke(app, ["cleanup", "--db-path", str(db_path), "--all", "--no-backup"])
+
+    assert result.exit_code == 0
+    assert "transitions" in result.stdout
 
 
 def test_download_quests_command_prints_summary(monkeypatch):

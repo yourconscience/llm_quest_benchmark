@@ -26,18 +26,6 @@ DEFAULT_BENCHMARK_CONFIG = {
     "name": "Default Benchmark",
 }
 
-COMPACTION_HARNESSES = {
-    "memo_compact",
-    "hinted_compact",
-    "tool_compact",
-    "tool_hinted",
-    "planner",
-    "compaction_no_memo",
-    "memo_cot",
-    "memo_extended",
-    "memo_structured",
-}
-
 
 def get_default_benchmark_yaml() -> str:
     """Get the default benchmark configuration from default.yaml file"""
@@ -79,6 +67,8 @@ class HarnessConfig:
     debug: bool = False
     benchmark_id: str | None = None
     compaction_interval: int = 50
+    restore_limit: int | None = None
+    adaptive_stall_steps: int | None = None
 
     def __init__(
         self,
@@ -91,14 +81,12 @@ class HarnessConfig:
         debug: bool = False,
         benchmark_id: str | None = None,
         compaction_interval: int = 50,
-        **legacy_keys,
+        restore_limit: int | None = None,
+        adaptive_stall_steps: int | None = None,
+        **unexpected_keys,
     ):
-        if "template" in legacy_keys or "action_template" in legacy_keys:
-            raise ValueError("Use harness: key instead of template:")
-        if "memory_mode" in legacy_keys:
-            raise ValueError("Use harness: key instead of memory_mode:")
-        if legacy_keys:
-            unexpected = ", ".join(sorted(legacy_keys))
+        if unexpected_keys:
+            unexpected = ", ".join(sorted(unexpected_keys))
             raise TypeError(f"Unexpected HarnessConfig key(s): {unexpected}")
 
         self.model = model
@@ -110,19 +98,21 @@ class HarnessConfig:
         self.debug = debug
         self.benchmark_id = benchmark_id
         self.compaction_interval = compaction_interval
+        self.restore_limit = restore_limit
+        self.adaptive_stall_steps = adaptive_stall_steps
         self.__post_init__()
 
     def __post_init__(self):
         self.system_template = normalize_template_name(self.system_template)
-        from llm_quest_benchmark.harnesses.factory import HARNESS_REGISTRY, SPECIAL_HARNESSES, is_random_choice_harness
+        from llm_quest_benchmark.harnesses.specs import (
+            HARNESS_SPECS,
+            is_random_choice_harness,
+            valid_harness_names,
+            validate_exclusive_knobs,
+        )
 
-        if (
-            self.harness not in HARNESS_REGISTRY
-            and self.harness != "human"
-            and not is_random_choice_harness(self.harness)
-        ):
-            valid = [*sorted(HARNESS_REGISTRY), *SPECIAL_HARNESSES]
-            raise ValueError(f"Invalid harness: {self.harness}. Supported harnesses: {valid}")
+        if self.harness not in HARNESS_SPECS and not is_random_choice_harness(self.harness):
+            raise ValueError(f"Invalid harness: {self.harness}. Supported harnesses: {valid_harness_names()}")
         if self.harness == "human" and self.model != "human":
             raise ValueError("Use model: human with harness: human")
         if self.model == "human" and self.harness != "human":
@@ -143,19 +133,41 @@ class HarnessConfig:
         if self.compaction_interval < 1:
             raise ValueError(f"compaction_interval must be >= 1, got {self.compaction_interval}")
 
+        validate_exclusive_knobs(self.harness, self.knob_values())
+        if self.restore_limit is not None and self.restore_limit < 1:
+            raise ValueError(f"restore_limit must be >= 1, got {self.restore_limit}")
+        if self.adaptive_stall_steps is not None and self.adaptive_stall_steps < 1:
+            raise ValueError(f"adaptive_stall_steps must be >= 1, got {self.adaptive_stall_steps}")
+
+    def knob_values(self) -> dict[str, int | None]:
+        """Material knob values considered by the harness specification."""
+        return {
+            "compaction_interval": self.compaction_interval,
+            "restore_limit": self.restore_limit,
+            "adaptive_stall_steps": self.adaptive_stall_steps,
+        }
+
+    def treatment(self):
+        """Canonical treatment for this configuration."""
+        from llm_quest_benchmark.harnesses.specs import build_treatment
+
+        return build_treatment(
+            harness=self.harness,
+            model=self.model,
+            temperature=self.temperature,
+            system_template=self.system_template,
+            knob_values=self.knob_values(),
+        )
+
     @property
     def harness_id(self) -> str:
-        """Generate a stable harness ID based on configuration values"""
-        import hashlib
-
-        interval_tag = f"_ci{self.compaction_interval}" if self.harness in COMPACTION_HARNESSES else ""
-        config_str = f"{self.model}_{self.temperature}_{self.harness}_{self.system_template}{interval_tag}"
-        hash_val = hashlib.md5(config_str.encode()).hexdigest()[:8]
-        return f"{self.model}_t{self.temperature}_{self.harness}_{hash_val}"
+        """Stable harness ID derived from the canonical treatment signature."""
+        signature = self.treatment().signature
+        return f"{self.model}_t{self.temperature}_{self.harness}_{signature.split('_', 1)[1][:8]}"
 
     @property
     def agent_id(self) -> str:
-        """DB-compatible alias for harness_id"""
+        """Run identity used for the results directory and DB rows."""
         return self.harness_id
 
 
@@ -175,6 +187,7 @@ class BenchmarkConfig:
     benchmark_id: str | None = None  # Unique ID for the benchmark run
     max_quests: int | None = None  # Maximum number of quests to run (useful for testing)
     max_workers: int | None = None  # Optional parallel workers for future benchmark scheduling
+    progress_manifest: str | None = None  # Optional curated milestone manifest (YAML)
 
     def __post_init__(self):
         # Validate quest paths
@@ -192,6 +205,12 @@ class BenchmarkConfig:
         if self.max_steps is not None and self.max_steps < 1:
             raise ValueError(f"max_steps must be >= 1, got {self.max_steps}")
 
+        if self.progress_manifest:
+            # Fail fast on an invalid manifest rather than mid-benchmark.
+            from llm_quest_benchmark.core.progress import ProgressManifest
+
+            ProgressManifest.from_file(self.progress_manifest)
+
     @classmethod
     def from_yaml(cls, yaml_path: str) -> "BenchmarkConfig":
         """Create config from YAML file"""
@@ -200,13 +219,6 @@ class BenchmarkConfig:
 
         # Convert agent configs
         if "agents" in data:
-            agents = []
-            for agent in data["agents"]:
-                if "template" in agent:
-                    raise ValueError("Use harness: key instead of template:")
-                if "memory_mode" in agent:
-                    raise ValueError("Use harness: key instead of memory_mode:")
-                agents.append(HarnessConfig(**agent))
-            data["agents"] = agents
+            data["agents"] = [HarnessConfig(**agent) for agent in data["agents"]]
 
         return cls(**data)

@@ -256,8 +256,11 @@ a { color: var(--accent); }
   <!-- Drop zone -->
   <div id="drop-zone" onclick="document.getElementById('file-input').click()">
     <div class="drop-icon">&#128196;</div>
-    <p><strong>Drop run_summary.json here</strong></p>
+    <p><strong>Drop a schema-v2 run_summary.json here</strong></p>
     <p style="margin-top:0.4rem; font-size:0.88rem">or click to select a file</p>
+    <p style="margin-top:0.4rem; font-size:0.8rem; color:var(--muted)">
+      Older records: convert once with <code>llm-quest migrate-records --source &lt;path&gt; --output &lt;path&gt;</code>
+    </p>
     <input type="file" id="file-input" accept=".json,application/json">
   </div>
 
@@ -379,32 +382,52 @@ a { color: var(--accent); }
     return Number(n).toLocaleString('en-US', { maximumFractionDigits: digits != null ? digits : 2 });
   }
 
+  function showError(message) {
+    console.error(message);
+    const container = document.getElementById('steps-container');
+    document.getElementById('timeline').style.display = 'block';
+    document.getElementById('steps-label').textContent = '';
+    container.innerHTML = '<div class="card p-3" style="color:var(--red)">' + esc(message) + '</div>';
+  }
+
   function fmtDur(secs) {
     if (secs == null) return '-';
     if (secs < 60) return secs.toFixed(1) + 's';
     return (secs / 60).toFixed(1) + 'min';
   }
 
-  function getChosenKey(choice) {
-    if (!choice || typeof choice !== 'object') return null;
-    return Object.keys(choice)[0] || null;
-  }
-
-  function isTerminalStep(step) {
-    return step.is_terminal === true;
+  function choicesMap(snapshot) {
+    const out = {};
+    ((snapshot && snapshot.choices) || []).forEach((choice, i) => {
+      out[String(i + 1)] = choice.text || '';
+    });
+    return out;
   }
 
   function render(data) {
-    const steps = data.steps || [];
-    const metrics = data.metrics || {};
+    if (data.schema_version !== 2) {
+      showError('This run record is not schema v2. Convert it first: ' +
+        'llm-quest migrate-records --source <path> --output <path>');
+      return;
+    }
+
+    // Schema-v2 records are grouped into canonical domains; nothing but
+    // schema_version lives at the top level.
+    const transitions = data.transitions || [];
+    const diagnostics = data.transcript_diagnostics || {};
     const usage = data.usage || {};
+    const progress = data.progress || {};
+    const run = data.run || {};
+    const quest = data.quest || {};
+    const terminal = data.terminal || {};
 
     // Show header
     document.getElementById('run-header').style.display = 'block';
-    document.getElementById('hdr-quest').textContent = data.quest_name || data.quest_file || 'Unknown Quest';
-    document.getElementById('hdr-agent').textContent = data.agent_id || '';
+    document.getElementById('hdr-quest').textContent = quest.name || quest.file || 'Unknown Quest';
+    document.getElementById('hdr-agent').textContent =
+      (run.agent_id || '') + ((data.treatment && data.treatment.signature) ? ' · ' + data.treatment.signature : '');
 
-    const outcome = (data.outcome || '').toUpperCase();
+    const outcome = (terminal.outcome || '').toUpperCase();
     const outcomeBadge = document.getElementById('hdr-outcome');
     outcomeBadge.textContent = outcome || 'UNKNOWN';
     outcomeBadge.className = 'outcome-badge outcome-' + (outcome || 'UNKNOWN');
@@ -412,10 +435,13 @@ a { color: var(--accent); }
     // Stats pills
     const totalTokens = usage.total_tokens || (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
     const cost = usage.estimated_cost_usd;
+    const restores = (diagnostics.restore_transitions != null) ? diagnostics.restore_transitions : 0;
     const pills = [
-      { label: 'Steps', value: metrics.total_steps != null ? metrics.total_steps : steps.length },
-      { label: 'Reward', value: data.reward != null ? fmt(data.reward, 0) : '-' },
-      { label: 'Duration', value: fmtDur(data.run_duration) },
+      { label: 'Steps', value: diagnostics.total_steps != null ? diagnostics.total_steps : transitions.length },
+      { label: 'Restores', value: restores },
+      { label: 'Progress', value: progress.scored ? fmt(progress.current, 1) + '%' : 'unscored' },
+      { label: 'Reward', value: terminal.reward != null ? fmt(terminal.reward, 0) : '-' },
+      { label: 'Duration', value: fmtDur(run.duration) },
       { label: 'Total Tokens', value: totalTokens ? fmt(totalTokens, 0) : '-' },
       { label: 'Cost', value: cost != null ? ('$' + cost.toFixed(4)) : '-' },
     ];
@@ -425,32 +451,37 @@ a { color: var(--accent); }
 
     // Timeline
     document.getElementById('timeline').style.display = 'block';
-    document.getElementById('steps-label').textContent = steps.length + ' steps';
+    document.getElementById('steps-label').textContent = transitions.length + ' transitions';
 
     const container = document.getElementById('steps-container');
     container.innerHTML = '';
 
-    steps.forEach((step, idx) => {
-      const dec = step.llm_decision || {};
-      const chosenKey = getChosenKey(dec.choice);
-      const chosenText = chosenKey ? (dec.choice[chosenKey] || '') : '';
-      const isTerminal = isTerminalStep(step);
+    transitions.forEach((step, idx) => {
+      const dec = step.response || {};
+      const action = step.action || {};
+      const isRestore = action.kind === 'restore';
+      const chosenKey = (!isRestore && action.choice_index != null) ? String(action.choice_index) : null;
+      const choices = choicesMap(step.before);
+      const chosenText = chosenKey ? (choices[chosenKey] || '') : '';
+      const isTerminal = !!(step.after && step.after.done);
       const isError = dec.parse_mode === 'error_default';
       const isSingleAuto = dec.reasoning === 'auto_single_choice';
 
-      // Collapsed preview: chosen action or error label
-      const previewText = chosenText || (chosenKey ? 'Choice ' + chosenKey : 'No choice');
+      // Collapsed preview: restored checkpoint, chosen action, or error label
+      const previewText = isRestore
+        ? ('Restored checkpoint ' + action.checkpoint_index)
+        : (chosenText || (chosenKey ? 'Choice ' + chosenKey : 'No choice'));
 
       // Tokens
-      const pt = dec.prompt_tokens || 0;
-      const ct = dec.completion_tokens || 0;
+      const stepUsage = step.usage || {};
+      const pt = stepUsage.prompt_tokens || 0;
+      const ct = stepUsage.completion_tokens || 0;
       const stepTokens = pt + ct;
 
       const item = document.createElement('div');
       item.className = 'step-item' + (isTerminal ? ' step-terminal' : '');
 
       // Build choices HTML
-      const choices = step.choices || {};
       const choicesHtml = Object.keys(choices).length === 0 ? '<span style="color:var(--muted);font-size:0.85rem">No choices available</span>' :
         '<ul class="choices-list">' +
         Object.entries(choices).map(([k, v]) =>
@@ -490,21 +521,25 @@ a { color: var(--accent); }
         reasoningHtml += `<div class="detail-label mt-3">Tool Results</div><div class="reasoning-text" style="font-family:monospace;font-size:0.82rem">${trHtml}</div>`;
       }
 
+      const progressPct = (step.progress && step.progress.current != null) ? fmt(step.progress.current, 1) + '%' : null;
       item.innerHTML = `
         <div class="step-header">
-          <span class="step-num">#${step.step}</span>
+          <span class="step-num">#${esc(step.index)}</span>
           <span class="step-action-preview">${esc(previewText)}</span>
           <span class="step-meta">
-            ${isTerminal ? '<span class="terminal-badge">' + esc((data.outcome || 'END').toUpperCase()) + '</span>' : ''}
+            ${isRestore ? '<span class="terminal-badge">RESTORE</span>' : ''}
+            ${isTerminal ? '<span class="terminal-badge">' + esc((terminal.outcome || 'END').toUpperCase()) + '</span>' : ''}
             ${isError ? '<span class="error-badge">ERROR</span>' : ''}
             ${isSingleAuto ? '<span style="font-size:0.72rem;color:var(--muted)">auto</span>' : ''}
+            ${step.reasoning_mode ? `<span style="font-size:0.72rem;color:var(--muted)">${esc(step.reasoning_mode)}</span>` : ''}
+            ${progressPct ? `<span>${esc(progressPct)}</span>` : ''}
             ${stepTokens > 0 ? `<span>${fmt(stepTokens, 0)} tok</span>` : ''}
           </span>
           <span class="chevron">&#9654;</span>
         </div>
         <div class="step-detail">
           <div class="detail-label">Observation</div>
-          <div class="observation-text">${esc(step.observation || '')}</div>
+          <div class="observation-text">${esc((step.before && step.before.observation) || '')}</div>
 
           <div class="detail-label mt-3">Choices</div>
           ${choicesHtml}

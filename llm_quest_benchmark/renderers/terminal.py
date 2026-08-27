@@ -4,13 +4,13 @@ from rich.console import Console
 
 from llm_quest_benchmark.constants import READABILITY_DELAY
 from llm_quest_benchmark.renderers.base import BaseRenderer
+from llm_quest_benchmark.schemas.records import QuestTransition
 from llm_quest_benchmark.schemas.response import LLMResponse
-from llm_quest_benchmark.schemas.state import AgentState
 from llm_quest_benchmark.utils import choice_mapper, text_processor
 
 
 class NoRenderer:
-    def render_game_state(self, state: AgentState):
+    def render_game_state(self, transition: QuestTransition):
         """Render complete game state with RPG elements"""
         pass
 
@@ -60,10 +60,10 @@ class RichRenderer(BaseRenderer):
         """Render error message"""
         self.console.print(f"\nError: {message}", style="red bold")
 
-    def render_game_state(self, state: AgentState):
-        """Render game state"""
+    def render_game_state(self, transition: QuestTransition):
+        """Render one executed transition"""
         self.console.clear()
-        self.step_number = state.step
+        self.step_number = transition.index
 
         # Print step separator
         self.console.print(f"\n{'=' * 80}", style="blue")
@@ -71,16 +71,24 @@ class RichRenderer(BaseRenderer):
         self.console.print(f"{'=' * 80}\n", style="blue")
 
         # Show LLM response first
-        self.render_llm_response(state.llm_response)
+        self.render_llm_response(transition.response)
         # Add separator after LLM response
         self.console.print(f"\n{'-' * 40}\n", style="dim")
 
-        self.render_quest_text(state.observation)
-        self.render_choices(state.choices)
+        if transition.action.is_restore:
+            self.console.print(
+                f"[magenta]Restored checkpoint {transition.action.checkpoint_index}[/]",
+            )
 
-    def render_llm_response(self, response: LLMResponse):
+        self.render_quest_text(transition.after.observation)
+        self.render_parameters(transition.after.params_state)
+        self.render_choices(transition.after.choices)
+
+    def render_llm_response(self, response: LLMResponse | None):
         """Render LLM's response"""
         self.console.print("\n[yellow bold]Agent's Thoughts:[/]")
+        if response is None:
+            return
         if response.analysis:
             self.console.print(f"[yellow]{response.analysis.strip()}[/]")
         if response.reasoning:

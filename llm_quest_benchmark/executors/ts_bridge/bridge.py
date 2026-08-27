@@ -1,5 +1,6 @@
 """TypeScript bridge for QM file parsing and execution"""
 
+import hashlib
 import json
 import logging
 import os
@@ -23,18 +24,21 @@ _QUEST_JSON_FAILURES = set()  # Track quests with JSON parsing issues to prevent
 class QMBridge:
     """Bridge to TypeScript QM parser and executor"""
 
-    def __init__(self, quest_file: str, language: str = "rus", debug: bool = False):
-        """Initialize bridge with quest file path"""
+    def __init__(self, quest_file: str, language: str = "rus", debug: bool = False, seed: str | None = None):
+        """Initialize bridge with quest file path and deterministic engine seed."""
         self.quest_file = Path(quest_file).resolve()
         self.language = language
         self.debug = debug
         self.process = None
         self.parser_script = Path(__file__).parent / "consoleplayer.ts"
         self.state_history: list[QMBridgeState] = []
+        self.seed = seed
 
         # Validate quest file exists
         if not self.quest_file.exists():
             raise FileNotFoundError(f"Quest file not found: {quest_file}")
+        if self.seed is None:
+            self.seed = hashlib.sha256(self.quest_file.read_bytes()).hexdigest()
 
         # Validate parser script exists
         if not self.parser_script.exists():
@@ -72,6 +76,7 @@ class QMBridge:
             env["NODE_OPTIONS"] = f"{node_options} {legacy_flag}".strip()
         if self.language:
             env["QM_LANG"] = self.language
+        env["QM_SEED"] = str(self.seed)
         return env
 
     def _try_parse_json_object(self, line: str) -> dict[str, Any] | None:
@@ -281,6 +286,43 @@ class QMBridge:
             raise TimeoutError(f"Timed out waiting for valid bridge state packet. Last JSON keys: [{keys}].\n{details}")
         raise TimeoutError(f"Timeout waiting for JSON response from TypeScript bridge.\n{details}")
 
+    def _send_command(self, command: dict[str, Any]) -> None:
+        """Write one structured protocol command to the engine process."""
+        if not self.process or not self.process.stdin:
+            raise RuntimeError("Game process not started")
+        self.process.stdin.write(json.dumps(command, ensure_ascii=False) + "\n")
+        self.process.stdin.flush()
+
+    @staticmethod
+    def _state_from_response(response: dict[str, Any]) -> QMBridgeState:
+        """Build a bridge state from one protocol packet, validating required fields."""
+        state = response.get("state")
+        saving = response.get("saving")
+        if not isinstance(state, dict) or not isinstance(saving, dict):
+            raise RuntimeError("Invalid response format: missing 'state' or 'saving' field")
+        if "text" not in state or "choices" not in state or "gameState" not in state:
+            raise RuntimeError("Invalid response format: missing required state fields")
+        if "locationId" not in saving:
+            raise RuntimeError("Invalid response format: missing saving.locationId")
+
+        params_state_raw = state.get("paramsState") or []
+        params_state = [clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)]
+        game_state_raw = state.get("gameState", "running")
+        return QMBridgeState(
+            location_id=str(saving["locationId"]),
+            text=clean_qm_text(state.get("text", "")),
+            params_state=params_state,
+            choices=[
+                {"id": str(c["jumpId"]), "text": clean_qm_text(c["text"])}
+                for c in (state.get("choices") or [])
+                if isinstance(c, dict) and c.get("active", False)
+            ],
+            reward=0.0,
+            game_ended=game_state_raw != "running",
+            game_state=game_state_raw,
+            saving=saving,
+        )
+
     def parse_quest_locations(self) -> dict[str, Any]:
         """Parse quest file and return metadata including locations and start location"""
         cmd = ["node", "-r", "ts-node/register", str(self.parser_script), str(self.quest_file), "--parse"]
@@ -367,31 +409,7 @@ class QMBridge:
             if noise and self.debug:
                 logger.debug("Skipped %d non-protocol stdout lines on start", len(noise))
 
-            state = response.get("state")
-            saving = response.get("saving")
-            if not isinstance(state, dict) or not isinstance(saving, dict):
-                raise RuntimeError("Invalid response format: missing 'state' or 'saving' field")
-            if "text" not in state or "choices" not in state or "gameState" not in state:
-                raise RuntimeError("Invalid response format: missing required state fields")
-            if "locationId" not in saving:
-                raise RuntimeError("Invalid response format: missing saving.locationId")
-
-            params_state_raw = state.get("paramsState") or []
-            params_state = [clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)]
-            game_state_raw = state.get("gameState", "running")
-            initial_state = QMBridgeState(
-                location_id=str(saving["locationId"]),
-                text=clean_qm_text(state.get("text", "")),
-                params_state=params_state,
-                choices=[
-                    {"id": str(c["jumpId"]), "text": clean_qm_text(c["text"])}
-                    for c in (state.get("choices") or [])
-                    if isinstance(c, dict) and c.get("active", False)
-                ],
-                reward=0.0,
-                game_ended=game_state_raw != "running",
-                game_state=game_state_raw,
-            )
+            initial_state = self._state_from_response(response)
 
             if not initial_state.choices and not initial_state.game_ended:
                 raise RuntimeError("No valid choices in initial state")
@@ -409,38 +427,13 @@ class QMBridge:
             raise RuntimeError("Game not started")
 
         try:
-            self.process.stdin.write("get_state\n")
-            self.process.stdin.flush()
+            self._send_command({"cmd": "state"})
 
             response_data, noise = self._read_protocol_message(timeout=10.0)
             if noise and self.debug:
                 logger.debug("Skipped %d non-protocol stdout lines on get_state", len(noise))
 
-            state = response_data.get("state")
-            saving = response_data.get("saving")
-            if not isinstance(state, dict) or not isinstance(saving, dict):
-                raise RuntimeError("Invalid response format: missing 'state' or 'saving' field")
-            if "text" not in state or "choices" not in state or "gameState" not in state:
-                raise RuntimeError("Invalid response format: missing required state fields")
-            if "locationId" not in saving:
-                raise RuntimeError("Invalid response format: missing saving.locationId")
-
-            params_state_raw = state.get("paramsState") or []
-            params_state = [clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)]
-            game_state_raw = state.get("gameState", "running")
-            current_state = QMBridgeState(
-                location_id=str(saving["locationId"]),
-                text=clean_qm_text(state.get("text", "")),
-                params_state=params_state,
-                choices=[
-                    {"id": str(c["jumpId"]), "text": clean_qm_text(c["text"])}
-                    for c in (state.get("choices") or [])
-                    if isinstance(c, dict) and c.get("active", False)
-                ],
-                reward=0.0,
-                game_ended=game_state_raw != "running",
-                game_state=game_state_raw,
-            )
+            current_state = self._state_from_response(response_data)
 
             if not current_state.choices and not current_state.game_ended:
                 raise RuntimeError("No valid choices in current state")
@@ -451,6 +444,27 @@ class QMBridge:
             logger.error(f"Failed to get current state: {str(e)}")
             self.close()  # Clean up on error
             raise RuntimeError(f"Failed to get current state: {str(e)}")
+
+    def load_saving(self, saving: dict[str, Any]) -> QMBridgeState:
+        """Restore the engine to an exact recorded saving."""
+        if not self.process:
+            raise RuntimeError("Game not started")
+        if not isinstance(saving, dict) or not saving:
+            raise ValueError("load_saving requires a non-empty engine saving")
+
+        try:
+            self._send_command({"cmd": "load", "saving": saving})
+            response_data, noise = self._read_protocol_message(timeout=10.0)
+            if noise and self.debug:
+                logger.debug("Skipped %d non-protocol stdout lines on load", len(noise))
+
+            restored = self._state_from_response(response_data)
+            self.state_history.append(restored)
+            return restored
+        except Exception as e:
+            logger.error(f"Failed to load saving: {str(e)}")
+            self.close()
+            raise RuntimeError(f"Failed to load saving: {str(e)}")
 
     def validate_choice(self, choice_num: int) -> str | None:
         """Validate choice number and return corresponding jump ID"""
@@ -472,8 +486,13 @@ class QMBridge:
 
         return current_state.choices[choice_num - 1]["id"]
 
-    def step(self, choice_num: int) -> QMBridgeState:
-        """Take a step in the game with choice number (1-based)"""
+    def step(self, choice_num: int, performed_at_ms: int) -> QMBridgeState:
+        """Take a step in the game with choice number (1-based).
+
+        ``performed_at_ms`` is the exact transition timestamp handed to the
+        engine's ``performJump``. It is recorded with the transition so replay
+        and resume reproduce dynamic quest behaviour exactly.
+        """
         if not self.process:
             raise RuntimeError("Game not started")
 
@@ -490,49 +509,13 @@ class QMBridge:
                 logger.debug(f"Current choices: {choices_debug}")
                 logger.debug(f"Current choices raw: {current_state.choices}")
 
-            # Send jump ID to process
-            self.process.stdin.write(f"{jump_id}\n")
-            self.process.stdin.flush()
+            self._send_command({"cmd": "jump", "jumpId": int(jump_id), "performedAtMs": int(performed_at_ms)})
 
-            # Read until we get a protocol JSON state.
-            try:
-                response_data, noise = self._read_protocol_message(timeout=10.0)
-            except TimeoutError:
-                logger.warning("No protocol response received from TypeScript bridge, trying get_state fallback")
-                return self.get_current_state()
-
+            response_data, noise = self._read_protocol_message(timeout=10.0)
             if noise and self.debug:
                 logger.debug("Skipped %d non-protocol stdout lines on step", len(noise))
 
-            state = response_data.get("state")
-            saving = response_data.get("saving")
-            if not isinstance(state, dict) or not isinstance(saving, dict):
-                raise RuntimeError("Invalid response format: missing 'state' or 'saving' field")
-            if "text" not in state or "choices" not in state or "gameState" not in state:
-                raise RuntimeError("Invalid response format: missing required state fields")
-            if "locationId" not in saving:
-                raise RuntimeError("Invalid response format: missing saving.locationId")
-
-            params_state_raw = state.get("paramsState") or []
-            params_state = [clean_qm_text(p) for p in params_state_raw if isinstance(p, str) and clean_qm_text(p)]
-
-            choices = [
-                {"id": str(c["jumpId"]), "text": clean_qm_text(c["text"])}
-                for c in (state.get("choices") or [])
-                if isinstance(c, dict) and c.get("active", False)
-            ]
-
-            game_state_raw = state.get("gameState", "running")
-            new_state = QMBridgeState(
-                location_id=str(saving["locationId"]),
-                text=clean_qm_text(state.get("text", "")),
-                params_state=params_state,
-                choices=choices,
-                reward=0.0,
-                game_ended=game_state_raw != "running",
-                game_state=game_state_raw,
-            )
-
+            new_state = self._state_from_response(response_data)
             self.state_history.append(new_state)
             return new_state
 
