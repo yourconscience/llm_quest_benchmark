@@ -103,7 +103,7 @@ def test_snapshot_without_saving_is_not_resumable():
 
 
 def test_run_record_rejects_non_v2_payload():
-    with pytest.raises(ValueError, match="migrate-records"):
+    with pytest.raises(ValueError, match="migrate_records"):
         RunRecord.from_dict({"schema_version": 1, "steps": []})
 
 

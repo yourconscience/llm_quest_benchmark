@@ -108,7 +108,7 @@ def test_quest_logger_rejects_legacy_database(tmp_path):
     conn.commit()
     conn.close()
 
-    with pytest.raises(RuntimeError, match="migrate-records"):
+    with pytest.raises(RuntimeError, match="migrate_records"):
         QuestLogger(db_path=str(db_path))
 
 
