@@ -92,10 +92,7 @@ class ProgressManifest:
         Recorded with every progress state so a run scored under a since-edited
         manifest is detectable instead of silently comparable.
         """
-        payload = [
-            {"id": m.id, "percent": m.percent, "match": m.match}
-            for m in self.milestones
-        ]
+        payload = [{"id": m.id, "percent": m.percent, "match": m.match} for m in self.milestones]
         return hashlib.sha256(canonical_json({"quest": self.quest, "milestones": payload}).encode("utf-8")).hexdigest()[
             :16
         ]

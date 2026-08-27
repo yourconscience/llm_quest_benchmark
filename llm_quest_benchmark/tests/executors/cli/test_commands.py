@@ -202,9 +202,7 @@ def test_migrate_records_converts_a_legacy_tree(tmp_path):
     )
     output = tmp_path / "results_v2"
 
-    result = runner.invoke(
-        app, ["migrate-records", "--source", str(tmp_path / "results"), "--output", str(output)]
-    )
+    result = runner.invoke(app, ["migrate-records", "--source", str(tmp_path / "results"), "--output", str(output)])
 
     assert result.exit_code == 0
     assert "Migrated 1 runs" in result.stdout

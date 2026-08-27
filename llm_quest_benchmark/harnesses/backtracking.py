@@ -159,9 +159,7 @@ class BacktrackingHarness(BaseHarness):
             else:
                 self._pending_restore = checkpoint
                 parsed_response.parse_mode = "restore"
-                parsed_response.reasoning = (
-                    parsed_response.reasoning or f"restore_checkpoint_{checkpoint}"
-                )
+                parsed_response.reasoning = parsed_response.reasoning or f"restore_checkpoint_{checkpoint}"
 
             if parsed_response.action < 1 or parsed_response.action > len(choices):
                 parsed_response.action = 1

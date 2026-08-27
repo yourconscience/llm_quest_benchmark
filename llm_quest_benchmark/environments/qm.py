@@ -148,9 +148,7 @@ class QMPlayerEnv:
         self._require_snapshot()
 
         if self._detect_state_loop():
-            self.logger.warning(
-                "Detected potential infinite loop after %s states", len(self.bridge.state_history)
-            )
+            self.logger.warning("Detected potential infinite loop after %s states", len(self.bridge.state_history))
             self.forced_stop_reason = "infinite_loop_detected"
             self._snapshot = self._forced_stop_snapshot()
             return self._snapshot
@@ -191,8 +189,7 @@ class QMPlayerEnv:
         restored = restored_state.to_snapshot()
         if restored.digest != snapshot.digest:
             raise RuntimeError(
-                "Restored state digest does not match the recorded snapshot "
-                f"({restored.digest} != {snapshot.digest})"
+                f"Restored state digest does not match the recorded snapshot ({restored.digest} != {snapshot.digest})"
             )
         self.forced_stop_reason = None
         self._snapshot = restored

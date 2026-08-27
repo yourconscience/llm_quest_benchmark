@@ -34,15 +34,12 @@ def verify_environment(record: RunRecord, quest_file: str) -> None:
     actual_checksum = quest_checksum(quest_file)
     if record.quest_checksum and record.quest_checksum != actual_checksum:
         raise ReplayError(
-            f"Quest checksum mismatch for {quest_file}: "
-            f"recorded {record.quest_checksum}, found {actual_checksum}"
+            f"Quest checksum mismatch for {quest_file}: recorded {record.quest_checksum}, found {actual_checksum}"
         )
 
     actual_engine = engine_revision()
     if record.engine_revision and record.engine_revision != actual_engine:
-        raise ReplayError(
-            f"Engine revision mismatch: recorded {record.engine_revision}, found {actual_engine}"
-        )
+        raise ReplayError(f"Engine revision mismatch: recorded {record.engine_revision}, found {actual_engine}")
 
 
 def _seed_from_record(env: QMPlayerEnv, record: RunRecord) -> QuestSnapshot:
@@ -90,8 +87,7 @@ def replay_record(env: QMPlayerEnv, record: RunRecord) -> ReplayResult:
             )
         if transition.before.digest != snapshot.digest:
             raise ReplayError(
-                f"Transition {transition.index} before-state diverged "
-                f"({snapshot.digest} != {transition.before.digest})"
+                f"Transition {transition.index} before-state diverged ({snapshot.digest} != {transition.before.digest})"
             )
 
         action = transition.action
@@ -119,8 +115,7 @@ def replay_record(env: QMPlayerEnv, record: RunRecord) -> ReplayResult:
 
         if snapshot.digest != transition.after.digest:
             raise ReplayError(
-                f"Transition {transition.index} after-state diverged "
-                f"({snapshot.digest} != {transition.after.digest})"
+                f"Transition {transition.index} after-state diverged ({snapshot.digest} != {transition.after.digest})"
             )
 
     return ReplayResult(snapshot=snapshot, checkpoints=checkpoints, verified_transitions=len(record.transitions))

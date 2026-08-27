@@ -264,7 +264,7 @@ def test_backtracking_knobs_survive_the_record_round_trip():
 def test_restore_progress_tracker_recovers_the_recorded_state(tmp_path):
     manifest = tmp_path / "manifest.yaml"
     manifest.write_text(
-        "quest: Demo\nversion: 1\nmilestones:\n  - id: a\n    percent: 30\n    match:\n      location_id: [\"x\"]\n",
+        'quest: Demo\nversion: 1\nmilestones:\n  - id: a\n    percent: 30\n    match:\n      location_id: ["x"]\n',
         encoding="utf-8",
     )
     record, _ = _recorded_run()

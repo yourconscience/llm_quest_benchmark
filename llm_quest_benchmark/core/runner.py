@@ -311,8 +311,7 @@ class QuestRunner:
         recorded_signature = record.treatment_signature
         if recorded_signature and current.get("signature") != recorded_signature:
             raise ReplayError(
-                "Treatment signature mismatch: recorded "
-                f"{recorded_signature}, current {current.get('signature')}"
+                f"Treatment signature mismatch: recorded {recorded_signature}, current {current.get('signature')}"
             )
 
     # ---- decision execution ------------------------------------------------

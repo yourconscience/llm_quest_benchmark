@@ -63,9 +63,10 @@ def test_material_differences_produce_different_signatures():
     assert _treatment(model="gpt-5-nano").signature != base
     assert _treatment(temperature=0.7).signature != base
     assert _treatment(system_template="other.jinja").signature != base
-    assert _treatment(harness="memo_compact", knob_values={"compaction_interval": 10}).signature != _treatment(
-        harness="memo_compact", knob_values={"compaction_interval": 50}
-    ).signature
+    assert (
+        _treatment(harness="memo_compact", knob_values={"compaction_interval": 10}).signature
+        != _treatment(harness="memo_compact", knob_values={"compaction_interval": 50}).signature
+    )
 
 
 def test_irrelevant_knobs_do_not_split_otherwise_equal_treatments():

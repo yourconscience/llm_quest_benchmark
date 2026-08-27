@@ -133,9 +133,7 @@ class Trajectory:
         scored = []
         for entry in self._steps:
             choices_text = " ".join(choice.get("text", "") for choice in entry.before.choices)
-            haystack = " ".join(
-                [entry.before.agent_observation(), choices_text, _selected_choice(entry)]
-            ).lower()
+            haystack = " ".join([entry.before.agent_observation(), choices_text, _selected_choice(entry)]).lower()
             entry_tokens = set(_SEARCH_TOKEN_PATTERN.findall(haystack))
             score = sum(1 for token in tokens if token in entry_tokens)
             if score > 0:

@@ -49,7 +49,9 @@ def _snapshot(location_id: str = "room1", observation: str = "You are in a room"
     return QuestSnapshot(
         location_id=location_id,
         observation=observation,
-        choices=choices if choices is not None else [{"id": "11", "text": "Go north"}, {"id": "12", "text": "Go south"}],
+        choices=choices
+        if choices is not None
+        else [{"id": "11", "text": "Go north"}, {"id": "12", "text": "Go south"}],
         params_state=["HP: 10"],
         saving={"locationId": int(location_id[-1]) if location_id[-1].isdigit() else 1},
     )

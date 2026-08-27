@@ -47,6 +47,7 @@ def default_db_path() -> str:
     """
     return DEFAULT_DB_PATH
 
+
 RUNS_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS runs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -404,9 +405,7 @@ class QuestLogger:
             record.ended_at = end_time.isoformat()
             record.run_duration = (end_time - self.start_time).total_seconds() if self.start_time else None
             record.usage = self.aggregate_usage(record.transitions)
-            record.transcript_diagnostics = self.calculate_metrics(
-                record.transitions, outcome, self._repetition_window
-            )
+            record.transcript_diagnostics = self.calculate_metrics(record.transitions, outcome, self._repetition_window)
             if diagnostics:
                 record.transcript_diagnostics.update(diagnostics)
             if progress is not None:
@@ -528,9 +527,7 @@ class QuestLogger:
     @staticmethod
     def format_transition_for_console(transition: QuestTransition) -> str:
         """Format a transition for console output."""
-        choices_str = "\n".join(
-            f"{i + 1}. {choice['text']}" for i, choice in enumerate(transition.before.choices)
-        )
+        choices_str = "\n".join(f"{i + 1}. {choice['text']}" for i, choice in enumerate(transition.before.choices))
         if transition.action.is_restore:
             action_str = f"restore checkpoint {transition.action.checkpoint_index}"
         else:

@@ -59,7 +59,9 @@ def _digest(payload: Any) -> str:
 def _require_mapping(value: Any, domain: str) -> dict[str, Any]:
     """Return a required record domain, rejecting anything that is not a mapping."""
     if not isinstance(value, dict):
-        raise ValueError(f"Run record domain '{domain}' must be an object, got {type(value).__name__}; {MIGRATION_HINT}")
+        raise ValueError(
+            f"Run record domain '{domain}' must be an object, got {type(value).__name__}; {MIGRATION_HINT}"
+        )
     return value
 
 

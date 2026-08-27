@@ -39,7 +39,7 @@ htmlcov/
 gunicorn.ctl
 
 # Database
-metrics.db
+metrics*.db
 instance
 site/traces/
 

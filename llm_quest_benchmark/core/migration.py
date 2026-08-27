@@ -97,11 +97,7 @@ def _choices_from_list(choices: Any) -> list[dict[str, str]]:
     """Legacy SQLite stored choices as [{id, text}]; ids are engine jump ids."""
     if not isinstance(choices, list):
         return []
-    return [
-        {"id": str(c.get("id", "")), "text": str(c.get("text", ""))}
-        for c in choices
-        if isinstance(c, dict)
-    ]
+    return [{"id": str(c.get("id", "")), "text": str(c.get("text", ""))} for c in choices if isinstance(c, dict)]
 
 
 def _choices_from_map(choices: Any) -> list[dict[str, str]]:

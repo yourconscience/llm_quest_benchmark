@@ -90,7 +90,9 @@ def condense_trace(record: RunRecord) -> str:
             continue
 
         response = transition.response
-        reasoning = ((response.reasoning if response else None) or (response.analysis if response else None) or "")[:150]
+        reasoning = ((response.reasoning if response else None) or (response.analysis if response else None) or "")[
+            :150
+        ]
         parse_mode = (response.parse_mode if response else "") or ""
 
         lines.append(f"Step {transition.index}:")
