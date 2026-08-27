@@ -6,7 +6,7 @@
 
 Benchmark for evaluating LLM context scaffolds on interactive fiction quests. Measures how prompt context, compact memory, tools, and planning loops affect sequential decision-making across models and tasks.
 
-Every run is recorded as exact environment transitions (schema v2): each transition stores the full state before the action, the executed choose/restore action with its engine timestamp and full engine saving, and the resulting state. That makes runs replayable, resumable when a step limit truncates them, and attributable to an explicit prompt/memory/tools/loop/reasoning treatment.
+Every run is recorded as exact environment transitions (schema v2), making runs replayable, resumable after truncation by a step limit, and attributable to an explicit treatment configuration.
 
 **[Project Site](https://yourconscience.github.io/llm_quest_benchmark/)** | **[Leaderboard](https://yourconscience.github.io/llm_quest_benchmark/index.html)** | **[About / Write-up](https://yourconscience.github.io/llm_quest_benchmark/about.html)**
 
