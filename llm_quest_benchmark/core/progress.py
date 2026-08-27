@@ -7,6 +7,7 @@ progress rather than guessing story advancement.
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import re
 from dataclasses import dataclass, field
@@ -37,6 +38,11 @@ class Milestone:
     match: dict[str, Any]
     description: str = ""
 
+    @staticmethod
+    @functools.cache
+    def _compiled_pattern(pattern: str):
+        return re.compile(pattern)
+
     def matches(self, snapshot: QuestSnapshot) -> bool:
         """All declared predicates must hold for the milestone to be reached."""
         params_text = "\n".join(snapshot.params_state)
@@ -63,7 +69,7 @@ class Milestone:
 
         pattern_rule = self.match.get("params_pattern")
         if pattern_rule is not None:
-            regex = re.compile(pattern_rule["pattern"])
+            regex = Milestone._compiled_pattern(pattern_rule["pattern"])
             hits = sum(1 for line in snapshot.params_state if regex.search(line))
             if hits < int(pattern_rule.get("min_count", 1)):
                 return False
@@ -79,6 +85,7 @@ class ProgressManifest:
     milestones: list[Milestone]
     source: str = ""
     version: int = MANIFEST_VERSION
+    _hash_cache: str | None = field(default=None, init=False, repr=False, compare=False)
 
     @property
     def maximum(self) -> float:
@@ -92,10 +99,12 @@ class ProgressManifest:
         Recorded with every progress state so a run scored under a since-edited
         manifest is detectable instead of silently comparable.
         """
-        payload = [{"id": m.id, "percent": m.percent, "match": m.match} for m in self.milestones]
-        return hashlib.sha256(canonical_json({"quest": self.quest, "milestones": payload}).encode("utf-8")).hexdigest()[
-            :16
-        ]
+        if self._hash_cache is None:
+            payload = [{"id": m.id, "percent": m.percent, "match": m.match} for m in self.milestones]
+            self._hash_cache = hashlib.sha256(
+                canonical_json({"quest": self.quest, "milestones": payload}).encode("utf-8")
+            ).hexdigest()[:16]
+        return self._hash_cache
 
     @classmethod
     def from_file(cls, path: str | Path) -> ProgressManifest:

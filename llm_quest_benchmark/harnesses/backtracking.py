@@ -12,7 +12,6 @@ from llm_quest_benchmark.harnesses.base import BaseHarness, _parse_json_response
 from llm_quest_benchmark.harnesses.memory import CompactionMemory
 from llm_quest_benchmark.players.base import DecisionContext
 from llm_quest_benchmark.schemas.records import QuestAction, QuestSnapshot
-from llm_quest_benchmark.schemas.response import LLMResponse
 
 DEFAULT_RESTORE_LIMIT = 3
 CHECKPOINT_SUMMARY_CHARS = 140
@@ -176,12 +175,7 @@ class BacktrackingHarness(BaseHarness):
             return parsed_response.action
         except Exception as exc:
             self.logger.error("Backtracking harness error during LLM call: %s", exc)
-            default_response = LLMResponse(
-                action=1,
-                is_default=True,
-                parse_mode="error_default",
-                reasoning=f"backtracking_error: {exc}",
-            )
+            default_response = self._error_default_response(exc)
             self.history.append(default_response)
             self._last_response = default_response
             return 1

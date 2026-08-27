@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from llm_quest_benchmark.core.logging import QuestLogger, ensure_v2_schema
+from llm_quest_benchmark.core.logging import QuestLogger, ensure_v2_schema, insert_transition_row
 from llm_quest_benchmark.core.provenance import quest_checksum
 from llm_quest_benchmark.harnesses.specs import HARNESS_SPECS, HarnessTreatment, build_treatment
 from llm_quest_benchmark.schemas.records import (
@@ -182,14 +182,7 @@ def _legacy_response(payload: Any, action_index: int | None) -> LLMResponse | No
 
 
 def _usage_from_response(response: LLMResponse | None) -> dict[str, Any]:
-    if response is None:
-        return {}
-    return {
-        "prompt_tokens": response.prompt_tokens or 0,
-        "completion_tokens": response.completion_tokens or 0,
-        "total_tokens": response.total_tokens or 0,
-        "estimated_cost_usd": response.estimated_cost_usd,
-    }
+    return response.usage_payload() if response is not None else {}
 
 
 def _legacy_action(choice_index: int | None, choices: list[dict[str, str]]) -> QuestAction:
@@ -247,16 +240,10 @@ def _build_transitions(
                 done=next_row is terminal_row,
                 game_state="running" if next_row is not terminal_row else UNAVAILABLE,
             )
-        if i == len(rows) - 1 and isinstance(final_state, dict) and final_state:
-            after = _legacy_snapshot(
-                location_id=final_state.get("location_id"),
-                observation=final_state.get("text") or final_state.get("observation"),
-                choices=_choices_from_list(final_state.get("choices")),
-                params_state=final_state.get("params_state"),
-                done=bool(final_state.get("done", False)),
-                reward=float(final_state.get("reward") or 0.0),
-                game_state="running" if not final_state.get("done") else UNAVAILABLE,
-            )
+        if i == len(rows) - 1:
+            final_snapshot = _final_state_snapshot(final_state, game_state_when_running="running")
+            if final_snapshot is not None:
+                after = final_snapshot
 
         transitions.append(
             QuestTransition(
@@ -275,7 +262,12 @@ def _build_transitions(
     return transitions
 
 
-def _terminal_snapshot(rows: list[dict[str, Any]], final_state: dict[str, Any] | None) -> QuestSnapshot:
+def _final_state_snapshot(final_state: dict[str, Any] | None, *, game_state_when_running: str) -> QuestSnapshot | None:
+    """Build the post-state from a run_summary ``final_state`` blob.
+
+    ``None`` means the payload carried nothing usable; callers keep their own
+    prior interpretation instead of inventing an unavailable post-state.
+    """
     if isinstance(final_state, dict) and final_state:
         return _legacy_snapshot(
             location_id=final_state.get("location_id"),
@@ -284,8 +276,15 @@ def _terminal_snapshot(rows: list[dict[str, Any]], final_state: dict[str, Any] |
             params_state=final_state.get("params_state"),
             done=bool(final_state.get("done", False)),
             reward=float(final_state.get("reward") or 0.0),
-            game_state=UNAVAILABLE,
+            game_state=UNAVAILABLE if final_state.get("done") else game_state_when_running,
         )
+    return None
+
+
+def _terminal_snapshot(rows: list[dict[str, Any]], final_state: dict[str, Any] | None) -> QuestSnapshot:
+    forced_terminal = _final_state_snapshot(final_state, game_state_when_running=UNAVAILABLE)
+    if forced_terminal is not None:
+        return forced_terminal
     if rows and not rows[-1]["choices"]:
         row = rows[-1]
         return _legacy_snapshot(
@@ -519,29 +518,7 @@ def _insert_record(conn: sqlite3.Connection, record: RunRecord) -> None:
     )
     new_run_id = cursor.lastrowid
     for transition in record.transitions:
-        payload = transition.to_dict()
-        conn.execute(
-            """
-            INSERT INTO transitions (
-                run_id, transition_index, before_state, action, after_state,
-                response, usage, progress, provenance, replay_status, reasoning_mode
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                new_run_id,
-                transition.index,
-                json.dumps(payload["before"], ensure_ascii=False),
-                json.dumps(payload["action"], ensure_ascii=False),
-                json.dumps(payload["after"], ensure_ascii=False),
-                json.dumps(payload["response"], ensure_ascii=False) if payload["response"] else None,
-                json.dumps(payload["usage"], ensure_ascii=False),
-                json.dumps(payload["progress"], ensure_ascii=False),
-                transition.provenance,
-                transition.replay_status,
-                transition.reasoning_mode,
-            ),
-        )
+        insert_transition_row(conn, new_run_id, transition)
 
 
 # ---- entry point -----------------------------------------------------------

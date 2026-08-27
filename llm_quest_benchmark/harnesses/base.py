@@ -256,6 +256,8 @@ def parse_llm_response(
 class BaseHarness(QuestPlayer):
     """Abstract LLM harness base class."""
 
+    OBSERVATION_HISTORY_LIMIT = 20
+
     def __init__(
         self,
         model_name,
@@ -330,12 +332,23 @@ class BaseHarness(QuestPlayer):
         if self.memory_module is not None:
             self.memory_module.reset()
 
-    def get_action(self, observation: str, choices: list[dict[str, str]]) -> int:
+    def _error_default_response(self, exc: Exception) -> LLMResponse:
+        """Fallback response recorded on provider failure; harness names the marker."""
+        return LLMResponse(
+            action=1,
+            is_default=True,
+            parse_mode="error_default",
+            reasoning=f"{self.harness_name}_error: {exc}",
+        )
+
+    def _remember_observation(self, observation: str) -> None:
         clean = (observation or "").strip()
         if clean:
             self._observation_history.append(clean)
-            if len(self._observation_history) > 20:
-                self._observation_history = self._observation_history[-20:]
+            del self._observation_history[: -self.OBSERVATION_HISTORY_LIMIT]
+
+    def get_action(self, observation: str, choices: list[dict[str, str]]) -> int:
+        self._remember_observation(observation)
         return super().get_action(observation, choices)
 
     def on_game_start(self) -> None:
@@ -362,11 +375,7 @@ class BaseHarness(QuestPlayer):
                 continue
             observation = transition.before.agent_observation()
             choices = transition.before.choices
-            clean = observation.strip()
-            if clean:
-                self._observation_history.append(clean)
-                if len(self._observation_history) > 20:
-                    self._observation_history = self._observation_history[-20:]
+            self._remember_observation(observation)
             self.history.append(transition.response)
             self._last_response = transition.response
             self._remember_decision(

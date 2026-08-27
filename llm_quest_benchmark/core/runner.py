@@ -395,14 +395,7 @@ class QuestRunner:
         after: QuestSnapshot,
     ) -> QuestTransition:
         response = self.agent.get_last_response()
-        usage: dict[str, Any] = {}
-        if response is not None:
-            usage = {
-                "prompt_tokens": response.prompt_tokens or 0,
-                "completion_tokens": response.completion_tokens or 0,
-                "total_tokens": response.total_tokens or 0,
-                "estimated_cost_usd": response.estimated_cost_usd,
-            }
+        usage = response.usage_payload() if response is not None else {}
 
         self._transition_index += 1
         transition = QuestTransition(

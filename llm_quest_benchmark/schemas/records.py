@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any
 
 from llm_quest_benchmark.schemas.response import LLMResponse
@@ -476,8 +477,6 @@ class RunRecord:
 
 def load_run_record(path: str) -> RunRecord:
     """Load a schema-v2 ``run_summary.json`` from disk."""
-    from pathlib import Path
-
     with open(Path(path), encoding="utf-8") as f:
         payload = json.load(f)
     if not isinstance(payload, dict):

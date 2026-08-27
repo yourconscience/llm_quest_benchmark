@@ -10,7 +10,6 @@ from llm_quest_benchmark.harnesses.base import BaseHarness
 from llm_quest_benchmark.harnesses.memory import DefaultMemory
 from llm_quest_benchmark.players.base import DecisionContext
 from llm_quest_benchmark.schemas.records import QuestAction
-from llm_quest_benchmark.schemas.response import LLMResponse
 
 DEFAULT_ADAPTIVE_STALL_STEPS = 3
 MODE_CONCISE = "concise"
@@ -104,12 +103,7 @@ class AdaptiveReasoningHarness(BaseHarness):
             return parsed_response.action
         except Exception as exc:
             self.logger.error("Adaptive reasoning harness error during LLM call: %s", exc)
-            default_response = LLMResponse(
-                action=1,
-                is_default=True,
-                parse_mode="error_default",
-                reasoning=f"adaptive_reasoning_error: {exc}",
-            )
+            default_response = self._error_default_response(exc)
             self.history.append(default_response)
             self._last_response = default_response
             return 1

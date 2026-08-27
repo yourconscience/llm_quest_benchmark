@@ -82,7 +82,7 @@ def analyze_quest_run(
         conn = sqlite3.connect(db_path)
         try:
             if not verify_v2_schema(conn):
-                raise ValueError(f"No runs found for quest: {quest_name}")
+                raise ValueError(f"Metrics database has no schema-v2 runs table: {db_path}")
             runs = conn.execute(
                 """
                 SELECT id, start_time, end_time, agent_id, treatment, treatment_signature,
@@ -173,7 +173,7 @@ def analyze_benchmark(
         conn = sqlite3.connect(db_path)
         try:
             if not verify_v2_schema(conn):
-                raise ValueError(f"No benchmark data found{' for ' + benchmark_id if benchmark_id else ''}")
+                raise ValueError(f"Metrics database has no schema-v2 runs table: {db_path}")
             where_clause = "WHERE 1=1"
             params: list[Any] = []
             if benchmark_id:

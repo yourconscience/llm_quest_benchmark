@@ -42,8 +42,8 @@ LEGACY_DB_MESSAGE = (
 def default_db_path() -> str:
     """Metrics database used whenever a caller supplies no explicit path.
 
-    Resolved on every call so tests and tools can point the runtime at their own
-    database without reaching into import-time defaults.
+    Frozen at import time from ``LLM_QUEST_DB_PATH``; subprocesses can redirect
+    via the environment variable, in-process overrides cannot.
     """
     return DEFAULT_DB_PATH
 
@@ -94,29 +94,6 @@ TRANSITIONS_TABLE_SQL = """
 
 # SQLite stores the same logical record as run_summary.json, flattened: each
 # column is one field of a canonical domain.
-RUN_COLUMNS = (
-    "id",
-    "schema_version",
-    "quest_file",
-    "quest_name",
-    "quest_checksum",
-    "quest_language",
-    "engine_revision",
-    "agent_id",
-    "treatment",
-    "treatment_signature",
-    "benchmark_id",
-    "lineage",
-    "start_time",
-    "end_time",
-    "run_duration",
-    "outcome",
-    "reward",
-    "usage",
-    "transcript_diagnostics",
-    "progress",
-    "terminal_snapshot",
-)
 
 
 class LogManager:
@@ -155,6 +132,36 @@ def verify_v2_schema(conn: sqlite3.Connection) -> bool:
     if "schema_version" not in columns:
         raise RuntimeError(LEGACY_DB_MESSAGE)
     return True
+
+
+TRANSITION_INSERT_SQL = """
+        INSERT INTO transitions (
+            run_id, transition_index, before_state, action, after_state,
+            response, usage, progress, provenance, replay_status, reasoning_mode
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+
+
+def insert_transition_row(conn: sqlite3.Connection, run_id: int, transition: QuestTransition) -> None:
+    """Single writer for schema-v2 transition rows (runtime logger and migration)."""
+    payload = transition.to_dict()
+    conn.execute(
+        TRANSITION_INSERT_SQL,
+        (
+            run_id,
+            transition.index,
+            json.dumps(payload["before"], ensure_ascii=False),
+            json.dumps(payload["action"], ensure_ascii=False),
+            json.dumps(payload["after"], ensure_ascii=False),
+            json.dumps(payload["response"], ensure_ascii=False) if payload["response"] else None,
+            json.dumps(payload["usage"], ensure_ascii=False),
+            json.dumps(payload["progress"], ensure_ascii=False),
+            transition.provenance,
+            transition.replay_status,
+            transition.reasoning_mode,
+        ),
+    )
 
 
 def ensure_v2_schema(conn: sqlite3.Connection) -> None:
@@ -339,29 +346,7 @@ class QuestLogger:
             self.logger.debug(self.format_transition_for_console(transition))
 
         try:
-            payload = transition.to_dict()
-            self._local.cursor.execute(
-                """
-                INSERT INTO transitions (
-                    run_id, transition_index, before_state, action, after_state,
-                    response, usage, progress, provenance, replay_status, reasoning_mode
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    self.current_run_id,
-                    transition.index,
-                    json.dumps(payload["before"], ensure_ascii=False),
-                    json.dumps(payload["action"], ensure_ascii=False),
-                    json.dumps(payload["after"], ensure_ascii=False),
-                    json.dumps(payload["response"], ensure_ascii=False) if payload["response"] else None,
-                    json.dumps(payload["usage"], ensure_ascii=False),
-                    json.dumps(payload["progress"], ensure_ascii=False),
-                    transition.provenance,
-                    transition.replay_status,
-                    transition.reasoning_mode,
-                ),
-            )
+            insert_transition_row(self._local.conn, self.current_run_id, transition)
             self._local.conn.commit()
         except Exception as e:
             self.logger.error(f"Error logging transition: {e}")
