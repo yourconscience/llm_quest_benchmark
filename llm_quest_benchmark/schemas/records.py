@@ -44,7 +44,7 @@ RUN_RECORD_DOMAINS = (
     "transitions",
 )
 
-MIGRATION_HINT = "run `llm-quest migrate-records --source PATH --output PATH` to convert legacy records."
+MIGRATION_HINT = "run `scripts/migrate_records.py --source PATH --output PATH` to convert legacy records."
 
 
 def canonical_json(payload: Any) -> str:

@@ -65,7 +65,7 @@ planning choices change behavior.
 - `llm_quest_benchmark/core/replay.py`: transition replay, environment
   verification, and resume assembly.
 - `llm_quest_benchmark/core/migration.py`: the only legacy reader, used by
-  `llm-quest migrate-records`.
+  `scripts/migrate_records.py` (one-time conversion tool, not a CLI command).
 
 ### 3. Harness Layer
 
@@ -117,7 +117,7 @@ and benchmark configuration parsing do not require API keys.
   parallel workers.
 - `llm_quest_benchmark/executors/cli/commands.py`: CLI commands (`run`, `play`,
   `analyze`, `analyze-run`, `benchmark`, `benchmark-report`, `leaderboard`,
-  `migrate-records`, `download-quests`, `cleanup`).
+  `download-quests`, `cleanup`).
 
 ### 6. Prompt Templates
 
@@ -148,7 +148,7 @@ Both stores hold the same logical schema-v2 record.
   metrics, progress, final snapshot) and `transitions` (before snapshot,
   executed action, after snapshot, response, usage, progress, provenance,
   replay status, reasoning mode). There is no in-place upgrade from the
-  pre-v2 schema; convert once with `llm-quest migrate-records`.
+  pre-v2 schema; convert once with `scripts/migrate_records.py`.
 - `results/<agent_id>/<quest>/run_<id>/run_summary.json`: the same record as
   JSON, written for every player type including random policies.
 

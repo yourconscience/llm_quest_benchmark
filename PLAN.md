@@ -104,7 +104,7 @@ Acceptance:
 - Remove column-addition, old-column fallback, post-run config patching, and random-run JSON suppression.
 - Export one v2 `run_summary.json` for every player type.
 - Update analyzers, reports, leaderboard generation, replay scripts, trace import/export, and CLI inspection to v2.
-- Add `llm-quest migrate-records --source PATH --output PATH` for JSON trees and SQLite databases.
+- Add `scripts/migrate_records.py --source PATH --output PATH` for JSON trees and SQLite databases.
 - Update human/web trace export to retain restore events rather than erasing undone transitions.
 
 Acceptance:

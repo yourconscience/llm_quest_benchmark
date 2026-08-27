@@ -43,7 +43,7 @@ legacy-mapped records fail before a new model call.
 
 ### Existing records
 
-`llm-quest migrate-records --source PATH --output PATH` maps legacy
+`scripts/migrate_records.py --source PATH --output PATH` maps legacy
 `run_summary.json` trees and SQLite databases into schema v2. Migration is the
 only legacy reader.
 
@@ -174,7 +174,7 @@ and every transition records the reasoning mode used.
 ## Outcome / Deviations
 
 Implemented as a single schema-v2 cutover. No runtime reader accepts a pre-v2
-record; `llm-quest migrate-records` is the only legacy reader.
+record; `scripts/migrate_records.py` is the only legacy reader.
 
 Delivered:
 
@@ -187,7 +187,7 @@ Delivered:
   location, observation, choices, parameter state, terminal state, and saving.
 - v2 SQLite (`runs`, `transitions`) plus one `run_summary.json` per run for
   every player type, with run metadata written before execution.
-- `llm-quest migrate-records` for legacy JSON trees and SQLite databases.
+- `scripts/migrate_records.py` for legacy JSON trees and SQLite databases.
 - `llm-quest run --resume-from`, replay verification, and the resumable
   `TRUNCATED` outcome.
 - Validated YAML progress manifests with a state-based `configs/progress/Boat.yaml`.

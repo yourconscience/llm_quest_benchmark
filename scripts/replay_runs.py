@@ -7,7 +7,7 @@ digest is compared with the record. A replay_report.json is written alongside
 each run_summary.json.
 
 Legacy records are not accepted here. Convert them first with:
-    llm-quest migrate-records --source <path> --output <path>
+    scripts/migrate_records.py --source <path> --output <path>
 
 Usage:
     uv run scripts/replay_runs.py [--results-dir results/] [--limit N] [--force]

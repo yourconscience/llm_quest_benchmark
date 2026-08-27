@@ -70,8 +70,8 @@ uv run llm-quest benchmark-report --benchmark-id <id> --output report.md
 uv run llm-quest analyze-run --run-summary results/<agent_id>/<quest>/run_<id>/run_summary.json
 
 # Convert pre-v2 records (one-time; the only legacy reader)
-uv run llm-quest migrate-records --source results/ --output results_v2/
-uv run llm-quest migrate-records --source metrics.db --output metrics_v2.db
+uv run scripts/migrate_records.py --source results/ --output results_v2/
+uv run scripts/migrate_records.py --source metrics.db --output metrics_v2.db
 
 # Verify recorded runs against the real engine
 uv run scripts/replay_runs.py --results-dir results/

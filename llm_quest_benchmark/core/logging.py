@@ -35,7 +35,7 @@ RESULTS_DIR = Path(os.environ.get(RESULTS_DIR_ENV_VAR) or "results")
 
 LEGACY_DB_MESSAGE = (
     "metrics database uses the pre-v2 schema. Convert it with: "
-    "llm-quest migrate-records --source <old.db> --output <new.db>"
+    "scripts/migrate_records.py --source <old.db> --output <new.db>"
 )
 
 
@@ -161,7 +161,7 @@ def ensure_v2_schema(conn: sqlite3.Connection) -> None:
     """Create the v2 tables, refusing to touch a legacy database.
 
     There is no in-place upgrade path: legacy databases are converted once by
-    ``llm-quest migrate-records`` into a fresh v2 destination.
+    ``scripts/migrate_records.py`` into a fresh v2 destination.
     """
     verify_v2_schema(conn)
     cursor = conn.cursor()

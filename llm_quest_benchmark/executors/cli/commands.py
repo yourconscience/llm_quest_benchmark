@@ -30,7 +30,6 @@ from llm_quest_benchmark.core.analyzer import analyze_benchmark, analyze_quest_r
 from llm_quest_benchmark.core.benchmark_report import render_benchmark_report
 from llm_quest_benchmark.core.leaderboard import generate_leaderboard
 from llm_quest_benchmark.core.logging import LogManager, default_db_path
-from llm_quest_benchmark.core.migration import migrate_records
 from llm_quest_benchmark.core.replay import harness_config_from_record
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.environments.state import QuestOutcome
@@ -807,36 +806,6 @@ def analyze(
     finally:
         if "conn" in locals():
             conn.close()
-
-
-@app.command("migrate-records")
-def migrate_records_command(
-    source: Path = typer.Option(..., "--source", help="Legacy run_summary.json, results tree, or SQLite database."),
-    output: Path = typer.Option(..., "--output", help="Destination for the schema-v2 records."),
-):
-    """Convert legacy records into schema v2.
-
-    This is the only legacy reader in the project. Migration never invents a
-    missing action, timestamp, parameter state, engine saving, or post-state;
-    unknowable fields are marked unavailable and block resume.
-
-    Example:
-        llm-quest migrate-records --source results/ --output results_v2/
-        llm-quest migrate-records --source metrics.db --output metrics_v2.db
-    """
-    try:
-        report = migrate_records(source, output)
-        typer.echo(f"Migrated {report.runs_migrated} runs ({report.kind}) to {report.output}")
-        typer.echo(f"Transitions migrated: {report.transitions_migrated}")
-        typer.echo(f"Resumable runs: {report.resumable_runs}")
-        for skipped in report.skipped:
-            typer.echo(f"Skipped {skipped}", err=True)
-    except (FileNotFoundError, ValueError) as e:
-        typer.echo(f"Migration failed: {e}", err=True)
-        raise typer.Exit(code=1)
-    except Exception as e:
-        log.exception(f"Error during migration: {e}")
-        raise typer.Exit(code=2)
 
 
 @app.command()

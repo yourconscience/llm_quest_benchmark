@@ -158,7 +158,7 @@ def test_analyze_run_rejects_legacy_records(tmp_path):
     result = runner.invoke(app, ["analyze-run", "--run-summary", str(summary_path)])
 
     assert result.exit_code == 2
-    assert "migrate-records" in result.output
+    assert "scripts/migrate_records.py" in result.output
 
 
 def test_analyze_run_autolocates_latest_run(monkeypatch, tmp_path):
@@ -172,53 +172,6 @@ def test_analyze_run_autolocates_latest_run(monkeypatch, tmp_path):
     result = runner.invoke(app, ["analyze-run", "--agent", "llm_test", "--quest", "QuestA"])
     assert result.exit_code == 0
     assert "Outcome: SUCCESS" in result.stdout
-
-
-def test_migrate_records_converts_a_legacy_tree(tmp_path):
-    legacy = tmp_path / "results" / "llm_old" / "Boat" / "run_3" / "run_summary.json"
-    legacy.parent.mkdir(parents=True)
-    legacy.write_text(
-        json.dumps(
-            {
-                "run_id": 3,
-                "quest_file": "quests/Boat.qm",
-                "quest_name": "Boat",
-                "agent_id": "llm_old",
-                "agent_config": {"model": "gpt-5-mini", "harness": "reasoning_recent", "temperature": 0.4},
-                "outcome": "FAILURE",
-                "steps": [
-                    {
-                        "step": 1,
-                        "location_id": "1",
-                        "observation": "start",
-                        "choices": {"1": "go", "2": "stay"},
-                        "llm_decision": {"choice": {"1": "go"}, "is_default": False},
-                    },
-                    {"step": 2, "location_id": "9", "observation": "end", "choices": {}, "llm_decision": {}},
-                ],
-            }
-        ),
-        encoding="utf-8",
-    )
-    output = tmp_path / "results_v2"
-
-    result = runner.invoke(app, ["migrate-records", "--source", str(tmp_path / "results"), "--output", str(output)])
-
-    assert result.exit_code == 0
-    assert "Migrated 1 runs" in result.stdout
-    assert "Resumable runs: 0" in result.stdout
-    migrated = output / "llm_old" / "Boat" / "run_3" / "run_summary.json"
-    assert migrated.exists()
-    assert json.loads(migrated.read_text(encoding="utf-8"))["schema_version"] == 2
-
-
-def test_migrate_records_reports_a_missing_source(tmp_path):
-    result = runner.invoke(
-        app, ["migrate-records", "--source", str(tmp_path / "nope"), "--output", str(tmp_path / "out")]
-    )
-
-    assert result.exit_code == 1
-    assert "Migration failed" in result.output
 
 
 def test_cleanup_counts_transitions(tmp_path):
