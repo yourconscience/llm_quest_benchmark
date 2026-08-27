@@ -12,12 +12,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from llm_quest_benchmark.core.logging import DEFAULT_DB_PATH
+from llm_quest_benchmark.core.logging import default_db_path, ensure_v2_schema, verify_v2_schema
+from llm_quest_benchmark.core.provenance import engine_revision, quest_checksum
 from llm_quest_benchmark.core.runner import run_quest_with_timeout
 from llm_quest_benchmark.environments.state import QuestOutcome
 from llm_quest_benchmark.harnesses.factory import create_harness
 from llm_quest_benchmark.llm import tracing
 from llm_quest_benchmark.schemas.config import BenchmarkConfig
+from llm_quest_benchmark.schemas.records import SCHEMA_VERSION
 
 # Configure logging
 logging.basicConfig(
@@ -50,51 +52,8 @@ def _agent_model(agent_config) -> str:
 
 
 def _agent_id(agent_config) -> str:
-    """Return the stable result identifier for legacy and harness configs."""
-    return getattr(agent_config, "harness_id", None) or agent_config.agent_id
-
-
-def _agent_template(agent_config) -> str:
-    """Return legacy template name for result artifacts."""
-    if hasattr(agent_config, "action_template"):
-        return agent_config.action_template
-
-    harness_templates = {
-        "minimal": "stub.jinja",
-        "reasoning_recent": "reasoning.jinja",
-        "reasoning_full": "reasoning.jinja",
-        "memo_compact": "stateful_compact.jinja",
-        "hinted_compact": "stateful_compact_hints.jinja",
-        "tool_compact": "tool_augmented.jinja",
-        "tool_hinted": "tool_augmented_hints.jinja",
-        "programmatic_memory": "programmatic_memory.jinja",
-        "planner": "planner.jinja",
-        "compaction_no_memo": "reasoning.jinja",
-        "memo_cot": "memo_cot.jinja",
-        "memo_extended": "memo_extended.jinja",
-        "memo_structured": "memo_structured.jinja",
-    }
-    return harness_templates.get(_agent_harness(agent_config), "reasoning.jinja")
-
-
-def _agent_memory_mode(agent_config) -> str:
-    """Return legacy memory mode for result artifacts."""
-    if hasattr(agent_config, "memory_mode"):
-        return agent_config.memory_mode
-
-    harness_memory_modes = {
-        "reasoning_full": "full_transcript",
-        "memo_compact": "compaction",
-        "hinted_compact": "compaction",
-        "tool_compact": "compaction",
-        "tool_hinted": "compaction",
-        "planner": "compaction",
-        "compaction_no_memo": "compaction",
-        "memo_cot": "compaction",
-        "memo_extended": "compaction",
-        "memo_structured": "compaction",
-    }
-    return harness_memory_modes.get(_agent_harness(agent_config), "default")
+    """Return the stable result identifier derived from the treatment."""
+    return agent_config.agent_id
 
 
 def _harnesses_by_model(results: list[dict[str, Any]]) -> dict[str, set[str]]:
@@ -133,13 +92,14 @@ def _result_entry(
     reward: float = 0.0,
     error: str | None = None,
 ) -> dict[str, Any]:
+    treatment = agent_config.treatment().to_dict()
     return {
         "quest": quest,
         "model": _agent_model(agent_config),
         "temperature": agent_config.temperature,
         "harness": _agent_harness(agent_config),
-        "template": _agent_template(agent_config),
-        "memory_mode": _agent_memory_mode(agent_config),
+        "treatment": treatment,
+        "treatment_signature": treatment["signature"],
         "agent_id": _agent_id(agent_config),
         "attempt": attempt,
         "outcome": outcome,
@@ -150,11 +110,14 @@ def _result_entry(
 
 def _mark_run_timeout(run_id: int | None, quest: str, agent_config, benchmark_id: str, timeout: int) -> None:
     """Record a parent-enforced timeout for a killed child process."""
-    agent_config_json = json.dumps(agent_config.__dict__)
     end_time = datetime.utcnow()
-    conn = sqlite3.connect(DEFAULT_DB_PATH)
+    treatment = agent_config.treatment().to_dict()
+    conn = sqlite3.connect(default_db_path())
     try:
+        ensure_v2_schema(conn)
         if run_id is not None:
+            # The child already wrote complete run metadata before executing,
+            # so the parent only records the terminal outcome.
             row = conn.execute("SELECT start_time FROM runs WHERE id = ?", (run_id,)).fetchone()
             run_duration = None
             if row and row[0]:
@@ -166,40 +129,38 @@ def _mark_run_timeout(run_id: int | None, quest: str, agent_config, benchmark_id
             conn.execute(
                 """
                 UPDATE runs
-                SET agent_id = ?, agent_config = ?, benchmark_id = ?, outcome = ?,
-                    reward = ?, end_time = ?, run_duration = ?
+                SET outcome = ?, reward = ?, end_time = ?, run_duration = ?
                 WHERE id = ?
                 """,
-                (
-                    _agent_id(agent_config),
-                    agent_config_json,
-                    benchmark_id,
-                    QuestOutcome.TIMEOUT.name,
-                    0.0,
-                    end_time,
-                    run_duration,
-                    run_id,
-                ),
+                (QuestOutcome.TIMEOUT.name, 0.0, end_time, run_duration, run_id),
             )
         else:
+            # The child died before writing its run row; record the attempt with
+            # the metadata the parent can prove.
             conn.execute(
                 """
                 INSERT INTO runs
-                    (quest_file, quest_name, start_time, end_time, agent_id, agent_config,
-                     outcome, reward, run_duration, benchmark_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (schema_version, quest_file, quest_name, quest_checksum, quest_language,
+                     engine_revision, agent_id, treatment, treatment_signature, benchmark_id,
+                     start_time, end_time, run_duration, outcome, reward)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
+                    SCHEMA_VERSION,
                     quest,
                     Path(quest).stem,
-                    end_time,
-                    end_time,
+                    quest_checksum(quest) if Path(quest).exists() else "unavailable",
+                    "rus",
+                    engine_revision(),
                     _agent_id(agent_config),
-                    agent_config_json,
+                    json.dumps(treatment, ensure_ascii=False),
+                    treatment["signature"],
+                    benchmark_id,
+                    end_time,
+                    end_time,
+                    0.0,
                     QuestOutcome.TIMEOUT.name,
                     0.0,
-                    0.0,
-                    benchmark_id,
                 ),
             )
         conn.commit()
@@ -214,6 +175,7 @@ def _run_benchmark_task(task: dict[str, Any], result_queue) -> None:
     quest = task["quest"]
     attempt = task["attempt"]
     max_steps = task.get("max_steps")
+    progress_manifest = task.get("progress_manifest")
 
     def callback(event: str, data: Any = None) -> None:
         if event == "run_record" and isinstance(data, dict):
@@ -234,6 +196,8 @@ def _run_benchmark_task(task: dict[str, Any], result_queue) -> None:
             debug=agent_config.debug,
             compaction_interval=agent_config.compaction_interval,
             system_template=agent_config.system_template,
+            restore_limit=agent_config.restore_limit,
+            adaptive_stall_steps=agent_config.adaptive_stall_steps,
         )
         outcome = run_quest_with_timeout(
             quest,
@@ -243,6 +207,7 @@ def _run_benchmark_task(task: dict[str, Any], result_queue) -> None:
             debug=agent_config.debug,
             callbacks=[callback],
             max_steps=max_steps,
+            progress_manifest=progress_manifest,
         )
         outcome_name = outcome.name if outcome else QuestOutcome.TIMEOUT.name
         result_queue.put(
@@ -304,25 +269,45 @@ def get_quest_files(quest_paths: list[str], max_quests: int | None = None) -> li
     return quest_files
 
 
-def _load_benchmark_runs_from_db(benchmark_id: str, db_path: str = DEFAULT_DB_PATH) -> list[dict[str, Any]]:
-    """Load DB runs associated with a benchmark id."""
-    if not Path(db_path).exists():
+def _load_benchmark_runs_from_db(benchmark_id: str, db_path: str | None = None) -> list[dict[str, Any]]:
+    """Load schema-v2 DB runs associated with a benchmark id.
+
+    The database is resolved at call time, so workers and tests read the same
+    database they wrote. A pre-v2 database raises with migration guidance rather
+    than being probed column by column.
+    """
+    resolved = db_path or default_db_path()
+    if not Path(resolved).exists():
         return []
 
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(resolved)
     conn.row_factory = sqlite3.Row
     try:
+        if not verify_v2_schema(conn):
+            return []
         rows = conn.execute(
             """
-            SELECT id, quest_file, quest_name, start_time, end_time, agent_id,
-                   agent_config, outcome, reward, run_duration, benchmark_id
+            SELECT id, schema_version, quest_file, quest_name, quest_checksum, quest_language,
+                   engine_revision, agent_id, treatment, treatment_signature, benchmark_id,
+                   start_time, end_time, run_duration, outcome, reward, usage,
+                   transcript_diagnostics, progress
             FROM runs
             WHERE benchmark_id = ?
             ORDER BY id
             """,
             (benchmark_id,),
         ).fetchall()
-        return [dict(row) for row in rows]
+        runs = []
+        for row in rows:
+            run = dict(row)
+            for key in ("treatment", "usage", "transcript_diagnostics", "progress"):
+                if isinstance(run.get(key), str) and run[key]:
+                    try:
+                        run[key] = json.loads(run[key])
+                    except json.JSONDecodeError:
+                        run[key] = {}
+            runs.append(run)
+        return runs
     finally:
         conn.close()
 
@@ -349,6 +334,7 @@ def _write_benchmark_artifacts(config: BenchmarkConfig, results: list[dict[str, 
                 "runs": agent.runs,
                 "system_template": agent.system_template,
                 "harness": _agent_harness(agent),
+                "treatment": agent.treatment().to_dict(),
             }
             for agent in config.agents
         ],
@@ -372,6 +358,7 @@ def _write_benchmark_artifacts(config: BenchmarkConfig, results: list[dict[str, 
         "benchmark_id": config.benchmark_id,
         "max_quests": config.max_quests,
         "max_workers": config.max_workers,
+        "progress_manifest": config.progress_manifest,
         "agents": [
             {
                 "model": agent.model,
@@ -381,6 +368,9 @@ def _write_benchmark_artifacts(config: BenchmarkConfig, results: list[dict[str, 
                 "runs": agent.runs,
                 "skip_single": agent.skip_single,
                 "debug": agent.debug,
+                "compaction_interval": agent.compaction_interval,
+                "restore_limit": agent.restore_limit,
+                "adaptive_stall_steps": agent.adaptive_stall_steps,
             }
             for agent in config.agents
         ],
@@ -437,6 +427,7 @@ def run_benchmark(config: BenchmarkConfig, progress_callback=None) -> list[dict[
                         "attempt": attempt,
                         "benchmark_id": config.benchmark_id,
                         "max_steps": config.max_steps,
+                        "progress_manifest": config.progress_manifest,
                     }
                 )
 
@@ -671,13 +662,6 @@ def print_summary(results: list[dict[str, Any]]) -> None:
     print("\nResults Summary:")
     print("=" * 80)
 
-    # Calculate total steps (if available)
-    steps_info_available = any("steps" in r for r in results)
-
-    if steps_info_available:
-        total_steps = sum(len(r.get("steps", [])) for r in results)
-        steps_by_model = {}
-
     # Group by agent variant (model, or "model [harness]" when a model is run
     # under more than one harness in these results).
     harnesses_by_model = _harnesses_by_model(results)
@@ -690,12 +674,6 @@ def print_summary(results: list[dict[str, Any]]) -> None:
         timeout = len([r for r in model_results if r["outcome"] == QuestOutcome.TIMEOUT.name])
         total = len(model_results)
 
-        # Calculate steps for this group (if available)
-        if steps_info_available:
-            model_steps = sum(len(r.get("steps", [])) for r in model_results)
-            avg_steps = model_steps / total if total > 0 else 0
-            steps_by_model[group] = (model_steps, avg_steps)
-
         label = "Agent" if "[" in group else "Model"
         print(f"\n{label}: {group}")
         print(f"Total quests: {total}")
@@ -703,17 +681,6 @@ def print_summary(results: list[dict[str, Any]]) -> None:
         print(f"Failed: {failed} ({failed / total * 100:.1f}%)")
         print(f"Error: {error} ({error / total * 100:.1f}%)")
         print(f"Timeout: {timeout} ({timeout / total * 100:.1f}%)")
-
-        if steps_info_available:
-            print(f"Total steps: {model_steps}")
-            print(f"Average steps per quest: {avg_steps:.1f}")
-
-    # Print overall steps summary (if available)
-    if steps_info_available:
-        print("\nOverall Steps Summary:")
-        print("=" * 80)
-        print(f"Total steps across all models: {total_steps}")
-        print(f"Average steps per quest: {total_steps / len(results):.1f}")
 
     # List errors if any
     errors = [r for r in results if r.get("error")]

@@ -18,25 +18,30 @@ Usage:
 import argparse
 import glob
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 
+repo_root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(repo_root))
+
+from llm_quest_benchmark.schemas.records import RunRecord, load_run_record  # noqa: E402
+
 JUNK_QUESTS = {"test_quest", "quest_1", "repeatable_quest", "repeatable", "nonexistent"}
-ANALYSIS_OUTCOMES = {"FAILURE", "TIMEOUT"}
+ANALYSIS_OUTCOMES = {"FAILURE", "TIMEOUT", "TRUNCATED"}
 MAX_PER_QUEST = 50
 
 
-def load_run(path: str) -> dict | None:
+def load_run(path: str) -> RunRecord | None:
     try:
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError):
+        return load_run_record(path)
+    except (ValueError, OSError):
         return None
 
 
-def has_reasoning(run: dict) -> bool:
-    for step in run.get("steps", []):
-        r = (step.get("llm_decision") or {}).get("reasoning") or ""
+def has_reasoning(run: RunRecord) -> bool:
+    for transition in run.transitions:
+        r = (transition.response.reasoning if transition.response else "") or ""
         if r and "error" not in r.lower()[:20]:
             return True
     return False
@@ -58,12 +63,12 @@ def select_runs(results_dir: Path) -> list[dict]:
         if run is None:
             continue
 
-        quest = run.get("quest_name", "")
+        quest = run.quest_name
         if quest in JUNK_QUESTS:
             skipped_junk += 1
             continue
 
-        outcome = run.get("outcome", "")
+        outcome = run.outcome or ""
         if outcome == "ERROR":
             skipped_error += 1
             continue
@@ -76,11 +81,12 @@ def select_runs(results_dir: Path) -> list[dict]:
             {
                 "path": path,
                 "quest": quest,
-                "agent": run.get("agent_id", ""),
+                "agent": run.agent_id,
+                "treatment_signature": run.treatment_signature,
                 "outcome": outcome,
-                "steps": len(run.get("steps", [])),
+                "transitions": len(run.transitions),
                 "has_reasoning": has_reasoning(run),
-                "run_id": run.get("run_id", 0),
+                "run_id": run.run_id if isinstance(run.run_id, int) else 0,
             }
         )
 
@@ -153,7 +159,14 @@ def main():
         "quests": len(set(r["quest"] for r in selected)),
         "agents": len(set(r["agent"] for r in selected)),
         "runs": [
-            {"path": r["path"], "quest": r["quest"], "agent": r["agent"], "outcome": r["outcome"], "steps": r["steps"]}
+            {
+                "path": r["path"],
+                "quest": r["quest"],
+                "agent": r["agent"],
+                "treatment_signature": r["treatment_signature"],
+                "outcome": r["outcome"],
+                "transitions": r["transitions"],
+            }
             for r in selected
         ],
     }

@@ -31,7 +31,11 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system, Bl
 .mode-prompt_hints { background: #db61a2; color: var(--bg); }
 .mode-tools_compact_memory { background: var(--green); color: var(--bg); }
 .mode-tools_hints_compact_memory { background: #56d4dd; color: var(--bg); }
+.mode-tools_programmatic_memory { background: #2ea043; color: var(--bg); }
 .mode-planner_loop { background: var(--orange); color: var(--bg); }
+.mode-backtracking_loop { background: #f0883e; color: var(--bg); }
+.mode-adaptive_reasoning { background: #bc8cff; color: var(--bg); }
+.mode-unknown { background: var(--border); color: var(--text); }
 .success-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; min-width: 60px; }
 .success-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
 .filter-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.3em 0.8em; border-radius: 6px; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
@@ -129,7 +133,9 @@ let filterMode = 'all';
 let filterQuest = 'all';
 let viewMode = 'summary';
 
-const LEADERBOARD_DATA_VERSION = '2026-05-06-taxonomy-v2';
+const LEADERBOARD_DATA_VERSION = '2026-08-26-schema-v2';
+// Mode ids come from schema-v2 treatment components (prompt, memory, tools,
+// loop, reasoning). Unknown ids fall back to the label supplied in the data.
 const TAXONOMY_LABELS = {
   minimal_prompt:'Minimal prompt',
   short_context_reasoning:'Short-context reasoning',
@@ -138,20 +144,11 @@ const TAXONOMY_LABELS = {
   prompt_hints:'Prompt hints',
   tools_compact_memory:'Tools + compact memory',
   tools_hints_compact_memory:'Tools + hints + compact memory',
+  tools_programmatic_memory:'Tools + programmatic memory',
   planner_loop:'Planner loop',
-};
-const MODE_ALIASES = {
-  a:'minimal_prompt',
-  baseline:'minimal_prompt',
-  b:'short_context_reasoning',
-  prompted:'short_context_reasoning',
-  c:'compact_memory_memo',
-  knowledge:'compact_memory_memo',
-  d:'planner_loop',
-  planner:'planner_loop',
-  e:'tools_compact_memory',
-  'tool-aug':'tools_compact_memory',
-  tool_augmented:'tools_compact_memory',
+  backtracking_loop:'Backtracking loop',
+  adaptive_reasoning:'Adaptive reasoning',
+  unknown:'Unknown treatment',
 };
 const MODE_CLASSES = {
   minimal_prompt:'mode-minimal_prompt',
@@ -161,7 +158,11 @@ const MODE_CLASSES = {
   prompt_hints:'mode-prompt_hints',
   tools_compact_memory:'mode-tools_compact_memory',
   tools_hints_compact_memory:'mode-tools_hints_compact_memory',
+  tools_programmatic_memory:'mode-tools_programmatic_memory',
   planner_loop:'mode-planner_loop',
+  backtracking_loop:'mode-backtracking_loop',
+  adaptive_reasoning:'mode-adaptive_reasoning',
+  unknown:'mode-unknown',
 };
 const COLORS = {
   minimal_prompt:'#c9d1d9',
@@ -171,7 +172,11 @@ const COLORS = {
   prompt_hints:'#db61a2',
   tools_compact_memory:'#3fb950',
   tools_hints_compact_memory:'#56d4dd',
+  tools_programmatic_memory:'#2ea043',
   planner_loop:'#d29922',
+  backtracking_loop:'#f0883e',
+  adaptive_reasoning:'#bc8cff',
+  unknown:'#6e7681',
 };
 
 function successColor(v) { return v >= 0.8 ? 'var(--green)' : v >= 0.4 ? 'var(--orange)' : 'var(--red)'; }
@@ -179,32 +184,23 @@ function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 function modelLabel(id) { return MODEL_BY_ID[id]?.label || id; }
 function modeLabel(id) { return MODE_BY_ID[id]?.label || id; }
 
-function canonicalModeId(id, label) {
-  const rawId = String(id || '').trim();
-  const rawLabel = String(label || '').trim();
-  const key = rawId.toLowerCase().replace(/\s+/g, '_');
-  return TAXONOMY_LABELS[rawId] ? rawId : MODE_ALIASES[key] || MODE_ALIASES[rawLabel.toLowerCase()] || rawId;
-}
-
 function normalizeLeaderboard(data) {
-  const rawModeLabels = Object.fromEntries((data.modes || []).map(mode => [mode.id, mode.label]));
   const modeSeen = new Set();
-  const modes = (data.modes || []).map(mode => {
-    const id = canonicalModeId(mode.id, mode.label);
-    return {id, label: TAXONOMY_LABELS[id] || mode.label || id};
-  }).filter(mode => {
+  const modes = (data.modes || []).map(mode => ({
+    id: mode.id,
+    label: TAXONOMY_LABELS[mode.id] || mode.label || mode.id,
+  })).filter(mode => {
     if (modeSeen.has(mode.id)) return false;
     modeSeen.add(mode.id);
     return true;
   });
   const knownModes = new Set(modes.map(mode => mode.id));
   const results = (data.results || []).map(row => {
-    const mode = canonicalModeId(row.mode, rawModeLabels[row.mode]);
-    if (!knownModes.has(mode)) {
-      modes.push({id: mode, label: TAXONOMY_LABELS[mode] || mode});
-      knownModes.add(mode);
+    if (!knownModes.has(row.mode)) {
+      modes.push({id: row.mode, label: TAXONOMY_LABELS[row.mode] || row.mode});
+      knownModes.add(row.mode);
     }
-    return {...row, mode};
+    return row;
   });
   return {...data, modes, results};
 }

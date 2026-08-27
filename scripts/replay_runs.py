@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
-"""Replay existing runs to extract per-step location_ids.
+"""Verify schema-v2 run records by replaying them against the real engine.
 
-Reads each run_summary.json, replays the recorded choice sequence through
-QMPlayerEnv, and writes a location_trace.json alongside each run_summary.json.
+Each run_summary.json is replayed transition by transition: recorded choose
+timestamps and restore actions are re-executed and every resulting snapshot
+digest is compared with the record. A replay_report.json is written alongside
+each run_summary.json.
 
-The trace list is aligned with steps[]: trace[i] is the location_id when
-step i was presented to the agent.
+Legacy records are not accepted here. Convert them first with:
+    llm-quest migrate-records --source <path> --output <path>
 
 Usage:
-    uv run scripts/replay_runs.py [--results-dir results/] [--limit N]
-
-Note: The TS engine re-seeds its PRNG on each bridge startup, so replay of quests
-with random branches diverges at the first stochastic choice. The trace is correct
-up to that point and padded with None after. Fully deterministic quests replay 100%.
+    uv run scripts/replay_runs.py [--results-dir results/] [--limit N] [--force]
 """
 
 import argparse
@@ -23,64 +21,53 @@ from pathlib import Path
 repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(repo_root))
 
+from llm_quest_benchmark.core.replay import ReplayError, replay_record, verify_environment  # noqa: E402
 from llm_quest_benchmark.environments.qm import QMPlayerEnv  # noqa: E402
-
-
-def _extract_choice(step: dict) -> str | None:
-    """Extract 1-based choice key from llm_decision.choice dict."""
-    decision = step.get("llm_decision") or {}
-    choice = decision.get("choice")
-    if not choice or not isinstance(choice, dict):
-        return None
-    return next(iter(choice))
+from llm_quest_benchmark.schemas.records import load_run_record  # noqa: E402
 
 
 def replay_run(summary_path: Path) -> dict:
-    """Replay a single run and return the location trace.
-
-    Returns a dict with keys:
-        - run_id
-        - quest_file
-        - location_trace: list[str | None] aligned with steps[]
-        - error: str | None  (set if replay failed partway through)
-    """
-    data = json.loads(summary_path.read_text(encoding="utf-8"))
-    run_id = data.get("run_id")
-    quest_file = data.get("quest_file")
-    steps = data.get("steps") or []
-
+    """Replay one recorded run and return its verification report."""
     result = {
-        "run_id": run_id,
-        "quest_file": quest_file,
+        "run_id": None,
+        "quest_file": None,
+        "verified_transitions": 0,
+        "total_transitions": 0,
         "location_trace": [],
+        "status": "failed",
         "error": None,
     }
 
-    if not quest_file or not steps:
-        result["error"] = "missing quest_file or steps"
+    try:
+        record = load_run_record(str(summary_path))
+    except (ValueError, OSError) as exc:
+        result["error"] = str(exc)
+        return result
+
+    result["run_id"] = record.run_id
+    result["quest_file"] = record.quest_file
+    result["total_transitions"] = len(record.transitions)
+    # The recorded trace needs no replay: each transition carries its own state.
+    result["location_trace"] = [t.before.location_id for t in record.transitions]
+    if record.transitions:
+        result["location_trace"].append(record.transitions[-1].after.location_id)
+
+    if not record.transitions:
+        result["status"] = "skipped"
+        result["error"] = "record has no transitions"
         return result
 
     env = None
     try:
-        env = QMPlayerEnv(quest_file)
-        env.reset()
-        result["location_trace"].append(env.state["location_id"])
-
-        # Replay all but the last step (last step has no outgoing choice to take)
-        for step in steps[:-1]:
-            choice = _extract_choice(step)
-            if choice is None:
-                break
-            env.step(choice)
-            result["location_trace"].append(env.state["location_id"])
-
-        # Pad to full length with None if replay stopped early
-        while len(result["location_trace"]) < len(steps):
-            result["location_trace"].append(None)
-    except Exception as e:
-        result["error"] = str(e)
-        while len(result["location_trace"]) < len(steps):
-            result["location_trace"].append(None)
+        verify_environment(record, record.quest_file)
+        env = QMPlayerEnv(record.quest_file, language=record.quest_language)
+        replay = replay_record(env, record)
+        result["verified_transitions"] = replay.verified_transitions
+        result["status"] = "verified"
+    except ReplayError as exc:
+        result["error"] = str(exc)
+    except Exception as exc:  # noqa: BLE001 - report engine/setup failures verbatim
+        result["error"] = str(exc)
     finally:
         if env is not None:
             env.close()
@@ -92,6 +79,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", default="results", help="Path to results directory")
     parser.add_argument("--limit", type=int, default=0, help="Max runs to process (0 = all)")
+    parser.add_argument("--force", action="store_true", help="Re-verify runs that already have a report")
     args = parser.parse_args()
 
     results_dir = Path(args.results_dir)
@@ -105,29 +93,33 @@ def main() -> None:
 
     print(f"Replaying {len(summaries)} runs from {results_dir}")
 
-    success = failed = skipped = 0
+    verified = failed = skipped = 0
     for path in summaries:
-        trace_path = path.parent / "location_trace.json"
-        if trace_path.exists():
+        report_path = path.parent / "replay_report.json"
+        if report_path.exists() and not args.force:
             skipped += 1
             continue
 
         print(f"  {path.relative_to(results_dir)}", end=" ... ", flush=True)
-        trace = replay_run(path)
+        report = replay_run(path)
 
-        tmp = trace_path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(trace, ensure_ascii=False, indent=2), encoding="utf-8")
-        tmp.replace(trace_path)
+        tmp = report_path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        tmp.replace(report_path)
 
-        if trace["error"]:
-            print(f"PARTIAL ({trace['error'][:60]})")
-            failed += 1
+        if report["status"] == "verified":
+            print(f"OK ({report['verified_transitions']}/{report['total_transitions']} transitions)")
+            verified += 1
+        elif report["status"] == "skipped":
+            print(f"SKIPPED ({report['error']})")
+            skipped += 1
         else:
-            covered = sum(1 for x in trace["location_trace"] if x is not None)
-            print(f"OK ({covered}/{len(trace['location_trace'])} steps)")
-            success += 1
+            print(f"FAILED ({str(report['error'])[:80]})")
+            failed += 1
 
-    print(f"\nDone: {success} ok, {failed} partial/failed, {skipped} skipped (trace exists)")
+    print(f"\nDone: {verified} verified, {failed} failed, {skipped} skipped")
+    if failed:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

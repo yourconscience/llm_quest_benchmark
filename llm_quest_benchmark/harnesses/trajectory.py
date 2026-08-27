@@ -1,16 +1,16 @@
-"""Bounded retrieval over canonical executed quest steps.
+"""Bounded retrieval over canonical executed quest transitions.
 
 This is an in-memory retrieval/index view for the ``programmatic_memory``
-harness only. The runner creates each ``AgentState`` once, delivers that exact
-object to the harness and callbacks, then ``QuestLogger`` serializes it to the
-persisted ``run_summary.json`` trajectory. This component stores references to
-those canonical executed-decision objects for one episode; it creates no
-parallel step representation and writes nothing to disk.
+harness only. The runner creates each ``QuestTransition`` once, delivers that
+exact object to the harness and callbacks, then ``QuestLogger`` serializes it to
+the persisted schema-v2 record. This component stores references to those
+canonical transitions for one episode; it creates no parallel step
+representation and writes nothing to disk.
 """
 
 import re
 
-from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.schemas.records import QuestTransition
 
 MAX_READ_COUNT = 6
 MAX_SEARCH_RESULTS = 5
@@ -43,29 +43,37 @@ def _coerce_positive_int(value) -> int | None:
     return None
 
 
-def _selected_choice(entry: AgentState) -> str:
-    """Return the selected choice text from a canonical decision state."""
-    try:
-        action = int(entry.action)
-    except (TypeError, ValueError):
+def _action_label(entry: QuestTransition) -> str:
+    """Render the executed action for retrieval output."""
+    if entry.action.is_restore:
+        return f"restore checkpoint {entry.action.checkpoint_index}"
+    return str(entry.action.choice_index)
+
+
+def _selected_choice(entry: QuestTransition) -> str:
+    """Return the selected choice text from a canonical transition."""
+    if not entry.action.is_choose:
         return ""
-    if 1 <= action <= len(entry.choices):
-        return entry.choices[action - 1].get("text", "")
+    index = entry.action.choice_index
+    if index is None:
+        return ""
+    if 1 <= index <= len(entry.before.choices):
+        return entry.before.choices[index - 1].get("text", "")
     return ""
 
 
 class Trajectory:
-    """Append-only references to canonical executed decision steps.
+    """Append-only references to canonical executed transitions.
 
-    The runner owns step construction and ordering. This view stores each
-    ``AgentState`` reference once after the action has executed, resets between
-    episodes, and never mutates the state object. Read/search bound their
+    The runner owns transition construction and ordering. This view stores each
+    ``QuestTransition`` reference once after the action has executed, resets
+    between episodes, and never mutates the transition. Read/search bound their
     OUTPUT by entry count and character budget; they never truncate stored
     state.
     """
 
     def __init__(self):
-        self._steps: list[AgentState] = []
+        self._steps: list[QuestTransition] = []
 
     def __len__(self) -> int:
         return len(self._steps)
@@ -73,13 +81,13 @@ class Trajectory:
     def reset(self) -> None:
         self._steps = []
 
-    def append(self, agent_state: AgentState) -> AgentState:
-        """Store the canonical executed-decision state by reference."""
-        self._steps.append(agent_state)
-        return agent_state
+    def append(self, transition: QuestTransition) -> QuestTransition:
+        """Store the canonical executed transition by reference."""
+        self._steps.append(transition)
+        return transition
 
-    def recent(self, window: int) -> list[AgentState]:
-        """Return canonical references for the last ``window`` steps."""
+    def recent(self, window: int) -> list[QuestTransition]:
+        """Return canonical references for the last ``window`` transitions."""
         if window <= 0:
             return []
         return list(self._steps[-window:])
@@ -124,8 +132,10 @@ class Trajectory:
 
         scored = []
         for entry in self._steps:
-            choices_text = " ".join(choice.get("text", "") for choice in entry.choices)
-            haystack = " ".join([entry.observation, choices_text, _selected_choice(entry)]).lower()
+            choices_text = " ".join(choice.get("text", "") for choice in entry.before.choices)
+            haystack = " ".join(
+                [entry.before.agent_observation(), choices_text, _selected_choice(entry)]
+            ).lower()
             entry_tokens = set(_SEARCH_TOKEN_PATTERN.findall(haystack))
             score = sum(1 for token in tokens if token in entry_tokens)
             if score > 0:
@@ -134,15 +144,15 @@ class Trajectory:
         if not scored:
             return f"no matches for query in {len(self._steps)} recorded steps"
 
-        scored.sort(key=lambda item: (item[0], item[1].step), reverse=True)
+        scored.sort(key=lambda item: (item[0], item[1].index), reverse=True)
         entries = [entry for _, entry in scored[:bounded_limit]]
         return self._format_entries(entries)
 
     @staticmethod
-    def _format_entries(entries: list[AgentState]) -> str:
+    def _format_entries(entries: list[QuestTransition]) -> str:
         """Join formatted entries into a result hard-bounded by MAX_OUTPUT_CHARS.
 
-        Only the formatted output is truncated; canonical ``AgentState``
+        Only the formatted output is truncated; canonical ``QuestTransition``
         objects remain untouched.
 
         Room for the trailing omission marker ("N of M steps shown...") is
@@ -181,11 +191,11 @@ class Trajectory:
         lines = []
         total_len = 0
         for entry in entries:
-            choices_text = "; ".join(choice.get("text", "") for choice in entry.choices) or "(none)"
+            choices_text = "; ".join(choice.get("text", "") for choice in entry.before.choices) or "(none)"
             selected_choice = _selected_choice(entry)
             line = (
-                f"Step {entry.step}: observation={entry.observation} | "
-                f"choices={choices_text} | selected={entry.action}: {selected_choice}"
+                f"Step {entry.index}: observation={entry.before.agent_observation()} | "
+                f"choices={choices_text} | selected={_action_label(entry)}: {selected_choice}"
             )
             projected_len = total_len + len(line) + (1 if lines else 0)
             if lines and projected_len > entry_budget:
@@ -198,7 +208,6 @@ class Trajectory:
                 break
             lines.append(line)
             total_len = projected_len
-
         text = "\n".join(lines)
         included = len(lines)
         if included < total_entries:

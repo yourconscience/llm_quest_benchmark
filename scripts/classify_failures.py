@@ -11,8 +11,14 @@ Usage:
 import argparse
 import json
 import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+
+repo_root = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(repo_root))
+
+from llm_quest_benchmark.schemas.records import RunRecord, load_run_record  # noqa: E402
 
 CLASSIFICATION_PROMPT = """You are an expert at analyzing LLM agent failures in interactive fiction quests.
 
@@ -43,63 +49,68 @@ TRACE:
 """
 
 
-def condense_trace(run: dict) -> str:
-    """Extract key info from a run, keeping it under ~3000 tokens."""
+def _action_label(transition) -> str:
+    if transition.action.is_restore:
+        return f"restore:{transition.action.checkpoint_index}"
+    index = transition.action.choice_index
+    choices = transition.before.choices
+    text = choices[index - 1]["text"] if index and 1 <= index <= len(choices) else ""
+    return f"{index}: {text[:60]}"
+
+
+def condense_trace(record: RunRecord) -> str:
+    """Extract key info from a schema-v2 record, keeping it under ~3000 tokens."""
+    transitions = record.transitions
     lines = []
-    lines.append(f"Quest: {run.get('quest_name', 'unknown')}")
-    lines.append(f"Agent: {run.get('agent_id', 'unknown')}")
-    lines.append(f"Outcome: {run.get('outcome', 'unknown')}")
-    lines.append(f"Total steps: {len(run.get('steps', []))}")
-    lines.append(f"Reward: {run.get('reward', 0)}")
+    lines.append(f"Quest: {record.quest_name}")
+    lines.append(f"Agent: {record.agent_id}")
+    lines.append(f"Treatment: {record.treatment_signature}")
+    lines.append(f"Outcome: {record.outcome}")
+    lines.append(f"Total transitions: {len(transitions)}")
+    lines.append(f"Reward: {record.reward}")
+    lines.append(f"Progress: {record.progress.current:.1f}%")
     lines.append("")
 
-    steps = run.get("steps", [])
     # For long traces, show first 5, last 5, and sample middle
-    if len(steps) <= 15:
-        show_steps = steps
+    if len(transitions) <= 15:
+        shown = [(t, None) for t in transitions]
     else:
-        middle_idx = len(steps) // 2
-        show_steps = (
-            steps[:5]
-            + [{"_marker": f"... ({len(steps) - 10} steps omitted) ..."}]
-            + steps[middle_idx - 1 : middle_idx + 2]
-            + [{"_marker": "..."}]
-            + steps[-5:]
+        middle_idx = len(transitions) // 2
+        shown = (
+            [(t, None) for t in transitions[:5]]
+            + [(None, f"... ({len(transitions) - 10} transitions omitted) ...")]
+            + [(t, None) for t in transitions[middle_idx - 1 : middle_idx + 2]]
+            + [(None, "...")]
+            + [(t, None) for t in transitions[-5:]]
         )
 
-    for s in show_steps:
-        if "_marker" in s:
-            lines.append(s["_marker"])
+    for transition, marker in shown:
+        if marker is not None:
+            lines.append(marker)
             continue
 
-        step_num = s.get("step", "?")
-        obs = (s.get("observation") or "")[:200]
-        choices = s.get("choices", {})
-        decision = s.get("llm_decision", {})
-        chosen = decision.get("choice", {})
-        reasoning = (decision.get("reasoning") or decision.get("analysis") or "")[:150]
-        parse_mode = decision.get("parse_mode", "")
+        response = transition.response
+        reasoning = ((response.reasoning if response else None) or (response.analysis if response else None) or "")[:150]
+        parse_mode = (response.parse_mode if response else "") or ""
 
-        lines.append(f"Step {step_num}:")
-        lines.append(f"  Observation: {obs}")
-        if choices:
-            choice_str = " | ".join(f"{k}: {v[:60]}" for k, v in list(choices.items())[:6])
+        lines.append(f"Step {transition.index}:")
+        lines.append(f"  Observation: {transition.before.observation[:200]}")
+        if transition.before.choices:
+            choice_str = " | ".join(
+                f"{i}: {c['text'][:60]}" for i, c in enumerate(transition.before.choices[:6], start=1)
+            )
             lines.append(f"  Choices: {choice_str}")
-        if chosen:
-            chosen_str = " | ".join(f"{k}: {v[:60]}" for k, v in chosen.items())
-            lines.append(f"  Chose: {chosen_str}")
+        lines.append(f"  Chose: {_action_label(transition)}")
         if reasoning:
             lines.append(f"  Reasoning: {reasoning}")
         if parse_mode and parse_mode != "json_parsed":
             lines.append(f"  Parse mode: {parse_mode}")
+        if transition.reasoning_mode:
+            lines.append(f"  Reasoning mode: {transition.reasoning_mode}")
         lines.append("")
 
     # Track action repetitions
-    actions = []
-    for s in steps:
-        choice = s.get("llm_decision", {}).get("choice", {})
-        action_key = str(sorted(choice.items())) if choice else "?"
-        actions.append(action_key)
+    actions = [_action_label(t) for t in transitions]
 
     if len(actions) > 5:
         from collections import Counter
@@ -117,8 +128,8 @@ def condense_trace(run: dict) -> str:
 def classify_run(run_path: str, model: str) -> dict:
     """Classify a single run using claude -p."""
     try:
-        run = json.loads(Path(run_path).read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError) as e:
+        run = load_run_record(run_path)
+    except (ValueError, OSError) as e:
         return {"path": run_path, "error": str(e)}
 
     trace = condense_trace(run)
@@ -162,10 +173,11 @@ def classify_run(run_path: str, model: str) -> dict:
 
         return {
             "path": run_path,
-            "quest": run.get("quest_name"),
-            "agent": run.get("agent_id"),
-            "outcome": run.get("outcome"),
-            "steps": len(run.get("steps", [])),
+            "quest": run.quest_name,
+            "agent": run.agent_id,
+            "treatment_signature": run.treatment_signature,
+            "outcome": run.outcome,
+            "transitions": len(run.transitions),
             **classification,
         }
     except subprocess.TimeoutExpired:

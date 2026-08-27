@@ -6,6 +6,8 @@
 
 Benchmark for evaluating LLM context scaffolds on interactive fiction quests. Measures how prompt context, compact memory, tools, and planning loops affect sequential decision-making across models and tasks.
 
+Every run is recorded as exact environment transitions (schema v2): each transition stores the full state before the action, the executed choose/restore action with its engine timestamp and full engine saving, and the resulting state. That makes runs replayable, resumable when a step limit truncates them, and attributable to an explicit prompt/memory/tools/loop/reasoning treatment.
+
 **[Project Site](https://yourconscience.github.io/llm_quest_benchmark/)** | **[Leaderboard](https://yourconscience.github.io/llm_quest_benchmark/index.html)** | **[About / Write-up](https://yourconscience.github.io/llm_quest_benchmark/about.html)**
 
 See the [About page](https://yourconscience.github.io/llm_quest_benchmark/about.html) for the project narrative, taxonomy, metrics, caveats, and model selection rationale.
@@ -54,11 +56,25 @@ uv run llm-quest run --quest quests/Boat.qm --model gemini-3-flash-preview --tim
 # Run benchmark matrix
 uv run llm-quest benchmark --config configs/benchmarks/memory_full_transcript.yaml
 
+# Run with a curated progress manifest and an explicit step limit
+uv run llm-quest run --quest quests/Boat.qm --model gemini-3-flash-preview \
+  --progress-manifest configs/progress/Boat.yaml --max-steps 20
+
+# Continue a TRUNCATED run; quest and treatment come from the record
+uv run llm-quest run --resume-from results/<agent_id>/<quest>/run_<id>/run_summary.json
+
 # Generate report from benchmark results
 uv run llm-quest benchmark-report --benchmark-id <id> --output report.md
 
 # Analyze a single run
-uv run llm-quest analyze-run --run-summary results/<harness>/<quest>/run_<id>/run_summary.json
+uv run llm-quest analyze-run --run-summary results/<agent_id>/<quest>/run_<id>/run_summary.json
+
+# Convert pre-v2 records (one-time; the only legacy reader)
+uv run llm-quest migrate-records --source results/ --output results_v2/
+uv run llm-quest migrate-records --source metrics.db --output metrics_v2.db
+
+# Verify recorded runs against the real engine
+uv run scripts/replay_runs.py --results-dir results/
 
 # Play as human in terminal
 uv run llm-quest play --quest quests/Boat.qm
@@ -111,7 +127,9 @@ Provider-specific keys in `.env`:
 - `llm_quest_benchmark/players/` - Non-LLM player primitives (`human`, `random_choice`)
 - `llm_quest_benchmark/prompt_templates/` - Jinja2 prompt templates for the public context-scaffold taxonomy
 - `llm_quest_benchmark/executors/` - CLI, benchmark orchestration, TS bridge
+- `llm_quest_benchmark/schemas/records.py` - schema-v2 run record types
 - `configs/benchmarks/` - YAML benchmark configurations
+- `configs/progress/` - curated quest progress manifests
 - `quests/` - Quest files (downloaded via `download_quests.sh`)
 - `space-rangers-quest/` - TypeScript quest engine (submodule)
 - `docs/ARCHITECTURE.md` - Runtime architecture and taxonomy mapping

@@ -7,7 +7,7 @@ from llm_quest_benchmark.harnesses.trajectory import (
     Trajectory,
     _coerce_positive_int,
 )
-from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.schemas.records import QuestAction, QuestSnapshot, QuestTransition
 
 
 def _append_step(
@@ -16,17 +16,22 @@ def _append_step(
     choices: list[str],
     selected_action: int,
     selected_choice: str,
-) -> AgentState:
+) -> QuestTransition:
     expected_choice = choices[selected_action - 1] if 1 <= selected_action <= len(choices) else ""
     assert selected_choice == expected_choice
+    index = len(trajectory) + 1
+    before = QuestSnapshot(
+        location_id="test",
+        observation=observation,
+        choices=[{"id": str(i + 1), "text": choice} for i, choice in enumerate(choices)],
+        saving={"locationId": index},
+    )
     return trajectory.append(
-        AgentState(
-            step=len(trajectory) + 1,
-            location_id="test",
-            observation=observation,
-            choices=[{"text": choice} for choice in choices],
-            action=str(selected_action),
-            llm_response=None,
+        QuestTransition(
+            index=index,
+            before=before,
+            action=QuestAction.choose(selected_action, str(selected_action), 1735689600000 + index),
+            after=QuestSnapshot(location_id="test", observation="after", saving={"locationId": index + 1}),
         )
     )
 
@@ -55,11 +60,11 @@ def test_append_retains_full_observation_and_choices_without_clipping():
         selected_choice=long_choice,
     )
 
-    assert step.step == 1
-    assert step.observation == long_observation
-    assert step.choices == [{"text": long_choice}, {"text": "Leave"}]
-    assert step.action == "1"
-    assert step.choices[0]["text"] == long_choice
+    assert step.index == 1
+    assert step.before.observation == long_observation
+    assert [c["text"] for c in step.before.choices] == [long_choice, "Leave"]
+    assert step.action.choice_index == 1
+    assert step.before.choices[0]["text"] == long_choice
     assert trajectory.recent(1)[0] is step
 
     read_output = trajectory.read(1, 1)
@@ -73,8 +78,8 @@ def test_append_preserves_insertion_order_and_increments_step():
 
     assert len(trajectory) == 3
     recent = trajectory.recent(10)
-    assert [s.step for s in recent] == [1, 2, 3]
-    assert [s.observation for s in recent] == [
+    assert [s.index for s in recent] == [1, 2, 3]
+    assert [s.before.observation for s in recent] == [
         "Observation 1 with detail.",
         "Observation 2 with detail.",
         "Observation 3 with detail.",
@@ -332,13 +337,13 @@ def test_search_matches_short_token_only_as_a_whole_word():
 def test_single_oversized_entry_is_hard_bounded_not_returned_in_full():
     """A single entry larger than MAX_OUTPUT_CHARS must still yield a result
     <= MAX_OUTPUT_CHARS: only the FORMATTED output is truncated (with a clear
-    marker), the stored canonical AgentState itself is never touched."""
+    marker), the stored canonical QuestTransition itself is never touched."""
     trajectory = Trajectory()
     huge_observation = "x" * (MAX_OUTPUT_CHARS * 2)
     _append_step(trajectory, huge_observation, ["A"], 1, "A")
 
     # Stored, full-fidelity entry is never truncated.
-    assert trajectory.recent(1)[0].observation == huge_observation
+    assert trajectory.recent(1)[0].before.observation == huge_observation
 
     output = trajectory.read(1, 1)
     assert len(output) <= MAX_OUTPUT_CHARS  # hard bound, no exceptions
@@ -369,7 +374,7 @@ def test_first_entry_near_full_budget_plus_second_entry_never_silently_slices():
     # full (untruncated) observation text never appears verbatim.
     assert first_observation not in result
     # Stored history is untouched regardless of what the formatted output did.
-    assert trajectory.recent(2)[0].observation == first_observation
+    assert trajectory.recent(2)[0].before.observation == first_observation
 
 
 def test_output_omits_whole_trailing_entries_once_budget_is_exceeded():
@@ -422,7 +427,7 @@ def test_reset_restarts_step_numbering_from_one():
 
     new_step = _append_step(trajectory, "Fresh episode start.", ["Go"], 1, "Go")
 
-    assert new_step.step == 1
+    assert new_step.index == 1
 
 
 def test_never_mutates_earlier_entries_on_append():
@@ -430,6 +435,6 @@ def test_never_mutates_earlier_entries_on_append():
     first = _append_step(trajectory, "First.", ["A"], 1, "A")
     _append_step(trajectory, "Second.", ["B"], 1, "B")
 
-    assert first.step == 1
-    assert first.observation == "First."
-    assert trajectory.recent(10)[0] == first
+    assert first.index == 1
+    assert first.before.observation == "First."
+    assert trajectory.recent(10)[0] is first

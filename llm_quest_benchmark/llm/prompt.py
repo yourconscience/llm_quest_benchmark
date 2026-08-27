@@ -1,16 +1,14 @@
 """Prompt renderer and history tracker for LLM agents"""
 
 from pathlib import Path
-from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, Template
 
 from llm_quest_benchmark.constants import DEFAULT_TEMPLATE, PROMPT_TEMPLATES_DIR, SYSTEM_ROLE_TEMPLATE
-from llm_quest_benchmark.schemas.state import QMState
 
 
 class PromptRenderer:
-    """Handles prompt rendering and history tracking for LLM agents"""
+    """Handles prompt rendering for LLM agents"""
 
     def __init__(
         self,
@@ -28,7 +26,6 @@ class PromptRenderer:
             action_template (str, optional): Action template name to use. Defaults to DEFAULT_TEMPLATE.
         """
         self.env = env
-        self.history: list[dict[str, Any]] = []
         self.templates_dir = templates_dir or PROMPT_TEMPLATES_DIR
         self.system_template_name = system_template
         self.action_template_name = action_template
@@ -69,27 +66,6 @@ class PromptRenderer:
         """
         return self.system_template.render(**kwargs)
 
-    def add_to_history(self, state: dict[str, Any] | QMState) -> None:
-        """Add state to history
-
-        Args:
-            state (Union[Dict[str, Any], QMState]): State to add to history
-        """
-        # Convert QMState to dict for history tracking
-        if isinstance(state, QMState):
-            self.history.append(
-                {
-                    "action": "",  # Will be updated by step
-                    "text": state.text,
-                    "choices": state.choices,
-                    "reward": state.reward,
-                    "done": state.done,
-                    "info": state.info,
-                }
-            )
-        else:
-            self.history.append(state)
-
     def get_template(self, template_name: str) -> Template:
         """Get a specific template by name
 
@@ -100,19 +76,6 @@ class PromptRenderer:
             Template: Jinja template instance
         """
         return self.jinja_env.get_template(template_name)
-
-    def get_history(self, last_n: int | None = None) -> list[dict[str, Any]]:
-        """Get history, optionally limited to last N entries
-
-        Args:
-            last_n (Optional[int], optional): Number of entries to return. Defaults to None.
-
-        Returns:
-            List[Dict[str, Any]]: History entries
-        """
-        if last_n is not None:
-            return self.history[-last_n:]
-        return self.history
 
     def get_system_template_content(self) -> str:
         """Get raw system template content"""

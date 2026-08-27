@@ -35,7 +35,7 @@ def test_quest_run_with_llm(caplog):
         if event == "progress":
             caplog.info(f"Progress update - Step {data['step']}: {data['message']}")
         elif event == "game_state":
-            caplog.info(f"Game state update - Step {data.step}")
+            caplog.info(f"Game state update - Transition {data.index}")
         elif event == "error":
             caplog.error(f"Error: {data}")
 
@@ -76,7 +76,7 @@ def test_random_player_on_test_quest(caplog):
         if event == "progress":
             caplog.info(f"Progress update - Step {data['step']}: {data['message']}")
         elif event == "game_state":
-            caplog.info(f"Game state update - Step {data.step}")
+            caplog.info(f"Game state update - Transition {data.index}")
         elif event == "error":
             caplog.error(f"Error: {data}")
 

@@ -13,6 +13,7 @@ from llm_quest_benchmark.constants import DEFAULT_TEMPLATE, normalize_template_n
 from llm_quest_benchmark.llm.client import get_llm_client, parse_model_name
 from llm_quest_benchmark.llm.prompt import PromptRenderer
 from llm_quest_benchmark.players.base import QuestPlayer
+from llm_quest_benchmark.schemas.records import QuestSnapshot, QuestTransition
 from llm_quest_benchmark.schemas.response import LLMResponse
 
 RISKY_CHOICE_KEYWORDS = (
@@ -194,22 +195,28 @@ def parse_llm_response(
 
         memo_raw = response_json.get("memo")
         memo = str(memo_raw) if memo_raw is not None else None
-        action_value = response_json.get("action") or response_json.get("result") or response_json.get("choice")
-        if action_value is not None:
+        # "action" may name the action kind rather than the choice (the
+        # backtracking harness answers {"action":"restore","result":2}), so each
+        # candidate key is tried in turn and the first valid choice number wins.
+        for key in ("action", "result", "choice"):
+            action_value = response_json.get(key)
+            if action_value is None:
+                continue
             try:
                 action = int(action_value)
-                if _validate_action_number(action, num_choices, debug, logger):
-                    return LLMResponse(
-                        action=action,
-                        reasoning=reasoning,
-                        analysis=analysis,
-                        memo=memo,
-                        is_default=False,
-                        parse_mode=json_parse_mode or "json",
-                    )
             except (ValueError, TypeError):
                 if debug and logger:
-                    logger.error("Invalid action value in JSON: %s", action_value)
+                    logger.debug("Non-numeric '%s' value in JSON: %s", key, action_value)
+                continue
+            if _validate_action_number(action, num_choices, debug, logger):
+                return LLMResponse(
+                    action=action,
+                    reasoning=reasoning,
+                    analysis=analysis,
+                    memo=memo,
+                    is_default=False,
+                    parse_mode=json_parse_mode or "json",
+                )
 
     try:
         action = int(response.strip())
@@ -335,12 +342,39 @@ class BaseHarness(QuestPlayer):
         super().on_game_start()
         self.reset()
 
-    def on_game_end(self, final_state: dict[str, Any]) -> None:
+    def on_game_end(self, final_snapshot: QuestSnapshot | None) -> None:
         if self.debug:
-            self.logger.debug("Game ended with state: %s", final_state)
+            self.logger.debug("Game ended with state: %s", final_snapshot)
 
     def get_last_response(self) -> LLMResponse | None:
         return self._last_response
+
+    def rebuild_from_transitions(self, transitions: list[QuestTransition]) -> None:
+        """Replay recorded decisions into harness memory without model calls.
+
+        Resume must continue with the same memory the interrupted run had, so
+        each recorded choose transition is folded back through the same
+        bookkeeping path a live decision uses.
+        """
+        for transition in transitions:
+            self.on_transition(transition)
+            if not transition.action.is_choose or transition.response is None:
+                continue
+            observation = transition.before.agent_observation()
+            choices = transition.before.choices
+            clean = observation.strip()
+            if clean:
+                self._observation_history.append(clean)
+                if len(self._observation_history) > 20:
+                    self._observation_history = self._observation_history[-20:]
+            self.history.append(transition.response)
+            self._last_response = transition.response
+            self._remember_decision(
+                observation,
+                choices,
+                self._state_signature(observation, choices),
+                transition.response,
+            )
 
     def _build_contextual_state(self, state: str) -> str:
         if self.memory_module is None:

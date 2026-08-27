@@ -133,6 +133,7 @@ def test_programmatic_memory_harness_deterministic_smoke_persists_retrieval_to_r
     existing LLMResponse -> QuestLogger -> run_summary.json path (contract item 5).
     """
     monkeypatch.setattr(logging_module, "RESULTS_DIR", tmp_path)
+    monkeypatch.setattr(logging_module, "DEFAULT_DB_PATH", str(tmp_path / "metrics.db"))
 
     agent = create_harness("programmatic_memory", model="gpt-5-mini", skip_single=True)
     agent.llm = FakeLLM("programmatic_memory")
@@ -146,17 +147,18 @@ def test_programmatic_memory_harness_deterministic_smoke_persists_retrieval_to_r
     assert len(summary_paths) == 1
     data = json.loads(summary_paths[0].read_text(encoding="utf-8"))
 
-    assert data["quest_name"] == "Boat"
-    steps = data["steps"]
-    assert len(steps) >= 2
+    assert data["schema_version"] == 2
+    assert data["quest"]["name"] == "Boat"
+    transitions = data["transitions"]
+    assert len(transitions) >= 2
 
-    retrieval_steps = [
-        step
-        for step in steps
-        if (step.get("llm_decision") or {}).get("tool_calls")
-        and step["llm_decision"]["tool_calls"][0].get("tool") == "history_search"
+    retrieval_transitions = [
+        transition
+        for transition in transitions
+        if (transition.get("response") or {}).get("tool_calls")
+        and transition["response"]["tool_calls"][0].get("tool") == "history_search"
     ]
-    assert retrieval_steps, "expected at least one persisted history_search tool call"
-    retrieved_decision = retrieval_steps[0]["llm_decision"]
-    assert retrieved_decision["tool_results"]
-    assert "history_search(" in retrieved_decision["tool_results"][0]
+    assert retrieval_transitions, "expected at least one persisted history_search tool call"
+    retrieved_response = retrieval_transitions[0]["response"]
+    assert retrieved_response["tool_results"]
+    assert "history_search(" in retrieved_response["tool_results"][0]

@@ -1,0 +1,66 @@
+# Curated progress manifest for quests/Boat.qm (four gods river crossing).
+#
+# Milestones are state predicates over the engine's location id and rendered
+# parameter state. Gods standing on the right bank render as "xxx - <Name>(N)";
+# gods still on the left bank render as "<Name> (N) - xxx".
+#
+# Progress is a diagnostic. Terminal success always reports 100 percent
+# regardless of which milestones matched.
+quest: Boat
+version: 1
+milestones:
+  - id: mission_accepted
+    percent: 10
+    description: Accepted the expedition contract and landed on Bonnasis.
+    match:
+      location_id: ["2"]
+
+  - id: legend_heard
+    percent: 20
+    description: Heard the legend of the four sons of the elder god.
+    match:
+      location_id: ["3"]
+
+  - id: ceremony_explained
+    percent: 30
+    description: Learned the ceremony rules that constrain the crossing.
+    match:
+      location_id: ["4", "5"]
+
+  - id: crossing_started
+    percent: 40
+    description: Entered the boat puzzle with the crossing clock running.
+    match:
+      location_id: ["6", "7", "8", "9", "10", "14"]
+
+  - id: one_god_across
+    percent: 55
+    description: At least one god stands on the right bank.
+    match:
+      params_pattern:
+        pattern: "^xxx - (Ах|Бах|Вау|Гэ)"
+        min_count: 1
+
+  - id: two_gods_across
+    percent: 70
+    description: At least two gods stand on the right bank.
+    match:
+      params_pattern:
+        pattern: "^xxx - (Ах|Бах|Вау|Гэ)"
+        min_count: 2
+
+  - id: three_gods_across
+    percent: 85
+    description: At least three gods stand on the right bank.
+    match:
+      params_pattern:
+        pattern: "^xxx - (Ах|Бах|Вау|Гэ)"
+        min_count: 3
+
+  - id: all_gods_across
+    percent: 90
+    description: All four gods stand on the right bank.
+    match:
+      params_pattern:
+        pattern: "^xxx - (Ах|Бах|Вау|Гэ)"
+        min_count: 4

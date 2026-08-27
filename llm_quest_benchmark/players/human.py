@@ -1,13 +1,15 @@
 """Interactive console player for Space Rangers quests"""
 
 import logging
-from typing import Any
 
 from llm_quest_benchmark.players.base import QuestPlayer
+from llm_quest_benchmark.schemas.records import QuestSnapshot
 
 
 class HumanPlayer(QuestPlayer):
     """Interactive console player that takes input from user"""
+
+    harness_name = "human"
 
     def __init__(self, skip_single: bool = False, debug: bool = False):
         super().__init__(skip_single=skip_single)
@@ -44,6 +46,6 @@ class HumanPlayer(QuestPlayer):
         if self.debug:
             self.logger.debug("Starting new game")
 
-    def on_game_end(self, final_state: dict[str, Any]) -> None:
+    def on_game_end(self, final_snapshot: QuestSnapshot | None) -> None:
         """Called when game ends"""
         pass

@@ -95,7 +95,9 @@ def test_benchmark_e2e(caplog, tmp_path):
         assert result["quest"] == str(quest_path)
         assert result["model"] == "random_policy"
         assert result["temperature"] == 0.0
-        assert result["template"] == "reasoning.jinja"
+        assert result["harness"] == "random_choice"
+        assert result["treatment"]["loop"] == "random"
+        assert result["treatment_signature"].startswith("t2_")
         assert result["attempt"] == 1
         assert "agent_id" in result
         assert "outcome" in result

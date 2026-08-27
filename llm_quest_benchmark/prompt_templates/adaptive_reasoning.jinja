@@ -1,0 +1,25 @@
+Current story state:
+{{ observation }}
+
+Available actions:
+{% for choice in choices %}
+{{ loop.index }}. {{ choice.text }}
+{% endfor %}
+
+Goal: maximize chances to complete the mission successfully.
+{% if mode == "deep" %}
+Deep planning mode{% if trigger %} (trigger: {{ trigger }}){% endif %}. Progress so far: {{ progress }}%.
+Before answering, work through this explicitly:
+1. What has changed since the last time you saw a similar state?
+2. Which earlier actions failed to advance the quest, and why?
+3. What is the concrete next objective, and which action serves it?
+4. Which options are dead ends or repeat a known failure?
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"analysis":"<max 60 words: state, blocker, objective>","reasoning":"<max 60 words: why this action breaks the stall>","result":<action_number>}
+{% else %}
+Concise mode. Pick the action that keeps progress alive and gathers useful information.
+
+Return ONLY valid JSON (no markdown/code fences), exactly:
+{"analysis":"<max 25 words>","reasoning":"<max 25 words>","result":<action_number>}
+{% endif %}

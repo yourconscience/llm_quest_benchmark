@@ -12,6 +12,8 @@ class RandomPlayer(QuestPlayer):
     Used for testing quests and finding edge cases.
     """
 
+    harness_name = "random_choice"
+
     def __init__(self, seed: int = None, debug: bool = False, skip_single: bool = False):
         """Initialize random player.
 
@@ -26,7 +28,8 @@ class RandomPlayer(QuestPlayer):
         if debug:
             self.logger.setLevel(logging.DEBUG)
         self.rng = random.Random(seed)
-        # Keep the persisted identifier stable for existing result artifacts.
+        # The seed is a material knob, so it belongs in the harness identifier.
+        self.harness_name = f"random_choice_{seed}" if seed is not None else "random_choice"
         self.agent_id = f"random_{seed}" if seed is not None else "random"
 
     def _get_action_impl(self, observation: str, choices: list[dict[str, str]]) -> int:
@@ -47,3 +50,18 @@ class RandomPlayer(QuestPlayer):
     def reset(self) -> None:
         """Reset player state; nothing to reset for random choice."""
         pass
+
+    def rebuild_from_transitions(self, transitions) -> None:
+        """Advance the RNG past the decisions a resumed run already made.
+
+        A seeded random policy is only deterministic if its stream position is
+        restored, so each recorded decision consumes exactly the draw it
+        originally consumed. Auto-selected single choices never consumed one.
+        """
+        for transition in transitions:
+            if not transition.action.is_choose:
+                continue
+            choices = transition.before.choices
+            if self.skip_single and len(choices) == 1:
+                continue
+            self.rng.randint(1, len(choices))

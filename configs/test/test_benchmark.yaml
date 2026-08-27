@@ -10,3 +10,5 @@ debug: true
 quest_timeout: 60
 max_workers: 2
 output_dir: results/benchmarks
+# Curated state-based milestones; progress stays diagnostic, outcome stays authoritative.
+progress_manifest: configs/progress/Boat.yaml

@@ -3,7 +3,7 @@
 import time
 from abc import ABC, abstractmethod
 
-from llm_quest_benchmark.schemas.state import AgentState
+from llm_quest_benchmark.schemas.records import QuestTransition
 
 
 class BaseRenderer(ABC):
@@ -18,11 +18,11 @@ class BaseRenderer(ABC):
         time.sleep(seconds)
 
     @abstractmethod
-    def render_game_state(self, state: AgentState) -> None:
-        """Render the current game state
+    def render_game_state(self, transition: QuestTransition) -> None:
+        """Render the game state produced by one executed transition
 
         Args:
-            state (AgentState): Current game state including observation, choices, action, etc.
+            transition (QuestTransition): Executed transition with before/after snapshots
         """
         pass
 
