@@ -140,6 +140,12 @@ def restore_progress_tracker(record: RunRecord) -> ProgressTracker:
             f"(recorded {recorded_hash}, found {manifest.hash})"
         )
 
+    if manifest is None and record.progress.scored and record.progress.maximum:
+        raise ReplayError(
+            f"Run was scored under progress manifest {manifest_path}, but the file is missing; "
+            "resuming would silently downgrade progress to unscored."
+        )
+
     tracker = ProgressTracker(manifest=manifest)
     tracker.restore_from(record.progress)
     return tracker

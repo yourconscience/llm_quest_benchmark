@@ -78,7 +78,14 @@ def convert_snapshot(state: dict[str, Any] | None) -> QuestSnapshot:
         return QuestSnapshot.unavailable()
 
     choices_map = state.get("choices") or {}
-    choices = [{"id": "", "text": str(text)} for _, text in sorted(choices_map.items(), key=lambda item: int(item[0]))]
+
+    def _choice_sort_key(item: tuple[Any, Any]) -> tuple[int, str]:
+        try:
+            return (0, f"{int(item[0]):010d}")
+        except (TypeError, ValueError):
+            return (1, str(item[0]))
+
+    choices = [{"id": "", "text": str(text)} for _, text in sorted(choices_map.items(), key=_choice_sort_key)]
     game_state = str(state.get("game_state") or "running")
     saving = state.get("saving") if isinstance(state.get("saving"), dict) else None
     return QuestSnapshot(

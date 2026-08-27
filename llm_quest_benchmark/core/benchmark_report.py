@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime
@@ -10,6 +11,8 @@ from pathlib import Path
 from typing import Any
 
 from llm_quest_benchmark.schemas.records import QuestTransition, RunRecord
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -168,6 +171,17 @@ def _parse_run_insight(benchmark_id: str, run_row: dict[str, Any]) -> RunInsight
     progress = run_row.get("progress") if isinstance(run_row.get("progress"), dict) else {}
     transitions: list[QuestTransition] = []
 
+    if isinstance(run_summary, dict):
+        try:
+            record = RunRecord.from_dict(run_summary)
+        except (ValueError, TypeError) as exc:
+            log.warning(
+                "Skipping unparseable run summary for run %s (%s); DB row still counts toward totals: %s",
+                run_id,
+                summary_path,
+                exc,
+            )
+            run_summary = None
     if isinstance(run_summary, dict):
         record = RunRecord.from_dict(run_summary)
         usage = usage or record.usage

@@ -195,7 +195,7 @@ remain comparable.
 `restore_limit` knob is rejected for any other harness, restores stay visible as
 transitions, and only the active checkpoint branch is truncated.
 `adaptive_reasoning` starts concise and switches to a deeper planning prompt
-after a repeated state or a `adaptive_stall_steps` progress stall; the reasoning
+after a repeated state or an `adaptive_stall_steps` progress stall; the reasoning
 mode used is recorded on every transition.
 
 `programmatic_memory` is an experimental treatment (see

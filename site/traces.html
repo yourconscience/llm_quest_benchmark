@@ -524,7 +524,7 @@ a { color: var(--accent); }
       const progressPct = (step.progress && step.progress.current != null) ? fmt(step.progress.current, 1) + '%' : null;
       item.innerHTML = `
         <div class="step-header">
-          <span class="step-num">#${step.index}</span>
+          <span class="step-num">#${esc(step.index)}</span>
           <span class="step-action-preview">${esc(previewText)}</span>
           <span class="step-meta">
             ${isRestore ? '<span class="terminal-badge">RESTORE</span>' : ''}
