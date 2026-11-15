@@ -17,14 +17,15 @@
 <script src="play/vendor/react-dom-18.3.1.production.min.js"></script>
 <script src="play/vendor/pako-2.1.0.min.js"></script>
 <script src="play/qmengine.js"></script>
+<link rel="stylesheet" href="fonts.css">
 <style>
 :root {
-  --bg: #0d1117;
-  --surface: #161b22;
+  --bg: #141416;
+  --surface: #1c1c1f;
   --surface-2: #0f151d;
-  --border: #30363d;
-  --text: #e6edf3;
-  --muted: #c9d1d9;
+  --border: #303035;
+  --text: #f2f2f3;
+  --muted: #b3b3b8;
   --soft-muted: #8b949e;
   --accent: #58a6ff;
   --green: #3fb950;
@@ -32,14 +33,16 @@
   --red: #f85149;
   --clr: #ffd863;
   --frame: rgba(255, 216, 99, 0.42);
+  --bs-body-font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --bs-font-monospace: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 body {
   background:
-    linear-gradient(rgba(13,17,23,0.78), rgba(13,17,23,0.93)),
+    linear-gradient(rgba(20,20,22,0.78), rgba(20,20,22,0.93)),
     url('play/questplay/background.jpg') center top / cover fixed,
     var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
 }
 .navbar { background: var(--surface); border-bottom: 1px solid var(--border); }
 a { color: var(--accent); }
@@ -56,7 +59,7 @@ a { color: var(--accent); }
   position: static; z-index: 10;
   display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
   margin: 0 0 0.75rem; padding: 0.75rem;
-  background: rgba(13,17,23,0.92); border: 1px solid var(--border); border-radius: 8px;
+  background: rgba(20,20,22,0.92); border: 1px solid var(--border); border-radius: 8px;
   backdrop-filter: blur(10px);
 }
 .play-title { min-width: 0; }
@@ -89,7 +92,7 @@ a { color: var(--accent); }
 .media-placeholder {
   width: 100%; height: 100%; min-height: 132px;
   display: flex; align-items: center; justify-content: center;
-  color: rgba(201,209,217,0.5); font-size: 0.78rem; letter-spacing: 0.08em;
+  color: rgba(179,179,184,0.5); font-size: 0.78rem; letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .obs-panel {
@@ -106,13 +109,13 @@ a { color: var(--accent); }
 }
 
 .params-strip { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
-.param-pill { background: rgba(13,17,23,0.88); border: 1px solid var(--border); border-radius: 4px; padding: 0.25rem 0.6rem; font-size: 0.78rem; color: var(--muted); font-family: 'SF Mono', 'Fira Code', monospace; }
+.param-pill { background: rgba(20,20,22,0.88); border: 1px solid var(--border); border-radius: 4px; padding: 0.25rem 0.6rem; font-size: 0.78rem; color: var(--muted); font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace; }
 
 .choices-panel {
   background: rgba(15,21,29,0.9); border: 1px solid var(--border);
   border-radius: 8px; padding: 0.55rem; margin-bottom: 0.75rem;
 }
-.choice-btn { display: block; width: 100%; text-align: left; background: rgba(22,27,34,0.96); border: 1px solid var(--border); color: var(--text); padding: 0.78rem 0.9rem; margin-bottom: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.95rem; line-height: 1.45; transition: border-color 0.15s, background 0.15s; }
+.choice-btn { display: block; width: 100%; text-align: left; background: rgba(28,28,31,0.96); border: 1px solid var(--border); color: var(--text); padding: 0.78rem 0.9rem; margin-bottom: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.95rem; line-height: 1.45; transition: border-color 0.15s, background 0.15s; }
 .choice-btn:last-child { margin-bottom: 0; }
 .choice-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(88,166,255,0.1); }
 .choice-btn.inactive { opacity: 0.4; cursor: default; }
@@ -146,7 +149,7 @@ a { color: var(--accent); }
 .cohort-pct { font-size: 0.8rem; color: var(--muted); min-width: 3rem; text-align: right; }
 
 .outcome-badge { font-size: 1.1rem; font-weight: 700; padding: 0.4em 1.1em; border-radius: 6px; letter-spacing: 0.03em; }
-.outcome-SUCCESS { background: var(--green); color: #0d1117; }
+.outcome-SUCCESS { background: var(--green); color: #141416; }
 .outcome-FAILURE { background: var(--red); color: #fff; }
 .outcome-DEAD { background: var(--red); color: #fff; }
 
@@ -155,7 +158,7 @@ a { color: var(--accent); }
 .agree-no { color: var(--muted); }
 
 .game-clr { color: var(--clr); }
-.game-fix { font-family: 'SF Mono', 'Fira Code', monospace; white-space: pre; }
+.game-fix { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace; white-space: pre; }
 
 .spinner-wrap { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 3rem; }
 
