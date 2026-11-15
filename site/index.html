@@ -419,6 +419,7 @@ function renderBarChart() {
     itemStyle: {color: COLORS[mode.id]}
   }));
   barChart.setOption({
+    textStyle: {fontFamily:'"Public Sans", ui-sans-serif, system-ui, sans-serif'},
     tooltip: {trigger:'axis', backgroundColor:'#1c1c1f', borderColor:'#303035', textStyle:{color:'#f2f2f3'}},
     legend: {textStyle:{color:'#b3b3b8'}, bottom: 0},
     grid: {left:'3%',right:'4%',bottom:'22%',containLabel:true},
